@@ -1,6 +1,6 @@
 // Service worker de Tarjetería Jhon — cachea la app para que abra sin internet.
-const CACHE = 'tj-panel-v1';
-const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
+const CACHE = 'tj-panel-v2';
+const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './catalogo_default.zip'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(() => {}));
