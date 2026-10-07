@@ -1533,6 +1533,14 @@ async function vendSave(id){const n=$('vf_n').value.trim(),panels=[...document.q
  }catch(x){m(x.code==='auth/email-already-in-use'?'Ese correo ya tiene cuenta.':'No se pudo guardar ('+(x.code||'error')+').')}}
 async function vendDel(id){const u=usuarios().find(x=>x.id===id);if(!u||!confirm('¿Eliminar al vendedor '+u.n+'? Perderá el acceso de inmediato.'))return;try{await fbDb.collection('roles').doc(id).delete()}catch(e){}DB.cfg.users=usuarios().filter(x=>x.id!==id);save();R.vend()}
 async function adminPin(){const e=firebase.auth().currentUser&&firebase.auth().currentUser.email;if(!e)return;if(!confirm('Le enviaremos un correo a '+e+' para cambiar su contraseña. ¿Continuar?'))return;try{await firebase.auth().sendPasswordResetEmail(e);alert('Correo enviado.')}catch(x){alert('No se pudo enviar.')}}
+// --- Chat: ajustar la altura al espacio real (celular) para que el cuadro de texto no quede bajo la barra de iconos ---
+function fitChat(){const w=$('chw');if(!w)return;
+ if(innerWidth>820){w.style.height='';w.style.minHeight='';return}
+ const vv=window.visualViewport,vh=vv?vv.height:innerHeight,tec=vv&&vv.height<innerHeight-120,bn=document.querySelector('.bn'),bh=tec?0:(bn?bn.offsetHeight:64),top=w.getBoundingClientRect().top+scrollY;
+ const h=Math.max(260,Math.floor(vh-top-bh-12))+'px';if(w.style.height!==h)w.style.height=h;w.style.minHeight='0'}
+const _rchat=R.chat;R.chat=function(){const r=_rchat.apply(this,arguments);fitChat();[120,600,1500].forEach(ms=>setTimeout(fitChat,ms));return r};
+addEventListener('resize',fitChat);addEventListener('orientationchange',()=>setTimeout(fitChat,250));
+if(window.visualViewport){visualViewport.addEventListener('resize',fitChat)}
 aplicarTema(getTemaUser(),false);ir('home');
 authInit();
 if('serviceWorker' in navigator){
