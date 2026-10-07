@@ -482,7 +482,7 @@ const saveLocal=()=>{try{localStorage.setItem('tj_db',JSON.stringify(DB))}catch(
 const save=()=>{saveLocal();syncToCloud()};
 
 // ===== Sincronización en la nube (Firebase) =====
-const firebaseConfig={apiKey:"AIzaSyBIe5zbvVjXIVXvOz8tgxBBbu8-Ty1Msrs",authDomain:"tarjeteria-jhon.firebaseapp.com",projectId:"tarjeteria-jhon",storageBucket:"tarjeteria-jhon.firebasestorage.app",messagingSenderId:"386602273549",appId:"1:386602273549:web:8d97182d91d33a79e17e44"};
+const firebaseConfig={apiKey:"AIzaSyBle5zbvVjXIVXvOz8tgxBBbu8-Ty1Msrs",authDomain:"tarjeteria-jhon.firebaseapp.com",projectId:"tarjeteria-jhon",storageBucket:"tarjeteria-jhon.firebasestorage.app",messagingSenderId:"386602273549",appId:"1:386602273549:web:8d97182d91d33a79e17e44"};
 let fbDb=null,fbDocRef=null,_cloudWriting=false,_syncTimer=null,_lastTs=0,_cloudOn=false;
 try{
  if(window.firebase){
