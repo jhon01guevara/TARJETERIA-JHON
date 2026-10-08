@@ -207,18 +207,28 @@ textarea{font-family:inherit;font-size:14px;padding:11px 13px;border:1px solid t
 .agg{margin:14px 0 2px;font-size:12.5px;font-weight:700;color:var(--az)}.agwk{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 @media(max-width:600px){.agk{grid-template-columns:1fr 1fr}.agc{min-height:50px;padding:4px}.agc span{font-size:11.5px}}
 
-.cint{display:flex;align-items:stretch;height:64px;overflow:hidden;background:linear-gradient(90deg,var(--az),color-mix(in srgb,var(--az) 62%,#FF9F0A));box-shadow:0 4px 14px -8px rgba(0,0,0,.35);position:relative;z-index:4}
-.cintTag{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:0 16px;color:#fff;font-weight:800;font-size:12px;letter-spacing:.08em;text-transform:uppercase;background:rgba(0,0,0,.18);white-space:nowrap}
-.cintVw{flex:1;min-width:0;overflow:hidden;display:flex;align-items:center;-webkit-mask-image:linear-gradient(90deg,transparent,#000 22px,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,transparent,#000 22px,#000 calc(100% - 22px),transparent)}
-.cintTr{display:flex;gap:12px;width:max-content;padding:0 12px;animation:cintMv var(--dur,40s) linear infinite;will-change:transform}
-.cint:hover .cintTr,.cint:active .cintTr{animation-play-state:paused}
-@keyframes cintMv{from{transform:translateX(0)}to{transform:translateX(-50%)}}
-.ci{display:flex;align-items:center;gap:9px;background:rgba(255,255,255,.93);color:#1D1D1F;border-radius:14px;padding:5px 14px 5px 6px;height:48px;cursor:pointer;border-left:4px solid var(--c,#E0457B);box-shadow:0 2px 8px rgba(0,0,0,.15);white-space:nowrap;flex:0 0 auto}
-.ci img{width:36px;height:36px;object-fit:cover;border-radius:9px;background:#eee;flex:0 0 auto}.ci>b{font-size:20px;width:30px;text-align:center;font-weight:400}
-.ci span{display:flex;flex-direction:column;line-height:1.2;max-width:230px}.ci strong{font-size:13px;overflow:hidden;text-overflow:ellipsis}.ci small{font-size:11px;color:#6E6E73;overflow:hidden;text-overflow:ellipsis}.ci small.late{color:#d92d20;font-weight:700}
-@media(prefers-reduced-motion:reduce){.cintVw{overflow-x:auto}.cintTr{animation:none}}
-@media(max-width:820px){.cint{height:56px}.cintTag{padding:0 10px;font-size:10px}.ci{height:42px}.ci img{width:30px;height:30px}.ci span{max-width:170px}}
-@media(max-width:480px){.cintTag .tx{display:none}}
+.cint{position:relative;z-index:4;padding:10px 0 4px;background:color-mix(in srgb,var(--az) 10%,color-mix(in srgb,var(--card) 70%,transparent));backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border-bottom:1px solid var(--linea)}
+.cintVw{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 14px 8px;scroll-padding-left:14px;overscroll-behavior-x:contain}
+.cintVw::-webkit-scrollbar{display:none}
+.cintTr{display:flex;gap:10px;width:max-content;min-width:100%}
+.ci{display:flex;align-items:center;gap:12px;flex:0 0 min(84vw,340px);box-sizing:border-box;height:66px;padding:0 10px;border-radius:22px;background:var(--card);color:var(--txt);cursor:pointer;scroll-snap-align:start;box-shadow:0 1px 2px rgba(0,0,0,.10),0 6px 16px -6px rgba(0,0,0,.22);transition:transform .15s,box-shadow .15s;position:relative;overflow:hidden;-webkit-tap-highlight-color:transparent}
+.ci::before{content:"";position:absolute;inset:0;background:var(--c,var(--az));opacity:0;transition:opacity .15s;pointer-events:none}
+.ci:active{transform:scale(.975)}.ci:active::before{opacity:.10}
+.ci .ico{flex:0 0 auto;width:44px;height:44px;border-radius:16px;display:grid;place-items:center;font-style:normal;font-size:22px;background:color-mix(in srgb,var(--c,var(--az)) 16%,transparent)}
+.ci img{width:44px;height:44px;object-fit:cover;border-radius:16px;background:var(--soft);flex:0 0 auto}
+.ci .tt{display:flex;flex-direction:column;gap:3px;min-width:0;flex:1}
+.ci strong{font-size:14px;font-weight:700;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ci small{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--gris);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ci .chip{font-style:normal;font-weight:700;font-size:10.5px;padding:2px 8px;border-radius:980px;background:color-mix(in srgb,var(--c,var(--az)) 14%,transparent);color:color-mix(in srgb,var(--c,var(--az)) 70%,var(--txt));flex:0 0 auto}
+.ci.late .chip{background:rgba(217,45,32,.14);color:#d92d20}.ci.late{box-shadow:0 1px 2px rgba(217,45,32,.18),0 6px 16px -6px rgba(217,45,32,.35)}
+.ci.hoy .chip{background:color-mix(in srgb,#2fa84f 16%,transparent);color:#1e7a38}
+.ci u{text-decoration:none;color:var(--gris);font-size:22px;line-height:1;flex:0 0 auto;opacity:.6;padding-right:2px}
+.cintFt{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:0 18px 4px;min-height:14px;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gris)}
+#cintDots{display:flex;gap:5px;align-items:center}
+#cintDots i{width:6px;height:6px;border-radius:3px;background:color-mix(in srgb,var(--gris) 40%,transparent);cursor:pointer;transition:width .25s,background .25s}
+#cintDots i.on{width:18px;background:var(--az)}
+@media(prefers-reduced-motion:reduce){.cintVw{scroll-behavior:auto}.ci,#cintDots i{transition:none}}
+@media(max-width:820px){.cint{padding-top:8px}.ci{height:60px;flex-basis:min(82vw,320px)}.ci .ico,.ci img{width:40px;height:40px;border-radius:14px}}
 
 #agToast{position:fixed;top:78px;right:16px;z-index:60;display:flex;flex-direction:column;gap:10px;width:min(360px,calc(100vw - 24px))}
 .agt{display:flex;gap:10px;background:var(--card);color:var(--txt);border-radius:16px;padding:12px 14px;box-shadow:0 12px 34px -10px rgba(0,0,0,.45);border-left:5px solid var(--c,#E0457B);animation:agIn .3s ease}
@@ -517,7 +527,7 @@ body.vnd :is([onclick^="delFac("],[onclick^="anular("],[onclick^="delE("],[oncli
  <div class="top"><div><h2 id="tt">Inicio</h2><div class="rt">Tarjetería Jhon · Panel de Facturación</div></div>
   <div class="ck"><b id="ct"></b><span id="cd"></span></div>
   <select id="th" style="width:auto;border-radius:980px" onchange="tema(this.value)"><option value="claro">Tema rosa</option><option value="oceano">Tema océano</option><option value="violeta">Tema violeta</option><option value="nocturno">Tema nocturno</option></select></div>
- <div class="cint" id="cint" hidden><div class="cintTag" id="cintTag"></div><div class="cintVw"><div class="cintTr" id="cintTr"></div></div></div>
+ <div class="cint" id="cint" hidden><div class="cintVw" id="cintVw"><div class="cintTr" id="cintTr"></div></div><div class="cintFt"><span id="cintTag"></span><span id="cintDots"></span><span id="cintCnt"></span></div></div>
  <div class="wrap" id="v"></div>
 </main>
 <div class="md" id="md" onclick="if(event.target===this)cerrar()"><div class="mb" id="mb"></div></div>
@@ -772,17 +782,41 @@ let _cintSig='',_chk=null;
 function cintGo(k,a,b){if(k=='ag'){AG.sel=b;AG.d=b;ir('agenda')}else ir(k)}
 function cintChk(){if(_chk)return _chk;_chk=[];try{const h=b64ToUtf8(MODELOS_B64),i=h.indexOf('const IMGS = '),j=h.indexOf('\n',i),I=JSON.parse(h.slice(i+13,j).replace(/;\s*$/,'')),k=h.indexOf('const DATA = `')+14,D=h.slice(k,h.indexOf('`',k)).split('\n');
  D.forEach(l=>{const [c,cat,d]=l.split('|');if(c&&I[c.trim()])_chk.push({n:c.trim(),s:(d||cat||'').trim(),i:I[c.trim()]})})}catch(e){}return _chk}
-async function cintillo(){const bar=$('cint');if(!bar)return;const t=hoy(),q0=AG.q,c0=AG.c;AG.q='';AG.c='';
- const ag=agOcc(addD(t,-30),addD(t,14)).filter(o=>!agDn(o));AG.q=q0;AG.c=c0;let tag,items,sig;
- if(ag.length){tag='📅<span class="tx"> Agenda</span>';items=ag.map(o=>{const e=o.e,x=AGT[e.t]||AGT.otro,late=o.d<t,w=late?'Vencida · '+fdate(o.d):o.d==t?'Hoy':o.d==addD(t,1)?'Mañana':fdate(o.d);
-  return `<div class="ci" style="--c:${x[2]}" onclick="cintGo('ag','${e.id}','${o.d}')"><b>${x[0]}</b><span><strong>${esc(e.ti)}</strong><small class="${late?'late':''}">${w}${e.h?' · '+e.h:''}${e.cn?' · '+esc(e.cn):''}</small></span></div>`});sig='A'+ag.map(o=>o.e.id+o.d+o.e.ti+(o.e.h||'')).join()}
- else{let cat=[];try{cat=(await tx('readonly',s=>s.getAll())).filter(f=>f.thumb)}catch(e){cat=(typeof CL!=='undefined'?CL:[]).filter(f=>f.thumb)}
-  cat.sort((a,b)=>(b.date||'').localeCompare(a.date||''));tag='🎴<span class="tx"> Modelos</span>';
-  if(cat.length){cat=cat.slice(0,30);items=cat.map(f=>`<div class="ci" onclick="cintGo('cat')"><img src="${f.thumb}" alt=""><span><strong>${esc(f.name||'Modelo')}</strong><small>${esc(f.cat||'Catálogo')}</small></span></div>`);sig='C'+cat.map(f=>f.id).join()}
-  else{const m=cintChk().slice(0,30);if(m.length){items=m.map(f=>`<div class="ci" onclick="cintGo('check')"><img src="${f.i}" alt=""><span><strong>${esc(f.n)}</strong><small>${esc(f.s)}</small></span></div>`);sig='M'+m.length}
-  else{items=['<div class="ci" style="--c:#FF9F0A"><b>🎴</b><span><strong>Tarjetería Jhon</strong><small>Tarjetas para toda ocasión</small></span></div>'];sig='X'}}}
- if(sig===_cintSig&&!bar.hidden)return;_cintSig=sig;let arr=items.slice();while(arr.length<10)arr=arr.concat(items);
- $('cintTag').innerHTML=tag;$('cintTr').innerHTML=arr.join('')+arr.join('');$('cintTr').style.setProperty('--dur',Math.max(25,arr.length*4.5)+'s');bar.hidden=false}
+const cintCfg=()=>({on:DB.cfg.cintOn!==0,seg:Math.min(20,Math.max(2,+DB.cfg.cintSeg||5)),cr:DB.cfg.cintCr!==0,ot:DB.cfg.cintOt!==0,ve:DB.cfg.cintVe!==0,ho:DB.cfg.cintHo!==0,pr:DB.cfg.cintPr!==0,dias:+DB.cfg.cintDias||14,mod:DB.cfg.cintMod!==0});
+let _cintPause=0,_cintHover=0,_cintTm=null;
+const _cintRM=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
+function cintItem(o,t){const e=o.e,x=AGT[e.t]||AGT.otro,late=o.d<t,fd=x=>fdate(x).replace(/[\/\-.]\d{4}$/,''),w=late?'Vencida · '+fd(o.d):o.d==t?'Hoy':o.d==addD(t,1)?'Mañana':fd(o.d),ti=(e.t==='cobro'&&String(e.ti).includes(' — '))?String(e.ti).split(' — ')[0]:e.ti;
+ return `<div class="ci ${late?'late':o.d==t?'hoy':''}" style="--c:${x[2]}" onclick="cintGo('ag','${e.id}','${o.d}')"><i class="ico">${x[0]}</i><span class="tt"><strong>${esc(ti)}</strong><small><em class="chip">${w}${e.h?' · '+e.h:''}</em>${e.cn?esc(e.cn):''}</small></span><u>›</u></div>`}
+async function cintillo(){const bar=$('cint');if(!bar)return;const k=cintCfg();
+ if(!k.on){bar.hidden=true;_cintSig='';return}
+ const t=hoy(),q0=AG.q,c0=AG.c;AG.q='';AG.c='';
+ let ag=agOcc(addD(t,-30),addD(t,k.dias)).filter(o=>!agDn(o));AG.q=q0;AG.c=c0;
+ ag=ag.filter(o=>{if(o.e.t==='cobro'?!k.cr:!k.ot)return false;return o.d<t?k.ve:o.d==t?k.ho:k.pr});
+ ag.sort((a,b)=>(a.d+(a.e.h||'')).localeCompare(b.d+(b.e.h||'')));
+ let tag,items,sig;
+ if(ag.length){tag='📅 Agenda';items=ag.map(o=>cintItem(o,t));sig='A'+ag.map(o=>o.e.id+o.d+o.e.ti+(o.e.h||'')+(o.e.cn||'')).join()}
+ else if(k.mod){let cat=[];try{cat=(await tx('readonly',s=>s.getAll())).filter(f=>f.thumb)}catch(e){cat=(typeof CL!=='undefined'?CL:[]).filter(f=>f.thumb)}
+  cat.sort((a,b)=>(b.date||'').localeCompare(a.date||''));tag='🎴 Modelos';
+  if(cat.length){cat=cat.slice(0,30);items=cat.map(f=>`<div class="ci" onclick="cintGo('cat')"><img src="${f.thumb}" alt=""><span class="tt"><strong>${esc(f.name||'Modelo')}</strong><small>${esc(f.cat||'Catálogo')}</small></span><u>›</u></div>`);sig='C'+cat.map(f=>f.id).join()}
+  else{const m=cintChk().slice(0,30);if(m.length){items=m.map(f=>`<div class="ci" onclick="cintGo('check')"><img src="${f.i}" alt=""><span class="tt"><strong>${esc(f.n)}</strong><small>${esc(f.s)}</small></span><u>›</u></div>`);sig='M'+m.length}
+  else{items=['<div class="ci" style="--c:#FF9F0A"><i class="ico">🎴</i><span class="tt"><strong>Tarjetería Jhon</strong><small>Tarjetas para toda ocasión</small></span></div>'];sig='X'}}}
+ else{bar.hidden=true;_cintSig='';return}
+ sig+='|'+k.seg;if(sig===_cintSig&&!bar.hidden)return;_cintSig=sig;
+ $('cintTr').innerHTML=items.join('');$('cintTag').textContent=tag;$('cintVw').scrollLeft=0;bar.hidden=false;cintDots(items.length);cintArranca()}
+const cintStep=()=>{const a=document.querySelector('#cintTr .ci');return a?a.offsetWidth+10:0};
+const cintFin=()=>{const v=$('cintVw');return v.scrollWidth>v.clientWidth+4&&v.scrollLeft+v.clientWidth>=v.scrollWidth-4};
+function cintIdx(){const v=$('cintVw'),n=$('cintTr').children.length,s=cintStep();return !s?0:cintFin()?n-1:Math.min(n-1,Math.round(v.scrollLeft/s))}
+function cintGoTo(i){const v=$('cintVw'),s=cintStep(),n=$('cintTr').children.length;if(!s||!n)return;i=((i%n)+n)%n;v.scrollTo({left:i*s,behavior:_cintRM()?'auto':'smooth'})}
+function cintDots(n){$('cintDots').innerHTML=n>1&&n<=8?Array.from({length:n},(_,i)=>`<i onclick="_cintPause=Date.now()+10000;cintGoTo(${i})"></i>`).join(''):'';cintDot()}
+function cintDot(){const n=$('cintTr').children.length;if(!n)return;const i=cintIdx();[...$('cintDots').children].forEach((x,j)=>x.classList.toggle('on',j===i));$('cintCnt').textContent=n>1?(i+1)+' / '+n:''}
+function cintTick(){clearTimeout(_cintTm);_cintTm=setTimeout(cintTick,cintCfg().seg*1000);
+ const bar=$('cint');if(!bar||bar.hidden||document.hidden||_cintHover||Date.now()<_cintPause||_cintRM())return;
+ if($('cintTr').children.length<2)return;cintGoTo(cintFin()?0:cintIdx()+1)}
+function cintArranca(){if(!window._cintL){window._cintL=1;const v=$('cintVw'),b=$('cint');v.addEventListener('scroll',cintDot,{passive:true});['pointerdown','wheel','touchstart'].forEach(ev=>v.addEventListener(ev,()=>{_cintPause=Date.now()+10000},{passive:true}));b.addEventListener('mouseenter',()=>{_cintHover=1});b.addEventListener('mouseleave',()=>{_cintHover=0})}
+ clearTimeout(_cintTm);_cintTm=setTimeout(cintTick,cintCfg().seg*1000)}
+function cintSet(k,v){DB.cfg[k]=v;save();_cintSig='';cintillo()}
+function cintCard(){const k=cintCfg(),ck=(key,lab,on)=>`<label class="pchk"><input type="checkbox" ${on?'checked':''} onchange="cintSet('${key}',this.checked?1:0)"> ${lab}</label>`;
+ return `<h3 style="margin:0 0 4px">🎠 Cinta de avisos</h3><p style="font-size:12.5px;color:var(--gris)">Las tarjetas de arriba muestran sus cobros a crédito, vencimientos y eventos. Aquí elige cada cuánto cambia de aviso y qué muestra.</p><div class="g"><div><label>Cinta de avisos</label><select onchange="cintSet('cintOn',+this.value)"><option value="1" ${k.on?'selected':''}>Activada</option><option value="0" ${k.on?'':'selected'}>Desactivada</option></select></div><div><label>Cambiar de aviso cada <b id="cs_v">${k.seg}</b> seg</label><input type="range" min="2" max="20" step="1" value="${k.seg}" oninput="$('cs_v').textContent=this.value" onchange="cintSet('cintSeg',+this.value)"></div><div><label>Mostrar próximos</label><select onchange="cintSet('cintDias',+this.value)">${[7,14,30].map(d=>`<option value="${d}" ${k.dias===d?'selected':''}>${d} días</option>`).join('')}</select></div></div><label style="display:block;margin-top:12px">Qué mostrar</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:6px">${ck('cintCr','💰 Cobros a crédito',k.cr)}${ck('cintOt','📅 Otros eventos',k.ot)}${ck('cintVe','🔴 Vencidas',k.ve)}${ck('cintHo','🟢 Hoy',k.ho)}${ck('cintPr','🔜 Próximos días',k.pr)}${ck('cintMod','🎴 Modelos si no hay avisos',k.mod)}</div><p style="font-size:12px;color:var(--gris);margin:10px 0 0">Se detiene mientras la toca o pasa el mouse por encima. Deslice con el dedo para ver el siguiente aviso.</p>`}
 setInterval(()=>{cintillo()},30000);
 
 let _ac=null,AGN={},AGSN={};try{AGN=JSON.parse(localStorage.getItem('tj_ag_n')||'{}');Object.keys(AGN).forEach(k=>{if(Date.now()-AGN[k]>2.5*864e5)delete AGN[k]})}catch(e){}
@@ -1373,7 +1407,7 @@ function recCard(){const L=DB.cfg.recMails||[];return `<h3 style="margin:0">🔑
 function recAdd(){const m=$('rc_m').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(m))return alert('Ingrese un correo válido.');const L=DB.cfg.recMails||(DB.cfg.recMails=[]);if(!L.includes(m))L.push(m);save();R.config()}
 function recDel(i){if(!confirm('¿Quitar este correo de recuperación?'))return;(DB.cfg.recMails||[]).splice(i,1);save();R.config()}
 const _rc=R.config;
-R.config=function(){_rc();if(!esAdmin())return;const c=document.createElement('div');c.className='card';c.id='recCard';c.innerHTML=recCard();const v=$('v');v.insertBefore(c,v.firstChild);const vc=document.createElement('div');vc.className='card';vc.innerHTML=vozCard();c.after(vc);const tc=document.createElement('div');tc.className='card';tc.id='tplCard';tc.innerHTML=tplCard();v.insertBefore(tc,v.firstChild)};
+R.config=function(){_rc();if(!esAdmin())return;const c=document.createElement('div');c.className='card';c.id='recCard';c.innerHTML=recCard();const v=$('v');v.insertBefore(c,v.firstChild);const vc=document.createElement('div');vc.className='card';vc.innerHTML=vozCard();c.after(vc);const cc=document.createElement('div');cc.className='card';cc.innerHTML=cintCard();vc.after(cc);const tc=document.createElement('div');tc.className='card';tc.id='tplCard';tc.innerHTML=tplCard();v.insertBefore(tc,v.firstChild)};
 // --- Facturas a crédito → evento de cobro en la agenda ---
 function credAg(f){if(!f||!f.credito||!f.credito.vence||f.anulada)return;if(DB.agenda.some(e=>e.fid===f.id))return;
  const c=DB.cli.find(x=>x.n===f.cli);
