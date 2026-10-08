@@ -207,6 +207,16 @@ textarea{font-family:inherit;font-size:14px;padding:11px 13px;border:1px solid t
 .agg{margin:14px 0 2px;font-size:12.5px;font-weight:700;color:var(--az)}.agwk{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 @media(max-width:600px){.agk{grid-template-columns:1fr 1fr}.agc{min-height:50px;padding:4px}.agc span{font-size:11.5px}}
 
+#llam{position:fixed;inset:0;z-index:2000;display:none;align-items:center;justify-content:center;background:rgba(10,10,20,.55);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);padding:20px}
+.llc{width:min(340px,100%);border-radius:32px;background:var(--card);color:var(--txt);padding:30px 22px 22px;text-align:center;box-shadow:0 20px 60px -10px rgba(0,0,0,.5)}
+.lla{width:84px;height:84px;margin:0 auto 12px;border-radius:50%;display:grid;place-items:center;font-size:36px;font-weight:800;color:#fff;background:linear-gradient(135deg,var(--az),color-mix(in srgb,var(--az) 55%,#FF9F0A))}
+.llc h3{margin:0 0 4px;font-size:20px}.llc p{margin:0 0 22px;color:var(--gris);font-size:14px;min-height:20px}
+.llb{display:flex;justify-content:center;gap:22px}
+.llb button{width:62px;height:62px;border-radius:50%;border:0;font-size:26px;cursor:pointer;color:#fff;box-shadow:0 6px 16px -4px rgba(0,0,0,.4);-webkit-tap-highlight-color:transparent}
+.llb button:active{transform:scale(.93)}.llb .ok{background:#2fa84f}.llb .no{background:#d92d20}.llb .mu{background:#6E6E73}.llb .mu.on{background:#1D1D1F}
+.llc.ring .lla{animation:llp 1.4s ease-out infinite}
+@keyframes llp{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--az) 50%,transparent)}100%{box-shadow:0 0 0 24px transparent}}
+@media(prefers-reduced-motion:reduce){.llc.ring .lla{animation:none}}
 .cint{position:relative;z-index:4;padding:10px 0 4px;background:color-mix(in srgb,var(--az) 10%,color-mix(in srgb,var(--card) 70%,transparent));backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border-bottom:1px solid var(--linea)}
 .cintVw{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 14px 8px;scroll-padding-left:14px;overscroll-behavior-x:contain}
 .cintVw::-webkit-scrollbar{display:none}
@@ -1407,7 +1417,7 @@ function recCard(){const L=DB.cfg.recMails||[];return `<h3 style="margin:0">🔑
 function recAdd(){const m=$('rc_m').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(m))return alert('Ingrese un correo válido.');const L=DB.cfg.recMails||(DB.cfg.recMails=[]);if(!L.includes(m))L.push(m);save();R.config()}
 function recDel(i){if(!confirm('¿Quitar este correo de recuperación?'))return;(DB.cfg.recMails||[]).splice(i,1);save();R.config()}
 const _rc=R.config;
-R.config=function(){_rc();if(!esAdmin())return;const c=document.createElement('div');c.className='card';c.id='recCard';c.innerHTML=recCard();const v=$('v');v.insertBefore(c,v.firstChild);const vc=document.createElement('div');vc.className='card';vc.innerHTML=vozCard();c.after(vc);const cc=document.createElement('div');cc.className='card';cc.innerHTML=cintCard();vc.after(cc);const tc=document.createElement('div');tc.className='card';tc.id='tplCard';tc.innerHTML=tplCard();v.insertBefore(tc,v.firstChild)};
+R.config=function(){_rc();if(!esAdmin())return;const c=document.createElement('div');c.className='card';c.id='recCard';c.innerHTML=recCard();const v=$('v');v.insertBefore(c,v.firstChild);const vc=document.createElement('div');vc.className='card';vc.innerHTML=vozCard();c.after(vc);const cc=document.createElement('div');cc.className='card';cc.innerHTML=cintCard();vc.after(cc);const lc=document.createElement('div');lc.className='card';lc.innerHTML=llamCard();cc.after(lc);const tc=document.createElement('div');tc.className='card';tc.id='tplCard';tc.innerHTML=tplCard();v.insertBefore(tc,v.firstChild)};
 // --- Facturas a crédito → evento de cobro en la agenda ---
 function credAg(f){if(!f||!f.credito||!f.credito.vence||f.anulada)return;if(DB.agenda.some(e=>e.fid===f.id))return;
  const c=DB.cli.find(x=>x.n===f.cli);
@@ -1475,6 +1485,75 @@ function restaurarResp(){
    save();if(vista&&R[vista])R[vista]();alert('Respaldo restaurado. Se está sincronizando con los demás dispositivos.')}
   r.readAsText(f)};
  i.click()}
+// --- Llamadas de voz entre administrador y vendedores (WebRTC; la conexión se coordina con Firestore) ---
+const LL={pc:null,id:null,stream:null,unsub:[],t0:0,tm:null,peer:null,ringTm:null,ring:null,incoming:null,ready:false,q:[],pend:[],muted:false};
+const llamOn=()=>DB.cfg.llamOn!==0&&!!fbDb&&!!window.RTCPeerConnection&&!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia);
+function llamIce(){const s=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}],u=(DB.cfg.turnUrl||'').trim();if(u)s.push({urls:u.split(/[\s,]+/).filter(Boolean),username:DB.cfg.turnUser||'',credential:DB.cfg.turnCred||''});return s}
+const BT_IN='<button class="no" onclick="llamRechazar()" title="Rechazar">✖</button><button class="ok" onclick="llamAcepta()" title="Contestar">📞</button>';
+const BT_ON='<button class="mu" id="llmu" onclick="llamMute()" title="Silenciar micrófono">🎙</button><button class="no" onclick="llamCuelga()" title="Colgar">✖</button>';
+function llamUI(o){clearTimeout(LL.hTm);let d=$('llam');if(!d){d=document.createElement('div');d.id='llam';document.body.appendChild(d)}
+ if(!o){d.style.display='none';d.innerHTML='';return}
+ d.style.display='flex';d.innerHTML=`<div class="llc ${o.ring?'ring':''}"><div class="lla">${esc((o.n||'?').trim().charAt(0).toUpperCase())}</div><h3>${esc(o.n)}</h3><p id="llst">${esc(o.s)}</p><div class="llb">${o.b||''}</div></div>`}
+const llamSt=s=>{const e=$('llst');if(e)e.textContent=s};
+const llamAud=()=>{let a=$('llau');if(!a){a=document.createElement('audio');a.id='llau';a.autoplay=true;a.setAttribute('playsinline','');document.body.appendChild(a)}return a};
+function llamTono(on,soft){clearInterval(LL.ring);LL.ring=null;if(!on)return;
+ const play=()=>{try{const C=window._llCtx||(window._llCtx=new (window.AudioContext||window.webkitAudioContext)());if(C.state==='suspended')C.resume();
+  [[0,659],[.28,523]].forEach(([d,f])=>{const o=C.createOscillator(),g=C.createGain(),t=C.currentTime+d;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(soft?.08:.25,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+.24);o.connect(g);g.connect(C.destination);o.start(t);o.stop(t+.26)});
+  if(!soft&&navigator.vibrate)navigator.vibrate([300,150,300])}catch(e){}};play();LL.ring=setInterval(play,2200)}
+const llamMic=()=>navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+function llamPC(id,me){const pc=new RTCPeerConnection({iceServers:llamIce()});LL.pc=pc;LL.ready=false;LL.q=[];LL.pend=[];
+ LL.stream.getTracks().forEach(k=>pc.addTrack(k,LL.stream));
+ pc.ontrack=e=>{const a=llamAud();a.srcObject=e.streams[0];a.play().catch(()=>{})};
+ pc.onicecandidate=e=>{if(!e.candidate)return;const c=e.candidate.toJSON();if(LL.ready)llamIceSend(id,me,c);else LL.q.push(c)};
+ pc.onconnectionstatechange=()=>{if(LL.pc!==pc)return;const s=pc.connectionState;if(s==='connected')llamActiva();else if(s==='failed')llamFin('No se pudo conectar. Puede que la red bloquee las llamadas.');else if(s==='disconnected')setTimeout(()=>{if(LL.pc===pc&&pc.connectionState==='disconnected')llamFin('Se perdió la conexión')},6000)};
+ return pc}
+const llamIceSend=(id,me,c)=>fbDb.collection('llamadas').doc(id).collection('ice').add({by:me,c,ts:Date.now()}).catch(()=>{});
+function llamIceListen(id,me,pc){LL.ready=true;LL.q.forEach(c=>llamIceSend(id,me,c));LL.q=[];
+ LL.unsub.push(fbDb.collection('llamadas').doc(id).collection('ice').onSnapshot(sn=>sn.docChanges().forEach(ch=>{if(ch.type!=='added')return;const d=ch.doc.data();if(d.by===me)return;if(pc.remoteDescription)pc.addIceCandidate(d.c).catch(()=>{});else LL.pend.push(d.c)}),()=>{}))}
+const llamFlush=pc=>{LL.pend.forEach(c=>pc.addIceCandidate(c).catch(()=>{}));LL.pend=[]};
+function llamActiva(){if(LL.t0||!LL.id)return;LL.t0=Date.now();clearTimeout(LL.ringTm);llamTono(0);llamUI({n:chatName(LL.peer),s:'00:00',b:BT_ON});
+ LL.tm=setInterval(()=>{const s=Math.floor((Date.now()-LL.t0)/1000);llamSt(String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'))},1000)}
+async function llamar(chatId){
+ if(!llamOn())return alert('Las llamadas no están disponibles: revise su conexión o que el navegador permita el micrófono.');
+ if(LL.id||LL.incoming)return alert('Ya hay una llamada en curso.');
+ const me=chatMe(),peer=me==='admin'?String(chatId).slice(3):'admin',nom=chatName(peer);
+ try{LL.stream=await llamMic()}catch(e){return alert('No se pudo usar el micrófono. Permita el acceso al micrófono en el navegador y vuelva a intentar.')}
+ const id='c'+uid();LL.id=id;LL.peer=peer;LL.t0=0;LL.muted=false;llamUI({n:nom,s:'Llamando…',b:'<button class="no" onclick="llamCuelga()" title="Cancelar">✖</button>',ring:1});llamTono(1,1);
+ try{const pc=llamPC(id,me),off=await pc.createOffer();await pc.setLocalDescription(off);
+  const ref=fbDb.collection('llamadas').doc(id);
+  await ref.set({id,chat:chatId,from:me,to:peer,fn:chatName(me),state:'ringing',offer:{type:off.type,sdp:off.sdp},ts:Date.now()});
+  llamIceListen(id,me,pc);
+  LL.unsub.push(ref.onSnapshot(async s=>{const d=s.data();if(!d||LL.id!==id)return;
+   if(d.answer&&pc.signalingState==='have-local-offer'){try{await pc.setRemoteDescription(d.answer);llamFlush(pc);llamSt('Conectando…')}catch(e){}}
+   if(['declined','ended','missed'].includes(d.state))llamFin(d.state==='declined'?'Llamada rechazada':d.state==='missed'?'Sin respuesta':'Llamada finalizada')},()=>{}));
+  LL.ringTm=setTimeout(()=>{if(LL.id===id&&!LL.t0){ref.update({state:'missed'}).catch(()=>{});llamFin('Sin respuesta')}},45000)
+ }catch(e){console.warn('Llamada:',e);llamFin('No se pudo iniciar la llamada')}}
+function llamEntrante(d){LL.incoming=d;llamUI({n:d.fn||chatName(d.from),s:'Llamada entrante…',b:BT_IN,ring:1});llamTono(1);try{if(DB.cfg.vozChat!==0)vozDama('Atención. Llamada entrante de '+(d.from==='admin'?'la administración':chatName(d.from))+'.')}catch(e){}
+ clearTimeout(LL.ringTm);LL.ringTm=setTimeout(()=>{if(LL.incoming&&LL.incoming.id===d.id){LL.incoming=null;llamFin('Llamada perdida')}},45000)}
+async function llamAcepta(){const d=LL.incoming;if(!d||LL.id)return;llamTono(0);clearTimeout(LL.ringTm);
+ try{LL.stream=await llamMic()}catch(e){llamRechazar();return alert('No se pudo usar el micrófono. Permita el acceso al micrófono en el navegador.')}
+ const me=chatMe();LL.id=d.id;LL.peer=d.from;LL.t0=0;LL.muted=false;LL.incoming=null;llamUI({n:d.fn||chatName(d.from),s:'Conectando…',b:BT_ON});
+ try{const pc=llamPC(d.id,me);await pc.setRemoteDescription(d.offer);const an=await pc.createAnswer();await pc.setLocalDescription(an);
+  const ref=fbDb.collection('llamadas').doc(d.id);await ref.update({answer:{type:an.type,sdp:an.sdp},state:'active'});
+  llamIceListen(d.id,me,pc);llamFlush(pc);
+  LL.unsub.push(ref.onSnapshot(s=>{const x=s.data();if(x&&LL.id===d.id&&['ended','missed','declined'].includes(x.state))llamFin('Llamada finalizada')},()=>{}))
+ }catch(e){console.warn('Contestar:',e);llamFin('No se pudo conectar')}}
+function llamRechazar(){const d=LL.incoming;if(!d)return;LL.incoming=null;fbDb.collection('llamadas').doc(d.id).update({state:'declined'}).catch(()=>{});llamFin('')}
+function llamCuelga(){const id=LL.id;if(id)fbDb.collection('llamadas').doc(id).update({state:LL.t0?'ended':'missed'}).catch(()=>{});llamFin('Llamada finalizada')}
+function llamMute(){LL.muted=!LL.muted;(LL.stream?LL.stream.getAudioTracks():[]).forEach(k=>{k.enabled=!LL.muted});const b=$('llmu');if(b)b.classList.toggle('on',LL.muted)}
+function llamFin(msg){if(!LL.id&&!LL.incoming&&!$('llam'))return;
+ llamTono(0);clearTimeout(LL.ringTm);clearInterval(LL.tm);LL.unsub.forEach(u=>{try{u()}catch(e){}});LL.unsub=[];
+ try{LL.pc&&LL.pc.close()}catch(e){}try{LL.stream&&LL.stream.getTracks().forEach(k=>k.stop())}catch(e){}
+ const a=$('llau');if(a)a.srcObject=null;const nom=LL.peer?chatName(LL.peer):'';
+ Object.assign(LL,{pc:null,id:null,stream:null,t0:0,tm:null,peer:null,ringTm:null,incoming:null,ready:false,q:[],pend:[],muted:false});
+ if(msg){llamUI({n:nom||'Llamada',s:msg,b:''});LL.hTm=setTimeout(()=>{if(!LL.id&&!LL.incoming)llamUI(null)},1800)}else if(!LL.id&&!LL.incoming)llamUI(null)}
+function llamListen(){if(window._llOn||!fbDb||!llamOn())return;window._llOn=true;const me=chatMe();
+ fbDb.collection('llamadas').where('to','==',me).where('state','==','ringing').onSnapshot(sn=>sn.docChanges().forEach(ch=>{const d=ch.doc.data();
+  if(ch.type==='added'){if(Date.now()-(d.ts||0)>40000)return;if(LL.id||LL.incoming){fbDb.collection('llamadas').doc(d.id).update({state:'declined'}).catch(()=>{});return}llamEntrante(d)}
+  else if(ch.type==='removed'&&LL.incoming&&LL.incoming.id===d.id&&!LL.id){LL.incoming=null;llamFin('Llamada perdida')}}),e=>console.warn('Llamadas:',e))}
+async function llamProbarMic(){try{const s=await llamMic();s.getTracks().forEach(k=>k.stop());alert('Micrófono listo ✅')}catch(e){alert('No se pudo usar el micrófono. Permita el acceso en el navegador.')}}
+function llamCard(){const on=DB.cfg.llamOn!==0,v=k=>esc(DB.cfg[k]||'');
+ return `<h3 style="margin:0 0 4px">📞 Llamadas de voz</h3><p style="font-size:12.5px;color:var(--gris)">Desde el chat directo, el administrador y cada vendedor pueden llamarse. Las dos personas deben tener el panel abierto. No cuesta nada: la voz va directo entre los dos dispositivos.</p><div class="g"><div><label>Llamadas</label><select onchange="DB.cfg.llamOn=+this.value;save()"><option value="1" ${on?'selected':''}>Activadas</option><option value="0" ${on?'':'selected'}>Desactivadas</option></select></div></div><details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px">Opcional: servidor TURN (si alguna llamada no conecta)</summary><p style="font-size:12px;color:var(--gris)">Algunas redes de datos móviles bloquean la conexión directa. Un servidor TURN lo resuelve; lo ofrecen servicios externos. Déjelo vacío si no lo necesita.</p><div class="g"><div><label>Dirección (turn:… o turns:…)</label><input value="${v('turnUrl')}" onchange="DB.cfg.turnUrl=this.value.trim();save()"></div><div><label>Usuario</label><input value="${v('turnUser')}" onchange="DB.cfg.turnUser=this.value.trim();save()"></div><div><label>Contraseña</label><input type="password" value="${v('turnCred')}" onchange="DB.cfg.turnCred=this.value.trim();save()"></div></div></details><p><button class="btn" onclick="llamProbarMic()">🎙 Probar micrófono</button></p>`}
 // --- Estilos de voz (usan las voces en español que tenga cada dispositivo) ---
 const VOZ_PERF={dama:'Dama (la de siempre)',natf:'Natural femenina',natm:'Natural masculina',jarvis:'Jarvis · asistente formal',manual:'Elegir una voz de este dispositivo'},VOZ_A={dama:[.95,1.1],natf:[1,1],natm:[1,1],jarvis:[.9,.7],manual:[1,1]};
 const vozLista=()=>(window.speechSynthesis?speechSynthesis.getVoices():[]).filter(v=>/^es/i.test(v.lang));
@@ -1609,7 +1688,7 @@ function chatBack(){CH.sel=null;if(CH.unsub){CH.unsub();CH.unsub=null}const w=$(
 function chatConv(){const el=$('chm');if(!el)return;const c=chatVis().find(x=>x.id===CH.sel);
  if(!c){el.innerHTML='<div class="vacio" style="margin:auto">Elija una conversación</div>';return}
  const i0=$('chin'),prev=i0?i0.value:'',had=!!i0&&document.activeElement===i0,me=chatMe(),grp=c.type==='grp';
- el.innerHTML=`<div class="chh"><button class="btn s chb" onclick="chatBack()">‹</button><b>${esc(chatTitle(c))}</b>${grp?`<small>${esc((c.members||[]).map(chatName).join(', '))}</small>`:''}${grp&&(esAdmin()||c.by===me)?`<button class="btn s d" style="margin-left:auto" onclick="chatDelGrp('${c.id}')">🗑 Eliminar grupo</button>`:''}</div><div class="chms" id="chms">${CH.msgs.map(m=>`<div class="cm ${m.from===me?'me':''}">${grp&&m.from!==me?`<small>${esc(m.fn||'')}</small>`:''}<div class="cb">${esc(m.t).replace(/\n/g,'<br>')}</div><small>${new Date(m.ts).toLocaleTimeString('es-PA',{hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')||'<div class="vacio">Escriba el primer mensaje 👋</div>'}</div><div class="chin"><textarea id="chin" rows="1" placeholder="Escriba un mensaje…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend()}" onfocus="setTimeout(()=>{this.scrollIntoView({block:'end',behavior:'smooth'});const b=$('chms');if(b)b.scrollTop=b.scrollHeight},300)">${esc(prev)}</textarea><button class="btn p" onclick="chatSend()">Enviar</button></div>`;
+ el.innerHTML=`<div class="chh"><button class="btn s chb" onclick="chatBack()">‹</button><b>${esc(chatTitle(c))}</b>${!grp&&llamOn()?`<button class="btn s" style="margin-left:auto" onclick="llamar('${c.id}')">📞 Llamar</button>`:''}${grp?`<small>${esc((c.members||[]).map(chatName).join(', '))}</small>`:''}${grp&&(esAdmin()||c.by===me)?`<button class="btn s d" style="margin-left:auto" onclick="chatDelGrp('${c.id}')">🗑 Eliminar grupo</button>`:''}</div><div class="chms" id="chms">${CH.msgs.map(m=>`<div class="cm ${m.from===me?'me':''}">${grp&&m.from!==me?`<small>${esc(m.fn||'')}</small>`:''}<div class="cb">${esc(m.t).replace(/\n/g,'<br>')}</div><small>${new Date(m.ts).toLocaleTimeString('es-PA',{hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')||'<div class="vacio">Escriba el primer mensaje 👋</div>'}</div><div class="chin"><textarea id="chin" rows="1" placeholder="Escriba un mensaje…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend()}" onfocus="setTimeout(()=>{this.scrollIntoView({block:'end',behavior:'smooth'});const b=$('chms');if(b)b.scrollTop=b.scrollHeight},300)">${esc(prev)}</textarea><button class="btn p" onclick="chatSend()">Enviar</button></div>`;
  const b=$('chms');if(b)b.scrollTop=b.scrollHeight;if(had){const n=$('chin');if(n)n.focus()}}
 async function chatSend(){const i=$('chin');if(!i||!CH.sel||!fbDb)return;const t=(i.value||'').trim().slice(0,2000);if(!t)return;const c=chatVis().find(x=>x.id===CH.sel);if(!c)return;i.value='';
  const me=chatMe(),ts=Date.now(),id=uid(),base={id:c.id,type:c.type,members:c.members||[],lastTs:ts,lastFrom:me,lastTxt:((c.type==='grp'?chatName(me)+': ':'')+t).slice(0,60)};
@@ -1791,9 +1870,9 @@ function authLimpia(){if(!esAdmin())return;if(DB.cfg.admin||usuarios().some(u=>u
 function entrar(){const f=navOrd().find(x=>puede(x[0]));topUser();if(!f){authUI('<h2>Sin accesos</h2><p>Su usuario aún no tiene paneles asignados. Pídale al administrador que se los active.</p><button class="btn" onclick="salir()">Salir</button>');return}
  if(!window._syncOn){window._syncOn=1;iniciarSincronizacionNube()}
  if(!window._catSync){window._catSync=1;sincronizarCatalogoNube()}
- setTimeout(authLimpia,4000);authOff();nav();galListen();chatListen();setTimeout(cobroVoz,3500);ir(f[0])}
+ setTimeout(authLimpia,4000);authOff();nav();galListen();chatListen();llamListen();setTimeout(cobroVoz,3500);ir(f[0])}
 function authRefresh(){if(!SES)return;topUser();nav();if(!puede(vista))ir(vista)}
-function salir(){if(CH.unsub){CH.unsub();CH.unsub=null}firebase.auth().signOut().finally(()=>location.reload())}
+function salir(){try{if(LL.id)llamCuelga();else if(LL.incoming)llamRechazar()}catch(e){}if(CH.unsub){CH.unsub();CH.unsub=null}firebase.auth().signOut().finally(()=>location.reload())}
 // --- Administración de vendedores (solo admin, en Configuración) ---
 R.vend=function(){if(!esAdmin())return;$('v').innerHTML='<div class="card" id="vendCard">'+vendHTML()+'</div>'};
 function vendHTML(){const us=usuarios();return `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0">🧑‍💼 Vendedores y accesos</h3><button class="btn p s" onclick="vendForm()">+ Crear vendedor</button></div><p style="font-size:12.5px;color:var(--gris)">Cada vendedor entra con su correo y contraseña y solo ve los paneles que usted marque.</p>${us.length?`<div class="tw"><table><tr><th>Vendedor</th><th>Paneles</th><th></th></tr>${us.map(u=>`<tr><td>${esc(u.n)}</td><td>${(u.panels||[]).map(k=>{const p=V.find(x=>x[0]===k);return p?p[1]+' '+p[2]:''}).join(', ')||'<small>Ninguno</small>'}</td><td class="r"><button class="btn s" onclick="vendForm('${u.id}')">✏️</button> <button class="btn s d" onclick="vendDel('${u.id}')">🗑</button></td></tr>`).join('')}</table></div>`:'<div class="vacio">Aún no hay vendedores.</div>'}<div style="margin-top:12px"><button class="btn s" onclick="adminPin()">🔑 Cambiar mi contraseña</button></div>`}
