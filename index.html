@@ -534,12 +534,25 @@ function iniciarSincronizacionNube(){
 // ===== Sincronización de fotos/archivos del catálogo (subidos manualmente) =====
 function blobToBase64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(blob)})}
 function base64ToBlob(b64,type){const bin=atob(b64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:type||'application/octet-stream'})}
+async function _blobParaNube(o){
+ const lim=720000;
+ if(o.blob.size<=lim)return {blob:o.blob,type:o.type};
+ if(!(o.type||'').startsWith('image/'))throw {code:'archivo-grande'};
+ const bm=await createImageBitmap(o.blob);
+ for(const [mx,q] of [[1600,.82],[1280,.75],[1024,.7],[800,.65]]){
+  const k=Math.min(1,mx/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);
+  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0,c.width,c.height);
+  const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',q));
+  if(bl&&bl.size<=lim){bm.close&&bm.close();return {blob:bl,type:'image/jpeg'}}}
+ bm.close&&bm.close();throw {code:'archivo-grande'}}
+function _catFalla(o,e){console.warn('Catálogo no sincronizado',o&&o.name,e);if(window._catAv)return;window._catAv=1;setTimeout(()=>{window._catAv=0},8000);
+ alert('No se pudo sincronizar "'+((o&&o.name)||'archivo')+'" con los demás dispositivos'+(e&&e.code==='archivo-grande'?' porque es demasiado grande (máximo aprox. 700 KB; los PDF no se pueden reducir)':' ('+((e&&e.code)||'error')+')')+'. En este dispositivo sí quedó guardado.')}
 async function subirArchivoNube(o){
- if(!fbDb)return;
+ if(!fbDb)return false;
  try{
-  const data=await blobToBase64(o.blob);
-  await fbDb.collection('catalogo').doc(o.id).set({id:o.id,name:o.name,ext:o.ext,cat:o.cat,price:o.price,desc:o.desc,type:o.type,size:o.size,date:o.date,data,ts:Date.now()})
- }catch(e){}
+  const p=await _blobParaNube(o),data=await blobToBase64(p.blob);
+  await fbDb.collection('catalogo').doc(o.id).set({id:o.id,name:o.name,ext:p.blob===o.blob?o.ext:'jpg',cat:o.cat,price:o.price,desc:o.desc,type:p.type,size:p.blob.size,date:o.date,data,ts:Date.now()});return true
+ }catch(e){_catFalla(o,e);return false}
 }
 async function eliminarArchivoNube(id){if(!fbDb)return;try{await fbDb.collection('catalogo').doc(id).delete()}catch(e){}}
 async function _aplicarDocCatalogo(r){
@@ -558,6 +571,7 @@ async function sincronizarCatalogoNube(){
   const snap=await fbDb.collection('catalogo').get();
   const localIds=new Set(CL.map(f=>f.id));
   for(const doc of snap.docs){const r=doc.data();if(!localIds.has(r.id))await _aplicarDocCatalogo(r)}
+  if(esAdmin()){const enNube=new Set(snap.docs.map(d=>d.id));let k=0;for(const o of CL){if(k>=40)break;if(o.blob&&!enNube.has(o.id)){k++;if(!await subirArchivoNube(o))break}}}
   fbDb.collection('catalogo').onSnapshot(snap=>{
    snap.docChanges().forEach(ch=>{
     const r=ch.doc.data();
@@ -567,10 +581,11 @@ async function sincronizarCatalogoNube(){
      if(vista==='cat')dib();
      return
     }
+    if(ch.doc.metadata&&ch.doc.metadata.hasPendingWrites)return;
     _aplicarDocCatalogo(r)
    })
-  })
- }catch(e){}
+  },e=>console.warn('Catálogo en vivo:',e))
+ }catch(e){console.warn('Sincronizar catálogo:',e)}
 }
 
 const $$=n=>'$'+(+n).toFixed(2);const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
@@ -1257,7 +1272,7 @@ async function precargarCatalogoDeFabrica(){
   if(vista==='cat'){CL=await tx('readonly',s=>s.getAll());dib()}
  }catch(e){}
 }
-precargarCatalogoDeFabrica().then(sincronizarCatalogoNube);
+precargarCatalogoDeFabrica();
 // ===== Usuarios, PIN y permisos por panel =====
 V.push(['vend','🧑‍💼','Vendedores']);V.push(['gal','📷','Galería']);V.push(['chat','💬','Chat']);
 const PANELES=V.filter(v=>v[0]!=='config'&&v[0]!=='vend'),SK='tj_sess';
@@ -1668,6 +1683,7 @@ async function authReset(){const e=($('au_e')&&$('au_e').value||'').trim();if(!e
 function authLimpia(){if(!esAdmin())return;if(DB.cfg.admin||usuarios().some(u=>u.h||u.s)){delete DB.cfg.admin;usuarios().forEach(u=>{delete u.h;delete u.s});save()}}
 function entrar(){const f=navOrd().find(x=>puede(x[0]));topUser();if(!f){authUI('<h2>Sin accesos</h2><p>Su usuario aún no tiene paneles asignados. Pídale al administrador que se los active.</p><button class="btn" onclick="salir()">Salir</button>');return}
  if(!window._syncOn){window._syncOn=1;iniciarSincronizacionNube()}
+ if(!window._catSync){window._catSync=1;sincronizarCatalogoNube()}
  setTimeout(authLimpia,4000);authOff();nav();galListen();chatListen();setTimeout(cobroVoz,3500);ir(f[0])}
 function authRefresh(){if(!SES)return;topUser();nav();if(!puede(vista))ir(vista)}
 function salir(){if(CH.unsub){CH.unsub();CH.unsub=null}firebase.auth().signOut().finally(()=>location.reload())}
