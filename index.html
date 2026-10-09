@@ -526,7 +526,7 @@ body.vnd :is([onclick^="delFac("],[onclick^="anular("],[onclick^="delE("],[oncli
 .tpl-apple .ap-ft{margin-top:5mm;padding-top:4mm;flex-shrink:0}
 .tpl-apple .stamp-wrap{top:156mm;left:16mm;right:auto;transform:scale(.8);transform-origin:top left}
 .tdp{border:1px solid var(--linea);border-radius:16px;padding:12px 14px;margin:10px 0}.tdp.nw{border-color:var(--az);background:var(--az-bg)}.tdp ul{margin:8px 0;padding-left:18px;font-size:13px}.tdth{width:42px;height:42px;object-fit:cover;border-radius:10px;background:var(--soft)}
-html.shopmode body>*:not(#shop):not(#shopm):not(#ksnack){display:none!important}
+html.shopmode body>*:not(#shop):not(#shopm):not(#ksnack):not(#kzoom){display:none!important}
 html.shopmode,html.shopmode body{background:#FFF8F8}
 .tdtg{display:inline-flex;align-items:center;gap:2px;margin:1px 6px 1px 0;font-size:14px;cursor:pointer;white-space:nowrap}.tdtg input{width:auto;margin:0}
 #shop,#shopm,#ksnack{--p:#E0457B;--pc:#FFD9E4;--onpc:#3E001D;--bg:#FFF8F8;--sf:#fff;--sf2:#F7EBEF;--tx:#201A1B;--tx2:#74686C;--ol:#E8DCE0;--sh:0 1px 2px rgba(60,20,40,.08),0 6px 16px -8px rgba(60,20,40,.22);font-family:Roboto,'Google Sans','Segoe UI',system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;color:var(--tx)}
@@ -548,10 +548,10 @@ html.shopmode,html.shopmode body{background:#FFF8F8}
 #shop .kchip{flex:0 0 auto;height:34px;padding:0 14px;border-radius:10px;border:1px solid var(--ol);background:none;font-size:13.5px;font-weight:500;transition:background .15s,transform .1s}
 #shop .kchip.on{background:var(--pc);color:var(--onpc);border-color:transparent;font-weight:600}#shop .kchip:active{transform:scale(.95)}
 #shop .ktms{display:flex;gap:12px;overflow-x:auto;padding:14px 2px 4px;scrollbar-width:none;scroll-snap-type:x proximity}#shop .ktms::-webkit-scrollbar{display:none}#shop .ktms:empty{display:none}
-#shop .ktm{flex:0 0 auto;width:84px;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;scroll-snap-align:start}
+#shop .ktm{flex:0 0 auto;width:74px;border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;scroll-snap-align:start}
 #shop .kte{width:60px;height:60px;border-radius:20px;background:var(--sf2);display:grid;place-items:center;font-size:28px;transition:background .2s,transform .15s,box-shadow .2s}
 #shop .ktm.on .kte{background:var(--p);box-shadow:0 8px 18px -8px var(--p);transform:scale(1.06)}#shop .ktm:active .kte{transform:scale(.92)}
-#shop .ktm small{font-size:12px;font-weight:500;color:var(--tx2);max-width:84px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#shop .ktm.on small{color:var(--tx);font-weight:700}
+#shop .ktm small{font-size:12px;font-weight:500;color:var(--tx2);max-width:74px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#shop .ktm.on small{color:var(--tx);font-weight:700}
 #shop .kmeta{display:flex;align-items:center;justify-content:space-between;min-height:34px;padding:6px 2px;font-size:13px;color:var(--tx2)}
 #shop .kmeta button{border:0;background:none;color:var(--p);font-weight:700;font-size:13px;padding:6px 4px}
 #shop .kgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -609,6 +609,45 @@ html.shopmode,html.shopmode body{background:#FFF8F8}
 @keyframes kin{from{opacity:0;transform:translateY(10px)}}@keyframes kfd{from{opacity:0}}@keyframes kup{from{transform:translateY(40px);opacity:0}}@keyframes kshim{to{background-position:-200% 0}}@keyframes ksp{to{transform:rotate(360deg)}}@keyframes kpop{from{transform:scale(0)}}
 @media(min-width:700px){#shopm{align-items:center}#shopm .ksheet{border-radius:28px}}
 @media(prefers-reduced-motion:reduce){#shop *,#shopm,#shopm *,#ksnack *{animation:none!important;transition:none!important}}
+
+#shop .khd .kht{flex:1;min-width:0}
+#shop .khact{display:none;gap:10px}
+#shop .kha{position:relative;display:flex;align-items:center;gap:8px;height:44px;padding:0 18px;border-radius:22px;border:1px solid var(--ol);background:var(--sf);font-weight:600;font-size:14px;transition:background .15s}
+#shop .kha:hover{background:var(--sf2)}#shop .kha.on{color:var(--p)}#shop .kha.pri{background:var(--p);color:#fff;border-color:transparent}#shop .kha .kbdg{top:-6px;right:-4px;background:var(--tx);color:var(--bg)}
+#shop .kmain{display:block}#shop .kside{display:none}#shop .kcol{min-width:0}
+#shop .kimg img{object-fit:contain}
+#shop .kimg{aspect-ratio:4/5;background:var(--sf2)}
+#shop .kmeta{gap:10px}#shop .kmr{display:flex;align-items:center;gap:6px}
+#shop .ksort{height:34px;border-radius:10px;border:1px solid var(--ol);background:var(--sf);color:var(--tx);font:inherit;font-size:13px;padding:0 8px;max-width:150px}
+#shop .kchip{display:inline-flex;align-items:center;gap:6px}
+#shop .kside h3{margin:6px 0 10px;font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2)}
+#shop .ksd{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:12px;cursor:pointer;font-size:14.5px;transition:background .15s}
+#shop .ksd:hover{background:var(--sf2)}#shop .ksd.on{background:var(--pc);color:var(--onpc);font-weight:600}
+#shop .ksd input{width:18px;height:18px;margin:0;accent-color:var(--p);flex:0 0 auto}#shop .ksd span{flex:1;min-width:0}#shop .ksd i{font-style:normal;font-size:12px;color:var(--tx2);background:var(--sf2);border-radius:10px;padding:2px 8px}#shop .ksd.on i{background:rgba(255,255,255,.55);color:inherit}
+#shopm .kdet{display:block}#shopm .kdi img{cursor:zoom-in;background:var(--sf2)}
+#shopm .kzh{position:absolute;left:10px;bottom:10px;background:rgba(0,0,0,.55);color:#fff;font-size:12px;padding:5px 10px;border-radius:12px;pointer-events:none}
+#shopm .kdi img{max-height:56vh}
+#kzoom{position:fixed;inset:0;z-index:3300;background:rgba(0,0,0,.93);display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:kfd .2s both}
+#kzoom img{max-width:100vw;max-height:100vh;object-fit:contain}#kzoom button{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:20px}
+@media(min-width:900px){
+ #shop .kwrap{padding:0 32px 48px}
+ #shop .khd{padding-top:22px;padding-bottom:16px;gap:16px}#shop .khd img{height:54px}#shop .khd b{font-size:26px}
+ #shop .khact{display:flex}#shop .knav{display:none}
+ #shop .kmain{display:grid;grid-template-columns:250px minmax(0,1fr);gap:32px;align-items:start}
+ #shop .kside{display:block;position:sticky;top:16px;max-height:calc(100vh - 32px);overflow:auto;background:var(--sf);border-radius:24px;padding:16px 12px;box-shadow:var(--sh)}
+ #shop .kstk{top:0;margin:0;padding:0 0 10px}#shop .ksr{height:56px}#shop .kchips{display:none}
+ #shop .kgrid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:20px}
+ #shop .kc:hover{transform:translateY(-4px);box-shadow:0 14px 30px -14px rgba(60,20,40,.4)}
+ #shop .kimg{aspect-ratio:4/5}
+ #ksnack{bottom:28px}
+ #shopm{align-items:center}
+ #shopm .ksheet.wide{width:min(1020px,94vw);max-height:90vh;padding:24px;border-radius:28px}
+ #shopm .wide .kgrab{display:none}
+ #shopm .wide .kdet{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:start}
+ #shopm .wide .kdi{position:sticky;top:0}#shopm .wide .kdi img{max-height:74vh;width:100%}
+ #shopm .wide .kcat{margin-top:0}#shopm .wide h2{font-size:28px}#shopm .wide .kact2{position:static;padding-top:6px}
+}
+@media(min-width:1500px){#shop .kwrap{max-width:1500px}}
 </style></head><body>
 <div class="aurora" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
 <aside class="sb">
@@ -1964,7 +2003,7 @@ ${pubCard}
 function tdCopy(){const i=$('td_link');i.select();try{navigator.clipboard.writeText(i.value).then(()=>alert('Enlace copiado ✔'),()=>{document.execCommand('copy');alert('Enlace copiado ✔')})}catch(e){document.execCommand('copy');alert('Enlace copiado ✔')}}
 function tdWaLink(){window.open('https://wa.me/?text='+encodeURIComponent('Le comparto el catálogo virtual de '+(DB.cfg.nombre||'Tarjetería Jhon')+': '+tdLink()),'_blank')}
 function tdSendCli(){const c=DB.cli.find(x=>x.id==$('td_cli').value);if(!c)return alert('Elija un cliente con teléfono.');const u=tdWa(c.t,'Hola '+c.n+', le comparto el catálogo virtual de '+(DB.cfg.nombre||'Tarjetería Jhon')+'. Regístrese, vea los productos y precios y haga su pedido aquí: '+tdLink());if(!u)return alert('Ese cliente no tiene un teléfono válido.');window.open(u,'_blank')}
-async function tdImg(o){if(o.blob&&/^image\//.test(o.type||'')){const bm=await createImageBitmap(o.blob);let m=800,q=.74,d='';for(let i=0;i<5;i++){const k=Math.min(1,m/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0,c.width,c.height);d=c.toDataURL('image/jpeg',q);if(d.length<=320000)break;m=Math.round(m*.8);q-=.06}bm.close&&bm.close();if(d.length>700000)throw new Error('grande');return d}
+async function tdImg(o){if(o.blob&&/^image\//.test(o.type||'')){const bm=await createImageBitmap(o.blob);let m=1100,q=.82,d='';for(let i=0;i<5;i++){const k=Math.min(1,m/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0,c.width,c.height);d=c.toDataURL('image/jpeg',q);if(d.length<=600000)break;m=Math.round(m*.8);q-=.06}bm.close&&bm.close();if(d.length>700000)throw new Error('grande');return d}
  if(o.thumb)return o.thumb;throw new Error('sin imagen')}
 function tdTemaAplicar(on){const t=$('tdTema').value;[...document.querySelectorAll('.tdck:checked')].forEach(c=>{const k=document.querySelector('.tdtgk[data-id="'+c.value+'"][value="'+t+'"]');if(k)k.checked=!!on})}
 async function tdPub(){if(!esAdmin()||!fbDb)return;const ids=[...document.querySelectorAll('.tdck:checked')].map(x=>x.value);if(!ids.length)return alert('Marque los productos que desea publicar.');let ok=0;const st=()=>$('tdSt');
@@ -1978,7 +2017,7 @@ function tdFactura(id){const p=TD.peds.find(x=>x.id===id);if(!p)return;const l=p
 // ---------- Página pública para el cliente ----------
 function shopInit(){document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){}
- const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{tema:'',n:12,fav:{},favOnly:false});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){}
+ const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'new',n:24,fav:{},favOnly:false});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){}
  if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{SH.items=sn.docs.map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;if(SH.cli){$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
@@ -2009,29 +2048,33 @@ async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('s
  try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
  SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){}shopRender()}
 function shopCatalog(){const o=$('shop');if(!o)return;
- o.innerHTML=`<div class="kwrap"><header class="khd">${shopLogo()}<div><b>Catálogo virtual</b><small>Hola, ${esc((SH.cli.name||'').split(' ')[0])} 👋</small></div></header>
-<div class="kstk"><label class="ksr">${kico(KI.search,22)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" oninput="shopQ(this.value)" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" onclick="shopQ('');$('sh_q').value='';$('sh_q').focus()" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><div class="kchips" id="sh_ch"></div></div>
-<section class="ktms" id="k_tm"></section><div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g"></div><div id="k_more"></div></div><nav class="knav" id="k_nav"></nav>`;
- shopFilters();shopCb()}
-function shopFilters(){shopTemas();shopChips();shopGrid(1)}
-function shopTemas(){const e=$('k_tm');if(!e)return;const c={};SH.items.forEach(i=>temaOf(i).forEach(t=>c[t]=(c[t]||0)+1));
- SH.tms=[...TEMAS.map(t=>t.id).filter(t=>c[t]),...Object.keys(c).filter(t=>!TEMAS.some(x=>x.id===t))];
- e.innerHTML=SH.tms.length?SH.tms.map((t,k)=>{const m=temaMeta(t);return `<button class="ktm ${SH.tema===t?'on':''}" onclick="shopTema(${k})" aria-pressed="${SH.tema===t}"><span class="kte">${m.e}</span><small>${esc(m.n)}</small></button>`}).join(''):''}
-function shopChips(){const e=$('sh_ch');if(!e)return;SH.cats=[...new Set(SH.items.map(i=>i.cat).filter(Boolean))].sort();
- e.innerHTML=SH.cats.length>1?['',...SH.cats].map((c,k)=>`<button class="kchip ${SH.cat===c?'on':''}" onclick="shopCat(${k-1})">${SH.cat===c?'✓ ':''}${c?esc(c):'Todos'}</button>`).join(''):''}
-function shopTema(k){const t=SH.tms[k];SH.tema=SH.tema===t?'':t;shopTemas();shopGrid(1)}
-function shopTemaId(t){SH.tema=t;SH.favOnly=false;SH.q='';SH.cat='';if($('sh_q'))$('sh_q').value='';shopFilters();shopNav();const s=$('shop');if(s)s.scrollTo({top:0,behavior:'smooth'})}
-function shopCat(k){SH.cat=k<0?'':SH.cats[k];shopChips();shopGrid(1)}
+ o.innerHTML=`<div class="kwrap"><header class="khd">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>Hola, ${esc((SH.cli.name||'').split(' ')[0])} 👋</small></div><div class="khact" id="k_ha"></div></header>
+<div class="kmain"><aside class="kside" id="k_side"></aside><div class="kcol"><div class="kstk"><label class="ksr">${kico(KI.search,22)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" oninput="shopQ(this.value)" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" onclick="shopQ('');$('sh_q').value='';$('sh_q').focus()" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><div class="kchips" id="sh_ch"></div></div>
+<div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g"></div><div id="k_more"></div></div></div></div><nav class="knav" id="k_nav"></nav>`;
+ shopFilters();shopNav()}
+const catKey=c=>{const n=shopN(c),t=TEMAS.find(x=>x.re.test(n));return t?t.id:'c:'+n};
+const ik=i=>i._k||(i._k=new Set([...temaOf(i),...(i.cat?[catKey(i.cat)]:[])]));
+function shopOpts(){const c=new Map(),nm={};SH.items.forEach(i=>ik(i).forEach(k=>{c.set(k,(c.get(k)||0)+1);if(k.startsWith('c:')&&!nm[k])nm[k]=i.cat}));
+ const meta=k=>k.startsWith('c:')?{id:k,n:nm[k],e:'🏷️'}:temaMeta(k),ids=[...c.keys()],t=TEMAS.map(x=>x.id).filter(k=>c.has(k)),o=ids.filter(k=>!TEMAS.some(x=>x.id===k)).sort((a,b)=>String(meta(a).n).localeCompare(String(meta(b).n)));
+ SH.opts=[...t,...o].map(k=>({...meta(k),c:c.get(k)}));SH.sel=SH.sel.filter(k=>c.has(k))}
+function shopFilters(){shopOpts();shopChips();shopSide();shopGrid(1)}
+function shopChips(){const e=$('sh_ch');if(!e)return;
+ e.innerHTML=SH.opts.length?`<button class="kchip ${SH.sel.length?'':'on'}" onclick="shopSel(-1)">Todos</button>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<button class="kchip ${on?'on':''}" onclick="shopSel(${k})" aria-pressed="${on}">${on?'✓':o.e} ${esc(o.n)}</button>`}).join(''):''}
+function shopSide(){const e=$('k_side');if(!e)return;
+ e.innerHTML=SH.opts.length?`<h3>Filtrar por</h3><label class="ksd ${SH.sel.length?'':'on'}"><input type="checkbox" ${SH.sel.length?'':'checked'} onchange="shopSel(-1)"><span>✨ Todos</span><i>${SH.items.length}</i></label>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<label class="ksd ${on?'on':''}"><input type="checkbox" ${on?'checked':''} onchange="shopSel(${k})"><span>${o.e} ${esc(o.n)}</span><i>${o.c}</i></label>`}).join(''):''}
+function shopSel(k){if(k<0)SH.sel=[];else{const id=SH.opts[k].id,p=SH.sel.indexOf(id);if(p<0)SH.sel.push(id);else SH.sel.splice(p,1)}shopChips();shopSide();shopGrid(1)}
+function shopTemaId(t){SH.sel=[t];SH.favOnly=false;SH.q='';if($('sh_q'))$('sh_q').value='';shopFilters();shopNav();const s=$('shop');if(s)s.scrollTo({top:0,behavior:'smooth'})}
 function shopQ(v){SH.q=v;const x=$('k_x');if(x)x.hidden=!v;clearTimeout(SH.qt);SH.qt=setTimeout(()=>shopGrid(1),130)}
-function shopClear(){SH.q='';SH.cat='';SH.tema='';const q=$('sh_q');if(q)q.value='';const x=$('k_x');if(x)x.hidden=true;shopFilters()}
-function shopList(){const q=shopN(SH.q).trim();return SH.items.filter(i=>(!SH.cat||i.cat===SH.cat)&&(!SH.tema||temaOf(i).includes(SH.tema))&&(!SH.favOnly||SH.fav[i.id])&&(!q||shopN((i.name||'')+' '+(i.cat||'')+' '+(i.desc||'')+' '+temaOf(i).map(t=>temaMeta(t).n).join(' ')).includes(q)))}
+function shopClear(){SH.q='';SH.sel=[];const q=$('sh_q');if(q)q.value='';const x=$('k_x');if(x)x.hidden=true;shopFilters()}
+function shopList(){const q=shopN(SH.q).trim();let L=SH.items.filter(i=>(!SH.sel.length||SH.sel.some(k=>ik(i).has(k)))&&(!SH.favOnly||SH.fav[i.id])&&(!q||shopN((i.name||'')+' '+(i.cat||'')+' '+(i.desc||'')+' '+[...ik(i)].map(k=>k.startsWith('c:')?'':temaMeta(k).n).join(' ')).includes(q)));
+ if(SH.sort==='pl')L=[...L].sort((a,b)=>(+a.price||1e9)-(+b.price||1e9));else if(SH.sort==='ph')L=[...L].sort((a,b)=>(+b.price||0)-(+a.price||0));else if(SH.sort==='az')L=[...L].sort((a,b)=>String(a.name).localeCompare(String(b.name),'es',{numeric:true}));return L}
 const shopCard=i=>`<article class="kc"><div class="kimg" onclick="shopDet('${i.id}')"><img loading="lazy" decoding="async" src="${i.img}" alt="${esc(i.name)}"><button class="kfav ${SH.fav[i.id]?'on':''}" data-f="${i.id}" onclick="event.stopPropagation();shopFav('${i.id}')" aria-label="Favorito">${kico(SH.fav[i.id]?KI.heart:KI.heartO,20)}</button></div><div class="kbd">${i.cat?`<span class="kcat">${esc(i.cat)}</span>`:''}<b>${esc(i.name)}</b><div class="kfoot"><span class="kp ${+i.price>0?'':'q'}">${+i.price>0?tdMoney(i.price):'Consultar precio'}</span><span class="kact" data-a="${i.id}">${shopBtn(i.id)}</span></div></div></article>`;
-function shopGrid(reset){const g=$('sh_g');if(!g)return;if(reset)SH.n=12;if(SH.io){SH.io.disconnect();SH.io=null}const mo=$('k_more'),mt=$('k_meta');mo.innerHTML='';
- if(!SH.ok){g.innerHTML=Array(6).fill('<div class="kc ksk"><div class="kimg"></div><div class="kbd"><i></i><i style="width:60%"></i></div></div>').join('');mt.innerHTML='';return}
- const L=shopList(),f=SH.q||SH.cat||SH.tema;
- mt.innerHTML=`<span>${L.length} diseño${L.length==1?'':'s'}${SH.favOnly?' favoritos':''}${SH.tema?' · '+esc(temaMeta(SH.tema).n):''}</span>${f?'<button onclick="shopClear()">Limpiar filtros</button>':''}`;
+function shopGrid(reset){const g=$('sh_g');if(!g)return;if(reset)SH.n=24;if(SH.io){SH.io.disconnect();SH.io=null}const mo=$('k_more'),mt=$('k_meta');mo.innerHTML='';
+ if(!SH.ok){g.innerHTML=Array(8).fill('<div class="kc ksk"><div class="kimg"></div><div class="kbd"><i></i><i style="width:60%"></i></div></div>').join('');mt.innerHTML='';return}
+ const L=shopList(),f=SH.q||SH.sel.length,nm=SH.sel.map(k=>(SH.opts.find(o=>o.id===k)||{}).n).filter(Boolean).join(', ');
+ mt.innerHTML=`<span class="kcnt">${L.length} diseño${L.length==1?'':'s'}${SH.favOnly?' favoritos':''}${nm?' · '+esc(nm):''}</span><span class="kmr">${f?'<button onclick="shopClear()">Limpiar</button>':''}<select class="ksort" onchange="SH.sort=this.value;shopGrid(1)" aria-label="Ordenar"><option value="new" ${SH.sort==='new'?'selected':''}>Más recientes</option><option value="az" ${SH.sort==='az'?'selected':''}>Nombre A-Z</option><option value="pl" ${SH.sort==='pl'?'selected':''}>Precio: menor</option><option value="ph" ${SH.sort==='ph'?'selected':''}>Precio: mayor</option></select></span>`;
  g.innerHTML=L.length?L.slice(0,SH.n).map(shopCard).join(''):`<div class="kempty"><span class="e">${SH.favOnly&&!f?'♡':'🔍'}</span>${!SH.items.length?'Pronto tendremos productos disponibles.':SH.favOnly&&!f?'Aún no tienes favoritos.<br>Toca el corazón en los diseños que te gusten.':'No encontramos diseños con esos filtros.'}${f?'<br><button class="sbtn" style="width:auto" onclick="shopClear()">Ver todos</button>':''}</div>`;
- if(L.length>SH.n){mo.innerHTML='<div class="kspin"></div>';SH.io=new IntersectionObserver(es=>{if(!es[0].isIntersecting)return;const l=shopList(),a=SH.n;SH.n+=12;g.insertAdjacentHTML('beforeend',l.slice(a,SH.n).map(shopCard).join(''));if(l.length>SH.n){SH.io.unobserve(mo);SH.io.observe(mo)}else{SH.io.disconnect();mo.innerHTML=''}},{root:$('shop'),rootMargin:'900px'});SH.io.observe(mo)}}
+ if(L.length>SH.n){mo.innerHTML='<div class="kspin"></div>';SH.io=new IntersectionObserver(es=>{if(!es[0].isIntersecting)return;const l=shopList(),a=SH.n;SH.n+=24;g.insertAdjacentHTML('beforeend',l.slice(a,SH.n).map(shopCard).join(''));if(l.length>SH.n){SH.io.unobserve(mo);SH.io.observe(mo)}else{SH.io.disconnect();mo.innerHTML=''}},{root:$('shop'),rootMargin:'900px'});SH.io.observe(mo)}}
 const shopBtn=id=>SH.cart[id]?`<div class="kst"><button onclick="shopQty('${id}',-1)" aria-label="Quitar uno">−</button><span>${SH.cart[id]}</span><button onclick="shopQty('${id}',1)" aria-label="Agregar uno">+</button></div>`:`<button class="kadd" onclick="shopQty('${id}',1)" aria-label="Agregar al carrito">${kico(KI.plus)}</button>`;
 function shopAct(id){document.querySelectorAll('[data-a="'+id+'"]').forEach(e=>e.innerHTML=shopBtn(id))}
 function shopFav(id){if(SH.fav[id])delete SH.fav[id];else SH.fav[id]=1;try{localStorage.setItem('tj_shop_fav',JSON.stringify(SH.fav))}catch(e){}
@@ -2040,20 +2083,23 @@ function shopFav(id){if(SH.fav[id])delete SH.fav[id];else SH.fav[id]=1;try{local
  if(SH.favOnly&&!SH.fav[id]&&$('shopm').style.display!=='flex')shopGrid(1);if($('shopm').dataset.k==='det'&&$('shopm').dataset.id===id)shopDet(id)}
 function shopTab(k){const s=$('shop');if(k==='cart')return shopCart();SH.favOnly=k==='fav';shopNav();shopGrid(1);if(s)s.scrollTo({top:0,behavior:'smooth'})}
 const shopLines=()=>Object.keys(SH.cart).map(id=>{const i=SH.items.find(x=>x.id===id);return i?{id,n:i.name,p:+i.price||0,q:SH.cart[id],img:i.img}:null}).filter(Boolean);
-function shopNav(){const e=$('k_nav');if(!e)return;const n=shopLines().reduce((s,l)=>s+l.q,0);
- e.innerHTML=[['home','Inicio',KI.home,0,!SH.favOnly],['fav','Favoritos',SH.favOnly?KI.heart:KI.heartO,0,SH.favOnly],['cart','Carrito',KI.cart,n,0]].map(([k,l,d,b,on])=>`<button class="${on?'on':''}" onclick="shopTab('${k}')"><span class="kpill">${kico(d)}${b?`<i class="kbdg">${b}</i>`:''}</span><small>${l}</small></button>`).join('')}
+function shopNav(){const n=shopLines().reduce((s,l)=>s+l.q,0),e=$('k_nav'),h=$('k_ha');
+ if(e)e.innerHTML=[['home','Inicio',KI.home,0,!SH.favOnly],['fav','Favoritos',SH.favOnly?KI.heart:KI.heartO,0,SH.favOnly],['cart','Carrito',KI.cart,n,0]].map(([k,l,d,b,on])=>`<button class="${on?'on':''}" onclick="shopTab('${k}')"><span class="kpill">${kico(d)}${b?`<i class="kbdg">${b}</i>`:''}</span><small>${l}</small></button>`).join('');
+ if(h)h.innerHTML=`<button class="kha ${SH.favOnly?'on':''}" onclick="shopTab('${SH.favOnly?'home':'fav'}')">${kico(SH.favOnly?KI.heart:KI.heartO,20)}<span>Favoritos</span></button><button class="kha pri" onclick="shopTab('cart')">${kico(KI.cart,20)}<span>Carrito</span>${n?`<i class="kbdg">${n}</i>`:''}</button>`}
 const shopCb=shopNav;
 function shopQty(id,d){const was=SH.cart[id]||0,n=Math.max(0,was+d);if(n)SH.cart[id]=n;else delete SH.cart[id];shopSaveCart();shopAct(id);shopNav();
  if(d>0){try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}if(!was)shopToast('Agregado al carrito','Ver',shopCart)}
  const m=$('shopm');if(m.style.display==='flex'){if(m.dataset.k==='cart')shopCart();else if(m.dataset.k==='det')shopDet(m.dataset.id)}}
 function shopToast(t,lbl,fn){const s=$('ksnack');if(!s)return;clearTimeout(SH.tt);SH.tf=fn||null;s.innerHTML='<div class="ksn"><span>'+t+'</span>'+(lbl?'<button onclick="shopToastGo()">'+lbl+'</button>':'')+'</div>';SH.tt=setTimeout(()=>{s.innerHTML=''},2400)}
 function shopToastGo(){const f=SH.tf;$('ksnack').innerHTML='';f&&f()}
-function shopM(h,k,id){const m=$('shopm'),re=m.style.display==='flex',old=re&&m.firstChild?m.firstChild.scrollTop:0;m.innerHTML='<div class="ksheet'+(re?' re':'')+'"><div class="kgrab"></div>'+h+'</div>';m.dataset.k=k||'';m.dataset.id=id||'';m.style.display='flex';if(old)m.firstChild.scrollTop=old;
+function shopM(h,k,id,w){const m=$('shopm'),re=m.style.display==='flex',old=re&&m.firstChild?m.firstChild.scrollTop:0;m.innerHTML='<div class="ksheet'+(re?' re':'')+(w?' wide':'')+'"><div class="kgrab"></div>'+h+'</div>';m.dataset.k=k||'';m.dataset.id=id||'';m.style.display='flex';if(old)m.firstChild.scrollTop=old;
  if(!SH.hp){SH.hp=1;try{history.pushState({shop:1},'')}catch(e){}}}
 function shopClose(pop){const m=$('shopm');m.style.display='none';m.innerHTML='';m.dataset.k='';if(SH.hp){SH.hp=0;if(!pop)try{history.back()}catch(e){}}}
 addEventListener('popstate',()=>{if(SH.hp)shopClose(1)});
-function shopDet(id){const i=SH.items.find(x=>x.id===id);if(!i)return;const tg=temaOf(i).map(t=>{const m=temaMeta(t);return TEMAS.some(x=>x.id===t)?`<button onclick="shopClose();shopTemaId('${t}')">${m.e} ${esc(m.n)}</button>`:`<span>${m.e} ${esc(m.n)}</span>`}).join('');
- shopM(`<div class="kdi"><img src="${i.img}" alt="${esc(i.name)}"><button class="kfav ${SH.fav[id]?'on':''}" data-f="${id}" onclick="shopFav('${id}')" aria-label="Favorito">${kico(SH.fav[id]?KI.heart:KI.heartO,22)}</button></div>${i.cat?`<div class="kcat">${esc(i.cat)}</div>`:''}<h2>${esc(i.name)}</h2><div class="kdp">${tdMoney(i.price)}</div>${tg?`<div class="ktg">${tg}</div>`:''}${i.desc?`<p class="kds">${esc(i.desc).replace(/\n/g,'<br>')}</p>`:''}<div class="kact2">${SH.cart[id]?`<div class="kst lg"><button onclick="shopQty('${id}',-1)" aria-label="Quitar uno">−</button><span>${SH.cart[id]} en el carrito</span><button onclick="shopQty('${id}',1)" aria-label="Agregar uno">+</button></div><button class="sbtn" onclick="shopCart()">Ver carrito</button>`:`<button class="sbtn" onclick="shopQty('${id}',1)">Agregar al carrito</button>`}<button class="sbtn g" onclick="shopClose()">Seguir viendo</button></div>`,'det',id)}
+function shopZoom(id){const i=SH.items.find(x=>x.id===id);if(!i)return;let z=$('kzoom');if(z)z.remove();z=document.createElement('div');z.id='kzoom';z.onclick=()=>z.remove();z.innerHTML='<img src="'+i.img+'" alt=""><button aria-label="Cerrar">✕</button>';document.body.appendChild(z)}
+addEventListener('keydown',e=>{if(e.key!=='Escape')return;const z=$('kzoom');if(z)z.remove();else if(SH.hp)shopClose()});
+function shopDet(id){const i=SH.items.find(x=>x.id===id);if(!i)return;const tg=[...ik(i)].map(k=>SH.opts.find(o=>o.id===k)).filter(Boolean).map(o=>`<button data-k="${esc(o.id)}" onclick="shopClose();shopTemaId(this.dataset.k)">${o.e} ${esc(o.n)}</button>`).join('');
+ shopM(`<div class="kdet"><div class="kdi"><img src="${i.img}" alt="${esc(i.name)}" onclick="shopZoom('${id}')"><button class="kfav ${SH.fav[id]?'on':''}" data-f="${id}" onclick="shopFav('${id}')" aria-label="Favorito">${kico(SH.fav[id]?KI.heart:KI.heartO,22)}</button><span class="kzh">Toca para ampliar</span></div><div class="kdx">${i.cat?`<div class="kcat">${esc(i.cat)}</div>`:''}<h2>${esc(i.name)}</h2><div class="kdp">${tdMoney(i.price)}</div>${tg?`<div class="ktg">${tg}</div>`:''}${i.desc?`<p class="kds">${esc(i.desc).replace(/\n/g,'<br>')}</p>`:''}<div class="kact2">${SH.cart[id]?`<div class="kst lg"><button onclick="shopQty('${id}',-1)" aria-label="Quitar uno">−</button><span>${SH.cart[id]} en el carrito</span><button onclick="shopQty('${id}',1)" aria-label="Agregar uno">+</button></div><button class="sbtn" onclick="shopCart()">Ver carrito</button>`:`<button class="sbtn" onclick="shopQty('${id}',1)">Agregar al carrito</button>`}<button class="sbtn g" onclick="shopClose()">Seguir viendo</button></div></div></div>`,'det',id,1)}
 function shopCart(){const L=shopLines();if(!L.length)return shopM('<h2 style="margin:6px 0 12px">Su carrito está vacío</h2><button class="sbtn g" onclick="shopClose()">Seguir viendo</button>','cart');
  const t=L.reduce((s,l)=>s+l.q*l.p,0),nt=($('sh_nt')||{}).value||'';
  shopM(`<h2 style="margin:6px 0">🛒 Su pedido</h2>${L.map(l=>`<div class="kln"><img src="${l.img}" alt=""><div><b>${esc(l.n)}</b><small>${tdMoney(l.p)} c/u</small></div><div class="kst"><button onclick="shopQty('${l.id}',-1)" aria-label="Quitar uno">−</button><span>${l.q}</span><button onclick="shopQty('${l.id}',1)" aria-label="Agregar uno">+</button></div></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:19px;font-weight:800;margin:14px 0 4px"><span>Total</span><span>${t>0?$$(t):'Consultar'}</span></div><small style="color:var(--tx2)">Precios sin ITBMS. Le confirmaremos disponibilidad y forma de pago.</small><textarea id="sh_nt" rows="2" placeholder="Notas para el pedido (opcional)">${esc(nt)}</textarea><div class="serr" id="sh_m2" style="margin:6px 0"></div><div class="kact2"><button class="sbtn" id="sh_sb" onclick="shopSend()">Enviar pedido</button><button class="sbtn g" onclick="shopClose()">Seguir viendo</button></div>`,'cart')}
