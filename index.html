@@ -828,7 +828,8 @@ async function subirArchivoNube(o){
  if(!fbDb)return false;
  try{
   const p=await _blobParaNube(o),data=await blobToBase64(p.blob);
-  await fbDb.collection('catalogo').doc(o.id).set({id:o.id,name:o.name,ext:p.blob===o.blob?o.ext:'jpg',cat:o.cat,price:o.price,desc:o.desc,type:p.type,size:p.blob.size,date:o.date,data,ts:Date.now()});return true
+  await fbDb.collection('catalogo').doc(o.id).set({id:o.id,name:o.name,ext:p.blob===o.blob?o.ext:'jpg',cat:o.cat,price:o.price,desc:o.desc,type:p.type,size:p.blob.size,date:o.date,data,ts:Date.now()});
+  await syncTiendaCat(o);return true
  }catch(e){_catFalla(o,e);return false}
 }
 async function eliminarArchivoNube(id){if(!fbDb)return;try{await fbDb.collection('catalogo').doc(id).delete()}catch(e){}}
@@ -839,6 +840,7 @@ async function _aplicarDocCatalogo(r){
   o.thumb=await mkThumb(o,1200);
   await guardar(o);
   CL=CL.filter(f=>f.id!==o.id);CL.push(o);
+  await syncTiendaCat(o);
   if(vista==='cat')dib()
  }catch(e){}
 }
@@ -1412,7 +1414,17 @@ function dib(){const cats=[...new Set([...CATS,...CL.map(f=>f.cat)])].filter(Boo
 const CAT_RX=[['Quinceaños',/quince|\bxv\b|15 ?anos/],['Revelación de sexo',/revelacion|gender|sexo|nino o nina|team ?(boy|girl)/],['Baby shower',/baby|bebe|nacimiento|shower|recien nacid/],['Boda',/boda|matrimonio|novios|wedding|save the date|nupcial/],['Graduación',/gradua|egres/],['Aniversario',/aniversario|anniversary/],['Pésame',/pesame|condolenc|descanse|luto|q\.?e\.?p\.?d|funeb|duelo/],['Agradecimiento',/gracias|agradec|thank/],['Felicidades',/felicid|enhorabuena|congrat|logro/],['Amor',/\bamor\b|enamor|valentin|te quiero|te amo|love|amistad/],['Cumpleaños',/cumple|birthday|bday/],['Día de la Madre',/dia de la madre|\bmama\b|madre/],['Día del Padre',/dia del padre|\bpapa\b|padre/],['Navidad',/navid|christmas|ano nuevo/]];
 const catDetect=f=>{const t=shopN((f.name||'')+' '+(f.desc||'')+' '+(f.cat||''));const r=CAT_RX.find(x=>x[1].test(t));return r?r[0]:null};
 const catOpts=c=>{const L=[...CATS];if(c&&!L.includes(c))L.push(c);return '<option value="">Sin categoría</option>'+L.map(k=>`<option value="${esc(k)}" ${k===c?'selected':''}>${esc(k)}</option>`).join('')};
-async function syncTiendaCat(f){if(!fbDb||!f||!f.id)return;try{await fbDb.collection('tienda_items').doc(f.id).update({cat:f.cat||''})}catch(e){if((e&&e.code)!=='not-found')console.warn('Categoría de tienda:',e)}}
+async function syncTiendaCat(f){
+ if(!fbDb||!f||!f.id||!esAdmin())return false;
+ const ref=fbDb.collection('tienda_items').doc(f.id),cat=String(f.cat||'').trim();
+ try{
+  const cur=await ref.get();
+  if(!cur.exists)return false;
+  await ref.set({cat},{merge:true});
+  const item=TD.items.find(x=>x.id===f.id);if(item)item.cat=cat;
+  return true
+ }catch(e){console.warn('Categoría de tienda:',e);return false}
+}
 async function catSet(id,v){const f=gf(id);if(!f)return;f.cat=v||'General';try{await tx('readwrite',s=>s.put(f))}catch(e){}dib();subirArchivoNube(f);await syncTiendaCat(f)}
 function catAutoPrev(){const L=CL.filter(f=>!CATS.includes(f.cat));if(!L.length)return alert('Todas las tarjetas ya tienen una de las categorías de la lista.');
  const m=L.map(f=>[f,catDetect(f)]),ok=m.filter(x=>x[1]),no=m.length-ok.length,cnt={};ok.forEach(x=>cnt[x[1]]=(cnt[x[1]]||0)+1);window._catAuto=ok.map(x=>[x[0].id,x[1]]);
