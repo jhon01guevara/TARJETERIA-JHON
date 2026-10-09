@@ -582,7 +582,7 @@ html.shopmode,html.shopmode body{background:#FFF8F8}
 #shop .kfav{position:absolute;top:8px;right:8px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.88);color:#444;display:grid;place-items:center;box-shadow:0 2px 8px rgba(0,0,0,.18);transition:transform .15s}
 #shop .kfav.on,#shopm .kfav.on{color:var(--p)}#shop .kfav:active{transform:scale(.85)}
 #shop .kbd{padding:10px 12px 12px;display:flex;flex-direction:column;gap:2px;min-width:0}
-#shop .kcat{font-size:11px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#shop .kcat{display:inline-flex;align-items:center;align-self:flex-start;max-width:100%;padding:3px 8px;border-radius:980px;background:var(--pc);color:var(--p);font-size:10.5px;font-weight:700;line-height:1.2;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #shop .kbd b{font-size:14.5px;font-weight:600;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #shop .kfoot{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px;min-height:40px}
 #shop .kp{font-size:15px;font-weight:700;min-width:0}#shop .kp.q{font-size:12.5px;font-weight:500;color:var(--tx2)}
@@ -1412,11 +1412,12 @@ function dib(){const cats=[...new Set([...CATS,...CL.map(f=>f.cat)])].filter(Boo
 const CAT_RX=[['Quinceaños',/quince|\bxv\b|15 ?anos/],['Revelación de sexo',/revelacion|gender|sexo|nino o nina|team ?(boy|girl)/],['Baby shower',/baby|bebe|nacimiento|shower|recien nacid/],['Boda',/boda|matrimonio|novios|wedding|save the date|nupcial/],['Graduación',/gradua|egres/],['Aniversario',/aniversario|anniversary/],['Pésame',/pesame|condolenc|descanse|luto|q\.?e\.?p\.?d|funeb|duelo/],['Agradecimiento',/gracias|agradec|thank/],['Felicidades',/felicid|enhorabuena|congrat|logro/],['Amor',/\bamor\b|enamor|valentin|te quiero|te amo|love|amistad/],['Cumpleaños',/cumple|birthday|bday/],['Día de la Madre',/dia de la madre|\bmama\b|madre/],['Día del Padre',/dia del padre|\bpapa\b|padre/],['Navidad',/navid|christmas|ano nuevo/]];
 const catDetect=f=>{const t=shopN((f.name||'')+' '+(f.desc||'')+' '+(f.cat||''));const r=CAT_RX.find(x=>x[1].test(t));return r?r[0]:null};
 const catOpts=c=>{const L=[...CATS];if(c&&!L.includes(c))L.push(c);return '<option value="">Sin categoría</option>'+L.map(k=>`<option value="${esc(k)}" ${k===c?'selected':''}>${esc(k)}</option>`).join('')};
-async function catSet(id,v){const f=gf(id);if(!f)return;f.cat=v||'General';try{await tx('readwrite',s=>s.put(f))}catch(e){}dib();subirArchivoNube(f)}
+async function syncTiendaCat(f){if(!fbDb||!f||!f.id)return;try{await fbDb.collection('tienda_items').doc(f.id).update({cat:f.cat||''})}catch(e){if((e&&e.code)!=='not-found')console.warn('Categoría de tienda:',e)}}
+async function catSet(id,v){const f=gf(id);if(!f)return;f.cat=v||'General';try{await tx('readwrite',s=>s.put(f))}catch(e){}dib();subirArchivoNube(f);await syncTiendaCat(f)}
 function catAutoPrev(){const L=CL.filter(f=>!CATS.includes(f.cat));if(!L.length)return alert('Todas las tarjetas ya tienen una de las categorías de la lista.');
  const m=L.map(f=>[f,catDetect(f)]),ok=m.filter(x=>x[1]),no=m.length-ok.length,cnt={};ok.forEach(x=>cnt[x[1]]=(cnt[x[1]]||0)+1);window._catAuto=ok.map(x=>[x[0].id,x[1]]);
  $('mb').innerHTML=`<h3 style="margin-top:0">🏷 Organizar por categoría</h3><p style="font-size:13px;color:var(--gris)">Se revisó el nombre y la descripción de ${L.length} tarjeta(s) que no tienen una categoría de la lista.</p>${ok.length?`<ul style="font-size:14px;line-height:1.7">${Object.keys(cnt).map(k=>`<li><b>${esc(k)}</b>: ${cnt[k]}</li>`).join('')}</ul>`:'<div class="vacio">No se reconoció ninguna por su nombre.</div>'}${no?`<p style="font-size:13px">⚠ ${no} tarjeta(s) no se pudieron reconocer por su nombre y quedarán como están. Asígneles la categoría con el selector de cada tarjeta.</p>`:''}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="cerrar()">Cancelar</button>${ok.length?`<button class="btn p" onclick="catAutoDo()">✔ Aplicar a ${ok.length}</button>`:''}</div>`;$('md').classList.add('on')}
-async function catAutoDo(){const a=window._catAuto||[];cerrar();const fs=[];for(const [id,c] of a){const f=gf(id);if(!f)continue;f.cat=c;try{await tx('readwrite',s=>s.put(f))}catch(e){}fs.push(f)}dib();alert('✔ Categoría asignada a '+fs.length+' tarjeta(s).');(async()=>{for(const f of fs)await subirArchivoNube(f)})()}
+async function catAutoDo(){const a=window._catAuto||[];cerrar();const fs=[];for(const [id,c] of a){const f=gf(id);if(!f)continue;f.cat=c;try{await tx('readwrite',s=>s.put(f))}catch(e){}fs.push(f)}dib();alert('✔ Categoría asignada a '+fs.length+' tarjeta(s).');(async()=>{for(const f of fs){await subirArchivoNube(f);await syncTiendaCat(f)}})()}
 async function ckToggle(e,id,field,label){
   const cb=e.target,f=gf(id);
   if(!cb.checked){ if(!confirm(`¿Quitar "${label}" a ${f.name}?`)){ e.preventDefault(); return false; } }
@@ -1448,7 +1449,7 @@ async function ver(id){const f=gf(id),u=cu(f);
 function cerrar(){$('md').classList.remove('on');$('mb').innerHTML=''}
 function desc(id){const f=gf(id),a=document.createElement('a');a.href=cu(f);a.download=f.name+(f.ext?'.'+f.ext:'');a.click()}
 async function edC(id){const f=gf(id),n=prompt('Nombre:',f.name);if(n===null)return;const c=prompt('Categoría:',f.cat);if(c===null)return;const p=prompt('Precio (0 = sin precio):',f.price);if(p===null)return;const d=prompt('Descripción:',f.desc);if(d===null)return;
- Object.assign(f,{name:n.trim()||f.name,cat:c.trim()||f.cat,price:+p||0,desc:d});await tx('readwrite',s=>s.put(f));dib();subirArchivoNube(f)}
+ Object.assign(f,{name:n.trim()||f.name,cat:c.trim()||f.cat,price:+p||0,desc:d});await tx('readwrite',s=>s.put(f));dib();subirArchivoNube(f);await syncTiendaCat(f)}
 async function delF(id){if(!confirm('¿Eliminar este archivo del catálogo?'))return;await tx('readwrite',s=>s.delete(id));CL=CL.filter(f=>f.id!=id);dib();eliminarArchivoNube(id)}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 async function pdfToCompressedBlob(blob,maxEdge,quality){
