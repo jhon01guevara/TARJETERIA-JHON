@@ -711,6 +711,14 @@ html.shopmode,html.shopmode body{background:#FFF8F8}
 #shop .kc.off .kimg img{filter:grayscale(.85);opacity:.55}
 #shop .kno{font-size:12px;font-weight:700;color:var(--tx2);background:var(--sf2);padding:6px 10px;border-radius:10px}
 #shopm .kstn{padding:14px;border-radius:16px;text-align:center;font-weight:600;background:var(--sf2);color:var(--tx2)}
+#ubiWrap{position:relative;margin-top:10px}
+#ubiWrap .ubifbar{display:none}
+#ubiWrap .ubifb{position:absolute;right:10px;bottom:34px;z-index:1000;width:42px;height:42px;border:0;border-radius:12px;background:#fff;color:#222;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer}
+#ubiWrap.ubifs{position:fixed;inset:0;margin:0;z-index:5000;background:#000}
+#ubiWrap.ubifs #ubiMap{height:100%!important;border-radius:0!important}
+#ubiWrap.ubifs .ubifb{display:none}
+#ubiWrap.ubifs .ubifbar{display:flex;position:absolute;top:0;left:0;right:0;z-index:1000;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 10px 10px 56px;background:linear-gradient(rgba(0,0,0,.55),transparent)}
+#ubiWrap .ubifbar input{flex:1;min-width:0}
 </style></head><body>
 <div class="aurora" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
 <aside class="sb">
@@ -907,12 +915,13 @@ ubi(){const cliOpts=DB.cli.map(c=>`<option value="${c.id}">${esc(c.n)}</option>`
   <div id="ubiOtroWrap"><label>Nombre del lugar</label><input id="ubiN" placeholder="Ej: Residencial Costa del Este, casa 12"></div>
  </div>
  <div class="g"><div style="grid-column:1/-1"><label>Nota (opcional)</label><input id="ubiNota" placeholder="Ej: entrega de pedido, visita de cobro…"></div></div>
+ <div class="g"><div style="grid-column:1/-1"><label>🔗 Link de Google Maps (opcional)</label><input id="ubiLink" placeholder="Pegue aquí el link de Google Maps o las coordenadas"></div></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn s" onclick="ubiLinkGo('ver')">🎯 Ir al sitio en el mapa</button><button class="btn s" onclick="ubiLinkGo('abrir')">↗ Abrir en Google Maps</button><button class="btn s" onclick="ubiLinkGo('guardar')">💾 Guardar este sitio</button></div>
  <br><button class="btn p" id="btnUbi" onclick="capturarUbicacion()">📍 Capturar ubicación actual</button>
  <div id="ubiEstado" style="margin-top:8px;font-size:13px;color:var(--gris)"></div></div>
- <div class="card"><div class="r" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0">Mapa de ubicaciones</h3><div style="display:flex;gap:8px"><button class="btn s" onclick="centrarEnMi()">🎯 Mi ubicación</button><span id="miPrecision" style="font-size:12px;color:var(--gris);align-self:center"></span>${DB.ubi.length?`<button class="btn s" onclick="exportUbiCSV()">⬇ Exportar CSV (X,Y para ArcGIS)</button>`:''}</div></div>
+ <div class="card"><div class="r" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0">Mapa de ubicaciones</h3><div style="display:flex;gap:8px"><button class="btn s" onclick="centrarEnMi()">🎯 Mi ubicación</button><button class="btn s" onclick="ubiFull(1)">⛶ Pantalla completa</button><span id="miPrecision" style="font-size:12px;color:var(--gris);align-self:center"></span>${DB.ubi.length?`<button class="btn s" onclick="exportUbiCSV()">⬇ Exportar CSV (X,Y para ArcGIS)</button>`:''}</div></div>
  <div style="font-size:13px;color:var(--gris);margin-top:6px">Toque el mapa para colocar un punto a mano (usa el cliente o nombre de arriba), o use "Capturar ubicación actual" para el punto GPS exacto donde está parado.</div>
- <div id="ubiMap" style="height:380px;border-radius:14px;margin-top:10px;overflow:hidden"></div>
- ${DB.ubi.length?`<div class="tw" style="margin-top:14px"><table><tr><th>Nombre</th><th>Coordenadas</th><th>Precisión</th><th>Fecha</th><th></th></tr>${DB.ubi.slice().reverse().map(u=>`<tr><td>${esc(u.n)}${u.nota?`<br><small style="color:var(--gris)">${esc(u.nota)}</small>`:''}</td><td>${u.lat.toFixed(6)}, ${u.lng.toFixed(6)}</td><td>${u.acc!=null?'±'+Math.round(u.acc)+' m':'Manual (mapa)'}</td><td>${fdate(u.fecha)} ${u.hora||''}</td><td class="r"><button class="btn s" onclick="centrarUbi('${u.id}')">🎯 Centrar</button> <button class="btn s d" onclick="delUbi('${u.id}')">🗑</button></td></tr>`).join('')}</table></div>`:'<div class="vacio">Aún no hay ubicaciones registradas.</div>'}</div>`;
+ <div id="ubiWrap"><div class="ubifbar"><input id="ubiLink2" placeholder="Pegue el link de Google Maps…" onkeydown="if(event.key==='Enter')ubiLinkGo('ver','ubiLink2')"><button class="btn p" onclick="ubiLinkGo('ver','ubiLink2')">Ir</button><button class="btn" onclick="ubiFull(0)">✕ Salir</button></div><button class="ubifb" onclick="ubiFull(1)" title="Pantalla completa" aria-label="Pantalla completa">⛶</button><div id="ubiMap" style="height:380px;border-radius:14px;overflow:hidden"></div></div>
+ ${DB.ubi.length?`<div class="tw" style="margin-top:14px"><table><tr><th>Nombre</th><th>Coordenadas</th><th>Precisión</th><th>Fecha</th><th></th></tr>${DB.ubi.slice().reverse().map(u=>`<tr><td>${esc(u.n)}${u.nota?`<br><small style="color:var(--gris)">${esc(u.nota)}</small>`:''}</td><td>${u.lat.toFixed(6)}, ${u.lng.toFixed(6)}</td><td>${u.acc!=null?'±'+Math.round(u.acc)+' m':'Manual (mapa)'}</td><td>${fdate(u.fecha)} ${u.hora||''}</td><td class="r"><a class="btn s" href="https://www.google.com/maps?q=${u.lat},${u.lng}" target="_blank" rel="noopener">🗺 Google Maps</a> <button class="btn s" onclick="centrarUbi('${u.id}')">🎯 Centrar</button> <button class="btn s d" onclick="delUbi('${u.id}')">🗑</button></td></tr>`).join('')}</table></div>`:'<div class="vacio">Aún no hay ubicaciones registradas.</div>'}</div>`;
  pintarMapaUbi()},
 config(){editEmails=false;
  const temas=[['claro','Rosa'],['oceano','Océano'],['violeta','Violeta'],['nocturno','Nocturno']],ta=DB.cfg.tema||'claro';
@@ -1234,10 +1243,10 @@ let mapaUbi=null,marcadoresUbi=[],miMarcador=null,miCirculo=null;
 function pintarMapaUbi(){
  const el=$('ubiMap');if(!el||!window.L)return;
  if(mapaUbi){mapaUbi.remove();mapaUbi=null}
- mapaUbi=L.map('ubiMap',{zoomControl:true});
- const capas={calle:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — Esri, HERE, Garmin, FAO, NOAA, USGS'}),satelite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — Esri, Maxar, Earthstar Geographics'})};
- capas.calle.addTo(mapaUbi);
- L.control.layers({'Calle':capas.calle,'Satélite':capas.satelite}).addTo(mapaUbi);
+ mapaUbi=L.map('ubiMap',{zoomControl:true});ubiTmp=null;
+ const capas={calle:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — Esri, HERE, Garmin, FAO, NOAA, USGS'}),satelite:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:18,attribution:'Tiles © Esri — Esri, Maxar, Earthstar Geographics'}),etiq:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:18})};
+ const sat=L.layerGroup([capas.satelite,capas.etiq]);sat.addTo(mapaUbi);
+ L.control.layers({'Satélite':sat,'Calle':capas.calle}).addTo(mapaUbi);
  mapaUbi.on('click',e=>{
   const sel=$('ubiCliSel'),cliId=sel?sel.value||null:null,cli=cliId?DB.cli.find(c=>c.id===cliId):null;
   const n=cli?cli.n:($('ubiN')?$('ubiN').value.trim():'');
@@ -1268,6 +1277,24 @@ function pintarMapaUbi(){
  mapaUbi.on('locationerror',()=>{});
  mapaUbi.locate({setView:true,maxZoom:16,enableHighAccuracy:true})
 }
+let ubiTmp=null;
+function ubiFull(on){const w=$('ubiWrap');if(!w)return;on=on===undefined?!w.classList.contains('ubifs'):!!on;w.classList.toggle('ubifs',on);document.body.style.overflow=on?'hidden':'';[100,400].forEach(ms=>setTimeout(()=>mapaUbi&&mapaUbi.invalidateSize(),ms))}
+addEventListener('keydown',e=>{if(e.key==='Escape'){const w=$('ubiWrap');if(w&&w.classList.contains('ubifs'))ubiFull(0)}});
+function ubiParse(t){t=String(t||'').trim();if(!t)return null;try{t=decodeURIComponent(t)}catch(e){}
+ const rx=[/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,/[?&](?:q|ll|query|center|destination|daddr)=\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i,/^\s*(-?\d{1,2}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/];
+ for(const r of rx){const m=t.match(r);if(m){const a=+m[1],b=+m[2];if(Math.abs(a)<=90&&Math.abs(b)<=180)return{lat:a,lng:b}}}return null}
+function ubiLinkGo(modo,id){const t=(($(id||'ubiLink')||{}).value||'').trim(),c=ubiParse(t);
+ if(!t)return alert('Pegue primero el link de Google Maps.');
+ if(modo==='abrir'){if(/^https?:\/\//i.test(t))window.open(t,'_blank');else if(c)window.open('https://www.google.com/maps?q='+c.lat+','+c.lng,'_blank');else alert('Pegue un link válido de Google Maps.');return}
+ if(!c)return alert(/goo\.gl|maps\.app/i.test(t)?'Ese es un link corto y el navegador no puede leerlo. Ábralo en Google Maps, copie el link completo de la barra de direcciones (o las coordenadas) y péguelo aquí.':'No encontré coordenadas en ese link. Pegue el link completo de Google Maps o las coordenadas, por ejemplo: 8.9824, -79.5199');
+ if(!mapaUbi)return alert('El mapa todavía no ha cargado. Espere unos segundos e intente de nuevo.');
+ if(modo==='guardar'){const sel=$('ubiCliSel'),cliId=sel?sel.value||null:null,cli=cliId?DB.cli.find(x=>x.id===cliId):null,n=cli?cli.n:($('ubiN')?$('ubiN').value.trim():'');
+  if(!n)return alert('Elija un cliente o escriba el nombre del lugar (arriba) para guardar este sitio.');
+  DB.ubi.push({id:uid(),n,cliId,nota:$('ubiNota')?$('ubiNota').value.trim():'',lat:c.lat,lng:c.lng,acc:null,alt:null,fecha:hoy(),hora:new Date().toLocaleTimeString('es-PA'),manual:true,link:/^https?:\/\//i.test(t)?t:''});
+  save();R.ubi();setTimeout(()=>{if(mapaUbi)mapaUbi.flyTo([c.lat,c.lng],18,{duration:1})},400);return}
+ if(ubiTmp){mapaUbi.removeLayer(ubiTmp);ubiTmp=null}
+ ubiTmp=L.marker([c.lat,c.lng]).addTo(mapaUbi).bindPopup('<b>Sitio del link</b><br><small>'+c.lat.toFixed(6)+', '+c.lng.toFixed(6)+'</small><br><a href="https://www.google.com/maps?q='+c.lat+','+c.lng+'" target="_blank" rel="noopener">Abrir en Google Maps</a>').openPopup();
+ mapaUbi.flyTo([c.lat,c.lng],18,{duration:1.2});const m=$('ubiWrap');if(m&&!m.classList.contains('ubifs'))m.scrollIntoView({behavior:'smooth',block:'center'})}
 function centrarEnMi(){
  if(!mapaUbi)return alert('El mapa todavía no ha cargado. Espere unos segundos e intente de nuevo.');
  if(!window.isSecureContext){alert('El GPS del teléfono no funciona abriendo el archivo directamente.\n\nAbra la página desde el link de internet (https://...) en vez del archivo guardado, y el "Mi ubicación" funcionará normal.');return}
