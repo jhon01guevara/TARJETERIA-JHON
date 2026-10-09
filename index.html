@@ -830,23 +830,20 @@ function iniciarSincronizacionNube(){
 function blobToBase64(blob){return new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(String(r.result).split(',')[1]);r.onerror=rej;r.readAsDataURL(blob)})}
 function base64ToBlob(b64,type){const bin=atob(b64);const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);return new Blob([arr],{type:type||'application/octet-stream'})}
 async function _blobParaNube(o){
- const lim=720000;
+ const lim=imgKBClamp(o.imgKB||IMG_KB_MAX)*1024;
  if(o.blob.size<=lim)return {blob:o.blob,type:o.type};
  if(!(o.type||'').startsWith('image/'))throw {code:'archivo-grande'};
- const bm=await createImageBitmap(o.blob);
- for(const [mx,q] of [[1600,.82],[1280,.75],[1024,.7],[800,.65]]){
-  const k=Math.min(1,mx/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);
-  const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0,c.width,c.height);
-  const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',q));
-  if(bl&&bl.size<=lim){bm.close&&bm.close();return {blob:bl,type:'image/jpeg'}}}
- bm.close&&bm.close();throw {code:'archivo-grande'}}
+ const bl=await comprimirImagenCatalogo(o.blob,lim/1024);
+ if(!bl||bl.size>lim)throw {code:'archivo-grande'};
+ return {blob:bl,type:bl.type||'image/jpeg'}
+}
 function _catFalla(o,e){console.warn('Catálogo no sincronizado',o&&o.name,e);if(window._catAv)return;window._catAv=1;setTimeout(()=>{window._catAv=0},8000);
  alert('No se pudo sincronizar "'+((o&&o.name)||'archivo')+'" con los demás dispositivos'+(e&&e.code==='archivo-grande'?' porque es demasiado grande (máximo aprox. 700 KB; los PDF no se pueden reducir)':' ('+((e&&e.code)||'error')+')')+'. En este dispositivo sí quedó guardado.')}
 async function subirArchivoNube(o){
  if(!fbDb)return false;
  try{
   const p=await _blobParaNube(o),data=await blobToBase64(p.blob);
-  await fbDb.collection('catalogo').doc(o.id).set({id:o.id,name:o.name,ext:p.blob===o.blob?o.ext:'jpg',cat:o.cat,price:o.price,desc:o.desc,type:p.type,size:p.blob.size,date:o.date,data,ts:Date.now()});
+  await fbDb.collection('catalogo').doc(o.id).set({id:o.id,name:o.name,ext:p.blob===o.blob?o.ext:'jpg',cat:o.cat,price:o.price,desc:o.desc,type:p.type,size:p.blob.size,imgKB:o.imgKB||null,date:o.date,data,ts:Date.now()});
   await syncTiendaCat(o);return true
  }catch(e){_catFalla(o,e);return false}
 }
@@ -854,7 +851,7 @@ async function eliminarArchivoNube(id){if(!fbDb)return;try{await fbDb.collection
 async function _aplicarDocCatalogo(r){
  try{
   const blob=base64ToBlob(r.data,r.type);
-  const o={id:r.id,name:r.name,ext:r.ext,cat:r.cat,price:r.price,desc:r.desc,type:r.type,size:r.size,date:r.date,blob};
+  const o={id:r.id,name:r.name,ext:r.ext,cat:r.cat,price:r.price,desc:r.desc,type:r.type,size:r.size,imgKB:r.imgKB||null,date:r.date,blob};
   o.thumb=await mkThumb(o,1200);
   await guardar(o);
   CL=CL.filter(f=>f.id!==o.id);CL.push(o);
@@ -1420,12 +1417,18 @@ let CL=[],CU={},cq='',cc='',catCl=new Set();function catTg(d){d.open?catCl.delet
 const cu=f=>CU[f.id]||(CU[f.id]=URL.createObjectURL(f.blob));
 const ext=f=>(f.ext||'').toUpperCase()||'ARCHIVO';
 const tam=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+const IMG_KB_MIN=500,IMG_KB_MAX=700,IMG_KB_DEF=500;
+function imgKBClamp(v){const n=Math.round(+v||IMG_KB_DEF);return Math.max(IMG_KB_MIN,Math.min(IMG_KB_MAX,n))}
+function imgKBPreference(){try{return imgKBClamp(localStorage.getItem('tj_img_kb')||IMG_KB_DEF)}catch(e){return IMG_KB_DEF}}
+function imgTargetKB(){const e=$('u_imgkb'),n=imgKBClamp(e?e.value:imgKBPreference());try{localStorage.setItem('tj_img_kb',n)}catch(x){}return n}
+function imgQualityOpts(){const now=imgKBPreference();return [500,550,600,650,700].map(n=>`<option value="${n}" ${n===now?'selected':''}>${n} KB${n===500?' — alta (recomendado)':n===700?' — máxima permitida':''}</option>`).join('')}
+function imgPicker(){const price=$('u_pr');if(!price||$('u_imgkb'))return;const box=document.createElement('div');box.innerHTML=`<label>Calidad de imágenes nuevas</label><select id="u_imgkb" onchange="imgTargetKB()">${imgQualityOpts()}</select><small style="display:block;color:var(--gris);margin-top:5px">Tope por imagen: 500–700 KB. Si el original pesa menos, se conserva sin reducir.</small>`;price.parentElement.insertAdjacentElement('afterend',box)}
 R.cat=async()=>{try{CL=await tx('readonly',s=>s.getAll())}catch(e){memW=1}
  $('v').innerHTML=`<div id="av" class="card" style="display:none;background:#fff4e5;color:#7a4a00;font-size:13px">⚠ Esta vista no permite guardar archivos de forma permanente: se verán mientras no cierre o recargue la página. Para guardarlos, abra el panel desde el archivo HTML descargado.</div><div class="card"><h3>Subir al catálogo</h3><div class="g" style="margin-bottom:14px"><div><label>Categoría / ocasión</label><input id="u_cat" list="cl" placeholder="Ej. Cumpleaños"><datalist id="cl">${CATS.map(c=>`<option>${c}</option>`).join('')}</datalist><div class="catq">${CATS.map(c=>`<button type="button" class="catqb" onclick="$('u_cat').value='${c}'">${c}</button>`).join('')}</div></div><div><label>Precio (opcional)</label><input id="u_pr" type="number" step="0.01" min="0"></div></div>
  <div class="up" id="dz" onclick="$('fi2').click()" ondragover="event.preventDefault();this.classList.add('ov')" ondragleave="this.classList.remove('ov')" ondrop="event.preventDefault();this.classList.remove('ov');subir(event.dataTransfer.files)"><div style="font-size:30px">📂</div><b>Arrastre archivos aquí o haga clic para seleccionarlos</b><br><small>PDF, JPG, PNG, WEBP, GIF, Word, Excel, video y más · varios a la vez</small></div><input id="fi2" type="file" multiple style="display:none" onchange="subir(this.files)"></div>
  <div class="card"><div class="g" style="margin-bottom:16px;align-items:end"><div><label>Buscar</label><input id="q" placeholder="Nombre o descripción" oninput="cq=this.value;dib()"></div><div><label>Categoría</label><select id="qc" onchange="cc=this.value;dib()"></select></div><div><button class="btn p" onclick="impCat()">📖 Vista previa / Imprimir catálogo</button></div></div>
  <div class="g" style="margin-bottom:16px"><div><button class="btn s" onclick="catAutoPrev()">🏷 Organizar por categoría (auto)</button></div><div><button class="btn s" id="btnCompCat" onclick="comprimirCatalogo()">🗜 Comprimir catálogo</button></div><div><button class="btn s" id="btnExpCat" onclick="expCatBackup()">⬇ Respaldo del catálogo</button></div><div><button class="btn s" onclick="document.getElementById('impCatInput').click()">⬆ Importar catálogo</button><input id="impCatInput" type="file" accept=".zip,application/zip" multiple hidden onchange="impCatFile(this)"></div></div>
- <div id="gc"></div><p style="font-size:12px;color:var(--gris);margin:14px 0 0">Use "Respaldo del catálogo" para guardar sus archivos fuera de este navegador, y "Importar catálogo" para recuperarlos aquí o en otro dispositivo.</p></div>`;cc='';cq='';dib();R.aviso();fixT()};
+  <div id="gc"></div><p style="font-size:12px;color:var(--gris);margin:14px 0 0">Use "Respaldo del catálogo" para guardar sus archivos fuera de este navegador, y "Importar catálogo" para recuperarlos aquí o en otro dispositivo.</p></div>`;imgPicker();cc='';cq='';dib();R.aviso();fixT()};
 function dib(){const cats=[...new Set([...CATS,...CL.map(f=>f.cat)])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'es'));$('qc').innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option ${c==cc?'selected':''}>${esc(c)}</option>`).join('');
  const q=cq.toLowerCase(),l=CL.filter(f=>(!cc||f.cat==cc)&&(f.name+' '+f.desc).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
  const itH=f=>`<div class="it${f.sac?' sacadoIt':''}"><div class="th" onclick="ver('${f.id}')">${f.thumb?`<img src="${f.thumb}" alt="">`:`<div class="ft2">${f.type=='application/pdf'?'📄':f.type.startsWith('image/')?'🖼':'📎'}<small>${ext(f)}</small></div>`}</div><div class="ckrow"><label class="ckitem"><input type="checkbox" class="cbA" ${f.acot?'checked':''} onclick="return ckToggle(event,'${f.id}','acot','Acotejado')"><span>Acotejado</span></label><label class="ckitem"><input type="checkbox" class="cbS" ${f.sac?'checked':''} onclick="return ckToggle(event,'${f.id}','sac','Sacado')"><span>Sacado</span></label></div><div class="ib"><span class="itcat" title="Categoría">${esc(f.cat||'Sin categoría')}</span><b>${esc(f.name)}</b><select class="catsel" onchange="catSet('${f.id}',this.value)" title="Categoría">${catOpts(f.cat)}</select>${f.price?`<small><b style="display:inline;font-size:13px">${$$(f.price)}</b></small>`:''}${f.desc?`<small>${esc(f.desc)}</small>`:''}<small>${ext(f)} · ${tam(f.size)}</small></div><div class="ia"><button class="btn s" onclick="ver('${f.id}')">👁 Ver</button><button class="btn s" onclick="desc('${f.id}')">⬇</button><button class="btn s" onclick="edC('${f.id}')">✏️</button>${f.price?`<button class="btn s" onclick="facC('${f.id}')">🧾</button>`:''}<button class="btn s d" onclick="delF('${f.id}')">🗑</button></div></div>`;const G={};l.forEach(f=>{const k=f.cat||'Sin categoría';(G[k]=G[k]||[]).push(f)});$('gc').innerHTML=l.length?Object.keys(G).sort().map(k=>`<details class="cg2" data-k="${esc(k)}" ${cq||!catCl.has(k)?'open':''} ontoggle="catTg(this)"><summary><b>${esc(k)}</b><span>${G[k].length}</span></summary><div class="gc">${G[k].map(itH).join('')}</div></details>`).join(''):'<div class="vacio">'+(CL.length?'Sin resultados.':'El catálogo está vacío. Suba su primer archivo arriba.')+'</div>'}
@@ -1457,13 +1460,16 @@ async function ckToggle(e,id,field,label){
 }
 const MT={jpg:'image/jpeg',jpeg:'image/jpeg',png:'image/png',webp:'image/webp',gif:'image/gif',bmp:'image/bmp',pdf:'application/pdf'};
 const rd=f=>new Promise((a,b)=>{const r=new FileReader();r.onload=()=>a(r.result);r.onerror=b;r.readAsDataURL(f)});
+const jpegBlob=(c,q)=>new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('No se pudo crear la imagen')),'image/jpeg',q));
+async function abrirImagenCatalogo(blob){try{return await createImageBitmap(blob)}catch(e){const u=URL.createObjectURL(blob);try{return await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('No se pudo leer la imagen'));i.src=u})}finally{URL.revokeObjectURL(u)}}}
+async function comprimirImagenCatalogo(blob,kb=IMG_KB_DEF){const target=imgKBClamp(kb)*1024;if(!blob||blob.size<=target)return blob;const im=await abrirImagenCatalogo(blob),w=im.width||im.naturalWidth,h=im.height||im.naturalHeight;let scale=Math.min(1,2400/Math.max(w,h));try{for(let pass=0;pass<11;pass++){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*scale));c.height=Math.max(1,Math.round(h*scale));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);const low=await jpegBlob(c,.42);if(low.size>target){scale*=.78;continue}let min=.42,max=.97,best=low;for(let n=0;n<7;n++){const q=(min+max)/2,out=await jpegBlob(c,q);if(out.size<=target){best=out;min=q}else max=q}return best}}finally{if(im.close)im.close()}throw new Error('No se pudo ajustar la imagen al tamaño elegido')}
 async function mkThumb(f,mx=720){try{if(f.type.startsWith('image/')){try{const bm=await createImageBitmap(f.blob),k=Math.min(1,mx/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0,c.width,c.height);bm.close&&bm.close();return c.toDataURL('image/jpeg',.85)}catch(e){}const u=await rd(f.blob);return await new Promise(res=>{const i=new Image();i.onload=()=>{const k=Math.min(1,mx/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82))};i.onerror=()=>res('');i.src=u})}
  if(f.type=='application/pdf'&&window.pdfjsLib){const d=await pdfjsLib.getDocument({data:new Uint8Array(await f.blob.arrayBuffer())}).promise,pg=await d.getPage(1),k=mx*.78/pg.getViewport({scale:1}).width,v=pg.getViewport({scale:k}),c=document.createElement('canvas');c.width=v.width;c.height=v.height;await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise;return c.toDataURL('image/jpeg',.8)}}catch(e){}return''}
 let memW=0;
 const guardar=async o=>{try{await tx('readwrite',s=>s.put(o))}catch(e){memW=1}};
-async function subir(fs){fs=[...fs];if(!fs.length)return;const c=$('u_cat').value.trim()||'General',pr=+$('u_pr').value||0;
- for(const f of fs){const e=(f.name.match(/\.([^.]+)$/)||[])[1]||'',o={id:uid(),name:f.name.replace(/\.[^.]+$/,''),ext:e,cat:c,price:pr,desc:'',type:f.type||MT[e.toLowerCase()]||'application/octet-stream',size:f.size,date:new Date().toISOString(),blob:f};
-  o.thumb=await mkThumb(o,1200);o.tf=1;o.hq=1;await guardar(o);CL.push(o);dib();subirArchivoNube(o)}
+async function subir(fs){fs=[...fs];if(!fs.length)return;const c=$('u_cat').value.trim()||'General',pr=+$('u_pr').value||0,kb=imgTargetKB();
+ for(const f of fs){let e=(f.name.match(/\.([^.]+)$/)||[])[1]||'',tipo=f.type||MT[e.toLowerCase()]||'application/octet-stream',blob=f,imgKB=null;if(/^image\//.test(tipo)){imgKB=kb;try{blob=await comprimirImagenCatalogo(f,kb);if(blob!==f){tipo='image/jpeg';e='jpg'}}catch(err){console.warn('Imagen sin comprimir:',err)}}const o={id:uid(),name:f.name.replace(/\.[^.]+$/,''),ext:e,cat:c,price:pr,desc:'',type:tipo,size:blob.size,date:new Date().toISOString(),blob,imgKB};
+  o.thumb=await mkThumb(o,1200);o.tf=1;o.hq=1;await guardar(o);CL.push(o);dib();await subirArchivoNube(o)}
  if(memW)R.aviso()}
 R.aviso=()=>{const a=$('av');if(a)a.style.display=memW?'block':'none'};
 async function fixT(){let ch=0;for(const f of CL)if(!f.thumb&&!f.tf){f.tf=1;f.thumb=await mkThumb(f);if(f.thumb){ch=1;await guardar(f)}}if(ch)dib()}
@@ -2163,7 +2169,7 @@ function tdMarcarVis(){const cs=[...document.querySelectorAll('.tdg tr[data-pub]
 function tdCopy(){const i=$('td_link');i.select();try{navigator.clipboard.writeText(i.value).then(()=>alert('Enlace copiado ✔'),()=>{document.execCommand('copy');alert('Enlace copiado ✔')})}catch(e){document.execCommand('copy');alert('Enlace copiado ✔')}}
 function tdWaLink(){window.open('https://wa.me/?text='+encodeURIComponent('Le comparto el catálogo virtual de '+(DB.cfg.nombre||'Tarjetería Jhon')+': '+tdLink()),'_blank')}
 function tdSendCli(){const c=DB.cli.find(x=>x.id==$('td_cli').value);if(!c)return alert('Elija un cliente con teléfono.');const u=tdWa(c.t,'Hola '+c.n+', le comparto el catálogo virtual de '+(DB.cfg.nombre||'Tarjetería Jhon')+'. Regístrese, vea los productos y precios y haga su pedido aquí: '+tdLink());if(!u)return alert('Ese cliente no tiene un teléfono válido.');window.open(u,'_blank')}
-async function tdImg(o){if(o.blob&&/^image\//.test(o.type||'')){const bm=await createImageBitmap(o.blob);let m=1100,q=.82,d='';for(let i=0;i<5;i++){const k=Math.min(1,m/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0,c.width,c.height);d=c.toDataURL('image/jpeg',q);if(d.length<=600000)break;m=Math.round(m*.8);q-=.06}bm.close&&bm.close();if(d.length>700000)throw new Error('grande');return d}
+async function tdImg(o){if(o.blob&&/^image\//.test(o.type||'')){const b=await comprimirImagenCatalogo(o.blob,imgKBClamp(o.imgKB||IMG_KB_DEF));return await rd(b)}
  if(o.thumb)return o.thumb;throw new Error('sin imagen')}
 const tdRows=()=>{const ids=new Set(TD.cat.map(x=>x.id));return [...TD.cat,...TD.items.filter(x=>x&&x.img&&!ids.has(x.id)).map(x=>({id:x.id,name:x.name,cat:x.cat,price:x.price,desc:x.desc,tags:x.tags,thumb:x.img,_pub:1}))].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{numeric:true}))};
 const tdMinV=()=>{try{return localStorage.getItem('tj_td_min')==='1'}catch(e){return false}};
