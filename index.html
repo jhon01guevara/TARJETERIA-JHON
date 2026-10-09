@@ -697,6 +697,24 @@ html.shopmode,html.shopmode body{background:#FFF8F8}
 #shop .ksr{border-radius:28px;border:0;box-shadow:var(--sh);background:var(--sf)}
 #shop .kchip{border-radius:12px;font-weight:600;transition:background .2s,transform .12s}#shop .kchip:active{transform:scale(.95)}
 #shop .khd{border-radius:0 0 28px 28px;background:var(--sf);box-shadow:0 2px 14px -8px rgba(60,20,40,.35)}
+#shop .khd{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;min-height:118px;padding:calc(12px + env(safe-area-inset-top)) 12px 14px}
+#shop .kbrand{grid-column:2;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0;text-align:center}
+#shop .khd .kbrand>img{height:56px;width:auto;max-width:min(64vw,230px);padding:5px 9px;border-radius:18px;background:#fff;box-shadow:0 5px 16px -10px rgba(60,20,40,.5);object-fit:contain}
+#shop .khd .kht{flex:none;text-align:center;min-width:0}#shop .khd .kht b{font-size:18px!important;line-height:1.15}#shop .khd .kht small{display:block;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#shop .khact{grid-column:3;justify-self:end;align-self:center}
+#shop .khero{position:relative;min-height:212px;margin:18px 0 20px;overflow:hidden;border-radius:28px;background:var(--sf2);box-shadow:0 12px 28px -20px rgba(60,20,40,.6)}
+#shop .khero[hidden]{display:none}.khero-track{display:flex;height:100%;transition:transform .48s cubic-bezier(.2,.8,.2,1);will-change:transform}
+#shop .khero-slide{position:relative;flex:0 0 100%;min-height:212px;overflow:hidden;cursor:pointer;isolation:isolate}
+#shop .khero-slide::after{content:'';position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(23,12,17,.78) 0%,rgba(23,12,17,.30) 52%,rgba(23,12,17,.08) 100%)}
+#shop .khero-slide img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:-2;transform:scale(1.02)}
+#shop .khero-copy{position:absolute;left:20px;right:58px;bottom:24px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.32)}
+#shop .khero-copy small{display:block;margin-bottom:6px;font-size:11px;font-weight:700;letter-spacing:.11em;text-transform:uppercase;opacity:.86}
+#shop .khero-copy b{display:block;max-width:28ch;font-size:clamp(20px,5vw,31px);line-height:1.08;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#shop .khero-copy span{display:block;margin-top:7px;font-size:13px;font-weight:600;opacity:.94}
+#shop .khero-control{position:absolute;top:50%;z-index:2;width:40px;height:40px;margin-top:-20px;border:0;border-radius:14px;background:rgba(255,255,255,.9);color:var(--tx);box-shadow:0 4px 12px rgba(0,0,0,.18);font-size:24px;line-height:1;transition:transform .15s,background .15s}
+#shop .khero-control:active{transform:scale(.9)}#shop .khero-control.prev{left:12px}#shop .khero-control.next{right:12px}
+#shop .khero-dots{position:absolute;z-index:2;right:16px;bottom:14px;display:flex;gap:6px}.khero-dots button{width:8px;height:8px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.48);transition:width .18s,background .18s}.khero-dots button.on{width:22px;background:#fff}
+@media(min-width:700px){#shop .khero,#shop .khero-slide{min-height:290px}#shop .khero-copy{left:34px;bottom:32px}#shop .khd .kht b{font-size:21px!important}#shop .khd .kbrand>img{height:66px}}
 #shop .knav{background:color-mix(in srgb,var(--sf) 90%,transparent);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:26px 26px 0 0;box-shadow:0 -4px 18px -10px rgba(60,20,40,.35)}
 #shop .kpill{transition:background .25s,width .25s}
 #k_fab{position:fixed;right:16px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:25}
@@ -2216,16 +2234,19 @@ async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('s
  try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
  SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){}shopRender()}
 function shopCatalog(){const o=$('shop');if(!o)return;
- o.innerHTML=`<div class="kwrap"><header class="khd">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋'}</small></div><div class="khact" id="k_ha"></div></header>
+ o.innerHTML=`<div class="kwrap"><header class="khd"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋'}</small></div></div><div class="khact" id="k_ha"></div></header><section class="khero" id="khero" aria-label="Diseños destacados"></section>
 <div class="kmain"><aside class="kside" id="k_side"></aside><div class="kcol"><div class="kstk"><label class="ksr">${kico(KI.search,22)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" oninput="shopQ(this.value)" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" onclick="shopQ('');$('sh_q').value='';$('sh_q').focus()" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><div class="kchips" id="sh_ch"></div></div>
 <div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g"></div><div id="k_more"></div></div></div></div><nav class="knav" id="k_nav"></nav><div id="k_fab"></div>`;
  shopFilters();shopNav()}
+function shopHero(){const e=$('khero');if(!e)return;if(SH.heroT){clearInterval(SH.heroT);SH.heroT=0}const L=SH.items.filter(i=>i&&i.img&&!noDisp(i)).slice(0,6);if(!L.length){e.hidden=true;return}e.hidden=false;SH.heroL=L;const old=L.findIndex(i=>i.id===SH.heroId);SH.heroI=old>=0?old:0;SH.heroId=L[SH.heroI].id;
+ e.innerHTML=`<div class="khero-track">${L.map(i=>`<article class="khero-slide" onclick="shopDet('${i.id}')"><img src="${i.img}" alt="${esc(i.name)}"><div class="khero-copy"><small>${esc(i.cat||'Diseño destacado')}</small><b>${esc(i.name)}</b><span>${+i.price>0?tdMoney(i.price):'Ver detalles del diseño'}</span></div></article>`).join('')}</div>${L.length>1?`<button class="khero-control prev" onclick="event.stopPropagation();shopHeroGo(SH.heroI-1)" aria-label="Diseño anterior">‹</button><button class="khero-control next" onclick="event.stopPropagation();shopHeroGo(SH.heroI+1)" aria-label="Siguiente diseño">›</button><div class="khero-dots">${L.map((i,n)=>`<button class="${n===SH.heroI?'on':''}" onclick="event.stopPropagation();shopHeroGo(${n})" aria-label="Mostrar diseño ${n+1}" aria-current="${n===SH.heroI?'true':'false'}"></button>`).join('')}</div>`:''}`;shopHeroGo(SH.heroI);if(L.length>1)SH.heroT=setInterval(()=>shopHeroGo(SH.heroI+1),5600)}
+function shopHeroGo(n){const e=$('khero'),L=SH.heroL||[];if(!e||!L.length)return;SH.heroI=(n+L.length)%L.length;SH.heroId=L[SH.heroI].id;const tr=e.querySelector('.khero-track');if(tr)tr.style.transform=`translateX(${-100*SH.heroI}%)`;e.querySelectorAll('.khero-dots button').forEach((b,i)=>{const on=i===SH.heroI;b.classList.toggle('on',on);b.setAttribute('aria-current',on?'true':'false')})}
 const catKey=c=>{const n=shopN(c),t=TEMAS.find(x=>x.re.test(n));return t?t.id:'c:'+n};
 const ik=i=>i._k||(i._k=new Set([...temaOf(i),...(i.cat?[catKey(i.cat)]:[])]));
 function shopOpts(){const c=new Map(),nm={};SH.items.forEach(i=>ik(i).forEach(k=>{c.set(k,(c.get(k)||0)+1);if(k.startsWith('c:')&&!nm[k])nm[k]=i.cat}));
  const meta=k=>k.startsWith('c:')?{id:k,n:nm[k],e:'🏷️'}:temaMeta(k),ids=[...c.keys()],t=TEMAS.map(x=>x.id).filter(k=>c.has(k)),o=ids.filter(k=>!TEMAS.some(x=>x.id===k)).sort((a,b)=>String(meta(a).n).localeCompare(String(meta(b).n)));
  SH.opts=[...t,...o].map(k=>({...meta(k),c:c.get(k)}));SH.sel=SH.sel.filter(k=>c.has(k))}
-function shopFilters(){shopOpts();shopChips();shopSide();shopGrid(1)}
+function shopFilters(){shopOpts();shopChips();shopSide();shopGrid(1);shopHero()}
 function shopChips(){const e=$('sh_ch');if(!e)return;
  e.innerHTML=SH.opts.length?`<button class="kchip ${SH.sel.length?'':'on'}" onclick="shopSel(-1)">Todos</button>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<button class="kchip ${on?'on':''}" onclick="shopSel(${k})" aria-pressed="${on}">${on?'✓':o.e} ${esc(o.n)}</button>`}).join(''):''}
 function shopSide(){const e=$('k_side');if(!e)return;
