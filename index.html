@@ -218,6 +218,30 @@ textarea{font-family:inherit;font-size:14px;padding:11px 13px;border:1px solid t
 .llc.ring .lla{animation:llp 1.4s ease-out infinite}
 @keyframes llp{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--az) 50%,transparent)}100%{box-shadow:0 0 0 24px transparent}}
 @media(prefers-reduced-motion:reduce){.llc.ring .lla{animation:none}}
+.em{display:inline-block;transform-origin:center;line-height:1}
+.anim-bounce{animation:aBn 1.1s ease-in-out infinite}@keyframes aBn{0%,100%{transform:translateY(0)}50%{transform:translateY(-16%)}}
+.anim-pulse{animation:aPl 1s ease-in-out infinite}@keyframes aPl{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+.anim-spin{animation:aSp 2.6s linear infinite}@keyframes aSp{to{transform:rotate(360deg)}}
+.anim-wiggle{animation:aWg 1.2s ease-in-out infinite}@keyframes aWg{0%,100%{transform:rotate(-12deg)}50%{transform:rotate(12deg)}}
+.anim-float{animation:aFl 2.6s ease-in-out infinite}@keyframes aFl{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-12%) rotate(4deg)}}
+.anim-shake{animation:aSh .7s ease-in-out infinite}@keyframes aSh{0%,100%{transform:translateX(0)}25%{transform:translateX(-8%)}75%{transform:translateX(8%)}}
+.anim-flip{animation:aFp 2.4s ease-in-out infinite}@keyframes aFp{0%,60%,100%{transform:rotateY(0)}80%{transform:rotateY(180deg)}}
+@media(prefers-reduced-motion:reduce){.em{animation:none!important}}
+.av{display:inline-flex;align-items:center;justify-content:center;width:var(--s,40px);height:var(--s,40px);border-radius:50%;overflow:hidden;background:var(--soft);font-size:calc(var(--s,40px)*.56);line-height:1;flex:0 0 auto}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+.av.dflt{background:linear-gradient(135deg,var(--az),color-mix(in srgb,var(--az) 55%,#FF9F0A));color:#fff;font-weight:800;font-size:calc(var(--s,40px)*.45)}
+.uav{display:flex;align-items:center;gap:8px;background:none;border:0;cursor:pointer;font:inherit;color:inherit;padding:2px 8px 2px 3px;border-radius:980px}.uav:hover{background:var(--az-bg)}
+.pfg{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px;margin-top:6px;max-height:150px;overflow-y:auto}
+.pfg button{border:2px solid transparent;background:var(--soft);border-radius:14px;font-size:24px;padding:6px 0;cursor:pointer}.pfg button.on{border-color:var(--az);background:var(--az-bg)}
+.chin{position:relative}.emob{font-size:20px;padding:6px 10px;flex:0 0 auto}
+.emop{position:absolute;left:0;bottom:calc(100% + 8px);width:min(340px,100%);max-height:280px;display:none;flex-direction:column;background:var(--card);border:1px solid var(--linea);border-radius:20px;box-shadow:0 12px 32px -8px rgba(0,0,0,.35);overflow:hidden;z-index:30}.emop.on{display:flex}
+.emot{display:flex;gap:2px;padding:6px 8px;border-bottom:1px solid var(--linea);overflow-x:auto;flex:0 0 auto}
+.emot button{border:0;background:none;font-size:20px;padding:6px 9px;border-radius:12px;cursor:pointer;flex:0 0 auto}.emot button.on{background:var(--az-bg)}
+.emog{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:8px;overflow-y:auto}
+.emog button{border:0;background:none;font-size:22px;padding:5px 0;border-radius:10px;cursor:pointer}.emog button:hover,.emog button:active{background:var(--soft)}
+.emog.stk{grid-template-columns:repeat(4,1fr);gap:6px}.emog.stk button{font-size:34px;padding:8px 0}
+.cm .cb.stk,.cm .cb.big{background:none!important;box-shadow:none!important;padding:2px 4px!important;border:0!important}.cb.stk .em{font-size:64px}
+.cm .cb.big{font-size:38px;line-height:1.15}
 .cint{position:relative;z-index:4;padding:10px 0 4px;background:color-mix(in srgb,var(--az) 10%,color-mix(in srgb,var(--card) 70%,transparent));backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);border-bottom:1px solid var(--linea)}
 .cintVw{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 14px 8px;scroll-padding-left:14px;overscroll-behavior-x:contain}
 .cintVw::-webkit-scrollbar{display:none}
@@ -1770,7 +1794,7 @@ const BT_IN='<button class="no" onclick="llamRechazar()" title="Rechazar">✖</b
 const BT_ON='<button class="mu" id="llmu" onclick="llamMute()" title="Silenciar micrófono">🎙</button><button class="no" onclick="llamCuelga()" title="Colgar">✖</button>';
 function llamUI(o){clearTimeout(LL.hTm);let d=$('llam');if(!d){d=document.createElement('div');d.id='llam';document.body.appendChild(d)}
  if(!o){d.style.display='none';d.innerHTML='';return}
- d.style.display='flex';d.innerHTML=`<div class="llc ${o.ring?'ring':''}"><div class="lla">${esc((o.n||'?').trim().charAt(0).toUpperCase())}</div><h3>${esc(o.n)}</h3><p id="llst">${esc(o.s)}</p><div class="llb">${o.b||''}</div></div>`}
+ d.style.display='flex';d.innerHTML=`<div class="llc ${o.ring?'ring':''}"><div class="lla">${o.p?avHTML(o.p,84):esc((o.n||'?').trim().charAt(0).toUpperCase())}</div><h3>${esc(o.n)}</h3><p id="llst">${esc(o.s)}</p><div class="llb">${o.b||''}</div></div>`}
 const llamSt=s=>{const e=$('llst');if(e)e.textContent=s};
 const llamAud=()=>{let a=$('llau');if(!a){a=document.createElement('audio');a.id='llau';a.autoplay=true;a.setAttribute('playsinline','');document.body.appendChild(a)}return a};
 function llamTono(on,soft){clearInterval(LL.ring);LL.ring=null;if(!on)return;
@@ -1788,14 +1812,14 @@ const llamIceSend=(id,me,c)=>fbDb.collection('llamadas').doc(id).collection('ice
 function llamIceListen(id,me,pc){LL.ready=true;LL.q.forEach(c=>llamIceSend(id,me,c));LL.q=[];
  LL.unsub.push(fbDb.collection('llamadas').doc(id).collection('ice').onSnapshot(sn=>sn.docChanges().forEach(ch=>{if(ch.type!=='added')return;const d=ch.doc.data();if(d.by===me)return;if(pc.remoteDescription)pc.addIceCandidate(d.c).catch(()=>{});else LL.pend.push(d.c)}),()=>{}))}
 const llamFlush=pc=>{LL.pend.forEach(c=>pc.addIceCandidate(c).catch(()=>{}));LL.pend=[]};
-function llamActiva(){if(LL.t0||!LL.id)return;LL.t0=Date.now();clearTimeout(LL.ringTm);llamTono(0);llamUI({n:chatName(LL.peer),s:'00:00',b:BT_ON});
+function llamActiva(){if(LL.t0||!LL.id)return;LL.t0=Date.now();clearTimeout(LL.ringTm);llamTono(0);llamUI({p:LL.peer,n:chatName(LL.peer),s:'00:00',b:BT_ON});
  LL.tm=setInterval(()=>{const s=Math.floor((Date.now()-LL.t0)/1000);llamSt(String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'))},1000)}
 async function llamar(chatId){
  if(!llamOn())return alert('Las llamadas no están disponibles: revise su conexión o que el navegador permita el micrófono.');
  if(LL.id||LL.incoming)return alert('Ya hay una llamada en curso.');
  const me=chatMe(),peer=me==='admin'?String(chatId).slice(3):'admin',nom=chatName(peer);
  try{LL.stream=await llamMic()}catch(e){return alert('No se pudo usar el micrófono. Permita el acceso al micrófono en el navegador y vuelva a intentar.')}
- const id='c'+uid();LL.id=id;LL.peer=peer;LL.t0=0;LL.muted=false;llamUI({n:nom,s:'Llamando…',b:'<button class="no" onclick="llamCuelga()" title="Cancelar">✖</button>',ring:1});llamTono(1,1);
+ const id='c'+uid();LL.id=id;LL.peer=peer;LL.t0=0;LL.muted=false;llamUI({p:peer,n:nom,s:'Llamando…',b:'<button class="no" onclick="llamCuelga()" title="Cancelar">✖</button>',ring:1});llamTono(1,1);
  try{const pc=llamPC(id,me),off=await pc.createOffer();await pc.setLocalDescription(off);
   const ref=fbDb.collection('llamadas').doc(id);
   await ref.set({id,chat:chatId,from:me,to:peer,fn:chatName(me),state:'ringing',offer:{type:off.type,sdp:off.sdp},ts:Date.now()});
@@ -1805,11 +1829,11 @@ async function llamar(chatId){
    if(['declined','ended','missed'].includes(d.state))llamFin(d.state==='declined'?'Llamada rechazada':d.state==='missed'?'Sin respuesta':'Llamada finalizada')},()=>{}));
   LL.ringTm=setTimeout(()=>{if(LL.id===id&&!LL.t0){ref.update({state:'missed'}).catch(()=>{});llamFin('Sin respuesta')}},45000)
  }catch(e){console.warn('Llamada:',e);llamFin('No se pudo iniciar la llamada')}}
-function llamEntrante(d){LL.incoming=d;llamUI({n:d.fn||chatName(d.from),s:'Llamada entrante…',b:BT_IN,ring:1});llamTono(1);try{if(DB.cfg.vozChat!==0)vozDama('Atención. Llamada entrante de '+(d.from==='admin'?'la administración':chatName(d.from))+'.')}catch(e){}
+function llamEntrante(d){LL.incoming=d;llamUI({p:d.from,n:d.fn||chatName(d.from),s:'Llamada entrante…',b:BT_IN,ring:1});llamTono(1);try{if(DB.cfg.vozChat!==0)vozDama('Atención. Llamada entrante de '+(d.from==='admin'?'la administración':chatName(d.from))+'.')}catch(e){}
  clearTimeout(LL.ringTm);LL.ringTm=setTimeout(()=>{if(LL.incoming&&LL.incoming.id===d.id){LL.incoming=null;llamFin('Llamada perdida')}},45000)}
 async function llamAcepta(){const d=LL.incoming;if(!d||LL.id)return;llamTono(0);clearTimeout(LL.ringTm);
  try{LL.stream=await llamMic()}catch(e){llamRechazar();return alert('No se pudo usar el micrófono. Permita el acceso al micrófono en el navegador.')}
- const me=chatMe();LL.id=d.id;LL.peer=d.from;LL.t0=0;LL.muted=false;LL.incoming=null;llamUI({n:d.fn||chatName(d.from),s:'Conectando…',b:BT_ON});
+ const me=chatMe();LL.id=d.id;LL.peer=d.from;LL.t0=0;LL.muted=false;LL.incoming=null;llamUI({p:d.from,n:d.fn||chatName(d.from),s:'Conectando…',b:BT_ON});
  try{const pc=llamPC(d.id,me);await pc.setRemoteDescription(d.offer);const an=await pc.createAnswer();await pc.setLocalDescription(an);
   const ref=fbDb.collection('llamadas').doc(d.id);await ref.update({answer:{type:an.type,sdp:an.sdp},state:'active'});
   llamIceListen(d.id,me,pc);llamFlush(pc);
@@ -1821,9 +1845,9 @@ function llamMute(){LL.muted=!LL.muted;(LL.stream?LL.stream.getAudioTracks():[])
 function llamFin(msg){if(!LL.id&&!LL.incoming&&!$('llam'))return;
  llamTono(0);clearTimeout(LL.ringTm);clearInterval(LL.tm);LL.unsub.forEach(u=>{try{u()}catch(e){}});LL.unsub=[];
  try{LL.pc&&LL.pc.close()}catch(e){}try{LL.stream&&LL.stream.getTracks().forEach(k=>k.stop())}catch(e){}
- const a=$('llau');if(a)a.srcObject=null;const nom=LL.peer?chatName(LL.peer):'';
+ const a=$('llau');if(a)a.srcObject=null;const nom=LL.peer?chatName(LL.peer):'',pid=LL.peer;
  Object.assign(LL,{pc:null,id:null,stream:null,t0:0,tm:null,peer:null,ringTm:null,incoming:null,ready:false,q:[],pend:[],muted:false});
- if(msg){llamUI({n:nom||'Llamada',s:msg,b:''});LL.hTm=setTimeout(()=>{if(!LL.id&&!LL.incoming)llamUI(null)},1800)}else if(!LL.id&&!LL.incoming)llamUI(null)}
+ if(msg){llamUI({p:pid,n:nom||'Llamada',s:msg,b:''});LL.hTm=setTimeout(()=>{if(!LL.id&&!LL.incoming)llamUI(null)},1800)}else if(!LL.id&&!LL.incoming)llamUI(null)}
 function llamListen(){if(window._llOn||!fbDb||!llamOn())return;window._llOn=true;const me=chatMe();
  fbDb.collection('llamadas').where('to','==',me).where('state','==','ringing').onSnapshot(sn=>sn.docChanges().forEach(ch=>{const d=ch.doc.data();
   if(ch.type==='added'){if(Date.now()-(d.ts||0)>40000)return;if(LL.id||LL.incoming){fbDb.collection('llamadas').doc(d.id).update({state:'declined'}).catch(()=>{});return}llamEntrante(d)}
@@ -1831,6 +1855,44 @@ function llamListen(){if(window._llOn||!fbDb||!llamOn())return;window._llOn=true
 async function llamProbarMic(){try{const s=await llamMic();s.getTracks().forEach(k=>k.stop());alert('Micrófono listo ✅')}catch(e){alert('No se pudo usar el micrófono. Permita el acceso en el navegador.')}}
 function llamCard(){const on=DB.cfg.llamOn!==0,v=k=>esc(DB.cfg[k]||'');
  return `<h3 style="margin:0 0 4px">📞 Llamadas de voz</h3><p style="font-size:12.5px;color:var(--gris)">Desde el chat directo, el administrador y cada vendedor pueden llamarse. Las dos personas deben tener el panel abierto. No cuesta nada: la voz va directo entre los dos dispositivos.</p><div class="g"><div><label>Llamadas</label><select onchange="DB.cfg.llamOn=+this.value;save()"><option value="1" ${on?'selected':''}>Activadas</option><option value="0" ${on?'':'selected'}>Desactivadas</option></select></div></div><details style="margin-top:10px"><summary style="cursor:pointer;font-size:13px">Opcional: servidor TURN (si alguna llamada no conecta)</summary><p style="font-size:12px;color:var(--gris)">Algunas redes de datos móviles bloquean la conexión directa. Un servidor TURN lo resuelve; lo ofrecen servicios externos. Déjelo vacío si no lo necesita.</p><div class="g"><div><label>Dirección (turn:… o turns:…)</label><input value="${v('turnUrl')}" onchange="DB.cfg.turnUrl=this.value.trim();save()"></div><div><label>Usuario</label><input value="${v('turnUser')}" onchange="DB.cfg.turnUser=this.value.trim();save()"></div><div><label>Contraseña</label><input type="password" value="${v('turnCred')}" onchange="DB.cfg.turnCred=this.value.trim();save()"></div></div></details><p><button class="btn" onclick="llamProbarMic()">🎙 Probar micrófono</button></p>`}
+// --- Perfiles (avatar) y emojis del chat ---
+let PERF={},PF={e:'',a:'bounce',img:''},EMO={open:false,tab:0};
+const _okImg=s=>typeof s==='string'&&s.length<700000&&/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(s);
+const _ANS=['bounce','pulse','spin','wiggle','float','shake','flip','none'],_okAn=a=>_ANS.includes(a)?a:'bounce';
+function avFrom(p,s,id){p=p||{};s=s||40;
+ if(_okImg(p.img))return `<span class="av" style="--s:${s}px"><img src="${p.img}" alt=""></span>`;
+ if(typeof p.e==='string'&&p.e&&p.e.length<=16)return `<span class="av" style="--s:${s}px"><span class="em anim-${_okAn(p.a)}">${esc(p.e)}</span></span>`;
+ return `<span class="av dflt" style="--s:${s}px">${id==='admin'?'👑':esc(String(chatName(id)||'?').charAt(0).toUpperCase())}</span>`}
+const avHTML=(id,s)=>avFrom(PERF[id],s,id);
+function avRefresh(){try{topUser()}catch(e){}try{if(vista==='chat'){chatList();chatConv()}}catch(e){}}
+function perfListen(){if(window._pfOn||!fbDb)return;window._pfOn=true;
+ fbDb.collection('perfiles').onSnapshot(sn=>{const o={};sn.docs.forEach(d=>{const x=d.data(),k=d.id||(x&&x.id);if(k)o[k]=x});PERF=o;avRefresh()},e=>console.warn('Perfiles:',e))}
+const PF_EM=['😀','😎','🤩','🥳','😇','🤓','😺','🦊','🐼','🦁','🐯','🐶','🦄','🐝','🦋','🌟','🔥','💎','🎴','👑','🚀','💼','🧁','🍀','🌈','⚡','🎨','🎯','🤝','💰'];
+const PF_AN=[['bounce','Rebote'],['pulse','Latido'],['spin','Giro'],['wiggle','Meneo'],['float','Flotar'],['shake','Temblor'],['flip','Volteo'],['none','Sin movimiento']];
+function perfPrev(){const e=$('pf_pv');if(e)e.innerHTML=avFrom(PF,96,chatMe());document.querySelectorAll('#pf_g button').forEach(b=>b.classList.toggle('on',b.dataset.e===PF.e&&!PF.img))}
+function perfForm(){const id=chatMe();if(!id)return;const p=PERF[id]||{};PF={e:p.e||'',a:_okAn(p.a),img:_okImg(p.img)?p.img:''};
+ $('mb').innerHTML=`<h3 style="margin-top:0">🙂 Mi perfil</h3><p style="font-size:12.5px;color:var(--gris);margin:0 0 10px">Elija un emoji con movimiento, o suba una foto o un GIF. Lo verán en el chat y en las llamadas.</p><div id="pf_pv" style="text-align:center;margin:6px 0 12px"></div><label>Emoji animado</label><div class="pfg" id="pf_g">${PF_EM.map(e=>`<button type="button" data-e="${e}" onclick="PF.e=this.dataset.e;PF.img='';perfPrev()">${e}</button>`).join('')}</div><div class="g" style="margin-top:10px"><div><label>Movimiento</label><select onchange="PF.a=this.value;perfPrev()">${PF_AN.map(([k,n])=>`<option value="${k}" ${PF.a===k?'selected':''}>${n}</option>`).join('')}</select></div></div><label style="display:block;margin-top:12px">Foto o GIF</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn s" style="cursor:pointer">📷 Tomar foto<input type="file" accept="image/*" capture="user" hidden onchange="perfFile(this)"></label><label class="btn s" style="cursor:pointer">🖼 Elegir imagen o GIF<input type="file" accept="image/*" hidden onchange="perfFile(this)"></label></div><p style="font-size:11.5px;color:var(--gris);margin:6px 0 0">Los GIF pueden pesar hasta 450 KB. Las fotos se reducen solas.</p><div style="display:flex;gap:8px;justify-content:space-between;margin-top:16px;flex-wrap:wrap"><button class="btn d" onclick="PF={e:'',a:'bounce',img:''};perfSave()">Quitar mi avatar</button><span><button class="btn" onclick="cerrar()">Cancelar</button> <button class="btn p" onclick="perfSave()">Guardar</button></span></div>`;$('md').classList.add('on');perfPrev()}
+function perfFile(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;if(!/^image\//.test(f.type))return alert('Elija una imagen.');
+ if(f.type==='image/gif'){if(f.size>450000)return alert('El GIF pesa demasiado (máximo 450 KB). Elija uno más liviano o use una foto.');const r=new FileReader();r.onload=()=>{PF.img=String(r.result);PF.e='';perfPrev()};r.readAsDataURL(f);return}
+ createImageBitmap(f).then(bm=>{const m=192,k=Math.max(m/bm.width,m/bm.height),w=bm.width*k,h=bm.height*k,c=document.createElement('canvas');c.width=c.height=m;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,m,m);x.drawImage(bm,(m-w)/2,(m-h)/2,w,h);PF.img=c.toDataURL('image/jpeg',.82);PF.e='';perfPrev();bm.close&&bm.close()}).catch(()=>alert('No se pudo leer la imagen.'))}
+async function perfSave(){const id=chatMe();if(!id||!fbDb)return alert('Se necesita conexión a internet.');const o={id,ts:Date.now()};if(PF.img)o.img=PF.img;else if(PF.e){o.e=PF.e;o.a=_okAn(PF.a)}
+ try{await fbDb.collection('perfiles').doc(id).set(o);PERF[id]=o;cerrar();avRefresh()}catch(e){alert('No se pudo guardar el perfil. Revise su conexión.')}}
+const EMO_T=[['😊','Caras','😀😃😄😁😆😅😂🤣😊🙂😉😍🥰😘😋😎🤩🥳🤗🤔😏😴😮😢😭😡😱🥺😇🙄😬🤯😜🤪😌😔😤'],['👍','Gestos','👍👎👏🙌🙏💪👌✌️🤞👋🤙👈👉👆👇✋🖐️🤟🫡🫶✍️👀🤝💅'],['💼','Negocio','💼📄🧾💰💵💳🏦📦🚚📌📍📞📱💻✉️📅⏰🎴🎁🎉🎂🎈🛒🏷️✂️📎🖊️✅❌⚠️🔔📈📉🧮'],['🐶','Natur.','🐶🐱🐼🦁🐯🐻🦄🐝🦋🌸🌹🌻🌈☀️⭐🔥☕🍕🍔🌮🍰🧁🍩🍎🍇🍓🥑🍺🥂'],['❤️','Símbolos','❤️🧡💛💚💙💜🖤🤍💯✨⚡💥💫🎵🎶➕➖✔️❓❗💬💭🔝🆗🆕🔴🟢🔵']];
+const EMO_S=[['❤️','pulse'],['😍','pulse'],['😂','wiggle'],['🥳','bounce'],['👍','bounce'],['👏','shake'],['🔥','pulse'],['🎉','bounce'],['😎','float'],['🤗','wiggle'],['😭','shake'],['😡','shake'],['🙏','float'],['💰','spin'],['⭐','spin'],['📞','wiggle'],['✅','pulse'],['🤝','bounce'],['😴','float'],['🚀','float']];
+const _seg=s=>Array.from(typeof Intl!=='undefined'&&Intl.Segmenter?new Intl.Segmenter('es',{granularity:'grapheme'}).segment(s):s,x=>x.segment||x);
+function emoHTML(){const tabs=EMO_T.map((x,i)=>`<button type="button" class="${EMO.tab===i?'on':''}" title="${x[1]}" onclick="emoTab(${i})">${x[0]}</button>`).join('')+`<button type="button" class="${EMO.tab===9?'on':''}" title="Animados" onclick="emoTab(9)">🎭</button>`;
+ const g=EMO.tab===9?`<div class="emog stk">${EMO_S.map(([e,a])=>`<button type="button" onclick="chatSticker('${e}','${a}')"><span class="em anim-${a}">${e}</span></button>`).join('')}</div>`:`<div class="emog">${_seg(EMO_T[EMO.tab][2]).map(e=>`<button type="button" onclick="emoPut(this.textContent)">${e}</button>`).join('')}</div>`;
+ return `<div class="emot">${tabs}</div>${g}`}
+function emoToggle(){EMO.open=!EMO.open;emoDraw()}
+function emoTab(i){EMO.tab=i;emoDraw()}
+function emoDraw(){const e=$('emop');if(!e)return;e.classList.toggle('on',EMO.open);if(EMO.open)e.innerHTML=emoHTML()}
+function emoPut(s){const t=$('chin');if(!t)return;const a=t.selectionStart==null?t.value.length:t.selectionStart,b=t.selectionEnd==null?t.value.length:t.selectionEnd;t.value=t.value.slice(0,a)+s+t.value.slice(b);t.selectionStart=t.selectionEnd=a+s.length;t.focus()}
+function chatSticker(e,a){if(!_ANS.includes(a)||!CH.sel)return;const i=$('chin');if(!i)return;const d=i.value;i.value='{s:'+e+':'+a+'}';chatSend();i.value=d;EMO.open=false;emoDraw()}
+const _STK=/^\{s:([^:{}]{1,16}):(bounce|pulse|spin|wiggle|float|shake|flip|none)\}$/,_BIG=/^(?:\p{Extended_Pictographic}\uFE0F?(?:\u200D\p{Extended_Pictographic}\uFE0F?)*\s*){1,3}$/u;
+function chatCb(t){t=String(t==null?'':t);const m=_STK.exec(t);if(m)return `<div class="cb stk"><span class="em anim-${m[2]}">${esc(m[1])}</span></div>`;
+ return `<div class="cb ${_BIG.test(t.trim())?'big':''}">${esc(t).replace(/\n/g,'<br>')}</div>`}
+const chatPrev=t=>{const m=_STK.exec(String(t));return m?m[1]+' Sticker':t};
+document.addEventListener('click',e=>{if(EMO.open&&!e.target.closest('.emop,.emob')){EMO.open=false;emoDraw()}});
 // --- Estilos de voz (usan las voces en español que tenga cada dispositivo) ---
 const VOZ_PERF={dama:'Dama (la de siempre)',natf:'Natural femenina',natm:'Natural masculina',jarvis:'Jarvis · asistente formal',manual:'Elegir una voz de este dispositivo'},VOZ_A={dama:[.95,1.1],natf:[1,1],natm:[1,1],jarvis:[.9,.7],manual:[1,1]};
 const vozLista=()=>(window.speechSynthesis?speechSynthesis.getVoices():[]).filter(v=>/^es/i.test(v.lang));
@@ -1957,7 +2019,7 @@ function chatListen(){if(_chOn||!fbDb)return;_chOn=true;let first=true;
 R.chat=function(){if(!fbDb){$('v').innerHTML='<div class="card"><div class="vacio">El chat necesita conexión a internet.</div></div>';return}chatListen();
  $('v').innerHTML=`<div class="chw ${CH.sel?'sel':''}" id="chw"><div class="chl card" id="chl"></div><div class="chm card" id="chm"></div></div>`;chatList();chatConv()};
 function chatList(){const el=$('chl');if(!el)return;const L=chatVis().sort((a,b)=>(b.lastTs||0)-(a.lastTs||0)),dms=L.filter(c=>c.type==='dm'),gs=L.filter(c=>c.type==='grp');
- const it=c=>`<div class="chi ${CH.sel===c.id?'on':''}" onclick="chatOpen('${c.id}')"><div class="cha">${c.type==='grp'?'👥':'👤'}</div><div class="chn"><b>${esc(chatTitle(c))}</b><small>${esc(c.lastTxt||(c.ph?'Sin mensajes':''))}</small></div>${chatUn(c)?'<i class="cbd">•</i>':''}</div>`;
+ const it=c=>`<div class="chi ${CH.sel===c.id?'on':''}" onclick="chatOpen('${c.id}')"><div class="cha">${c.type==='grp'?'👥':avHTML(esAdmin()?c.id.slice(3):'admin',38)}</div><div class="chn"><b>${esc(chatTitle(c))}</b><small>${esc(c.lastTxt||(c.ph?'Sin mensajes':''))}</small></div>${chatUn(c)?'<i class="cbd">•</i>':''}</div>`;
  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3 style="margin:0">💬 Chat</h3><button class="btn p s" onclick="chatNewGrp()">+ Grupo</button></div><div class="chs">Mensajes directos</div>${dms.map(it).join('')||'<div class="vacio">Sin contactos.</div>'}<div class="chs">Grupos</div>${gs.map(it).join('')||'<div class="vacio">Aún no hay grupos.</div>'}`}
 function chatOpen(id){CH.sel=id;CH.msgs=[];if(CH.unsub){CH.unsub();CH.unsub=null}const w=$('chw');if(w)w.classList.add('sel');
  CH.unsub=fbDb.collection('chats').doc(id).collection('msgs').orderBy('ts').limitToLast(300).onSnapshot(sn=>{CH.msgs=sn.docs.map(d=>d.data());if(CH.sel===id){chatConv();chatMark(id,(CH.msgs[CH.msgs.length-1]||{}).ts);chatList()}},()=>{});chatList();chatConv()}
@@ -1965,10 +2027,10 @@ function chatBack(){CH.sel=null;if(CH.unsub){CH.unsub();CH.unsub=null}const w=$(
 function chatConv(){const el=$('chm');if(!el)return;const c=chatVis().find(x=>x.id===CH.sel);
  if(!c){el.innerHTML='<div class="vacio" style="margin:auto">Elija una conversación</div>';return}
  const i0=$('chin'),prev=i0?i0.value:'',had=!!i0&&document.activeElement===i0,me=chatMe(),grp=c.type==='grp';
- el.innerHTML=`<div class="chh"><button class="btn s chb" onclick="chatBack()">‹</button><b>${esc(chatTitle(c))}</b>${!grp&&llamOn()?`<button class="btn s" style="margin-left:auto" onclick="llamar('${c.id}')">📞 Llamar</button>`:''}${grp?`<small>${esc((c.members||[]).map(chatName).join(', '))}</small>`:''}${grp&&(esAdmin()||c.by===me)?`<button class="btn s d" style="margin-left:auto" onclick="chatDelGrp('${c.id}')">🗑 Eliminar grupo</button>`:''}</div><div class="chms" id="chms">${CH.msgs.map(m=>`<div class="cm ${m.from===me?'me':''}">${grp&&m.from!==me?`<small>${esc(m.fn||'')}</small>`:''}<div class="cb">${esc(m.t).replace(/\n/g,'<br>')}</div><small>${new Date(m.ts).toLocaleTimeString('es-PA',{hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')||'<div class="vacio">Escriba el primer mensaje 👋</div>'}</div><div class="chin"><textarea id="chin" rows="1" placeholder="Escriba un mensaje…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend()}" onfocus="setTimeout(()=>{this.scrollIntoView({block:'end',behavior:'smooth'});const b=$('chms');if(b)b.scrollTop=b.scrollHeight},300)">${esc(prev)}</textarea><button class="btn p" onclick="chatSend()">Enviar</button></div>`;
+ el.innerHTML=`<div class="chh"><button class="btn s chb" onclick="chatBack()">‹</button>${grp?'':avHTML(esAdmin()?c.id.slice(3):'admin',34)}<b>${esc(chatTitle(c))}</b>${!grp&&llamOn()?`<button class="btn s" style="margin-left:auto" onclick="llamar('${c.id}')">📞 Llamar</button>`:''}${grp?`<small>${esc((c.members||[]).map(chatName).join(', '))}</small>`:''}${grp&&(esAdmin()||c.by===me)?`<button class="btn s d" style="margin-left:auto" onclick="chatDelGrp('${c.id}')">🗑 Eliminar grupo</button>`:''}</div><div class="chms" id="chms">${CH.msgs.map(m=>`<div class="cm ${m.from===me?'me':''}">${grp&&m.from!==me?`<small>${esc(m.fn||'')}</small>`:''}${chatCb(m.t)}<small>${new Date(m.ts).toLocaleTimeString('es-PA',{hour:'2-digit',minute:'2-digit'})}</small></div>`).join('')||'<div class="vacio">Escriba el primer mensaje 👋</div>'}</div><div class="chin"><div class="emop ${EMO.open?'on':''}" id="emop">${EMO.open?emoHTML():''}</div><button type="button" class="btn s emob" onclick="emoToggle()" title="Emojis">😊</button><textarea id="chin" rows="1" placeholder="Escriba un mensaje…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend()}" onfocus="setTimeout(()=>{this.scrollIntoView({block:'end',behavior:'smooth'});const b=$('chms');if(b)b.scrollTop=b.scrollHeight},300)">${esc(prev)}</textarea><button class="btn p" onclick="chatSend()">Enviar</button></div>`;
  const b=$('chms');if(b)b.scrollTop=b.scrollHeight;if(had){const n=$('chin');if(n)n.focus()}}
 async function chatSend(){const i=$('chin');if(!i||!CH.sel||!fbDb)return;const t=(i.value||'').trim().slice(0,2000);if(!t)return;const c=chatVis().find(x=>x.id===CH.sel);if(!c)return;i.value='';
- const me=chatMe(),ts=Date.now(),id=uid(),base={id:c.id,type:c.type,members:c.members||[],lastTs:ts,lastFrom:me,lastTxt:((c.type==='grp'?chatName(me)+': ':'')+t).slice(0,60)};
+ const me=chatMe(),ts=Date.now(),id=uid(),base={id:c.id,type:c.type,members:c.members||[],lastTs:ts,lastFrom:me,lastTxt:((c.type==='grp'?chatName(me)+': ':'')+chatPrev(t)).slice(0,60)};
  if(c.type==='grp'){base.name=c.name;base.by=c.by||''}
  try{const ref=fbDb.collection('chats').doc(c.id);await ref.collection('msgs').doc(id).set({id,from:me,fn:chatName(me),t,ts});await ref.set(base,{merge:true});chatMark(c.id,ts)}catch(e){alert('No se pudo enviar. Revise su conexión.')}}
 function chatNewGrp(){const me=chatMe(),op=usuarios().filter(u=>u.id!==me);
@@ -2370,7 +2432,7 @@ function authUI(h){let o=$('auth');if(!o){o=document.createElement('div');o.id='
 function authOff(){const o=$('auth');if(o)o.style.display='none'}
 const authMsg=t=>{const e=$('au_m');if(e)e.textContent=t};
 function topUser(){let c=$('uchip');if(!c){c=document.createElement('div');c.id='uchip';c.style.cssText='display:flex;align-items:center;gap:8px;font-size:12.5px';document.querySelector('.top').appendChild(c)}
- const u=usr();c.innerHTML=`<span>👤 ${esc(esAdmin()?'Administrador':u?u.n:'')}</span><button class="btn s" onclick="salir()">Salir</button>`;
+ const u=usr();c.innerHTML=`<button class="uav" onclick="perfForm()" title="Mi perfil">${avHTML(chatMe(),30)}<span>${esc(esAdmin()?'Administrador':u?u.n:'')}</span></button><button class="btn s" onclick="salir()">Salir</button>`;
  document.body.classList.toggle('vnd',esVend());const sf=document.querySelector('.sf');if(sf)sf.style.display=esAdmin()?'':'none'}
 let _note=(function(){try{const n=localStorage.getItem('tj_sesion_note');if(n)localStorage.removeItem('tj_sesion_note');return n||''}catch(e){return ''}})();
 function authInit(){
@@ -2393,7 +2455,7 @@ function authLimpia(){if(!esAdmin())return;if(DB.cfg.admin||usuarios().some(u=>u
 function entrar(){const f=navOrd().find(x=>puede(x[0]));topUser();if(!f){authUI('<h2>Sin accesos</h2><p>Su usuario aún no tiene paneles asignados. Pídale al administrador que se los active.</p><button class="btn" onclick="salir()">Salir</button>');return}
  if(!window._syncOn){window._syncOn=1;iniciarSincronizacionNube()}
  if(!window._catSync){window._catSync=1;sincronizarCatalogoNube()}
- setTimeout(authLimpia,4000);authOff();nav();galListen();chatListen();llamListen();tiendaListen();setTimeout(cobroVoz,3500);ir(f[0])}
+ setTimeout(authLimpia,4000);authOff();nav();galListen();chatListen();llamListen();perfListen();tiendaListen();setTimeout(cobroVoz,3500);ir(f[0])}
 function authRefresh(){if(!SES)return;topUser();nav();if(!puede(vista))ir(vista)}
 function salir(){try{if(LL.id)llamCuelga();else if(LL.incoming)llamRechazar()}catch(e){}if(CH.unsub){CH.unsub();CH.unsub=null}firebase.auth().signOut().finally(()=>location.reload())}
 // --- Administración de vendedores (solo admin, en Configuración) ---
