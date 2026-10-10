@@ -974,6 +974,20 @@ html.shopmode:not([data-kt=dark]) #shop .knav{background:rgba(255,255,255,.92);b
 html.shopmode:not([data-kt=dark]) #shop .kreg-w{background:linear-gradient(180deg,#FFF0F5 0%,#fff 48%)}
 html.shopmode:not([data-kt=dark]) #shop .kimg{background:#FAFAFB}
 html.shopmode:not([data-kt=dark]) #ktheme{background:#fff;box-shadow:0 0 0 1px #ECECF0,0 6px 16px -8px rgba(16,16,24,.25)}
+/* ===== Tienda: logo con más presencia ===== */
+html.shopmode #shop{--hh:calc(78px + env(safe-area-inset-top))}
+html.shopmode #shop .khd .kbrand{gap:14px}
+html.shopmode #shop .khd .kbrand>img{height:58px!important;max-width:min(54vw,220px)!important;padding:0!important;background:transparent!important;border-radius:0!important;box-shadow:none!important;object-fit:contain;filter:drop-shadow(0 2px 6px rgba(16,16,24,.12))}
+html[data-kt=dark].shopmode #shop .khd .kbrand>img{background:#fff!important;padding:4px 10px!important;border-radius:14px!important}
+html.shopmode #shop .kreg img{max-height:130px!important;max-width:88%!important;margin-bottom:12px}
+@media(min-width:900px){html.shopmode #shop{--hh:calc(92px + env(safe-area-inset-top))}html.shopmode #shop .khd .kbrand>img{height:72px!important;max-width:290px!important}}
+.av[data-uid]{cursor:zoom-in}#uchip .av,#pf_pv .av{cursor:pointer}
+#avzoom{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;cursor:zoom-out;animation:kfade .2s}
+#avzoom img{max-width:94vw;max-height:80vh;object-fit:contain;border-radius:18px;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+#avzoom .avze{font-size:min(60vw,240px);line-height:1}
+#avzoom .avze.dflt{width:min(70vw,260px);height:min(70vw,260px);display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,var(--az),#FF9F0A);color:#fff;font-weight:800;font-size:min(30vw,120px)}
+#avzoom .avzc{position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom));text-align:center;color:#fff}#avzoom .avzc b{display:block;font-size:17px}#avzoom .avzc small{opacity:.75}
+#avzoom button{position:absolute;top:calc(14px + env(safe-area-inset-top));right:14px;width:44px;height:44px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;font-size:20px;cursor:pointer}
 </style></head><body>
 <div class="aurora" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
 <aside class="sb">
@@ -2071,11 +2085,16 @@ let PERF={},PF={e:'',a:'bounce',img:''},EMO={open:false,tab:0};
 const _okImg=s=>typeof s==='string'&&s.length<700000&&/^data:image\/(png|jpe?g|gif|webp);base64,[A-Za-z0-9+\/=]+$/.test(s);
 const _ANS=['bounce','pulse','spin','wiggle','float','shake','flip','none'],_okAn=a=>_ANS.includes(a)?a:'bounce';
 function avFrom(p,s,id){p=p||{};s=s||40;
- if(_okImg(p.img))return `<span class="av" style="--s:${s}px"><img src="${p.img}" alt=""></span>`;
- if(typeof p.e==='string'&&p.e&&p.e.length<=16)return `<span class="av" style="--s:${s}px"><span class="em anim-${_okAn(p.a)}">${esc(p.e)}</span></span>`;
- return `<span class="av dflt" style="--s:${s}px">${id==='admin'?'👑':esc(String(chatName(id)||'?').charAt(0).toUpperCase())}</span>`}
+ if(_okImg(p.img))return `<span class="av" data-uid="${id||''}" style="--s:${s}px"><img src="${p.img}" alt=""></span>`;
+ if(typeof p.e==='string'&&p.e&&p.e.length<=16)return `<span class="av" data-uid="${id||''}" style="--s:${s}px"><span class="em anim-${_okAn(p.a)}">${esc(p.e)}</span></span>`;
+ return `<span class="av dflt" data-uid="${id||''}" style="--s:${s}px">${id==='admin'?'👑':esc(String(chatName(id)||'?').charAt(0).toUpperCase())}</span>`}
 const avHTML=(id,s)=>avFrom(PERF[id],s,id);
-function avBig(id){const p=PERF[id]||{},nm=chatName(id),rol=id==='admin'?'Administrador':'Vendedor';$('mb').innerHTML=`<div style="text-align:center">${_okImg(p.img)?`<img src="${p.img}" alt="" style="max-width:100%;max-height:60vh;border-radius:18px">`:avFrom(p,200,id)}<h3 style="margin:12px 0 2px">${esc(nm)}</h3><small style="color:var(--gris)">${rol}</small><div style="margin-top:16px"><button class="btn" onclick="cerrar()">Cerrar</button></div></div>`;$('md').classList.add('on')}
+function avBig(id){const p=PERF[id]||{},nm=chatName(id),rol=id==='admin'?'Administrador':'Vendedor',old=document.getElementById('avzoom');if(old)old.remove();
+ const z=document.createElement('div');z.id='avzoom';z.onclick=()=>z.remove();let body;
+ if(_okImg(p.img))body=`<img src="${p.img}" alt="">`;else if(typeof p.e==='string'&&p.e&&p.e.length<=16)body=`<span class="avze"><span class="em anim-${_okAn(p.a)}">${esc(p.e)}</span></span>`;else body=`<span class="avze dflt">${id==='admin'?'👑':esc(String(nm).charAt(0).toUpperCase())}</span>`;
+ z.innerHTML=body+`<div class="avzc"><b>${esc(nm)}</b><small>${rol}</small></div><button aria-label="Cerrar">✕</button>`;document.body.appendChild(z)}
+document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('.av[data-uid]');if(!a||a.closest('#uchip,#pf_pv,.lla'))return;const id=a.dataset.uid;if(!id)return;e.stopPropagation();e.preventDefault();avBig(id)},true);
+addEventListener('keydown',e=>{if(e.key==='Escape'){const z=document.getElementById('avzoom');if(z)z.remove()}});
 function avRefresh(){try{if(vista==='vend'&&$('vendCard')&&!$('md').classList.contains('on'))R.vend()}catch(e){}try{topUser()}catch(e){}try{if(vista==='chat'){chatList();chatConv()}}catch(e){}}
 function perfListen(){if(window._pfOn||!fbDb)return;window._pfOn=true;
  fbDb.collection('perfiles').onSnapshot(sn=>{const o={};sn.docs.forEach(d=>{const x=d.data(),k=d.id||(x&&x.id);if(k)o[k]=x});PERF=o;avRefresh()},e=>console.warn('Perfiles:',e))}
