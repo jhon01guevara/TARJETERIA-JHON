@@ -2852,9 +2852,11 @@ async function lbgCompress(f){const bmp=await createImageBitmap(f);let W=Math.mi
   W=Math.round(W*.8)}throw new Error('grande')}
 async function lbgCloudUpload(f){const kind=lbgIsVid(f.name,f.type)?'video':'image';
  try{if(!(window.firebase&&firebase.storage))throw 0;const ref=firebase.storage().ref('loginbg/'+Date.now()+'_'+f.name.replace(/[^\w.\-]+/g,'_'));
-  await new Promise((res,rej)=>{const t=ref.put(f,f.type?{contentType:f.type}:undefined);t.on('state_changed',s=>lbgStatus('☁ Subiendo a la nube… '+Math.round(s.bytesTransferred/s.totalBytes*100)+'%'),rej,res)});
+  await new Promise((res,rej)=>{const t=ref.put(f,f.type?{contentType:f.type}:undefined);let last=-1,idle=0,fin=0;
+   const wd=setInterval(()=>{if(fin)return;idle++;if(idle>=(last>0?30:12)){fin=1;clearInterval(wd);try{t.cancel()}catch(e){}rej(new Error('stall'))}},1000);
+   t.on('state_changed',s=>{if(s.bytesTransferred!==last){last=s.bytesTransferred;idle=0}lbgStatus('☁ Subiendo a la nube… '+Math.round(s.bytesTransferred/(s.totalBytes||1)*100)+'%')},e=>{fin=1;clearInterval(wd);rej(e)},()=>{fin=1;clearInterval(wd);res()})});
   const url=await ref.getDownloadURL();return{mode:'url',url,kind,spath:ref.fullPath}}catch(e){}
- if(kind==='image'){try{lbgStatus('☁ Subiendo versión optimizada…');return{mode:'img',kind,img:await lbgCompress(f)}}catch(e){}}
+ if(kind==='image'){try{lbgStatus('☁ La subida directa no respondió. Subiendo versión optimizada…');return{mode:'img',kind,img:await lbgCompress(f)}}catch(e){}}
  return null}
 function lbgDelStorage(c){try{if(c&&c.spath&&window.firebase&&firebase.storage)firebase.storage().ref(c.spath).delete().catch(()=>{})}catch(e){}}
 async function lbgPull(force){if(LBG.pulling||typeof fbDb==='undefined'||!fbDb)return;LBG.pulling=1;
