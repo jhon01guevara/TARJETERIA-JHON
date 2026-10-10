@@ -732,7 +732,7 @@ html.shopmode,html.shopmode body{background:#FFF8F8}
 #ubiWrap{position:relative;margin-top:10px}
 #ubiWrap .ubifbar{display:none}
 #ubiWrap .ubifb{position:absolute;right:10px;bottom:34px;z-index:1000;width:42px;height:42px;border:0;border-radius:12px;background:#fff;color:#222;font-size:22px;box-shadow:0 2px 8px rgba(0,0,0,.35);cursor:pointer}
-#ubiWrap.ubifs{position:fixed;inset:0;margin:0;z-index:5000;background:#000}
+#ubiWrap.ubifs{position:fixed;inset:0;width:100vw;height:100vh;height:100dvh;margin:0;z-index:5000;background:#000}
 #ubiWrap.ubifs #ubiMap{height:100%!important;border-radius:0!important}
 #ubiWrap.ubifs .ubifb{display:none}
 #ubiWrap.ubifs .ubifbar{display:flex;position:absolute;top:0;left:0;right:0;z-index:1000;gap:8px;padding:calc(10px + env(safe-area-inset-top)) 10px 10px 56px;background:linear-gradient(rgba(0,0,0,.55),transparent)}
@@ -1302,7 +1302,7 @@ function pintarMapaUbi(){
  mapaUbi.locate({setView:true,maxZoom:16,enableHighAccuracy:true})
 }
 let ubiTmp=null;
-function ubiFull(on){const w=$('ubiWrap');if(!w)return;on=on===undefined?!w.classList.contains('ubifs'):!!on;w.classList.toggle('ubifs',on);document.body.style.overflow=on?'hidden':'';[100,400].forEach(ms=>setTimeout(()=>mapaUbi&&mapaUbi.invalidateSize(),ms))}
+function ubiFull(on){const w=$('ubiWrap');if(!w)return;on=on===undefined?!w.classList.contains('ubifs'):!!on;if(on){if(!w._home){w._home=w.parentNode;w._homeNext=w.nextSibling}document.body.appendChild(w)}else if(w._home){if(w._homeNext&&w._homeNext.parentNode===w._home)w._home.insertBefore(w,w._homeNext);else w._home.appendChild(w)}w.classList.toggle('ubifs',on);document.body.style.overflow=on?'hidden':'';[50,150,400].forEach(ms=>setTimeout(()=>mapaUbi&&mapaUbi.invalidateSize(),ms))}
 addEventListener('keydown',e=>{if(e.key==='Escape'){const w=$('ubiWrap');if(w&&w.classList.contains('ubifs'))ubiFull(0)}});
 function ubiParse(t){t=String(t||'').trim();if(!t)return null;try{t=decodeURIComponent(t)}catch(e){}
  const rx=[/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,/[?&](?:q|ll|query|center|destination|daddr)=\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i,/^\s*(-?\d{1,2}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/];
@@ -1683,6 +1683,18 @@ function recAdd(){const m=$('rc_m').value.trim().toLowerCase();if(!/^\S+@\S+\.\S
 function recDel(i){if(!confirm('¿Quitar este correo de recuperación?'))return;(DB.cfg.recMails||[]).splice(i,1);save();R.config()}
 const _rc=R.config;
 R.config=function(){_rc();if(!esAdmin())return;const c=document.createElement('div');c.className='card';c.id='recCard';c.innerHTML=recCard();const v=$('v');v.insertBefore(c,v.firstChild);const vc=document.createElement('div');vc.className='card';vc.innerHTML=vozCard();c.after(vc);const cc=document.createElement('div');cc.className='card';cc.innerHTML=cintCard();vc.after(cc);const lc=document.createElement('div');lc.className='card';lc.innerHTML=llamCard();cc.after(lc);const tc=document.createElement('div');tc.className='card';tc.id='tplCard';tc.innerHTML=tplCard();v.insertBefore(tc,v.firstChild)};
+// --- Cierre de sesión por inactividad (configurable por el administrador) ---
+function sesCard(){const m=+(DB.cfg.sesionMin||0);const op=[0,5,10,15,30,60,120];return `<h3 style="margin:0">⏱ Cierre de sesión por inactividad</h3><p style="font-size:12.5px;color:var(--gris)">Si deja el panel abierto sin tocarlo (como administrador o como vendedor), la sesión se cerrará sola pasado este tiempo. Use 0 para desactivarlo.</p><div class="g" style="margin:8px 0 6px"><div><label>Minutos de inactividad</label><select id="ses_m" onchange="sesSet(this.value)">${op.map(n=>`<option value="${n}" ${n===m?'selected':''}>${n===0?'Nunca (desactivado)':n+' minutos'}</option>`).join('')}</select></div></div><p style="font-size:11.5px;color:var(--gris)">${m>0?'✅ Activo: la sesión se cerrará tras '+m+' min. sin actividad.':'⛔ Desactivado: la sesión no se cierra sola.'}</p>`}
+function sesSet(v){DB.cfg.sesionMin=Math.max(0,Math.round(+v||0));save();idleArm();R.config()}
+const _rcs=R.config;
+R.config=function(){_rcs();if(!esAdmin())return;const sc=document.createElement('div');sc.className='card';sc.id='sesCard';sc.innerHTML=sesCard();const v=$('v');v.insertBefore(sc,v.firstChild)};
+let _idleTimer=null,_idleLast=Date.now(),_idleArmed=0;
+function idleBump(){_idleLast=Date.now()}
+function idleCheck(){if(!SES)return;const min=+(DB.cfg.sesionMin||0);if(!min)return;if(Date.now()-_idleLast>=min*60000){try{localStorage.setItem('tj_sesion_note','Sesión cerrada por inactividad.')}catch(e){}try{salir()}catch(e){location.reload()}}}
+function idleArm(){if(!_idleArmed){_idleArmed=1;['mousedown','mousemove','keydown','touchstart','wheel','scroll'].forEach(ev=>document.addEventListener(ev,idleBump,{passive:true}))}idleBump();if(_idleTimer)clearInterval(_idleTimer);_idleTimer=setInterval(idleCheck,15000)}
+const _entrarSes=entrar;entrar=function(){_entrarSes.apply(this,arguments);idleArm()};
+const _salirSes=salir;salir=function(){if(_idleTimer){clearInterval(_idleTimer);_idleTimer=null}return _salirSes.apply(this,arguments)};
+
 // --- Facturas a crédito → evento de cobro en la agenda ---
 function credAg(f){if(!f||!f.credito||!f.credito.vence||f.anulada)return;if(DB.agenda.some(e=>e.fid===f.id))return;
  const c=DB.cli.find(x=>x.n===f.cli);
@@ -2072,9 +2084,13 @@ function vdBars(id,p){const L=act().filter(f=>vdOwn(f,id)),h=hoy(),ks=[];let mo=
  const v=ks.map(k=>L.filter(f=>mo?f.fecha.slice(0,7)===k:f.fecha===k).reduce((s,f)=>s+f.total,0)),mx=Math.max(...v,1);
  return ks.map((k,i)=>`<div class="vdb"><i style="height:${Math.round(v[i]/mx*100)}%" title="${mo?MESC[+k.slice(5,7)-1]+' '+k.slice(0,4):fdate(k)}: ${$$(v[i])}"></i><small>${mo?MESC[+k.slice(5,7)-1]:k.slice(8)}</small></div>`).join('')}
 const vdChips=()=>VDP.map(x=>`<button class="btn s ${VD.p===x[0]?'p':''}" onclick="vdSet('${x[0]}')">${x[1]}</button>`).join(' ');
+function vdShareHTML(){const link=tdLink();return `<div class="card" id="vdShare"><h3 style="margin:0">🛍 Comparte tu tienda virtual</h3><p style="font-size:12.5px;color:var(--gris);margin:4px 0 10px">Comparta este enlace con sus clientes. Los pedidos y registros que lleguen por aquí quedan a su nombre.</p><input id="vd_link" readonly value="${esc(link)}" onfocus="this.select()" style="margin-bottom:8px"><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn p" onclick="vdShareWa()">💬 WhatsApp</button><button class="btn" onclick="vdShareMail()">✉ Correo</button><button class="btn s" onclick="vdShareCopy()">📋 Copiar enlace</button></div></div>`}
+function vdShareWa(){window.open('https://wa.me/?text='+encodeURIComponent('Hola, le comparto el catálogo virtual de '+(DB.cfg.nombre||'Tarjetería Jhon')+'. Vea los productos, precios y haga su pedido aquí: '+tdLink()),'_blank')}
+function vdShareMail(){const s=encodeURIComponent('Catálogo virtual de '+(DB.cfg.nombre||'Tarjetería Jhon')),b=encodeURIComponent('Hola,\n\nLe comparto el catálogo virtual de '+(DB.cfg.nombre||'Tarjetería Jhon')+' para que vea los productos, los precios y pueda hacer su pedido:\n'+tdLink()+'\n\n¡Gracias por su preferencia!');location.href='mailto:?subject='+s+'&body='+b}
+function vdShareCopy(){const link=tdLink();const ok=()=>alert('Enlace copiado ✔');try{navigator.clipboard.writeText(link).then(ok).catch(()=>{const i=$('vd_link');if(i){i.select();document.execCommand('copy');ok()}})}catch(e){const i=$('vd_link');if(i){i.select();document.execCommand('copy');ok()}}}
 function vdHTML(id){const st=vdStats(id,VD.p),pend=vdPend(id),b=st.cli[0],mine=id===chatMe(),nm=vdName(id),mxc=b?b.t:1,mxp=st.pr[0]?st.pr[0].q:1,rec=st.l.slice(-8).reverse(),pl=VDP.find(x=>x[0]===VD.p)[1],h=hoy();
  const rows=(a,fn)=>a.length?a.map(fn).join(''):'<div class="vacio">Sin datos en este período.</div>';
- return `<div class="vdroot"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h3 style="margin:0">📈 ${mine?'Mi rendimiento':'Rendimiento de '+esc(nm)}</h3><small style="color:var(--gris)">${esc(nm)} · ${pl}</small></div><div style="display:flex;gap:6px;flex-wrap:wrap">${vdChips()}</div></div>
+ return `<div class="vdroot">${mine?vdShareHTML():''}<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h3 style="margin:0">📈 ${mine?'Mi rendimiento':'Rendimiento de '+esc(nm)}</h3><small style="color:var(--gris)">${esc(nm)} · ${pl}</small></div><div style="display:flex;gap:6px;flex-wrap:wrap">${vdChips()}</div></div>
 <div class="vdk"><div><small>💰 Ventas</small><b>${$$(st.tot)}</b></div><div><small>🧾 Facturas</small><b>${st.n}</b></div><div><small>🎯 Ticket promedio</small><b>${$$(st.avg)}</b></div><div><small>⏳ Por cobrar (crédito)</small><b>${$$(vdPm(id))}</b></div><div><small>⭐ Mejor cliente</small><b class="sm">${b?esc(b.n):'—'}</b><small>${b?$$(b.t)+' · '+b.c+' fact.':''}</small></div></div></div>
 <div class="card"><h3>Ventas por ${(VD.p==='anio'||VD.p==='todo')?'mes':'día'}</h3><div class="vdc">${vdBars(id,VD.p)}</div></div>
 <div class="vdg">
@@ -2356,7 +2372,7 @@ const authMsg=t=>{const e=$('au_m');if(e)e.textContent=t};
 function topUser(){let c=$('uchip');if(!c){c=document.createElement('div');c.id='uchip';c.style.cssText='display:flex;align-items:center;gap:8px;font-size:12.5px';document.querySelector('.top').appendChild(c)}
  const u=usr();c.innerHTML=`<span>👤 ${esc(esAdmin()?'Administrador':u?u.n:'')}</span><button class="btn s" onclick="salir()">Salir</button>`;
  document.body.classList.toggle('vnd',esVend());const sf=document.querySelector('.sf');if(sf)sf.style.display=esAdmin()?'':'none'}
-let _note='';
+let _note=(function(){try{const n=localStorage.getItem('tj_sesion_note');if(n)localStorage.removeItem('tj_sesion_note');return n||''}catch(e){return ''}})();
 function authInit(){
  authUI('<p style="margin:0;text-align:center">☁ Conectando…</p>');
  if(!window.firebase||!firebase.auth)return authUI('<h2>Sin conexión</h2><p>Se necesita internet para iniciar sesión.</p><button class="btn p" onclick="location.reload()">Reintentar</button>');
