@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#E0457B">
+<meta name="theme-color" content="#E0457B"><script>if(/[?&]tienda(=|&|$)/.test(location.search)){document.querySelector('meta[name=theme-color]').content='#F5F5F7'}</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -775,6 +775,99 @@ html.shopmode,html.shopmode body{background:#FFF8F8}
 .catqb{border:1px solid var(--linea);background:var(--soft);color:var(--txt);border-radius:99px;padding:5px 11px;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}.catqb:hover,.catqb:active{background:var(--az);border-color:var(--az);color:#fff}
 .catsel{max-width:100%;font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:980px;border:0;background:var(--az-bg);color:var(--az);cursor:pointer;font-family:inherit;width:auto}
 .itcat{display:inline-flex;align-items:center;width:max-content;max-width:100%;margin:0 0 6px;padding:3px 8px;border-radius:980px;background:var(--az-bg);color:var(--az);font-size:10.5px;font-weight:700;line-height:1.2;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* ===== Tienda: estilo Apple (capa de diseño; no altera la lógica) ===== */
+#shop,#shopm,#ksnack{--p:#E0457B;--pc:#FDE8EF;--onpc:#B8225C;--bg:#F5F5F7;--sf:#fff;--sf2:#EFEFF2;--tx:#1D1D1F;--tx2:#6E6E73;--ol:#D2D2D7;--glass:rgba(245,245,247,.72);--sh:0 0 0 .5px rgba(0,0,0,.05),0 2px 12px rgba(0,0,0,.05);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Inter','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
+@media(prefers-color-scheme:dark){#shop,#shopm,#ksnack{--bg:#000;--sf:#1C1C1E;--sf2:#2C2C2E;--tx:#F5F5F7;--tx2:#A1A1A6;--ol:#38383A;--pc:#3A1727;--onpc:#FF9EC0;--glass:rgba(22,22,23,.72);--sh:0 0 0 .5px rgba(255,255,255,.06)}html.shopmode,html.shopmode body{background:#000}}
+html.shopmode,html.shopmode body{background:#F5F5F7}
+@media(prefers-color-scheme:dark){html.shopmode,html.shopmode body{background:#000}}
+#shop{--hh:calc(56px + env(safe-area-inset-top));scroll-behavior:smooth}
+/* Barra superior translúcida */
+#shop .khd{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;min-height:var(--hh);padding:env(safe-area-inset-top) 14px 0;margin:0 -14px;border-radius:0;background:none;box-shadow:none}
+#shop .khd::before{content:'';position:absolute;inset:0 -100vmax;z-index:-1;background:var(--glass);backdrop-filter:saturate(180%) blur(22px);-webkit-backdrop-filter:saturate(180%) blur(22px);box-shadow:0 .5px 0 rgba(0,0,0,.14)}
+#shop .kbrand{flex-direction:row;gap:10px;align-items:center}
+#shop .khd .kbrand>img{height:34px;max-width:120px;padding:3px 6px;border-radius:10px;box-shadow:none;background:#fff}
+#shop .khd .kht{text-align:left}#shop .khd .kht b{font-size:15px!important;font-weight:600;letter-spacing:-.02em}#shop .khd .kht small{font-size:11.5px;margin:0}
+#shop .kha{height:36px;padding:0 16px;border-radius:980px;border:0;background:var(--sf2);font-size:13px;font-weight:500;box-shadow:none}
+#shop .kha:hover{background:var(--ol)}#shop .kha.on{color:var(--p);background:var(--pc)}#shop .kha.pri{background:var(--p);color:#fff}
+/* Hero */
+#shop .khero{margin:20px 0 28px;border-radius:28px;box-shadow:none;background:#1D1D1F}
+#shop .khero-slide::after{background:linear-gradient(0deg,rgba(0,0,0,.62) 0%,rgba(0,0,0,.12) 55%,rgba(0,0,0,0) 100%)}
+#shop .khero-copy{left:24px;bottom:26px;text-shadow:none}
+#shop .khero-copy small{font-size:12px;font-weight:600;letter-spacing:.02em;text-transform:none;opacity:.8}
+#shop .khero-copy b{font-size:clamp(24px,6vw,42px);font-weight:700;letter-spacing:-.03em;line-height:1.05}
+#shop .khero-copy span{font-size:14px;font-weight:500}
+#shop .khero-control{width:36px;height:36px;margin-top:-18px;border-radius:50%;background:rgba(255,255,255,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);box-shadow:none;font-size:22px}
+#shop .khero-dots button{background:rgba(255,255,255,.45)}
+/* Búsqueda y filtros */
+#shop .kstk{top:var(--hh);background:var(--glass);backdrop-filter:saturate(180%) blur(22px);-webkit-backdrop-filter:saturate(180%) blur(22px);padding:8px 14px 6px}
+#shop .ksr{height:44px;border-radius:12px;background:rgba(118,118,128,.12);box-shadow:none}
+#shop .ksr:focus-within{box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 28%,transparent);background:var(--sf)}
+#shop .kchip{height:32px;border:0;border-radius:980px;background:var(--sf);color:var(--tx);font-weight:500;box-shadow:var(--sh)}
+#shop .kchip.on{background:var(--tx);color:var(--bg);font-weight:500}
+#shop .kte{border-radius:50%;background:var(--sf);box-shadow:var(--sh)}
+#shop .ktm.on .kte{background:var(--p);box-shadow:0 6px 16px -6px var(--p)}
+#shop .kmeta{font-size:13px}#shop .kmeta button{font-weight:500}
+#shop .ksort{border:0;border-radius:8px;background:var(--sf);box-shadow:var(--sh)}
+/* Tarjetas de producto */
+#shop .kgrid{gap:14px}
+#shop .kc{background:var(--sf);border-radius:22px;box-shadow:var(--sh);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+#shop .kc:hover{transform:translateY(-4px);box-shadow:0 18px 40px -16px rgba(0,0,0,.22)}
+#shop .kimg{border-radius:0;background:var(--sf2);padding:10px}
+#shop .kimg img{border-radius:14px}
+#shop .kfav{width:34px;height:34px;top:14px;right:14px;background:rgba(255,255,255,.78);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:none}
+#shop .kbd{padding:12px 14px 14px;gap:3px}
+#shop .kcat{padding:0;background:none;color:var(--tx2);font-size:11px;font-weight:600;letter-spacing:.05em}
+#shop .kbd b{font-size:15px;font-weight:600;letter-spacing:-.015em}
+#shop .kp{color:var(--tx);font-size:16px;font-weight:600;letter-spacing:-.02em}
+#shop .kadd{width:34px;height:34px;border-radius:50%;background:var(--p);color:#fff;box-shadow:none}
+#shop .kst,#shopm .kst{height:34px;border-radius:980px;background:var(--sf2);color:var(--tx)}
+#shop .kst button,#shopm .kst button{height:34px;width:32px}
+#shop .kst .kqn,#shopm .kst .kqn{height:34px;border-radius:980px}
+#shop .kbg{left:14px;top:14px;border-radius:980px;padding:4px 10px;font-weight:600;box-shadow:none}
+/* Barra inferior estilo iOS */
+#shop .knav{background:var(--glass);backdrop-filter:saturate(180%) blur(22px);-webkit-backdrop-filter:saturate(180%) blur(22px);border-radius:0;box-shadow:0 -.5px 0 rgba(0,0,0,.14);padding-top:8px}
+#shop .kpill{width:56px;height:28px;border-radius:0;background:none!important}
+#shop .knav small{font-size:10.5px;font-weight:500}
+#shop .knav .on,#shop .knav .on .kpill{color:var(--p)}#shop .knav .on small{font-weight:600}
+#shop .kbdg{font-family:inherit;background:var(--p)}
+/* Botón flotante del pedido */
+.kfab{height:50px;padding:0 22px;border-radius:980px;background:rgba(29,29,31,.9);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',system-ui,sans-serif;font-weight:600;font-size:15px;letter-spacing:-.01em;box-shadow:0 12px 30px -10px rgba(0,0,0,.5)}
+/* Hojas (detalle / pedido) */
+#shopm{background:rgba(0,0,0,.36);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#shopm .ksheet{border-radius:24px 24px 0 0;background:var(--glass);backdrop-filter:saturate(180%) blur(40px);-webkit-backdrop-filter:saturate(180%) blur(40px);box-shadow:0 -10px 50px rgba(0,0,0,.2)}
+#shopm .ksheet:not(.re){background:color-mix(in srgb,var(--bg) 94%,transparent)}
+#shopm .kdi{border-radius:18px;background:var(--sf)}
+#shopm h2{font-size:26px;font-weight:700;letter-spacing:-.025em}#shopm .kdp{font-size:22px;font-weight:600}
+#shopm .ktg button,#shopm .ktg span{border-radius:980px;font-weight:500}
+#shopm .kact2{background:transparent}
+#shopm .kqb{border:0;border-radius:16px;background:var(--sf);box-shadow:var(--sh)}#shopm .kqb.on{background:var(--p);color:#fff;box-shadow:0 8px 20px -8px var(--p)}
+#shopm .kln img{border-radius:10px}
+#shopm textarea,#shop .kf input{border:0;border-radius:12px;background:rgba(118,118,128,.12)}
+#shopm textarea:focus,#shop .kf input:focus{background:var(--sf)}
+#shop .sbtn,#shopm .sbtn{border-radius:980px;min-height:50px;font-weight:600;font-size:16px;letter-spacing:-.01em;box-shadow:none}
+#shop .sbtn:hover,#shopm .sbtn:hover{filter:brightness(1.06)}
+#shopm .sbtn.g{background:rgba(118,118,128,.14)}
+/* Bienvenida / registro */
+#shop .kreg-w{background:linear-gradient(180deg,var(--sf) 0%,var(--bg) 70%)}
+#shop .kreg{border-radius:28px;box-shadow:0 0 0 .5px rgba(0,0,0,.06),0 24px 60px -24px rgba(0,0,0,.22);padding:34px 26px}
+#shop .kreg h2{font-size:28px;font-weight:700;letter-spacing:-.03em}
+#shop .kreg p{font-size:15px}
+/* Aviso */
+#ksnack .ksn{background:rgba(29,29,31,.92);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:980px;padding:12px 10px 12px 20px;font-family:inherit;letter-spacing:-.01em}
+#ksnack .ksn button{font-family:inherit;color:#FF9EC0}
+@media(min-width:900px){
+ #shop .khd{margin:0 -32px;padding:0 32px}
+ #shop .khd .kbrand>img{height:38px;max-width:150px}#shop .khd .kht b{font-size:17px!important}
+ #shop .kstk{top:var(--hh);margin:0;padding:8px 0}#shop .ksr{height:44px}
+ #shop .kmain{gap:36px;margin-top:8px}
+ #shop .kside{top:calc(var(--hh) + 16px);max-height:calc(100vh - var(--hh) - 32px);border-radius:22px;box-shadow:var(--sh)}
+ #shop .ksd{border-radius:10px}#shop .ksd.on{background:var(--pc);color:var(--onpc);font-weight:600}
+ #shop .khero,#shop .khero-slide{min-height:360px}
+ #shop .khero-copy{left:44px;bottom:42px}
+ #shop .kgrid{gap:22px}
+ #shopm .ksheet.wide{border-radius:28px}
+}
+@media(prefers-reduced-motion:reduce){#shop{scroll-behavior:auto}}
 </style></head><body>
 <div class="aurora" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
 <aside class="sb">
