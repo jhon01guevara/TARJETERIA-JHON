@@ -16,6 +16,7 @@ apply();document.addEventListener('DOMContentLoaded',mk);setInterval(apply,60000
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2799,7 +2800,7 @@ if(window.visualViewport){visualViewport.addEventListener('resize',fitChat)}
 // ---------- Fondo personalizado del inicio de sesión (imagen HD o video) ----------
 const LBG={k:'tj_lbg',db:null,url:null,sig:''};
 const LBG_PRE=[['medianoche','Medianoche','radial-gradient(120% 90% at 20% 0%,#2b3a7a 0%,#0b0e1a 62%)'],['oceano','Océano','linear-gradient(135deg,#0f2027,#203a43,#2c5364,#0f2027)'],['atardecer','Atardecer','linear-gradient(135deg,#ff512f,#dd2476 50%,#4a1c6b,#ff512f)'],['grafito','Grafito','linear-gradient(160deg,#111,#3a3a3c 55%,#111)'],['esmeralda','Esmeralda','linear-gradient(135deg,#06201a,#0f5b4a 50%,#06201a)']];
-const LBG_DEF={mode:'aurora',dim:35,blur:0,url:'',kind:'',name:'',size:0};
+const LBG_DEF={mode:'aurora',dim:35,blur:0,url:'',kind:'',name:'',size:0,cts:0,cloud:null};
 const lbgMeta=()=>{try{return Object.assign({},LBG_DEF,JSON.parse(localStorage.getItem(LBG.k)||'{}'))}catch(e){return Object.assign({},LBG_DEF)}};
 const lbgSave=m=>{try{localStorage.setItem(LBG.k,JSON.stringify(m))}catch(e){}};
 function lbgDb(){return new Promise((res,rej)=>{if(LBG.db)return res(LBG.db);let r;try{r=indexedDB.open('tj_loginbg',1)}catch(e){return rej(e)}r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>{LBG.db=r.result;res(r.result)};r.onerror=()=>rej(r.error)})}
@@ -2831,19 +2832,56 @@ function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
  <div class="lbgRow"><button class="btn s ${on('aurora')}" onclick="lbgPick('aurora')">✨ Aurora (original)</button>${LBG_PRE.map(p=>`<button class="btn s ${on(p[0])}" onclick="lbgPick('${p[0]}')">${p[1]}</button>`).join('')}</div>
  <div class="lbgRow"><button class="btn p" onclick="$('lbgFile').click()">📁 Subir imagen o video</button><input id="lbgFile" type="file" accept="image/*,video/*,.mp4,.webm,.mov,.m4v,.jpg,.jpeg,.png,.webp,.avif,.gif" hidden onchange="lbgFile(this)"><button class="btn s" onclick="lbgReset()">↺ Restablecer</button><span id="lbgInfo" style="font-size:12.5px;color:var(--gris)">${m.mode==='file'?esc(m.name||'')+' · '+lbgSz(m.size):m.mode==='url'?'Enlace: '+esc(m.url.slice(0,48)):''}</span></div>
  <div class="lbgRow" style="align-items:center"><input id="lbgUrl" placeholder="…o pegue el enlace (URL) de una imagen o video" value="${m.mode==='url'?esc(m.url):''}" style="flex:1;min-width:200px"><button class="btn s" onclick="lbgUrl()">Usar enlace</button></div>
+ <div id="lbgSync" style="font-size:12.5px;margin-top:10px;color:${m.cts?'#1a8f55':'var(--gris)'}">${m.cts?'☁ Sincronizado con todos sus dispositivos.':''}</div>
  <div class="g" style="margin-top:10px"><div><label>Oscurecer fondo: <b id="lbgDv">${m.dim}%</b></label><input type="range" min="0" max="80" value="${m.dim}" oninput="lbgSet('dim',+this.value)"></div><div><label>Desenfoque: <b id="lbgBv">${m.blur}px</b></label><input type="range" min="0" max="24" value="${m.blur}" oninput="lbgSet('blur',+this.value)"></div></div>
- <p style="font-size:12px;color:var(--gris);margin:12px 0 0;line-height:1.5">💡 El archivo se guarda en <b>este dispositivo</b> (sin comprimir). Para verlo en otro equipo, súbalo allí también o use un enlace. Los videos se reproducen en bucle y sin sonido. Para videos muy grandes use mejor MP4 (H.264) o WebM.</p>`}
+ <p style="font-size:12px;color:var(--gris);margin:12px 0 0;line-height:1.5">☁ Se sincroniza solo con sus otros dispositivos: aparece en el inicio de sesión de todos los equipos. Las imágenes y videos se suben a Firebase Storage sin comprimir; si Storage no está disponible, la imagen se envía optimizada (1920 px) y el video queda solo en este equipo (use un enlace para sincronizarlo). Los videos se reproducen en bucle y sin sonido; use MP4 (H.264) o WebM.</p>`}
+
+// ---- Sincronización con la nube (Firebase) ----
+const LBG_DOC=()=>fbDb&&fbDb.collection('panel').doc('loginbg');
+function lbgStatus(t,ok){const e=$('lbgSync');if(!e)return;e.textContent=t;e.style.color=ok===false?'#d92d20':ok?'#1a8f55':'var(--gris)'}
+let _lbgPT=0;function lbgPushSoon(){clearTimeout(_lbgPT);_lbgPT=setTimeout(()=>lbgPush(),700)}
+async function lbgPush(extra){const d=LBG_DOC();if(!d||typeof esAdmin!=='function'||!esAdmin())return;const m=lbgMeta(),ts=Date.now(),DEL=firebase.firestore.FieldValue.delete();
+ const f={dim:m.dim,blur:m.blur,ts};
+ if(m.mode==='file'){if(!m.cloud)return;Object.assign(f,{mode:m.cloud.mode,kind:m.cloud.kind||m.kind,name:m.name,size:m.size});if(m.cloud.mode==='url'){f.url=m.cloud.url;f.img=DEL}else f.url=DEL}
+ else{f.mode=m.mode;f.kind=m.kind||'';f.img=DEL;if(m.mode==='url')f.url=m.url;else f.url=DEL}
+ if(extra)Object.assign(f,extra);
+ try{await d.set(f,{merge:true});const m2=lbgMeta();m2.cts=ts;lbgSave(m2);lbgStatus('☁ Sincronizado con todos sus dispositivos.',true)}catch(e){lbgStatus('No se pudo sincronizar con la nube (permisos de Firebase). Queda solo en este dispositivo.',false)}}
+async function lbgCompress(f){const bmp=await createImageBitmap(f);let W=Math.min(1920,bmp.width);
+ for(let t=0;t<6;t++){const H=Math.round(bmp.height*W/bmp.width),c=document.createElement('canvas');c.width=W;c.height=H;c.getContext('2d').drawImage(bmp,0,0,W,H);
+  for(const q of [.85,.75,.65,.55,.45]){const b=await new Promise(r=>c.toBlob(r,'image/jpeg',q));if(b&&b.size<=620*1024)return await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)})}
+  W=Math.round(W*.8)}throw new Error('grande')}
+async function lbgCloudUpload(f){const kind=lbgIsVid(f.name,f.type)?'video':'image';
+ try{if(!(window.firebase&&firebase.storage))throw 0;const ref=firebase.storage().ref('loginbg/'+Date.now()+'_'+f.name.replace(/[^\w.\-]+/g,'_'));
+  await new Promise((res,rej)=>{const t=ref.put(f,f.type?{contentType:f.type}:undefined);t.on('state_changed',s=>lbgStatus('☁ Subiendo a la nube… '+Math.round(s.bytesTransferred/s.totalBytes*100)+'%'),rej,res)});
+  const url=await ref.getDownloadURL();return{mode:'url',url,kind,spath:ref.fullPath}}catch(e){}
+ if(kind==='image'){try{lbgStatus('☁ Subiendo versión optimizada…');return{mode:'img',kind,img:await lbgCompress(f)}}catch(e){}}
+ return null}
+function lbgDelStorage(c){try{if(c&&c.spath&&window.firebase&&firebase.storage)firebase.storage().ref(c.spath).delete().catch(()=>{})}catch(e){}}
+async function lbgPull(force){if(LBG.pulling||typeof fbDb==='undefined'||!fbDb)return;LBG.pulling=1;
+ try{const s=await LBG_DOC().get();LBG.pulled=1;if(!s.exists)return;const c=s.data(),m=lbgMeta();if(!force&&m.cts===c.ts)return;
+  const n=Object.assign({},LBG_DEF,{dim:c.dim==null?35:c.dim,blur:c.blur||0,kind:c.kind||'',name:c.name||'',size:c.size||0,cts:c.ts});
+  if(c.mode==='img'&&c.img){const b=await (await fetch(c.img)).blob();await lbgPut(new File([b],c.name||'fondo.jpg',{type:b.type||'image/jpeg'}));n.mode='file';n.size=b.size;n.cloud={mode:'img',kind:'image'};LBG.fts=Date.now()}
+  else if(c.mode==='url'){n.mode='url';n.url=c.url||'';n.kind=c.kind||''}
+  else n.mode=c.mode||'aurora';
+  lbgSave(n);LBG.sig='';lbgApply();lbgRef()}catch(e){LBG.pulled=0}finally{LBG.pulling=0}}
+let _lbgPl=0;function lbgPullSoon(){if(Date.now()-_lbgPl<30000)return;_lbgPl=Date.now();lbgPull()}
+const _au1=authUI;authUI=function(){const r=_au1.apply(this,arguments);try{if(!LBG.pulled)lbgPull()}catch(e){}return r};
+const _mrl=mergeRemote;mergeRemote=function(){const r=_mrl.apply(this,arguments);try{lbgPullSoon()}catch(e){}return r};
+
 const lbgSz=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB';
 function lbgRef(){const c=$('lbgCard');if(!c)return;c.innerHTML=lbgCard();lbgFill($('lbgPrev'),lbgMeta())}
-function lbgPick(k){const m=lbgMeta();m.mode=k;lbgSave(m);lbgRef();lbgApply()}
-let _lbgT=0;function lbgSet(k,v){const m=lbgMeta();m[k]=v;lbgSave(m);const e=$(k==='dim'?'lbgDv':'lbgBv');if(e)e.textContent=v+(k==='dim'?'%':'px');clearTimeout(_lbgT);_lbgT=setTimeout(()=>{lbgFill($('lbgPrev'),lbgMeta());lbgApply()},60)}
+function lbgPick(k){const m=lbgMeta();m.mode=k;lbgSave(m);lbgRef();lbgApply();lbgPush()}
+let _lbgT=0;function lbgSet(k,v){const m=lbgMeta();m[k]=v;lbgSave(m);const e=$(k==='dim'?'lbgDv':'lbgBv');if(e)e.textContent=v+(k==='dim'?'%':'px');clearTimeout(_lbgT);_lbgT=setTimeout(()=>{lbgFill($('lbgPrev'),lbgMeta());lbgApply();lbgPushSoon()},60)}
 async function lbgFile(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;if(!/^(image|video)\//.test(f.type)&&!/\.(mp4|webm|mov|m4v|jpe?g|png|webp|avif|gif)$/i.test(f.name))return alert('Elija una imagen o un video.');
  const i=$('lbgInfo');if(i)i.textContent='Guardando…';
  try{await lbgPut(f)}catch(e){if(i)i.textContent='';return alert('El navegador no pudo guardar este archivo (espacio insuficiente o modo privado). Pruebe con un archivo más liviano o use un enlace (URL).')}
  try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
- const m=lbgMeta();m.mode='file';m.name=f.name;m.size=f.size;m.kind=lbgIsVid(f.name,f.type)?'video':'image';m.url='';lbgSave(m);LBG.fts=Date.now();lbgRef();lbgApply()}
-function lbgUrl(){const u=($('lbgUrl').value||'').trim();if(!/^https?:\/\//i.test(u))return alert('Pegue un enlace que empiece con https://');const m=lbgMeta();m.mode='url';m.url=u;m.kind=lbgIsVid(u)?'video':'image';lbgSave(m);lbgRef();lbgApply()}
-async function lbgReset(){await lbgDel();lbgSave(Object.assign({},LBG_DEF));lbgRef();lbgApply()}
+ const old=lbgMeta().cloud;const m=lbgMeta();m.mode='file';m.name=f.name;m.size=f.size;m.kind=lbgIsVid(f.name,f.type)?'video':'image';m.url='';m.cloud=null;lbgSave(m);LBG.fts=Date.now();lbgRef();lbgApply();
+ lbgStatus('☁ Preparando sincronización…');const cl=await lbgCloudUpload(f);
+ if(cl){const m2=lbgMeta();m2.cloud={mode:cl.mode,url:cl.url||'',kind:cl.kind,spath:cl.spath||''};lbgSave(m2);lbgDelStorage(old);await lbgPush(cl.mode==='img'?{img:cl.img}:{})}
+ else lbgStatus('Guardado solo en este dispositivo: no se pudo subir a la nube (Firebase Storage no habilitado o sin permiso). Para sincronizar un video use un enlace (URL).',false)}
+function lbgUrl(){const u=($('lbgUrl').value||'').trim();if(!/^https?:\/\//i.test(u))return alert('Pegue un enlace que empiece con https://');const m=lbgMeta();m.mode='url';m.url=u;m.kind=lbgIsVid(u)?'video':'image';lbgSave(m);lbgRef();lbgApply();lbgPush()}
+async function lbgReset(){const m=lbgMeta();lbgDelStorage(m.cloud);await lbgDel();lbgSave(Object.assign({},LBG_DEF,{cts:m.cts}));lbgRef();lbgApply();lbgPush()}
 const _rcl=R.config;R.config=function(){const r=_rcl.apply(this,arguments);if(!esAdmin())return r;const c=document.createElement('div');c.className='card';c.id='lbgCard';c.innerHTML=lbgCard();const v=$('v');if(v)v.insertBefore(c,v.firstChild);lbgFill($('lbgPrev'),lbgMeta());return r};
 
 aplicarTema(getTemaUser(),false);ir('home');
