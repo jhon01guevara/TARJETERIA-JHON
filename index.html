@@ -3,7 +3,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#E0457B"><script>if(/[?&]tienda(=|&|$)/.test(location.search)){document.querySelector('meta[name=theme-color]').content='#F5F5F7'}</script>
+<meta name="theme-color" content="#E0457B"><script>(function(){if(!/[?&]tienda(=|&|$)/.test(location.search))return;var H=document.documentElement;
+function pref(){try{return localStorage.getItem('tj_shop_theme')||'auto'}catch(e){return'auto'}}
+function calc(){var p=pref();if(p==='light'||p==='dark')return p;var h=new Date().getHours();return(h>=6&&h<18)?'light':'dark'}
+function apply(){var t=calc();H.setAttribute('data-kt',t);var m=document.querySelector('meta[name=theme-color]');if(m)m.content=t==='dark'?'#000000':'#F5F5F7';var b=document.getElementById('ktheme');if(b)draw(b)}
+var IC={light:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',dark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>'};
+var LB={light:'Día',dark:'Noche',auto:'Auto'};
+function draw(b){var p=pref();b.innerHTML=IC[p]+'<span>'+LB[p]+'</span>';b.setAttribute('aria-label','Tema: '+LB[p])}
+function mk(){if(document.getElementById('ktheme'))return;var b=document.createElement('button');b.id='ktheme';b.type='button';b.onclick=function(){var n={auto:'light',light:'dark',dark:'auto'}[pref()];try{localStorage.setItem('tj_shop_theme',n)}catch(e){}apply()};document.body.appendChild(b);draw(b)}
+apply();document.addEventListener('DOMContentLoaded',mk);setInterval(apply,60000);
+})()</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -576,7 +585,7 @@ input.mck:checked::after{transform:rotate(45deg) scale(1) translate(-1px,-1px)}
 .tdtg span{display:inline-block;padding:6px 11px;border-radius:99px;border:1px solid var(--linea);background:var(--card);font-size:12.5px;font-weight:600;transition:background .15s,color .15s,border-color .15s,transform .1s}
 .tdtg:active span{transform:scale(.95)}.tdtg input:checked+span{background:var(--az);border-color:var(--az);color:#fff}
 .tdtg input:checked+span::before{content:'✓ ';font-weight:800}
-html.shopmode body>*:not(#shop):not(#shopm):not(#ksnack):not(#kzoom){display:none!important}
+html.shopmode body>*:not(#shop):not(#shopm):not(#ksnack):not(#kzoom):not(#ktheme){display:none!important}
 html.shopmode,html.shopmode body{background:#FFF8F8}
 .tdtg{display:inline-flex;align-items:center;gap:2px;margin:1px 6px 1px 0;font-size:14px;cursor:pointer;white-space:nowrap}.tdtg input{width:auto;margin:0}
 #shop,#shopm,#ksnack{--p:#E0457B;--pc:#FFD9E4;--onpc:#3E001D;--bg:#FFF8F8;--sf:#fff;--sf2:#F7EBEF;--tx:#201A1B;--tx2:#74686C;--ol:#E8DCE0;--sh:0 1px 2px rgba(60,20,40,.08),0 6px 16px -8px rgba(60,20,40,.22);font-family:Roboto,'Google Sans','Segoe UI',system-ui,-apple-system,sans-serif;-webkit-tap-highlight-color:transparent;color:var(--tx)}
@@ -777,9 +786,10 @@ html.shopmode,html.shopmode body{background:#FFF8F8}
 .itcat{display:inline-flex;align-items:center;width:max-content;max-width:100%;margin:0 0 6px;padding:3px 8px;border-radius:980px;background:var(--az-bg);color:var(--az);font-size:10.5px;font-weight:700;line-height:1.2;letter-spacing:.01em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 /* ===== Tienda: estilo Apple (capa de diseño; no altera la lógica) ===== */
 #shop,#shopm,#ksnack{--p:#E0457B;--pc:#FDE8EF;--onpc:#B8225C;--bg:#F5F5F7;--sf:#fff;--sf2:#EFEFF2;--tx:#1D1D1F;--tx2:#6E6E73;--ol:#D2D2D7;--glass:rgba(245,245,247,.72);--sh:0 0 0 .5px rgba(0,0,0,.05),0 2px 12px rgba(0,0,0,.05);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Inter','Segoe UI',system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:-.011em}
-@media(prefers-color-scheme:dark){#shop,#shopm,#ksnack{--bg:#000;--sf:#1C1C1E;--sf2:#2C2C2E;--tx:#F5F5F7;--tx2:#A1A1A6;--ol:#38383A;--pc:#3A1727;--onpc:#FF9EC0;--glass:rgba(22,22,23,.72);--sh:0 0 0 .5px rgba(255,255,255,.06)}html.shopmode,html.shopmode body{background:#000}}
+html[data-kt=dark] #shop,html[data-kt=dark] #shopm,html[data-kt=dark] #ksnack{--bg:#000;--sf:#1C1C1E;--sf2:#2C2C2E;--tx:#F5F5F7;--tx2:#A1A1A6;--ol:#38383A;--pc:#3A1727;--onpc:#FF9EC0;--glass:rgba(22,22,23,.72);--sh:0 0 0 .5px rgba(255,255,255,.06);color-scheme:dark}
+html[data-kt=light] #shop,html[data-kt=light] #shopm{color-scheme:light}
 html.shopmode,html.shopmode body{background:#F5F5F7}
-@media(prefers-color-scheme:dark){html.shopmode,html.shopmode body{background:#000}}
+html[data-kt=dark].shopmode,html[data-kt=dark].shopmode body{background:#000}
 #shop{--hh:calc(56px + env(safe-area-inset-top));scroll-behavior:smooth}
 /* Barra superior translúcida */
 #shop .khd{position:sticky;top:0;z-index:30;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;min-height:var(--hh);padding:env(safe-area-inset-top) 14px 0;margin:0 -14px;border-radius:0;background:none;box-shadow:none}
@@ -868,6 +878,12 @@ html.shopmode,html.shopmode body{background:#F5F5F7}
  #shopm .ksheet.wide{border-radius:28px}
 }
 @media(prefers-reduced-motion:reduce){#shop{scroll-behavior:auto}}
+
+#ktheme{position:fixed;z-index:3050;top:calc(10px + env(safe-area-inset-top));left:14px;height:36px;min-width:36px;padding:0 10px;border:0;border-radius:980px;display:none;align-items:center;justify-content:center;gap:6px;background:rgba(118,118,128,.16);color:#1D1D1F;font:500 12px -apple-system,BlinkMacSystemFont,'SF Pro Text','Inter',system-ui,sans-serif;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:transform .15s,background .2s}
+html.shopmode body>#ktheme{display:flex!important}#ktheme:active{transform:scale(.92)}
+html[data-kt=dark] #ktheme{color:#F5F5F7;background:rgba(235,235,245,.16)}
+#ktheme svg{width:18px;height:18px;flex:none}
+@media(min-width:900px){#ktheme{left:32px}}
 </style></head><body>
 <div class="aurora" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
 <aside class="sb">
