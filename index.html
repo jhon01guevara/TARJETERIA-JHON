@@ -845,7 +845,7 @@ html[data-kt=dark].shopmode,html[data-kt=dark].shopmode body{background:#000}
 /* Hojas (detalle / pedido) */
 #shopm{background:rgba(0,0,0,.36);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 #shopm .ksheet{border-radius:24px 24px 0 0;background:var(--glass);backdrop-filter:saturate(180%) blur(40px);-webkit-backdrop-filter:saturate(180%) blur(40px);box-shadow:0 -10px 50px rgba(0,0,0,.2)}
-#shopm .ksheet:not(.re){background:color-mix(in srgb,var(--bg) 94%,transparent)}
+#shopm .ksheet,#shopm .ksheet.re{background:color-mix(in srgb,var(--bg) 97%,transparent)}
 #shopm .kdi{border-radius:18px;background:var(--sf)}
 #shopm h2{font-size:26px;font-weight:700;letter-spacing:-.025em}#shopm .kdp{font-size:22px;font-weight:600}
 #shopm .ktg button,#shopm .ktg span{border-radius:980px;font-weight:500}
@@ -884,6 +884,11 @@ html.shopmode body>#ktheme{display:flex!important}#ktheme:active{transform:scale
 html[data-kt=dark] #ktheme{color:#F5F5F7;background:rgba(235,235,245,.16)}
 #ktheme svg{width:18px;height:18px;flex:none}
 @media(min-width:900px){#ktheme{left:32px}}
+
+#shopm .kf{display:block;text-align:left;margin:0 0 10px}#shopm .kf span{display:block;font-size:12px;font-weight:600;color:var(--tx2);margin:0 0 4px 4px}
+#shopm .kf input{width:100%;padding:13px 14px;border:0;border-radius:12px;background:var(--sf);box-shadow:0 0 0 1px var(--ol);color:var(--tx);font:inherit;font-size:16px;margin:0;outline:0}
+#shopm .kf input:focus{box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 40%,transparent),0 0 0 1px var(--p);background:var(--sf)}
+#shopm .serr{color:#d92d20;font-size:13px;min-height:18px;margin:0 0 6px}
 </style></head><body>
 <div class="aurora" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
 <aside class="sb">
@@ -2473,7 +2478,7 @@ function tdFactura(id){const p=TD.peds.find(x=>x.id===id);if(!p)return;const l=p
 function shopInit(){document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){}if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'new',n:24,fav:{},favOnly:false});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){}
- if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{SH.items=sn.docs.map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;if(SH.cli){$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{SH.items=sn.docs.map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -2501,7 +2506,6 @@ const shopLogo=()=>{if(SH.logo!==undefined)return SH.logo;const g=document.query
 const shopSaveCart=()=>{try{localStorage.setItem('tj_shop_cart',JSON.stringify(SH.cart))}catch(e){}};
 function shopRender(){const o=$('shop');if(!o)return;
  if(SH.err)return o.innerHTML=`<div class="kreg-w"><div class="kreg">${shopLogo()}<h2>Catálogo no disponible</h2><p>No se pudo conectar. Intente de nuevo en unos minutos.</p><button class="sbtn" onclick="location.reload()">Reintentar</button></div></div>`;
- if(!SH.cli)return o.innerHTML=`<div class="kreg-w"><div class="kreg">${shopLogo()}<h2>Bienvenido a nuestro catálogo virtual</h2><p>Regístrese para ver nuestros diseños, temas y precios.</p><label class="kf"><span>Nombre completo *</span><input id="sh_n" autocomplete="name"></label><label class="kf"><span>Teléfono / WhatsApp *</span><input id="sh_t" type="tel" autocomplete="tel" inputmode="tel"></label><label class="kf"><span>Correo electrónico *</span><input id="sh_e" type="email" autocomplete="email" inputmode="email"></label><label class="kf"><span>Empresa (opcional)</span><input id="sh_c" autocomplete="organization"></label><label class="kf"><span>Dirección o ciudad (opcional)</span><input id="sh_d" autocomplete="street-address"></label><div class="serr" id="sh_m"></div><button class="sbtn" id="sh_b" onclick="shopReg()">Entrar al catálogo</button><p style="font-size:11.5px;margin:12px 0 0">Sus datos se usan solo para atender su pedido.</p></div></div>`;
  shopCatalog()}
 async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('sh_t'),e=g('sh_e'),m=s=>{$('sh_m').textContent=s};
  if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');
@@ -2509,7 +2513,7 @@ async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('s
  try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
  SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){}shopRender()}
 function shopCatalog(){const o=$('shop');if(!o)return;
- o.innerHTML=`<div class="kwrap"><header class="khd"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋'}</small></div></div><div class="khact" id="k_ha"></div></header><section class="khero" id="khero" aria-label="Diseños destacados"></section>
+ o.innerHTML=`<div class="kwrap"><header class="khd"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div></header><section class="khero" id="khero" aria-label="Diseños destacados"></section>
 <div class="kmain"><aside class="kside" id="k_side"></aside><div class="kcol"><div class="kstk"><label class="ksr">${kico(KI.search,22)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" oninput="shopQ(this.value)" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" onclick="shopQ('');$('sh_q').value='';$('sh_q').focus()" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><div class="kchips" id="sh_ch"></div></div>
 <div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g"></div><div id="k_more"></div></div></div></div><nav class="knav" id="k_nav"></nav><div id="k_fab"></div>`;
  shopFilters();shopNav()}
@@ -2610,10 +2614,18 @@ function shopPdfVer(blob,name){const old=document.getElementById('pdfv');if(old)
 function tdPedDel(id){const p=TD.peds.find(x=>x.id===id);if(!p||!fbDb)return;const l=p.lead||{};if(!confirm('¿Eliminar el pedido de '+(l.name||'este cliente')+(p.total>0?' por '+$$(p.total):'')+'?\nEsta acción no se puede deshacer.'))return;
  fbDb.collection('tienda_pedidos').doc(id).delete().catch(()=>alert('No se pudo eliminar el pedido. Revise su conexión o sus permisos.'))}
 
-async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){}const c=SH.cli,id=uid();
- const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa||'',dir:c.dir||''},items:L.map(l=>({id:l.id,n:l.n,p:l.p,q:l.q})),total:L.reduce((s,l)=>s+l.q*l.p,0),nota:(($('sh_nt')||{}).value||'').trim().slice(0,500),ref:SH.ref,ts:Date.now(),estado:'nuevo'};
+function shopAskReg(){shopM(`<div style="text-align:center;padding:6px 0 2px"><h2 style="margin:6px 0 4px">Último paso</h2><p style="color:var(--tx2);margin:0 0 16px;font-size:14.5px;line-height:1.45">Complete sus datos para enviar su pedido. Solo se lo pediremos esta vez.</p></div><label class="kf"><span>Nombre completo *</span><input id="sh_n" autocomplete="name"></label><label class="kf"><span>Teléfono / WhatsApp *</span><input id="sh_t" type="tel" autocomplete="tel" inputmode="tel"></label><label class="kf"><span>Correo electrónico *</span><input id="sh_e" type="email" autocomplete="email" inputmode="email"></label><label class="kf"><span>Empresa (opcional)</span><input id="sh_c" autocomplete="organization"></label><label class="kf"><span>Dirección o ciudad (opcional)</span><input id="sh_d" autocomplete="street-address"></label><div class="serr" id="sh_m"></div><div class="kact2"><button class="sbtn" id="sh_b" onclick="shopRegSend()">Registrarme y enviar pedido</button><button class="sbtn g" onclick="shopCart()">Volver al pedido</button></div><p style="font-size:11.5px;margin:6px 0 0;text-align:center;color:var(--tx2)">Sus datos se usan solo para atender su pedido.</p>`,'reg');setTimeout(()=>{const i=$('sh_n');if(i)i.focus()},350)}
+async function shopRegSend(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('sh_t'),e=g('sh_e'),m=s=>{$('sh_m').textContent=s};
+ if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');
+ const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};$('sh_b').disabled=true;m('Registrando…');
+ try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
+ SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){}
+ const h=document.querySelector('#shop .khd .kht small');if(h)h.textContent='Hola, '+(n.split(' ')[0])+' 👋';
+ shopCart();const nt=$('sh_nt');if(nt)nt.value=SH.pendNote||'';shopSend()}
+async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){}const c=SH.cli,id=uid();
+ const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa||'',dir:c.dir||''},items:L.map(l=>({id:l.id,n:l.n,p:l.p,q:l.q})),total:L.reduce((s,l)=>s+l.q*l.p,0),nota:(($('sh_nt')||{}).value||SH.pendNote||'').trim().slice(0,500),ref:SH.ref,ts:Date.now(),estado:'nuevo'};
  try{await fbDb.collection('tienda_pedidos').doc(id).set(p)}catch(e){b.disabled=false;b.textContent='Enviar pedido';$('sh_m2').textContent='No se pudo enviar. Intente de nuevo.';return}
- SH.last=p;{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.')}SH.cart={};try{localStorage.removeItem('tj_shop_cart')}catch(e){}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
+ SH.last=p;SH.pendNote='';{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.')}SH.cart={};try{localStorage.removeItem('tj_shop_cart')}catch(e){}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
  shopM('<div style="text-align:center;padding:10px 0"><div style="font-size:54px">✅</div><h2 style="margin:6px 0">¡Pedido enviado!</h2><p style="color:var(--tx2);margin:0 0 16px">Gracias, '+esc((c.name||'').split(' ')[0])+'. Nos pondremos en contacto con usted muy pronto para confirmar su pedido.</p><button class="sbtn" onclick="shopPdf(SH.last)" style="margin-bottom:8px">📄 Descargar comprobante (PDF)</button><button class="sbtn g" onclick="shopClose()">Seguir viendo el catálogo</button></div>','ok');setTimeout(()=>{try{shopPdf(p)}catch(e){}},500)}
 function shopFab(){const e=$('k_fab');if(!e)return;const L=shopLines(),n=L.reduce((a,l)=>a+l.q,0),t=L.reduce((a,l)=>a+l.q*l.p,0);e.innerHTML=n?`<button class="kfab" onclick="shopTab('cart')">${kico(KI.cart,22)}<span>Ver pedido · ${n}${t>0?' · '+$$(t):''}</span></button>`:''}
 const _kn=shopNav;shopNav=function(){_kn.apply(this,arguments);try{shopFab()}catch(e){}};
