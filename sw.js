@@ -1,40 +1,20 @@
-// Service worker de Tarjetería Jhon — cachea la app para que abra sin internet.
-const CACHE = 'tj-panel-v5';
-const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './catalogo_default.zip'];
-
-self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(CORE)).catch(() => {}));
-  self.skipWaiting();
-});
-
-self.addEventListener('activate', e => {
-  e.waitUntil(
-    caches.keys().then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
-  );
-  self.clients.claim();
-});
-
-self.addEventListener('fetch', e => {
-  if (e.request.method !== 'GET') return;
-  const url = new URL(e.request.url);
-  // El documento principal: cache-first, para que abra offline al instante
-  if (url.origin === self.location.origin) {
-    e.respondWith(
-      caches.match(e.request).then(cached => {
-        const fetchPromise = fetch(e.request).then(res => {
-          caches.open(CACHE).then(c => c.put(e.request, res.clone()));
-          return res;
-        }).catch(() => cached);
-        return cached || fetchPromise;
-      })
-    );
-    return;
-  }
-  // Librerías externas (jsPDF, Chart.js, Google Fonts): network-first, cae a cache si no hay internet
-  e.respondWith(
-    fetch(e.request).then(res => {
-      caches.open(CACHE).then(c => c.put(e.request, res.clone()));
+// Service worker de Tarjetería Jhon: siempre busca la versión más nueva en internet
+// y usa la copia guardada solo si no hay conexión.
+const V='tj-net-first-1';
+self.addEventListener('install',()=>self.skipWaiting());
+self.addEventListener('activate',e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==V)await caches.delete(k);await self.clients.claim()})()));
+self.addEventListener('fetch',e=>{
+  const r=e.request;if(r.method!=='GET')return;
+  const u=new URL(r.url);if(u.origin!==location.origin)return;
+  const html=r.mode==='navigate'||u.pathname.endsWith('.html')||u.pathname.endsWith('/');
+  e.respondWith((async()=>{
+    try{
+      const res=await fetch(html?new Request(r.url,{cache:'no-store',credentials:'same-origin'}):r);
+      if(res&&res.ok){const c=res.clone();caches.open(V).then(ch=>ch.put(r.url,c)).catch(()=>{})}
       return res;
-    }).catch(() => caches.match(e.request))
-  );
+    }catch(err){
+      const m=await caches.match(r.url)||await caches.match(r)||(html&&(await caches.match('index.html')||await caches.match('./')));
+      if(m)return m;throw err;
+    }
+  })());
 });
