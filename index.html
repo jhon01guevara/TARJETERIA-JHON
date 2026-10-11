@@ -38,6 +38,7 @@ apply();document.addEventListener('DOMContentLoaded',mk);setInterval(apply,60000
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -1136,6 +1137,14 @@ let fbDb=null,fbDocRef=null,_cloudWriting=false,_syncTimer=null,_lastTs=0,_cloud
 // registrar app web). Mientras la clave sea el texto de ejemplo, esto no hace nada —
 // no bloquea ni rompe el panel.
 const RECAPTCHA_V3_SITE_KEY='6Ld9hOktAAAAALfcLgikIHsm0rvaJCaWQ_lIXf-y';
+// Verificación de correo en el registro de la tienda pública (EmailJS, gratis hasta 200
+// correos/mes, sin servidor propio). Reemplace los tres valores por los de su cuenta de
+// emailjs.com (Email Services > Service ID; Email Templates > Template ID; Account > Public
+// Key). Mientras queden con el texto de ejemplo, el registro funciona SIN pedir código (no se
+// rompe nada), para no dejar la tienda sin poder registrar clientes mientras se configura esto.
+const EMAILJS_PUBLIC_KEY='7uMfxbPHkkks7YCGu',EMAILJS_SERVICE_ID='service_uy10xlg',EMAILJS_TEMPLATE_ID='template_68e10ls';
+const emailjsListo=()=>EMAILJS_PUBLIC_KEY!=='EMAILJS_PUBLIC_KEY'&&EMAILJS_SERVICE_ID!=='EMAILJS_SERVICE_ID'&&EMAILJS_TEMPLATE_ID!=='EMAILJS_TEMPLATE_ID'&&window.emailjs;
+try{if(window.emailjs&&emailjsListo())emailjs.init({publicKey:EMAILJS_PUBLIC_KEY})}catch(e){}
 try{
  if(window.firebase){
   firebase.initializeApp(firebaseConfig);
@@ -2454,8 +2463,8 @@ function chatBadge(){if(!SES)return;const n=chatVis().filter(c=>chatUn(c)).lengt
 const _nv=nav;nav=function(){_nv.apply(this,arguments);try{chatBadge()}catch(e){}};
 function chatListen(){if(_chOn||!fbDb)return;_chOn=true;let first=true;
  fbDb.collection('chats').onSnapshot(sn=>{
-  if(!first)sn.docChanges().forEach(ch=>{const c=ch.doc.data();if(ch.type!=='removed'&&SES&&c.lastFrom&&c.lastFrom!==chatMe()&&(c.type==='dm'?(esAdmin()||c.id==='dm_'+chatMe()):chatMine(c))){if(!(vista==='chat'&&CH.sel===c.id)){try{agSound()}catch(e){}}chatVoz(c)}});
-  first=false;CHS=sn.docs.map(d=>d.data());if(SES){chatBadge();if(vista==='chat')chatList()}},()=>{})}
+  if(!first)sn.docChanges().forEach(ch=>{const c=ch.doc.data();if(!c||!/^[\w-]{1,64}$/.test(ch.doc.id))return;if(ch.type!=='removed'&&SES&&c.lastFrom&&c.lastFrom!==chatMe()&&(c.type==='dm'?(esAdmin()||c.id==='dm_'+chatMe()):chatMine(c))){if(!(vista==='chat'&&CH.sel===c.id)){try{agSound()}catch(e){}}chatVoz(c)}});
+  first=false;CHS=sn.docs.map(d=>{const o=d.data();return o&&/^[\w-]{1,64}$/.test(d.id)?Object.assign(o,{id:d.id}):null}).filter(Boolean);if(SES){chatBadge();if(vista==='chat')chatList()}},()=>{})}
 R.chat=function(){if(!fbDb){$('v').innerHTML='<div class="card"><div class="vacio">El chat necesita conexión a internet.</div></div>';return}chatListen();
  $('v').innerHTML=`<div class="chw ${CH.sel?'sel':''}" id="chw"><div class="chl card" id="chl"></div><div class="chm card" id="chm"></div></div>`;chatList();chatConv()};
 function chatList(){const el=$('chl');if(!el)return;const L=chatVis().sort((a,b)=>(b.lastTs||0)-(a.lastTs||0)),dms=L.filter(c=>c.type==='dm'),gs=L.filter(c=>c.type==='grp');
@@ -2658,7 +2667,7 @@ function tdRender(){if(vista!=='tienda'||!SES)return;const adm=esAdmin(),me=chat
  const pubCard=adm?`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0 0 4px">📦 Productos en la tienda <small style="color:var(--gris);font-weight:500">(${pub.size} publicados · ${TD.cat.length} en este catálogo)</small></h3><button class="btn s" id="tdMinB" onclick="tdMin()">${tdMinV()?'▸ Maximizar':'▾ Minimizar'}</button></div><div id="tdBody" style="${tdMinV()?'display:none':''}"><p style="font-size:12.5px;color:var(--gris)">Marque los productos de su Catálogo (con foto) que quiere mostrar a los clientes. Nombre, categoría, precio y descripción salen del Catálogo. Para cambiar un precio, edítelo en el Catálogo y vuelva a publicar.</p>${tdTabla(pub)}<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><select id="tdTema" style="width:auto">${TEMAS.map(t=>`<option value="${t.id}">${t.e} ${t.n}</option>`).join("")}</select><button class="btn" onclick="tdTemaAplicar(1)">+ Asignar tema a marcados</button><button class="btn" onclick="tdTemaAplicar(0)">− Quitar tema</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><select id="tdBd" style="width:auto">${Object.keys(TDBD).map(k=>`<option value="${k}">${TDBD[k]}</option>`).join("")}</select><button class="btn" onclick="tdBadgeBulk(1)">🏷 Poner etiqueta a marcados</button><button class="btn" onclick="tdBadgeBulk(0)">Quitar etiqueta</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><select id="tdStk" style="width:auto">${Object.keys(TDSTK).map(k=>`<option value="${k}">${TDSTK[k]}</option>`).join("")}</select><button class="btn" onclick="tdStockAplicar()">📦 Aplicar existencia a marcados</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><button class="btn p" onclick="tdPub()">⬆ Publicar / actualizar marcados</button><button class="btn d" onclick="tdUnpub()">🗑 Quitar marcados de la tienda</button><span id="tdSt" style="font-size:12.5px;color:var(--gris)"></span></div></div></div>`:'';
  $('v').innerHTML=`<div class="card"><h3 style="margin:0 0 4px">🛍 Catálogo virtual</h3><p style="font-size:12.5px;color:var(--gris)">Comparta su enlace. El cliente se registra, ve productos, categorías y precios, arma su carrito y le envía el pedido. ${adm?'':'Los registros y pedidos quedan a su nombre.'}</p>${file}<label>Su enlace</label><input id="td_link" readonly value="${esc(link)}" onfocus="this.select()"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn p" onclick="tdCopy()">📋 Copiar enlace</button><button class="btn" onclick="window.open(tdLink(),'_blank')">👁 Ver como cliente</button><button class="btn p" onclick="window.open(tdLink()+'&dir=1','_blank')">📖 Ver catálogo directo</button><button class="btn" onclick="tdWaLink()">💬 Enviar por WhatsApp</button></div><div style="margin-top:14px"><label>Enviar el enlace a un cliente registrado</label><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="td_cli" style="flex:1;min-width:200px">${cls.map(c=>`<option value="${c.id}">${esc(c.n)} — ${esc(c.t)}</option>`).join('')||'<option value="">(sin clientes con teléfono)</option>'}</select><button class="btn p" onclick="tdSendCli()">💬 Enviar</button></div></div></div>
 <div class="card"><h3 style="margin:0 0 6px">🛒 Pedidos de la tienda (${TD.peds.length})</h3>${TD.peds.length?TD.peds.map(p=>{const l=p.lead||{},w=tdWa(l.tel,'Hola '+l.name+', recibimos su pedido de la tienda virtual. ');return `<div class="tdp ${p.estado==='nuevo'?'nw':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><b>${esc(l.name||'Cliente')}</b> · ${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}<br><small style="color:var(--gris)">${new Date(p.ts).toLocaleString('es-PA')} · Vendedor: ${esc(vdName(p.ref||'admin'))} · ${p.estado==='nuevo'?'<b style="color:var(--az)">NUEVO</b>':'Atendido'}</small></div><b style="font-size:17px">${$$(p.total)}</b></div><ul>${(p.items||[]).map(i=>`<li>${i.q} × ${esc(i.n)} — ${$$(i.p)}</li>`).join('')}</ul>${p.nota?`<small>📝 ${esc(p.nota)}</small><br>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn p s" onclick="tdFactura('${p.id}')">🧾 Crear factura</button>${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<button class="btn s" onclick="shopPdf(TD.peds.find(x=>x.id==='${p.id}'),'ver')">👁 Ver PDF</button><button class="btn s" onclick="shopPdf(TD.peds.find(x=>x.id==='${p.id}'))">⬇ Descargar</button><button class="btn s" onclick="tdEstado('${p.id}')">${p.estado==='nuevo'?'✔ Marcar atendido':'↩ Reabrir'}</button><button class="btn s d" onclick="tdPedDel('${p.id}')">🗑 Eliminar</button></div></div>`}).join(''):'<div class="vacio">Aún no hay pedidos.</div>'}</div>
-<div class="card"><h3 style="margin:0 0 6px">👥 Clientes registrados en la tienda (${TD.leads.length})</h3><p style="font-size:12.5px;color:var(--gris)">${adm?'Cada registro se agrega automáticamente a su lista de Clientes.':'Los clientes que se registraron con su enlace.'}</p>${TD.leads.length?`<div class="tw"><table><tr><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Correo</th><th>Vendedor</th><th></th></tr>${TD.leads.map(l=>{const w=tdWa(l.tel,'Hola '+l.name+', gracias por registrarse en nuestro catálogo virtual. ');return `<tr><td>${new Date(l.ts).toLocaleDateString('es-PA')}</td><td><b>${esc(l.name)}</b>${l.empresa?'<br><small>'+esc(l.empresa)+'</small>':''}</td><td>${esc(l.tel||'')}</td><td>${esc(l.email||'')}</td><td>${esc(vdName(l.ref||'admin'))}</td><td class="r">${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="vacio">Aún no hay registros.</div>'}</div>
+<div class="card"><h3 style="margin:0 0 6px">👥 Clientes registrados en la tienda (${TD.leads.length})</h3><p style="font-size:12.5px;color:var(--gris)">${adm?'Cada registro se agrega automáticamente a su lista de Clientes.':'Los clientes que se registraron con su enlace.'}</p>${TD.leads.length?`<div class="tw"><table><tr><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Correo</th><th>Vendedor</th><th></th></tr>${TD.leads.map(l=>{const w=tdWa(l.tel,'Hola '+l.name+', gracias por registrarse en nuestro catálogo virtual. ');return `<tr><td>${new Date(l.ts).toLocaleDateString('es-PA')}</td><td><b>${esc(l.name)}</b>${l.empresa?'<br><small>'+esc(l.empresa)+'</small>':''}</td><td>${esc(l.tel||'')}</td><td>${esc(l.email||'')}</td><td>${esc(vdName(l.ref||'admin'))}</td><td class="r">${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''} ${adm?`<button class="btn s d" onclick="tdLeadDel('${l.id}')">🗑 Eliminar</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="vacio">Aún no hay registros.</div>'}</div>
 ${pubCard}`;try{tdAplicarFiltro()}catch(e){}}
 let TDF='todos';const TDG_CLOSED=new Set();
 const TDSTK={ok:'✅ Disponible',low:'⚠️ Pocas existencias',out:'⛔ Agotado',disc:'🚫 Descontinuado'};
@@ -2887,14 +2896,50 @@ function shopPdfVer(blob,name){const old=document.getElementById('pdfv');if(old)
  const k=e=>{if(e.key==='Escape'){cl();removeEventListener('keydown',k)}};addEventListener('keydown',k)}
 function tdPedDel(id){const p=TD.peds.find(x=>x.id===id);if(!p||!fbDb)return;const l=p.lead||{};if(!confirm('¿Eliminar el pedido de '+(l.name||'este cliente')+(p.total>0?' por '+$$(p.total):'')+'?\nEsta acción no se puede deshacer.'))return;
  fbDb.collection('tienda_pedidos').doc(id).delete().catch(()=>alert('No se pudo eliminar el pedido. Revise su conexión o sus permisos.'))}
+// Solo el administrador puede borrar registros de la tienda (así lo exigen las reglas de Firestore).
+function tdLeadDel(id){if(!esAdmin()||!fbDb)return;const l=TD.leads.find(x=>x.id===id);if(!l)return;
+ if(!confirm('¿Eliminar el registro de '+(l.name||'este cliente')+'?\nEsto no borra al cliente de su lista de Clientes si ya se importó, solo el registro de la tienda.\nEsta acción no se puede deshacer.'))return;
+ fbDb.collection('tienda_leads').doc(id).delete().catch(()=>alert('No se pudo eliminar el registro. Revise su conexión o sus permisos.'))}
 
 function shopAskReg(){shopM(`<div style="text-align:center;padding:6px 0 2px"><h2 style="margin:6px 0 4px">Último paso</h2><p style="color:var(--tx2);margin:0 0 16px;font-size:14.5px;line-height:1.45">Complete sus datos para enviar su pedido. Solo se lo pediremos esta vez.</p></div><label class="kf"><span>Nombre completo *</span><input id="sh_n" autocomplete="name"></label><label class="kf"><span>Teléfono / WhatsApp *</span><input id="sh_t" type="tel" autocomplete="tel" inputmode="tel"></label><label class="kf"><span>Correo electrónico *</span><input id="sh_e" type="email" autocomplete="email" inputmode="email"></label><label class="kf"><span>Empresa (opcional)</span><input id="sh_c" autocomplete="organization"></label><label class="kf"><span>Dirección o ciudad (opcional)</span><input id="sh_d" autocomplete="street-address"></label>${shopHP()}<div class="serr" id="sh_m"></div><div class="kact2"><button class="sbtn" id="sh_b" onclick="shopRegSend()">Registrarme y enviar pedido</button><button class="sbtn g" onclick="shopCart()">Volver al pedido</button></div><p style="font-size:11.5px;margin:6px 0 0;text-align:center;color:var(--tx2)">Sus datos se usan solo para atender su pedido.</p>`,'reg');setTimeout(()=>{const i=$('sh_n');if(i)i.focus()},350)}
 async function shopRegSend(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('sh_t'),e=g('sh_e'),m=s=>{$('sh_m').textContent=s};
  if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');{const r=shopAntiBot();if(r!=='ok')return m(shopAntiBotMsg(r))}
- const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};$('sh_b').disabled=true;m('Registrando…');
- try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
+ const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};
+ if(!emailjsListo())return shopRegFinish(l);
+ $('sh_b').disabled=true;m('Enviando código a su correo…');
+ const ok=await shopCodeSend(l);
+ if(!ok){$('sh_b').disabled=false;return m('No se pudo enviar el código de verificación. Intente de nuevo.')}
+ shopAskCode()}
+// --- Verificación de correo con código de 6 dígitos (EmailJS) ---
+// El código se genera y se revisa en el propio navegador (no hay servidor propio detrás de
+// este panel), así que alguien con conocimientos técnicos podría leerlo en la memoria del
+// navegador y saltarse el paso. Igual sirve muy bien contra lo más común: correos inventados o
+// mal escritos por error, y bots simples que no llegan a revisar su bandeja de entrada.
+function shopCodeGen(){return String(Math.floor(100000+Math.random()*900000))}
+async function shopCodeSend(l){const code=shopCodeGen();
+ SH.pendReg={l,code,exp:Date.now()+600000,lastSent:Date.now()};
+ try{await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{to_email:l.email,to_name:l.name,code});return true}
+ catch(e){SH.pendReg=null;return false}}
+function shopAskCode(){const l=(SH.pendReg||{}).l||{};
+ shopM(`<div style="text-align:center;padding:6px 0 2px"><h2 style="margin:6px 0 4px">Confirme su correo</h2><p style="color:var(--tx2);margin:0 0 16px;font-size:14.5px;line-height:1.45">Le enviamos un código de 6 dígitos a <b>${esc(l.email||'')}</b>. Escríbalo aquí para enviar su pedido (revise también Spam/Promociones).</p></div><label class="kf"><span>Código de 6 dígitos</span><input id="sh_cod" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="letter-spacing:4px;font-size:20px;text-align:center"></label><div class="serr" id="sh_cm"></div><div class="kact2"><button class="sbtn" id="sh_cb" onclick="shopCodeVerify()">Confirmar y enviar pedido</button><button class="sbtn g" onclick="shopCodeResend()" id="sh_crs">Reenviar código</button></div><button class="sbtn g" style="margin-top:8px" onclick="shopAskReg()">← Cambiar datos</button>`,'cod');
+ setTimeout(()=>{const i=$('sh_cod');if(i)i.focus()},350)}
+async function shopCodeVerify(){const m=s=>{const e=$('sh_cm');if(e)e.textContent=s};const pr=SH.pendReg;
+ if(!pr)return m('Esto expiró, vuelva a intentar.');
+ if(Date.now()>pr.exp){SH.pendReg=null;return m('El código expiró. Pida uno nuevo con "Reenviar código".')}
+ const v=($('sh_cod').value||'').trim();
+ if(v!==pr.code)return m('Código incorrecto. Revíselo e intente de nuevo.');
+ const b=$('sh_cb');if(b)b.disabled=true;m('Verificando…');
+ const l=pr.l;SH.pendReg=null;await shopRegFinish(l)}
+async function shopCodeResend(){const pr=SH.pendReg;if(!pr)return;const btn=$('sh_crs');
+ if(Date.now()-pr.lastSent<45000){const m=$('sh_cm');if(m)m.textContent='Espere unos segundos antes de pedir otro código.';return}
+ if(btn)btn.disabled=true;
+ const ok=await shopCodeSend(pr.l);
+ const m=$('sh_cm');if(m)m.textContent=ok?'Le enviamos un nuevo código.':'No se pudo reenviar. Intente de nuevo en un momento.';
+ if(btn)btn.disabled=false}
+async function shopRegFinish(l){const m=s=>{const e=$('sh_m')||$('sh_cm');if(e)e.textContent=s};const b=$('sh_b')||$('sh_cb');if(b)b.disabled=true;m('Registrando…');
+ try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){if(b)b.disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
  SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){}
- const h=document.querySelector('#shop .khd .kht small');if(h)h.textContent='Hola, '+(n.split(' ')[0])+' 👋';
+ const h=document.querySelector('#shop .khd .kht small');if(h)h.textContent='Hola, '+(l.name.split(' ')[0])+' 👋';
  shopCart();const nt=$('sh_nt');if(nt)nt.value=SH.pendNote||'';shopSend()}
 
 // ---------- Mi cuenta: pedidos del cliente ----------
