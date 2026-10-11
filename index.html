@@ -33,20 +33,20 @@ function draw(b){var p=pref();b.innerHTML=IC[p]+'<span>'+LB[p]+'</span>';b.setAt
 function mk(){if(document.getElementById('ktheme'))return;var b=document.createElement('button');b.id='ktheme';b.type='button';b.onclick=function(){var n={auto:'light',light:'dark',dark:'auto'}[pref()];try{localStorage.setItem('tj_shop_theme',n)}catch(e){}apply()};document.body.appendChild(b);draw(b)}
 apply();document.addEventListener('DOMContentLoaded',mk);setInterval(apply,60000);
 })()</script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" integrity="sha384-AQ3POAMqIhwS81FrUH95ekxqBZHeP5tG2JfEL3+7GuTtfRLWnrRh32UxwzM+//A9" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" integrity="sha384-qn4Jh88HhJA8dplNQyGjOh9OGI4izVhrfj/qIFgaKcdgOE06pXqIKGlsCILZcLAC" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" integrity="sha384-TnlRYaR4JYz/lpaGuaiU61PjNberSA4vjLjtF+oRC/IkohkJqnWxw5EmDSOt1vA1" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js" integrity="sha384-6I0gWsz4FIAr30c0TxIxJnPQuJiZ1FfILdZrgJdjxTH3R8dgPGTvexbyqTvReV6Z" crossorigin="anonymous"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js" integrity="sha384-E3vxFxXu8FhW5kvqdQJ5Yf8ugrV7iCJP8jgnItRH2Rk8Q08cJzJGTi/oMC3FEp3j" crossorigin="anonymous"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Tarjetería Jhon">
 <meta name="mobile-web-app-capable" content="yes">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js" integrity="sha384-bs/nf9FbdNouRbMiFcrcZfLXYPKiPaGVGplVbv7dLGECccEXDW+S3zjqSKR5ZEaD" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.2/jszip.min.js" integrity="sha384-DdGlNq+wVXAn83gXqwyeFHB7iyXy6L0rLrNzgDmhKWPjiJLg9vj6qosYmZmkMfQ+" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.2/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <title>Tarjetería Jhon · Panel de Facturación</title>
 <style>
 :root{--az:#E0457B;--az-bg:rgba(224,69,123,.10);--fondo:#F2F2F5;--card:#fff;--txt:#1D1D1F;--gris:#6E6E73;--linea:#E4E4E9;--soft:#F5F5F7;--amb:#FF9F0A;--sw:264px;--r:20px;--rs:12px;--sh:0 1px 2px rgba(0,0,0,.04),0 10px 26px -14px rgba(0,0,0,.16);--mica:radial-gradient(1200px 700px at 14% -10%,rgba(224,69,123,.08),transparent 60%),radial-gradient(1000px 800px at 100% 0%,rgba(15,108,189,.06),transparent 55%)}
@@ -1097,9 +1097,9 @@ html.summer #shopm h2::after{content:' ☀️'}
 <div class="md" id="md" onclick="if(event.target===this)cerrar()"><div class="mb" id="mb"></div></div>
 <div id="prt"></div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script>
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const $=id=>document.getElementById(id);
@@ -1119,7 +1119,12 @@ function toggleCard(key){
 }
 try{const s=localStorage.getItem('tj_db');if(s){const o=JSON.parse(s),c=DB.cfg;DB=Object.assign(DB,o);DB.cfg=Object.assign(c,o.cfg||{})}}catch(e){}
 if(!DB.prod.length)DB.prod=[['TARJETAS DE TODA OCACION',1.30],['TARJETAS DE TODA OCACION',1.25],['TARJETAS DE TODA OCACION',1.20],['TARJETAS DE TODA OCACION',1.15],['TARJETAS DE TODA OCACION',1.00],['TARJETAS DE TODA OCACION DISTRUBUCION',0.95]].map((p,i)=>({id:'p'+i,n:p[0],p:p[1]}));
-const saveLocal=()=>{try{localStorage.setItem('tj_db',JSON.stringify(DB))}catch(e){}};
+// Si la copia local (localStorage) falla (p.ej. el navegador llenó su cuota), antes esto quedaba
+// en silencio total: nadie se enteraba, ni en consola. Ahora avisa una vez cada 5 minutos como
+// máximo (para no llenar la pantalla de avisos si falla seguido) — la nube sigue intentando guardar
+// aparte, pero es la única señal visible de que algo no se está guardando donde debería.
+let _slWarnT=0;
+const saveLocal=()=>{try{localStorage.setItem('tj_db',JSON.stringify(DB))}catch(e){console.warn('[saveLocal] no se pudo guardar localmente:',e);const n=Date.now();if(n-_slWarnT>300000){_slWarnT=n;try{cloudEstado('⚠ No se pudo guardar una copia local (memoria llena). Revise espacio del navegador.',false)}catch(_){}}}};
 const save=()=>{saveLocal();syncToCloud()};
 
 // ===== Sincronización en la nube (Firebase) =====
@@ -2049,6 +2054,23 @@ function sesCard(){const m=+(DB.cfg.sesionMin||0);const op=[0,5,10,15,30,60,120]
 function sesSet(v){DB.cfg.sesionMin=Math.max(0,Math.round(+v||0));save();idleArm();R.config()}
 const _rcs=R.config;
 R.config=function(){_rcs();if(!esAdmin())return;const sc=document.createElement('div');sc.className='card';sc.id='sesCard';sc.innerHTML=sesCard();const v=$('v');v.insertBefore(sc,v.firstChild)};
+
+// --- Copia de seguridad completa (clientes, facturas, productos, catálogo, agenda, config) ---
+// Guarda TODO lo que hay en DB (lo mismo que se sincroniza a Firebase) en un archivo .json que
+// el dueño del negocio puede guardar donde quiera. Si algo falla en Firebase o se borra algo por
+// accidente, este archivo permite volver a cargar los datos.
+function bkCard(){return `<h3 style="margin:0">💾 Copia de seguridad</h3><p style="font-size:12.5px;color:var(--gris)">Descargue un respaldo de todos sus datos (clientes, facturas, productos, catálogo, agenda y configuración) para guardarlo aparte. Hágalo de vez en cuando, sobre todo antes de cambios grandes.</p><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn p" onclick="bkExport()">⬇ Descargar copia de seguridad</button><button class="btn" onclick="$('bk_f').click()">⬆ Restaurar desde una copia</button></div><input id="bk_f" type="file" accept="application/json" hidden onchange="bkImport(this.files[0])"><p id="bk_m" style="font-size:11.5px;color:var(--gris);margin-top:6px"></p>`}
+function bkExport(){try{const payload={app:'tarjeteria-jhon',tipo:'backup',fecha:new Date().toISOString(),data:DB};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='respaldo-'+(DB.cfg.nombre||'tarjeteria').replace(/[^a-z0-9]+/gi,'-').toLowerCase()+'-'+new Date().toISOString().slice(0,10)+'.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}catch(e){alert('No se pudo generar la copia de seguridad.')}}
+async function bkImport(file){const m=t=>{const e=$('bk_m');if(e)e.textContent=t};if(!file)return;
+ if(!confirm('Esto va a REEMPLAZAR todos los datos actuales del panel (clientes, facturas, productos, etc.) por los del archivo de respaldo. Esta acción no se puede deshacer.\n\n¿Está seguro de que quiere continuar?')){$('bk_f').value='';return}
+ try{
+  const txt=await file.text();const json=JSON.parse(txt);const data=(json&&json.data)?json.data:json;
+  if(!data||typeof data!=='object'||!Array.isArray(data.cli)||!Array.isArray(data.fac))throw new Error('formato');
+  DB=data;save();m('✅ Copia restaurada. Recargando…');setTimeout(()=>location.reload(),900)
+ }catch(e){m('⚠ No se pudo leer ese archivo. Asegúrese de que sea una copia de seguridad generada por este mismo panel.')}
+ $('bk_f').value=''}
+const _rcb=R.config;
+R.config=function(){_rcb();if(!esAdmin())return;const bc=document.createElement('div');bc.className='card';bc.id='bkCard';bc.innerHTML=bkCard();const v=$('v');v.insertBefore(bc,v.firstChild)};
 let _idleTimer=null,_idleLast=Date.now(),_idleArmed=0;
 function idleBump(){_idleLast=Date.now()}
 function idleCheck(){if(!SES)return;const min=+(DB.cfg.sesionMin||0);if(!min)return;if(Date.now()-_idleLast>=min*60000){try{localStorage.setItem('tj_sesion_note','Sesión cerrada por inactividad.')}catch(e){}try{salir()}catch(e){location.reload()}}}
@@ -2749,9 +2771,18 @@ function shopRender(){const o=$('shop');if(!o)return;
 //    formularios automáticamente sí suele llenarlo. 2) Tiempo mínimo: si el pedido/registro llega
 //    en menos de 2.5s desde que se abrió la tienda, es casi seguro un script, no una persona.
 function shopHP(){return '<div style="position:absolute;left:-9999px;top:-9999px;height:0;overflow:hidden" aria-hidden="true"><label>Sitio web<input type="text" id="sh_hp" name="sh_web" tabindex="-1" autocomplete="off"></label></div>'}
-function shopAntiBot(){const hp=$('sh_hp');if(hp&&hp.value.trim())return false;if(!SH.openTs||Date.now()-SH.openTs<2500)return false;return true}
+// 3) Tope por navegador: como máximo 6 envíos (registros + pedidos juntos) cada 10 minutos desde
+// el mismo navegador. No detiene a alguien que ataque directo contra Firestore sin pasar por esta
+// página (eso solo lo frena Firebase App Check, pendiente de que Google lo vuelva a habilitar
+// gratis), pero sí frena a un script simple o a un clic repetido que reutiliza este navegador.
+const RL_KEY='tj_shop_rl',RL_MAX=6,RL_WIN=600000;
+function shopRateOk(){let a=[];try{a=JSON.parse(localStorage.getItem(RL_KEY)||'[]')}catch(e){}
+ const now=Date.now();a=a.filter(t=>now-t<RL_WIN);if(a.length>=RL_MAX)return false;
+ a.push(now);try{localStorage.setItem(RL_KEY,JSON.stringify(a))}catch(e){}return true}
+function shopAntiBot(){const hp=$('sh_hp');if(hp&&hp.value.trim())return'no';if(!SH.openTs||Date.now()-SH.openTs<2500)return'no';if(!shopRateOk())return'rl';return'ok'}
+const shopAntiBotMsg=r=>r==='rl'?'Demasiados envíos seguidos desde este dispositivo. Espere unos minutos e intente de nuevo.':'No se pudo registrar. Intente de nuevo.';
 async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('sh_t'),e=g('sh_e'),m=s=>{$('sh_m').textContent=s};
- if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');if(!shopAntiBot())return m('No se pudo registrar. Intente de nuevo.');
+ if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');{const r=shopAntiBot();if(r!=='ok')return m(shopAntiBotMsg(r))}
  const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};$('sh_b').disabled=true;m('Registrando…');
  try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
  SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){}shopRender()}
@@ -2859,7 +2890,7 @@ function tdPedDel(id){const p=TD.peds.find(x=>x.id===id);if(!p||!fbDb)return;con
 
 function shopAskReg(){shopM(`<div style="text-align:center;padding:6px 0 2px"><h2 style="margin:6px 0 4px">Último paso</h2><p style="color:var(--tx2);margin:0 0 16px;font-size:14.5px;line-height:1.45">Complete sus datos para enviar su pedido. Solo se lo pediremos esta vez.</p></div><label class="kf"><span>Nombre completo *</span><input id="sh_n" autocomplete="name"></label><label class="kf"><span>Teléfono / WhatsApp *</span><input id="sh_t" type="tel" autocomplete="tel" inputmode="tel"></label><label class="kf"><span>Correo electrónico *</span><input id="sh_e" type="email" autocomplete="email" inputmode="email"></label><label class="kf"><span>Empresa (opcional)</span><input id="sh_c" autocomplete="organization"></label><label class="kf"><span>Dirección o ciudad (opcional)</span><input id="sh_d" autocomplete="street-address"></label>${shopHP()}<div class="serr" id="sh_m"></div><div class="kact2"><button class="sbtn" id="sh_b" onclick="shopRegSend()">Registrarme y enviar pedido</button><button class="sbtn g" onclick="shopCart()">Volver al pedido</button></div><p style="font-size:11.5px;margin:6px 0 0;text-align:center;color:var(--tx2)">Sus datos se usan solo para atender su pedido.</p>`,'reg');setTimeout(()=>{const i=$('sh_n');if(i)i.focus()},350)}
 async function shopRegSend(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('sh_t'),e=g('sh_e'),m=s=>{$('sh_m').textContent=s};
- if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');if(!shopAntiBot())return m('No se pudo registrar. Intente de nuevo.');
+ if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');{const r=shopAntiBot();if(r!=='ok')return m(shopAntiBotMsg(r))}
  const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};$('sh_b').disabled=true;m('Registrando…');
  try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
  SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){}
@@ -2918,7 +2949,7 @@ function shopAcc(quiet){const c=SH.cli,L=shopOrdMine(),n=L.length,tot=L.reduce((
  ${n?L.map(p=>{const e=shopEst(p.estado),num=String(p.id||'').slice(-6).toUpperCase(),q=(p.items||[]).reduce((s,i)=>s+(+i.q||0),0);return `<details class="kord"><summary><div><b>Pedido N° ${num}</b><small>${fd(p.ts)} · ${q} diseño(s)</small></div><div style="text-align:right"><b>${p.total>0?$$(p.total):'Consultar'}</b><span class="kst2" style="background:${e[1]}22;color:${e[1]}">${e[0]}</span></div></summary><div class="kordb">${(p.items||[]).map(i=>`<div class="kodl"><span>${i.q} × ${esc(i.n)}</span><span>${i.p>0?$$(i.q*i.p):'—'}</span></div>`).join('')}${p.nota?`<small style="display:block;margin:6px 0;color:var(--tx2)">Nota: ${esc(p.nota)}</small>`:''}<div class="kodb"><button class="sbtn" onclick="shopOrdAct('${p.id}','img')">👁 Ver</button><button class="sbtn g" onclick="shopOrdAct('${p.id}')">📄 Descargar</button></div></div></details>`}).join(''):'<div class="kempty" style="padding:26px 10px"><span class="e">🧾</span>Todavía no ha hecho pedidos.</div>'}
  <div class="kact2"><button class="sbtn g" onclick="shopClose()">Cerrar</button></div>`,'acc');
  if(!quiet)shopOrdSync()}
-async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}if(!shopAntiBot()){const em=$('sh_m2');if(em)em.textContent='No se pudo enviar. Intente de nuevo.';return}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){}try{shopMusPrime()}catch(e){}const c=SH.cli,id=uid();
+async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}{const r=shopAntiBot();if(r!=='ok'){const em=$('sh_m2');if(em)em.textContent=shopAntiBotMsg(r);return}}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){}try{shopMusPrime()}catch(e){}const c=SH.cli,id=uid();
  const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa||'',dir:c.dir||''},items:L.map(l=>({id:l.id,n:l.n,p:l.p,q:l.q})),total:L.reduce((s,l)=>s+l.q*l.p,0),nota:(($('sh_nt')||{}).value||SH.pendNote||'').trim().slice(0,500),ref:SH.ref,ts:Date.now(),estado:'nuevo'};
  try{await fbDb.collection('tienda_pedidos').doc(id).set(p)}catch(e){b.disabled=false;b.textContent='Enviar pedido';$('sh_m2').textContent='No se pudo enviar. Intente de nuevo.';return}
  SH.last=p;SH.pendNote='';shopOrdSave(p);try{shopConfetti()}catch(e){}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica()}SH.cart={};try{localStorage.removeItem('tj_shop_cart')}catch(e){}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
