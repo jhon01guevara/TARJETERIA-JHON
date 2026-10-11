@@ -2908,7 +2908,7 @@ async function shopRegSend(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=
  if(!emailjsListo())return shopRegFinish(l);
  $('sh_b').disabled=true;m('Enviando código a su correo…');
  const ok=await shopCodeSend(l);
- if(!ok){$('sh_b').disabled=false;return m('No se pudo enviar el código de verificación. Intente de nuevo.')}
+ if(!ok){$('sh_b').disabled=false;return m('No se pudo enviar el código de verificación. Intente de nuevo.'+(SH.mailErr?' ['+SH.mailErr.trim().slice(0,160)+']':''))}
  shopAskCode()}
 // --- Verificación de correo con código de 6 dígitos (EmailJS) ---
 // El código se genera y se revisa en el propio navegador (no hay servidor propio detrás de
@@ -2919,7 +2919,7 @@ function shopCodeGen(){return String(Math.floor(100000+Math.random()*900000))}
 async function shopCodeSend(l){const code=shopCodeGen();
  SH.pendReg={l,code,exp:Date.now()+600000,lastSent:Date.now()};
  try{await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{to_email:l.email,to_name:l.name,code});return true}
- catch(e){SH.pendReg=null;return false}}
+ catch(e){console.error('EmailJS falló:',e);SH.mailErr=String((e&&e.status)||'')+' '+String((e&&(e.text||e.message))||e);SH.pendReg=null;return false}}
 function shopAskCode(){const l=(SH.pendReg||{}).l||{};
  shopM(`<div style="text-align:center;padding:6px 0 2px"><h2 style="margin:6px 0 4px">Confirme su correo</h2><p style="color:var(--tx2);margin:0 0 16px;font-size:14.5px;line-height:1.45">Le enviamos un código de 6 dígitos a <b>${esc(l.email||'')}</b>. Escríbalo aquí para enviar su pedido (revise también Spam/Promociones).</p></div><label class="kf"><span>Código de 6 dígitos</span><input id="sh_cod" type="text" inputmode="numeric" maxlength="6" autocomplete="one-time-code" style="letter-spacing:4px;font-size:20px;text-align:center"></label><div class="serr" id="sh_cm"></div><div class="kact2"><button class="sbtn" id="sh_cb" onclick="shopCodeVerify()">Confirmar y enviar pedido</button><button class="sbtn g" onclick="shopCodeResend()" id="sh_crs">Reenviar código</button></div><button class="sbtn g" style="margin-top:8px" onclick="shopAskReg()">← Cambiar datos</button>`,'cod');
  setTimeout(()=>{const i=$('sh_cod');if(i)i.focus()},350)}
