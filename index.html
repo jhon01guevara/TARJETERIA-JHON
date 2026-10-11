@@ -1,6 +1,19 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Protección anti-clickjacking: si alguien intenta cargar este panel dentro de un iframe
+     (una página ajena superpuesta para engañar al usuario a hacer clic), lo saca de ahí
+     antes de mostrar nada. GitHub Pages no permite fijar la cabecera X-Frame-Options,
+     así que esta es la defensa equivalente que sí funciona en un sitio estático. -->
+<style id="_akOff">html{display:none!important}</style>
+<script>
+(function(){
+ try{
+  if(self===top){var s=document.getElementById('_akOff');if(s)s.remove()}
+  else{top.location.replace(self.location.href)}
+ }catch(e){var s=document.getElementById('_akOff');if(s)s.remove()}
+})();
+</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#E0457B"><script>(function(){if(!/[?&]tienda(=|&|$)/.test(location.search))return;var H=document.documentElement;
