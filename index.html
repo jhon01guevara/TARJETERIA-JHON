@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- CSP mínima: el panel no usa <object>/<embed>/<base> ni formularios HTML, así que esto
+     se puede restringir sin romper nada. No incluye script-src porque el panel usa manejadores
+     onclick en línea por todo el código (exigiría 'unsafe-inline', que anula casi toda la
+     protección), y no hay forma de probarla aquí sin acceso a un navegador real. -->
+<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'self'">
 <!-- Protección anti-clickjacking: si alguien intenta cargar este panel dentro de un iframe
-     (una página ajena superpuesta para engañar al usuario a hacer clic), lo saca de ahí
-     antes de mostrar nada. GitHub Pages no permite fijar la cabecera X-Frame-Options,
-     así que esta es la defensa equivalente que sí funciona en un sitio estático. -->
+     (una página ajena superpuesta para engañar al usuario a hacer clic), la página se queda
+     oculta. GitHub Pages no permite fijar la cabecera X-Frame-Options, así que esta es la
+     defensa equivalente para un sitio estático. Importante: solo se revela cuando se confirma
+     que es la ventana principal (self===top); si no se puede confirmar eso (por ejemplo, un
+     iframe "sandbox" que bloquea la navegación y hace que el intento de salir falle), la
+     página se queda oculta en vez de mostrarse — un error al intentar salir del marco no es
+     motivo para revelarla. -->
 <style id="_akOff">html{display:none!important}</style>
 <script>
 (function(){
- try{
-  if(self===top){var s=document.getElementById('_akOff');if(s)s.remove()}
-  else{top.location.replace(self.location.href)}
- }catch(e){var s=document.getElementById('_akOff');if(s)s.remove()}
+ if(self===top){var s=document.getElementById('_akOff');if(s)s.remove();return}
+ try{top.location.replace(self.location.href)}catch(e){}
 })();
 </script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap">
@@ -1093,7 +1100,6 @@ html.summer #shopm h2::after{content:' ☀️'}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const $=id=>document.getElementById(id);
@@ -1221,6 +1227,24 @@ async function sincronizarCatalogoNube(){
 
 const $$=n=>'$'+(+n).toFixed(2);const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+// --- Saneo de documentos públicos (tienda_leads, tienda_pedidos, galería) ---
+// Cualquiera puede crear un registro o un pedido sin iniciar sesión (y cualquier vendedor puede
+// subir a la galería). Antes de dibujar esos datos en el panel se limpian aquí: el id solo puede
+// tener el formato que genera nuestro propio código (uid()); los documentos con un id "raro" se
+// descartan en vez de mostrarse (ese id se inserta directo en atributos onclick="...('ID')", y un
+// id fabricado con comillas podría ejecutar código en la sesión de quien lo vea). Los textos se
+// recortan a un largo razonable y los números se fuerzan a ser números de verdad.
+const SAFE_ID=/^[A-Za-z0-9_-]{1,60}$/;
+const sTxt=(v,n)=>String(v??'').slice(0,n||200);
+const sNum=v=>{const n=+v;return Number.isFinite(n)?n:0};
+function sanLead(d){if(!d||typeof d!=='object')return null;const id=String(d.id||'');if(!SAFE_ID.test(id))return null;
+ return{id,name:sTxt(d.name,120),tel:sTxt(d.tel,40),email:sTxt(d.email,120),empresa:sTxt(d.empresa,120),dir:sTxt(d.dir,200),ref:sTxt(d.ref||'admin',60),ts:sNum(d.ts),imp:!!d.imp}}
+function sanPed(d){if(!d||typeof d!=='object')return null;const id=String(d.id||'');if(!SAFE_ID.test(id))return null;const l=d.lead||{};
+ const items=Array.isArray(d.items)?d.items.slice(0,200).map(i=>({id:sTxt(i&&i.id,80),n:sTxt(i&&i.n,200),p:sNum(i&&i.p),q:Math.max(0,Math.round(sNum(i&&i.q)))})):[];
+ return{id,cid:sTxt(d.cid,80),lead:{name:sTxt(l.name,120),tel:sTxt(l.tel,40),email:sTxt(l.email,120),empresa:sTxt(l.empresa,120),dir:sTxt(l.dir,200)},items,total:sNum(d.total),nota:sTxt(d.nota,500),ref:sTxt(d.ref||'admin',60),ts:sNum(d.ts),estado:d.estado==='atendido'?'atendido':'nuevo'}}
+function sanGal(d){if(!d||typeof d!=='object')return null;const id=String(d.id||'');if(!SAFE_ID.test(id))return null;
+ const img=String(d.img||'');if(!/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(img))return null;
+ return Object.assign({},d,{id,img,t:sTxt(d.t,160),by:sTxt(d.by,80)})}
 const V=[['home','🏠','Inicio'],['nueva','🧾','Nueva factura'],['fac','📚','Facturas'],['prod','🎴','Productos'],['cat','📖','Catálogo'],['cli','👥','Clientes'],['ubi','📍','Ubicación'],['check','✅','Check'],['agenda','📅','Agenda'],['config','⚙️','Configuración']];
 let vista='home',items=[],perVentasSel='dia';
 function perVentas(p){perVentasSel=p;R.home()}
@@ -2041,7 +2065,7 @@ const _em=emitir;emitir=function(){const n=DB.fac.length,r=_em.apply(this,argume
 const _an=anular;anular=function(id){const a=DB.fac.find(f=>f.id==id),was=a&&a.anulada,r=_an.apply(this,arguments),b=DB.fac.find(f=>f.id==id);if(b&&b.anulada&&!was){DB.agenda=DB.agenda.filter(e=>e.fid!==id);save()}return r};
 // --- Galería de fotos ---
 let GAL=[],_galOn=false;
-function galListen(){if(_galOn||!fbDb)return;_galOn=true;try{fbDb.collection('galeria').onSnapshot(sn=>{GAL=sn.docs.map(d=>d.data()).sort((a,b)=>b.ts-a.ts);if(vista==='gal'&&SES)R.gal()},()=>{})}catch(e){}}
+function galListen(){if(_galOn||!fbDb)return;_galOn=true;try{fbDb.collection('galeria').onSnapshot(sn=>{GAL=sn.docs.map(d=>sanGal(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);if(vista==='gal'&&SES)R.gal()},()=>{})}catch(e){}}
 function galComp(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{let w=im.width,h=im.height;const k=Math.min(1,1280/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);URL.revokeObjectURL(u);let q=.72,d=c.toDataURL('image/jpeg',q);while(d.length>900000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q)}res(d)};im.onerror=()=>rej(new Error('img'));im.src=u})}
 async function galAdd(inp,cam){if(!fbDb)return alert('La galería necesita conexión a internet.');const fs=[...inp.files];inp.value='';if(!fs.length)return;const b=$('galSt');if(b)b.textContent='Guardando…';let ok=0;
  for(const f of fs){if(!/^image\//.test(f.type))continue;try{const img=await galComp(f),id=uid(),u=usr();await fbDb.collection('galeria').doc(id).set({id,t:cam?'Foto '+new Date().toLocaleString('es-PA'):f.name.replace(/\.[^.]+$/,'').slice(0,60),n:'',by:esAdmin()?'Administrador':(u?u.n:''),o:SES.id,ts:Date.now(),img});ok++}catch(e){alert('No se pudo guardar una imagen.')}}
@@ -2592,10 +2616,10 @@ function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbDb.collection(c):fbDb.collection(c).where('ref','==',me);let f1=true,f2=true;
  fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';try{if(esAdmin()&&fbDb&&cd.build!==BUILD)fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&cd.base!==tdBase())fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
- q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>d.data()).sort((a,b)=>b.ts-a.ts);
+ q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
- q('tienda_pedidos').onSnapshot(sn=>{TD.peds=sn.docs.map(d=>d.data()).sort((a,b)=>b.ts-a.ts);
+ q('tienda_pedidos').onSnapshot(sn=>{TD.peds=sn.docs.map(d=>sanPed(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f2)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo pedido de la tienda virtual, de '+((d.lead&&d.lead.name)||'un cliente')+'.')});
   f2=false;tdBadge();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Pedidos:',e))}
 function tdImport(){let ch=0;TD.leads.filter(l=>!l.imp).forEach(l=>{const d=String(l.tel||'').replace(/\D/g,'');
@@ -2848,7 +2872,7 @@ function shopOrdLoad(){try{const a=JSON.parse(localStorage.getItem(OKEY)||'[]');
 function shopOrdSave(p){const a=shopOrdLoad().filter(x=>x.id!==p.id);a.push(p);try{localStorage.setItem(OKEY,JSON.stringify(a.slice(-150)))}catch(e){}}
 function shopOrdMine(){const c=SH.cli;if(!c)return[];const tel=String(c.tel||'').replace(/\D/g,'');return shopOrdLoad().filter(p=>p.cid===c.id||(tel&&String((p.lead||{}).tel||'').replace(/\D/g,'')===tel)).sort((a,b)=>b.ts-a.ts)}
 async function shopOrdSync(){const c=SH.cli;if(!c||SH.guest||!fbDb)return;let ch=false;const tel=c.tel||'';
- for(const q of [['cid',c.id],['lead.tel',tel]]){if(!q[1])continue;try{const r=await fbDb.collection('tienda_pedidos').where(q[0],'==',q[1]).get();r.docs.forEach(d=>{const p=d.data();if(p&&p.id){const o=shopOrdLoad().find(x=>x.id===p.id);if(!o||o.estado!==p.estado||o.total!==p.total){shopOrdSave(p);ch=true}}})}catch(e){}}
+ for(const q of [['cid',c.id],['lead.tel',tel]]){if(!q[1])continue;try{const r=await fbDb.collection('tienda_pedidos').where(q[0],'==',q[1]).get();r.docs.forEach(d=>{const p=sanPed(d.data());if(p&&p.id){const o=shopOrdLoad().find(x=>x.id===p.id);if(!o||o.estado!==p.estado||o.total!==p.total){shopOrdSave(p);ch=true}}})}catch(e){}}
  const m=$('shopm');if(ch&&m&&m.dataset.k==='acc')shopAcc(1)}
 const shopEst=e=>e==='atendido'?['Atendido','#2bb673']:['Recibido','#E8870A'];
 function shopOrdAct(id,modo){const p=shopOrdLoad().find(x=>x.id===id);if(!p)return;if(modo==='img')shopImgVer(p);else shopPdf(p,modo)}
