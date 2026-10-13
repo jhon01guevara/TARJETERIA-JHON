@@ -2261,10 +2261,33 @@ async function bkImport(file){const m=t=>{const e=$('bk_m');if(e)e.textContent=t
  $('bk_f').value=''}
 const _rcb=R.config;
 R.config=function(){_rcb();if(!esAdmin())return;const bc=document.createElement('div');bc.className='card';bc.id='bkCard';bc.innerHTML=bkCard();const v=$('v');v.insertBefore(bc,v.firstChild)};
-let _idleTimer=null,_idleLast=Date.now(),_idleArmed=0;
-function idleBump(){_idleLast=Date.now()}
-function idleCheck(){if(!SES)return;const min=+(DB.cfg.sesionMin||0);if(!min)return;if(Date.now()-_idleLast>=min*60000){try{localStorage.setItem('tj_sesion_note','Sesión cerrada por inactividad.')}catch(e){}try{salir()}catch(e){location.reload()}}}
-function idleArm(){if(!_idleArmed){_idleArmed=1;['mousedown','mousemove','keydown','touchstart','wheel','scroll'].forEach(ev=>document.addEventListener(ev,idleBump,{passive:true}))}idleBump();if(_idleTimer)clearInterval(_idleTimer);_idleTimer=setInterval(idleCheck,15000)}
+let _idleTimer=null,_idleLast=Date.now(),_idleArmed=0,_idleW=0,_idleSrv=null,_idleSrvT=0;
+const _ACT='tj_act',_SMN='tj_sesmin';
+/* Marca de actividad: se guarda también en el navegador, para que cerrar/reabrir la pestaña o
+   bloquear el celular NO reinicie el reloj de inactividad. */
+function idleStamp(){_idleLast=Date.now();if(_idleLast-_idleW>2000){_idleW=_idleLast;try{localStorage.setItem(_ACT,String(_idleLast))}catch(e){}}}
+function idleBump(){idleStamp()}
+/* Minutos de inactividad: administrador = su configuración local; vendedor = lo que diga la nube
+   (consultado directo al servidor), con copia local de respaldo por si la lectura falla. */
+function idleMin(){let m=+(DB.cfg.sesionMin||0);
+ if(!esAdmin()){if(_idleSrv!==null)m=_idleSrv;else if(!m){try{m=+(localStorage.getItem(_SMN)||0)}catch(e){}}}
+ try{if(m>0)localStorage.setItem(_SMN,String(m));else localStorage.removeItem(_SMN)}catch(e){}return m}
+function idleFetch(force){try{if(!fbDocRef||!SES||esAdmin())return;const n=Date.now();if(!force&&n-_idleSrvT<120000)return;_idleSrvT=n;
+ fbDocRef.get({source:'server'}).then(d=>{if(d.exists){const c=(d.data()||{}).cfg||{};_idleSrv=Math.max(0,Math.round(+c.sesionMin||0));idleCheck()}}).catch(()=>{})}catch(e){}}
+function idleOut(){if(window._idleOut)return;window._idleOut=1;try{localStorage.setItem('tj_sesion_note','Sesión cerrada por inactividad.')}catch(e){}try{localStorage.removeItem(_ACT)}catch(e){}
+ try{salir()}catch(e){}
+ /* Plan B: si salir() falla o se queda colgado, se cierra la sesión directamente. */
+ setTimeout(()=>{try{firebase.auth().signOut()}catch(e){}setTimeout(()=>location.reload(),600)},2500)}
+function idleCheck(){if(!SES)return;const min=idleMin();if(!min)return;try{if(LL&&(LL.id||LL.incoming))return}catch(e){}
+ let last=_idleLast;try{const st=+localStorage.getItem(_ACT)||0;if(st>last)last=st}catch(e){}
+ if(Date.now()-last>=min*60000)idleOut()}
+function idleArm(){if(!_idleArmed){_idleArmed=1;
+  ['mousedown','mousemove','keydown','touchstart','wheel','scroll','click','pointerdown'].forEach(ev=>document.addEventListener(ev,idleBump,{passive:true,capture:true}));
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){idleCheck();idleFetch(1)}});addEventListener('pageshow',()=>{idleCheck();idleFetch(1)});addEventListener('focus',()=>idleCheck());
+  /* Al reabrir la página con la sesión ya iniciada se respeta la última actividad real. */
+  let st=0;try{st=+localStorage.getItem(_ACT)||0}catch(e){}if(st&&st<=Date.now())_idleLast=st;else idleStamp()}
+ else idleStamp();
+ if(_idleTimer)clearInterval(_idleTimer);_idleTimer=setInterval(()=>{idleCheck();idleFetch()},10000);idleFetch(1);idleCheck()}
 const _entrarSes=entrar;entrar=function(){_entrarSes.apply(this,arguments);idleArm()};
 const _salirSes=salir;salir=function(){if(_idleTimer){clearInterval(_idleTimer);_idleTimer=null}return _salirSes.apply(this,arguments)};
 
@@ -3338,7 +3361,7 @@ function authInit(){
  })}
 function authLogin(){authUI(`<h2>Tarjetería Jhon</h2><p>Inicie sesión para continuar.</p><label>Correo</label><input id="au_e" type="email" autocomplete="username"><label>Contraseña</label><input id="au_p" type="password" autocomplete="current-password" onkeydown="if(event.key==='Enter')authGo()"><label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0"><input type="checkbox" style="width:auto" onchange="$('au_p').type=this.checked?'text':'password'"> Mostrar contraseña</label><div id="au_m"></div><button class="btn p" onclick="authGo()">Entrar</button><a href="#" onclick="authReset();return false" style="display:block;text-align:center;margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.85);text-decoration:underline">¿Olvidó su contraseña?</a>`);if(_note){authMsg(_note);_note=''}}
 async function authGo(){const e=$('au_e').value.trim(),p=$('au_p').value;if(!e||!p)return authMsg('Escriba correo y contraseña.');authMsg('Verificando…');
- try{await firebase.auth().signInWithEmailAndPassword(e,p)}catch(x){const c=x.code||String(x.message||x);const m={'auth/invalid-credential':'Correo o contraseña incorrectos','auth/wrong-password':'Contraseña incorrecta','auth/user-not-found':'No existe ese usuario','auth/invalid-email':'Correo no válido','auth/too-many-requests':'Demasiados intentos, espere unos minutos','auth/network-request-failed':'Sin conexión o bloqueado por la red','auth/operation-not-allowed':'Correo/contraseña no está habilitado en Firebase'};authMsg((m[c]||'No se pudo entrar')+' ['+c+']')}}
+ try{idleStamp();await firebase.auth().signInWithEmailAndPassword(e,p)}catch(x){const c=x.code||String(x.message||x);const m={'auth/invalid-credential':'Correo o contraseña incorrectos','auth/wrong-password':'Contraseña incorrecta','auth/user-not-found':'No existe ese usuario','auth/invalid-email':'Correo no válido','auth/too-many-requests':'Demasiados intentos, espere unos minutos','auth/network-request-failed':'Sin conexión o bloqueado por la red','auth/operation-not-allowed':'Correo/contraseña no está habilitado en Firebase'};authMsg((m[c]||'No se pudo entrar')+' ['+c+']')}}
 async function authReset(){const e=($('au_e')&&$('au_e').value||'').trim();if(!e)return authMsg('Escriba su correo arriba y toque el enlace otra vez.');
  try{await firebase.auth().sendPasswordResetEmail(e)}catch(x){}authMsg('Si el correo existe, le enviamos un enlace para crear una nueva contraseña.')}
 function authLimpia(){if(!esAdmin())return;if(DB.cfg.admin||usuarios().some(u=>u.h||u.s)){delete DB.cfg.admin;usuarios().forEach(u=>{delete u.h;delete u.s});save()}}
