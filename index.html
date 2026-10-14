@@ -3508,4 +3508,28 @@ function investCard(){return `<h3 style="margin:0">📦 Investigación de produc
 const _rcInv=R.config;R.config=function(){const r=_rcInv.apply(this,arguments);if(!esAdmin())return r;const c=document.createElement('div');c.className='card';c.id='investCard';c.innerHTML=investCard();const v=$('v');if(v)v.insertBefore(c,v.firstChild);return r};
 function investHomeHTML(){return `<div class="card" id="investHome"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">📦 Investigación de productos</h3><button class="btn s" onclick="investigacionAbrir()">Abrir →</button></div><p style="font-size:13px;color:var(--gris);margin:6px 0 0">Compare proveedores de Alibaba: precios, MOQ, fletes y certificaciones, con una ruta de seguimiento por etapas. Sincronizado con la nube.</p></div>`}
 const _rhInv=R.home;R.home=function(){const r=_rhInv.apply(this,arguments);if(!esAdmin())return r;const w=document.createElement('div');w.innerHTML=investHomeHTML();const v=$('v');if(v&&w.firstElementChild)v.appendChild(w.firstElementChild);return r};
+
+/* ===== Agente de ventas por WhatsApp (IA) =====
+   El bot en sí corre en una Cloud Function aparte (no en esta página, porque necesita
+   claves secretas que nunca deben quedar expuestas en el código del navegador). Esta
+   parte solo MUESTRA, aquí en el panel, las conversaciones que el agente marcó como
+   "necesita un asesor humano", para que usted pueda continuarlas. Los pedidos que el
+   agente cierra por su cuenta ya aparecen solos en "Pedidos nuevos" de la tienda,
+   porque los escribe con el mismo formato que usa la tienda virtual. */
+let WA={list:[],on:false};
+function waListen(){if(WA.on||!fbDb)return;WA.on=true;
+ try{fbDb.collection('wa_conversaciones').where('estado','==','humano').onSnapshot(sn=>{
+  WA.list=sn.docs.map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));
+  waRefreshCard();waRefreshHome()
+ },e=>console.warn('Agente WhatsApp: no se pudo escuchar conversaciones.',e))}catch(e){}
+}
+function waUltimo(c){const h=c.historial||[];for(let i=h.length-1;i>=0;i--)if(h[i].role==='user')return h[i].content||'';return''}
+function waBack(phone){if(!fbDb)return;fbDb.collection('wa_conversaciones').doc(phone).set({estado:'bot'},{merge:true}).catch(()=>alert('No se pudo devolver la conversación al agente. Revise su conexión o permisos.'))}
+function waRow(c){return `<div class="tdr"><div><b>${esc(c.phone||'')}</b><small>${esc((waUltimo(c)||'').slice(0,70))}</small></div><a class="btn s" href="https://wa.me/${esc((c.phone||'').replace(/\D/g,''))}" target="_blank" rel="noopener" title="Abrir WhatsApp">💬</a><button class="btn s p" onclick="waBack('${esc(c.phone||'')}')" title="Devolver al agente">🤖 Volver al bot</button></div>`}
+function waCard(){return `<h3 style="margin:0">🤖 Agente de ventas (WhatsApp)</h3><p style="font-size:12.5px;color:var(--gris)">Responde preguntas de catálogo, precios y disponibilidad, y crea pedidos automáticamente por WhatsApp usando IA, con los datos reales de su tienda. Cuando el agente no puede resolver algo (o el cliente pide hablar con una persona), la conversación aparece abajo para que usted la continúe manualmente; mientras tanto el agente deja de responder ahí para no cruzarse con usted.</p><div id="waList">${WA.list.length?WA.list.map(waRow).join(''):'<small style="color:var(--gris)">No hay conversaciones esperando un asesor ahora mismo.</small>'}</div>`}
+function waRefreshCard(){const e=$('waCard');if(!e||vista!=='config')return;e.innerHTML=waCard()}
+function waHomeHTML(){return `<div class="card" id="waHome"><h3 style="margin:0">🤖 ${WA.list.length} conversación${WA.list.length==1?'':'es'} de WhatsApp esperando un asesor</h3><div>${WA.list.slice(0,5).map(waRow).join('')}</div></div>`}
+function waRefreshHome(){if(vista!=='home')return;const e=$('waHome');if(!WA.list.length){if(e)e.remove();return}const w=document.createElement('div');w.innerHTML=waHomeHTML();if(!w.firstElementChild)return;if(e)e.replaceWith(w.firstElementChild);else{const v=$('v');if(v)v.insertBefore(w.firstElementChild,v.firstChild)}}
+const _rcWa=R.config;R.config=function(){const r=_rcWa.apply(this,arguments);if(!esAdmin())return r;const c=document.createElement('div');c.className='card';c.id='waCard';c.innerHTML=waCard();const v=$('v');if(v)v.insertBefore(c,v.firstChild);waListen();return r};
+const _rhWa=R.home;R.home=function(){const r=_rhWa.apply(this,arguments);if(!esAdmin())return r;waListen();if(WA.list.length){const w=document.createElement('div');w.innerHTML=waHomeHTML();const v=$('v');if(v&&w.firstElementChild)v.insertBefore(w.firstElementChild,v.firstChild)}return r};
 </script></body></html>
