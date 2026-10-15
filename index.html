@@ -1984,7 +1984,7 @@ R.cat=async()=>{try{CL=await tx('readonly',s=>s.getAll())}catch(e){memW=1}
  $('v').innerHTML=`<div id="av" class="card" style="display:none;background:#fff4e5;color:#7a4a00;font-size:13px">⚠ Esta vista no permite guardar archivos de forma permanente: se verán mientras no cierre o recargue la página. Para guardarlos, abra el panel desde el archivo HTML descargado.</div><div class="card"><h3>Subir al catálogo</h3><div class="g" style="margin-bottom:14px"><div><label>Categoría / ocasión</label><input id="u_cat" list="cl" placeholder="Ej. Cumpleaños"><datalist id="cl">${CATS.map(c=>`<option>${c}</option>`).join('')}</datalist><div class="catq">${CATS.map(c=>`<button type="button" class="catqb" onclick="$('u_cat').value='${c}'">${c}</button>`).join('')}</div></div><div><label>Precio (opcional)</label><input id="u_pr" type="number" step="0.01" min="0"></div></div>
  <div class="up" id="dz" onclick="$('fi2').click()" ondragover="event.preventDefault();this.classList.add('ov')" ondragleave="this.classList.remove('ov')" ondrop="event.preventDefault();this.classList.remove('ov');subir(event.dataTransfer.files)"><div style="font-size:30px">📂</div><b>Arrastre archivos aquí o haga clic para seleccionarlos</b><br><small>PDF, JPG, PNG, WEBP, GIF, Word, Excel, video y más · varios a la vez</small></div><input id="fi2" type="file" multiple style="display:none" onchange="subir(this.files)"></div>
  <div class="card"><div class="g" style="margin-bottom:16px;align-items:end"><div><label>Buscar</label><input id="q" placeholder="Nombre o descripción" oninput="cq=this.value;dib()"></div><div><label>Categoría</label><select id="qc" onchange="cc=this.value;dib()"></select></div><div><button class="btn p" onclick="impCat()">📖 Vista previa / Imprimir catálogo</button></div></div>
- <div class="g" style="margin-bottom:16px"><div><button class="btn s" onclick="catAutoPrev()">🏷 Organizar por categoría (auto)</button></div><div><button class="btn s" id="btnCompCat" onclick="comprimirCatalogo()">🗜 Comprimir catálogo</button></div><div><button class="btn s" id="btnExpCat" onclick="expCatBackup()">⬇ Respaldo del catálogo</button></div><div><button class="btn s" onclick="document.getElementById('impCatInput').click()">⬆ Importar catálogo</button><input id="impCatInput" type="file" accept=".zip,application/zip" multiple hidden onchange="impCatFile(this)"></div></div>
+ <div class="g" style="margin-bottom:16px"><div><button class="btn s" onclick="catAutoPrev()">🏷 Organizar por categoría (auto)</button></div><div><button class="btn s" id="btnCompCat" onclick="comprimirCatalogo()">🗜 Comprimir catálogo</button></div><div><button class="btn s" id="btnExpCat" onclick="expCatBackup()">⬇ Respaldo del catálogo</button></div><div><button class="btn s" id="btnImgJ" onclick="descTodoImg('jpg')">🖼 Descargar todo en JPG</button></div><div><button class="btn s" id="btnImgP" onclick="descTodoImg('png')">🖼 Descargar todo en PNG</button></div><div><button class="btn s" onclick="document.getElementById('impCatInput').click()">⬆ Importar catálogo</button><input id="impCatInput" type="file" accept=".zip,application/zip" multiple hidden onchange="impCatFile(this)"></div></div>
   <div id="gc"></div><p style="font-size:12px;color:var(--gris);margin:14px 0 0">Use "Respaldo del catálogo" para guardar sus archivos fuera de este navegador, y "Importar catálogo" para recuperarlos aquí o en otro dispositivo.</p></div>`;imgPicker();cc='';cq='';dib();R.aviso();fixT()};
 function dib(){const cats=[...new Set([...CATS,...CL.map(f=>f.cat)])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'es'));$('qc').innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option ${c==cc?'selected':''}>${esc(c)}</option>`).join('');
  const q=cq.toLowerCase(),l=CL.filter(f=>(!cc||f.cat==cc)&&(f.name+' '+f.desc).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
@@ -2130,6 +2130,73 @@ async function expCatBackup(){
   if(lotes.length>1)alert(`Se generaron ${lotes.length} archivos .zip (el catálogo es muy grande para uno solo). Si su navegador bloqueó alguna descarga después de la primera, permita "descargas múltiples" para este sitio y toque el botón de nuevo. Guarde los ${lotes.length} archivos juntos; se necesitan todos para restaurar el catálogo completo.`);
  }catch(e){alert('No se pudo generar el respaldo del catálogo: '+((e&&e.message)||e))}
  if(b){b.disabled=false;b.textContent='⬇ Respaldo del catálogo'}
+}
+
+/* ===== Descargar todos los modelos del catálogo como imágenes (JPG o PNG) =====
+   Respeta la categoría y la búsqueda que estén activas. Las imágenes se convierten al formato elegido
+   (las que ya están en ese formato se guardan tal cual, sin perder calidad); los PDF se convierten
+   página por página; videos y otros archivos se omiten. Todo sale en un .zip ordenado por categoría. */
+async function _imgConv(blob,fmt){
+ const want=fmt==='png'?'image/png':'image/jpeg';
+ if(blob.type===want)return blob;
+ const url=URL.createObjectURL(blob);
+ try{
+  const im=await new Promise((ok,no)=>{const i=new Image();i.onload=()=>ok(i);i.onerror=()=>no(new Error('imagen no válida'));i.src=url});
+  const c=document.createElement('canvas');c.width=im.naturalWidth;c.height=im.naturalHeight;const g=c.getContext('2d');
+  if(fmt!=='png'){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height)}
+  g.drawImage(im,0,0);
+  return await new Promise((ok,no)=>c.toBlob(b=>b?ok(b):no(new Error('no se pudo convertir')),want,.93))
+ }finally{URL.revokeObjectURL(url)}
+}
+async function _pdfImgs(blob,fmt){
+ const want=fmt==='png'?'image/png':'image/jpeg',out=[];
+ const d=await pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer())}).promise;
+ for(let n=1;n<=d.numPages;n++){
+  const pg=await d.getPage(n),w0=pg.getViewport({scale:1}).width,v=pg.getViewport({scale:Math.min(3,Math.max(1,1800/w0))}),c=document.createElement('canvas');
+  c.width=Math.round(v.width);c.height=Math.round(v.height);const g=c.getContext('2d');
+  if(fmt!=='png'){g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height)}
+  await pg.render({canvasContext:g,viewport:v}).promise;
+  out.push(await new Promise(ok=>c.toBlob(ok,want,.93)))
+ }
+ return out
+}
+async function descTodoImg(fmt){
+ const bid=fmt==='png'?'btnImgP':'btnImgJ',b=$(bid),lbl=b?b.textContent:'';
+ if(!window.JSZip){alert('No se pudo cargar el generador de ZIP. Verifique su conexión a internet e intente de nuevo.');return}
+ const q=(cq||'').toLowerCase(),L=CL.filter(f=>(!cc||f.cat==cc)&&(f.name+' '+f.desc).toLowerCase().includes(q)&&f.blob);
+ if(!L.length){alert('No hay modelos para descargar con el filtro actual.');return}
+ const nImg=L.filter(f=>(f.type||'').startsWith('image/')||f.type==='application/pdf').length;
+ if(!nImg){alert('Ninguno de los archivos del filtro actual es imagen ni PDF.');return}
+ if(!confirm('Se descargarán '+nImg+' modelo(s) en formato '+fmt.toUpperCase()+(cc?' de la categoría «'+cc+'»':'')+', en un archivo .zip ordenado por categoría.'+(L.length>nImg?'\n('+(L.length-nImg)+' archivo(s) que no son imagen ni PDF se omiten.)':'')+'\n\n¿Continuar?'))return;
+ document.querySelectorAll('#btnImgJ,#btnImgP').forEach(x=>x.disabled=true);
+ const used=new Set(),clean=t=>String(t||'').normalize('NFC').replace(/[\\/:*?"<>|\u0000-\u001f]+/g,' ').replace(/\s+/g,' ').trim().slice(0,80)||'sin nombre';
+ const CAP=40*1024*1024,lotes=[];let cur=[],peso=0,hechos=0,fallos=[];
+ try{
+  for(const f of L){
+   const isPdf=f.type==='application/pdf',isImg=(f.type||'').startsWith('image/');if(!isPdf&&!isImg)continue;
+   if(b)b.textContent='Procesando '+(++hechos)+' de '+nImg+'…';
+   let blobs;
+   try{blobs=isPdf?(window.pdfjsLib?await _pdfImgs(f.blob,fmt):null):[await _imgConv(f.blob,fmt)];if(!blobs)throw new Error('lector de PDF no disponible')}
+   catch(e){fallos.push(f.name);continue}
+   const dir=clean(f.cat||'Sin categoría'),base=clean(f.name);
+   blobs.forEach((bl,i)=>{
+    let nm=dir+'/'+base+(blobs.length>1?' - pág '+(i+1):''),k=nm,n=2;while(used.has(k.toLowerCase()))k=nm+' ('+n++ +')';used.add(k.toLowerCase());
+    if(cur.length&&peso+bl.size>CAP){lotes.push(cur);cur=[];peso=0}
+    cur.push([k+'.'+fmt,bl]);peso+=bl.size})
+   if(hechos%5===0)await sleep(0)
+  }
+  if(cur.length)lotes.push(cur);
+  if(!lotes.length){alert('No se pudo convertir ningún archivo.');return}
+  for(let li=0;li<lotes.length;li++){
+   if(b)b.textContent='Empaquetando '+(li+1)+' de '+lotes.length+'…';
+   const zip=new JSZip();lotes[li].forEach(([n,bl])=>zip.file(n,bl));
+   const out=await zip.generateAsync({type:'blob',compression:'STORE'}),suf=lotes.length>1?'_parte'+(li+1)+'de'+lotes.length:'';
+   dlBlob(out,'modelos_'+fmt+(cc?'_'+clean(cc).replace(/ /g,'-'):'')+suf+'.zip');
+   if(li<lotes.length-1)await sleep(700)
+  }
+  alert('✔ Listo: '+(hechos-fallos.length)+' modelo(s) en '+fmt.toUpperCase()+(lotes.length>1?' en '+lotes.length+' archivos .zip (si el navegador bloqueó alguno, permita «descargas múltiples» y repita).':'.')+(fallos.length?'\n\nNo se pudieron convertir '+fallos.length+': '+fallos.slice(0,8).join(', ')+(fallos.length>8?'…':''):''))
+ }catch(e){alert('No se pudo generar la descarga: '+((e&&e.message)||e))}
+ finally{document.querySelectorAll('#btnImgJ,#btnImgP').forEach(x=>x.disabled=false);if(b)b.textContent=lbl}
 }
 async function impCatFile(input){
  const files=[...input.files];if(!files.length)return;
