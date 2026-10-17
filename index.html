@@ -21,6 +21,8 @@
  try{top.location.replace(self.location.href)}catch(e){}
 })();
 </script>
+<script>/* Registro de errores silenciados (SEG-10): avisa en consola, máximo 60 veces, sin interrumpir nada. */
+window._tjw=function(e){try{var n=(window._tjwN=(window._tjwN||0)+1);if(n>60)return;var st=e&&e.stack?String(e.stack).split("\n")[1]:"";console.warn("[Tarjetería] error ignorado #"+n+":",(e&&e.message)||e,st?st.trim():"")}catch(_){}};</script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap">
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#E0457B"><script>(function(){if(!/[?&]tienda(=|&|$)/.test(location.search))return;var H=document.documentElement;
@@ -30,7 +32,7 @@ function apply(){var t=calc();H.setAttribute('data-kt',t);var m=document.querySe
 var IC={light:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',dark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>',auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>'};
 var LB={light:'Día',dark:'Noche',auto:'Auto'};
 function draw(b){var p=pref();b.innerHTML=IC[p]+'<span>'+LB[p]+'</span>';b.setAttribute('aria-label','Tema: '+LB[p])}
-function mk(){if(document.getElementById('ktheme'))return;var b=document.createElement('button');b.id='ktheme';b.type='button';b.onclick=function(){var n={auto:'light',light:'dark',dark:'auto'}[pref()];try{localStorage.setItem('tj_shop_theme',n)}catch(e){}apply()};document.body.appendChild(b);draw(b)}
+function mk(){if(document.getElementById('ktheme'))return;var b=document.createElement('button');b.id='ktheme';b.type='button';b.onclick=function(){var n={auto:'light',light:'dark',dark:'auto'}[pref()];try{localStorage.setItem('tj_shop_theme',n)}catch(e){window._tjw&&_tjw(e)}apply()};document.body.appendChild(b);draw(b)}
 apply();document.addEventListener('DOMContentLoaded',mk);setInterval(apply,60000);
 })()</script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -1308,23 +1310,23 @@ const INVEST_B64="PCFET0NUWVBFIGh0bWw+CjxodG1sIGxhbmc9ImVzIj4KPGhlYWQ+CjxtZXRhIG
 
 let DB={prod:[],cli:[],fac:[],ubi:[],agenda:[],cfg:{sig:1058,itbms:0,nombre:'Tarjetería Jhon',ruc:'',tel:'(507) 6074-1150',email:'Tarjeteriajhon@gmail.com',dir:'Panama Oeste',banco:'Banco General',tcuenta:'Ahorro',cuenta:'0425980328817',yappy:'+507 6057-6823',dests:[],tema:'claro',snd:1,tono:'campana',vol:70,nsys:0}};
 let cardState={cfg:false,email:false};
-try{cardState=Object.assign(cardState,JSON.parse(localStorage.getItem('tj_cards')||'{}'))}catch(e){}
+try{cardState=Object.assign(cardState,JSON.parse(localStorage.getItem('tj_cards')||'{}'))}catch(e){window._tjw&&_tjw(e)}
 function toggleCard(key){
  cardState[key]=!cardState[key];
- try{localStorage.setItem('tj_cards',JSON.stringify(cardState))}catch(e){}
+ try{localStorage.setItem('tj_cards',JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}
  const cap=key==='cfg'?'Cfg':'Email',body=$('body'+cap),caret=$('caret'+cap),btn=$('btnToggle'+cap);
  if(body)body.style.display=cardState[key]?'':'none';
  if(caret)caret.textContent=cardState[key]?'▾':'▸';
  if(btn)btn.textContent=cardState[key]?'Minimizar':'Maximizar';
 }
-try{const s=localStorage.getItem('tj_db');if(s){const o=JSON.parse(s),c=DB.cfg;DB=Object.assign(DB,o);DB.cfg=Object.assign(c,o.cfg||{})}}catch(e){}
+try{const s=localStorage.getItem('tj_db');if(s){const o=JSON.parse(s),c=DB.cfg;DB=Object.assign(DB,o);DB.cfg=Object.assign(c,o.cfg||{})}}catch(e){window._tjw&&_tjw(e)}
 if(!DB.prod.length)DB.prod=[['TARJETAS DE TODA OCACION',1.30],['TARJETAS DE TODA OCACION',1.25],['TARJETAS DE TODA OCACION',1.20],['TARJETAS DE TODA OCACION',1.15],['TARJETAS DE TODA OCACION',1.00],['TARJETAS DE TODA OCACION DISTRUBUCION',0.95]].map((p,i)=>({id:'p'+i,n:p[0],p:p[1]}));
 // Si la copia local (localStorage) falla (p.ej. el navegador llenó su cuota), antes esto quedaba
 // en silencio total: nadie se enteraba, ni en consola. Ahora avisa una vez cada 5 minutos como
 // máximo (para no llenar la pantalla de avisos si falla seguido) — la nube sigue intentando guardar
 // aparte, pero es la única señal visible de que algo no se está guardando donde debería.
 let _slWarnT=0;
-const saveLocal=()=>{try{localStorage.setItem('tj_db',JSON.stringify(DB))}catch(e){console.warn('[saveLocal] no se pudo guardar localmente:',e);const n=Date.now();if(n-_slWarnT>300000){_slWarnT=n;try{cloudEstado('⚠ No se pudo guardar una copia local (memoria llena). Revise espacio del navegador.',false)}catch(_){}}}};
+const saveLocal=()=>{try{localStorage.setItem('tj_db',JSON.stringify(DB))}catch(e){console.warn('[saveLocal] no se pudo guardar localmente:',e);const n=Date.now();if(n-_slWarnT>300000){_slWarnT=n;try{cloudEstado('⚠ No se pudo guardar una copia local (memoria llena). Revise espacio del navegador.',false)}catch(_){window._tjw&&_tjw(_)}}}};
 const save=()=>{saveLocal();syncToCloud()};
 
 // ===== Sincronización en la nube (Firebase) =====
@@ -1343,17 +1345,17 @@ const RECAPTCHA_V3_SITE_KEY='6Ld9hOktAAAAALfcLgikIHsm0rvaJCaWQ_lIXf-y';
 // rompe nada), para no dejar la tienda sin poder registrar clientes mientras se configura esto.
 const EMAILJS_PUBLIC_KEY='7uMfxbPHkkks7YCGu',EMAILJS_SERVICE_ID='service_uy10xlg',EMAILJS_TEMPLATE_ID='template_wybv8ea';
 const emailjsListo=()=>EMAILJS_PUBLIC_KEY!=='EMAILJS_PUBLIC_KEY'&&EMAILJS_SERVICE_ID!=='EMAILJS_SERVICE_ID'&&EMAILJS_TEMPLATE_ID!=='EMAILJS_TEMPLATE_ID'&&window.emailjs;
-try{if(window.emailjs&&emailjsListo())emailjs.init({publicKey:EMAILJS_PUBLIC_KEY})}catch(e){}
+try{if(window.emailjs&&emailjsListo())emailjs.init({publicKey:EMAILJS_PUBLIC_KEY})}catch(e){window._tjw&&_tjw(e)}
 try{
  if(window.firebase){
   firebase.initializeApp(firebaseConfig);
   if(firebase.appCheck && RECAPTCHA_V3_SITE_KEY!=='RECAPTCHA_V3_SITE_KEY'){
-   try{firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),true)}catch(e){}
+   try{firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),true)}catch(e){window._tjw&&_tjw(e)}
   }
   fbDb=firebase.firestore();
   fbDocRef=fbDb.collection('panel').doc('data');
  }
-}catch(e){}
+}catch(e){window._tjw&&_tjw(e)}
 function cloudEstado(txt,ok){_cloudOn=!!ok;const els=document.querySelectorAll('.cloudSt');els.forEach(e=>{e.textContent=txt;e.style.color=ok?'#2fae6b':(ok===false?'#c0392b':'')})}
 function mergeRemote(remote){const c=DB.cfg;const ts=remote._ts||0;DB=Object.assign(DB,remote);DB.cfg=Object.assign(c,remote.cfg||{});_lastTs=ts;saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0)}
 function syncToCloud(){
@@ -1362,7 +1364,7 @@ function syncToCloud(){
  _syncTimer=setTimeout(()=>{
   const ts=Date.now();_lastTs=ts;_cloudWriting=true;
   const payload=Object.assign({},DB,{_ts:ts});
-  fbDocRef.set(payload).then(()=>cloudEstado('☁ Sincronizado',true)).catch(()=>cloudEstado('☁ Sin conexión, guardado localmente',false)).finally(()=>{setTimeout(()=>_cloudWriting=false,600)})
+  fbDocRef.set(payload).then(()=>cloudEstado('☁ Sincronizado',true)).catch(er=>{window._tjw&&_tjw(er);window._tjFails=(window._tjFails||0)+1;const grande=er&&(er.code==='invalid-argument'||er.code==='resource-exhausted');cloudEstado(grande?'☁ NO se pudo guardar: el panel superó el tamaño permitido. Descarga una copia JSON':'☁ Sin conexión, guardado localmente',false)}).finally(()=>{setTimeout(()=>_cloudWriting=false,600)})
  },700)
 }
 function iniciarSincronizacionNube(){
@@ -1403,7 +1405,7 @@ async function subirArchivoNube(o){
   await syncTiendaCat(o);return true
  }catch(e){_catFalla(o,e);return false}
 }
-async function eliminarArchivoNube(id){if(!fbDb)return;try{await fbDb.collection('catalogo').doc(id).delete()}catch(e){}}
+async function eliminarArchivoNube(id){if(!fbDb)return;try{await fbDb.collection('catalogo').doc(id).delete()}catch(e){window._tjw&&_tjw(e)}}
 async function _aplicarDocCatalogo(r){
  try{
   const blob=base64ToBlob(r.data,r.type);
@@ -1413,7 +1415,7 @@ async function _aplicarDocCatalogo(r){
   CL=CL.filter(f=>f.id!==o.id);CL.push(o);
   await syncTiendaCat(o);
   if(vista==='cat')dib()
- }catch(e){}
+ }catch(e){window._tjw&&_tjw(e)}
 }
 async function sincronizarCatalogoNube(){
  if(!fbDb)return;
@@ -1469,7 +1471,7 @@ const navClick=k=>{if(!navEd)ir(k)};
 function navEdit(){navEd=!navEd;nav()}
 function navMv(e,k,d){e.stopPropagation();const o=navOrd().map(v=>v[0]),i=o.indexOf(k),j=i+d;if(j<0||j>=o.length)return;[o[i],o[j]]=[o[j],o[i]];DB.cfg.navOrder=o;save();nav()}
 function navReset(){DB.cfg.navOrder=[];save();nav()}
-(()=>{let dr=null;const dn=e=>{if(!navEd||e.target.closest('.mv'))return;const it=e.target.closest('.ni');if(!it)return;dr={it,c:it.parentNode,h:it.parentNode.id==='nav2',m:0,x:e.clientX,y:e.clientY};try{it.setPointerCapture(e.pointerId)}catch(x){}};
+(()=>{let dr=null;const dn=e=>{if(!navEd||e.target.closest('.mv'))return;const it=e.target.closest('.ni');if(!it)return;dr={it,c:it.parentNode,h:it.parentNode.id==='nav2',m:0,x:e.clientX,y:e.clientY};try{it.setPointerCapture(e.pointerId)}catch(x){window._tjw&&_tjw(x)}};
  const mv=e=>{if(!dr)return;if(!dr.m&&Math.abs(e.clientX-dr.x)+Math.abs(e.clientY-dr.y)<6)return;dr.m=1;dr.it.classList.add('drg');const t=document.elementFromPoint(e.clientX,e.clientY),tg=t&&t.closest('.ni');if(!tg||tg===dr.it||tg.parentNode!==dr.c)return;const r=tg.getBoundingClientRect(),af=dr.h?e.clientX>r.left+r.width/2:e.clientY>r.top+r.height/2;dr.c.insertBefore(dr.it,af?tg.nextSibling:tg)};
  const up=()=>{if(!dr)return;const d=dr;dr=null;d.it.classList.remove('drg');if(d.m){DB.cfg.navOrder=[...d.c.children].map(c=>c.dataset.k);save();nav()}};
  ['nav','nav2'].forEach(id=>{const el=document.getElementById(id);if(!el)return;el.addEventListener('pointerdown',dn);el.addEventListener('pointermove',mv);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up)})})();
@@ -1536,7 +1538,7 @@ agenda(){const t=hoy(),pend=l=>l.filter(o=>!agDn(o)).length,q0=AG.q,c0=AG.c;AG.q
  <div class="agbar"><div class="pt">${[['mes','Mes'],['sem','Semana'],['lista','Lista']].map(([k,l])=>`<button class="${k==AG.v?'on':''}" onclick="agView('${k}')">${l}</button>`).join('')}</div>${AG.v!=='lista'?`<button class="btn s" onclick="agMove(-1)">‹</button><b style="min-width:130px;text-align:center">${ttl}</b><button class="btn s" onclick="agMove(1)">›</button>`:`<b>${ttl}</b>`}<button class="btn s" onclick="agHoy()">Hoy</button><button class="btn p s" onclick="agForm()">➕ Nuevo evento</button></div>
  <div class="agbar"><input id="ag_q" placeholder="🔍 Buscar evento, cliente o nota…" value="${esc(AG.q)}" oninput="agQ(this.value)"><select onchange="agC(this.value)"><option value="">Todos los tipos</option>${Object.entries(AGT).map(([k,x])=>`<option value="${k}" ${AG.c==k?'selected':''}>${x[0]} ${x[1]}</option>`).join('')}</select><button class="btn s" onclick="cfgSnd('snd',DB.cfg.snd?0:1);R.agenda()">${DB.cfg.snd?'🔊 Sonido activado':'🔇 Sonido silenciado'}</button><button class="btn s" onclick="agIcs()">📆 Exportar a calendario (.ics)</button></div><div id="agBody"></div>`;agBody()},
 check(){$('v').innerHTML=`<div class="card" style="padding:0;overflow:hidden;max-width:none;width:100%;margin:0"><iframe id="checkFrame" title="Check" style="width:100%;height:calc(100vh - 150px);min-height:560px;border:0;display:block;background:transparent"></iframe></div>`;
- const _cf=$('checkFrame');_cf.onload=()=>{try{_cf.contentDocument.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-t')==='nocturno'?'dark':'light')}catch(e){}try{if(esVend())chkLock(_cf.contentDocument,_cf.contentWindow)}catch(e){}};
+ const _cf=$('checkFrame');_cf.onload=()=>{try{_cf.contentDocument.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-t')==='nocturno'?'dark':'light')}catch(e){window._tjw&&_tjw(e)}try{if(esVend())chkLock(_cf.contentDocument,_cf.contentWindow)}catch(e){window._tjw&&_tjw(e)}};
  _cf.srcdoc=chkSkin(b64ToUtf8(MODELOS_B64))}};
 
 const AGT={ent:['📦','Entrega','#E0457B'],cita:['🤝','Cita','#0F6CBD'],cobro:['💰','Cobro','#2fa84f'],ped:['🧾','Pedido','#FF9F0A'],rec:['🔔','Recordatorio','#7B4FE0'],otro:['📌','Otro','#6E6E73']};
@@ -1584,7 +1586,7 @@ function agIcs(){if(!DB.agenda.length)return alert('La agenda está vacía.');co
 let _cintSig='',_chk=null;
 function cintGo(k,a,b){if(k=='ag'){AG.sel=b;AG.d=b;ir('agenda')}else ir(k)}
 function cintChk(){if(_chk)return _chk;_chk=[];try{const h=b64ToUtf8(MODELOS_B64),i=h.indexOf('const IMGS = '),j=h.indexOf('\n',i),I=JSON.parse(h.slice(i+13,j).replace(/;\s*$/,'')),k=h.indexOf('const DATA = `')+14,D=h.slice(k,h.indexOf('`',k)).split('\n');
- D.forEach(l=>{const [c,cat,d]=l.split('|');if(c&&I[c.trim()])_chk.push({n:c.trim(),s:(d||cat||'').trim(),i:I[c.trim()]})})}catch(e){}return _chk}
+ D.forEach(l=>{const [c,cat,d]=l.split('|');if(c&&I[c.trim()])_chk.push({n:c.trim(),s:(d||cat||'').trim(),i:I[c.trim()]})})}catch(e){window._tjw&&_tjw(e)}return _chk}
 const cintCfg=()=>({on:DB.cfg.cintOn!==0,seg:Math.min(20,Math.max(2,+DB.cfg.cintSeg||5)),cr:DB.cfg.cintCr!==0,ot:DB.cfg.cintOt!==0,ve:DB.cfg.cintVe!==0,ho:DB.cfg.cintHo!==0,pr:DB.cfg.cintPr!==0,dias:+DB.cfg.cintDias||14,mod:DB.cfg.cintMod!==0});
 let _cintPause=0,_cintHover=0,_cintTm=null;
 const _cintRM=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -1622,9 +1624,9 @@ function cintCard(){const k=cintCfg(),ck=(key,lab,on)=>`<label class="pchk"><inp
  return `<h3 style="margin:0 0 4px">🎠 Cinta de avisos</h3><p style="font-size:12.5px;color:var(--gris)">Las tarjetas de arriba muestran sus cobros a crédito, vencimientos y eventos. Aquí elige cada cuánto cambia de aviso y qué muestra.</p><div class="g"><div><label>Cinta de avisos</label><select onchange="cintSet('cintOn',+this.value)"><option value="1" ${k.on?'selected':''}>Activada</option><option value="0" ${k.on?'':'selected'}>Desactivada</option></select></div><div><label>Cambiar de aviso cada <b id="cs_v">${k.seg}</b> seg</label><input type="range" min="2" max="20" step="1" value="${k.seg}" oninput="$('cs_v').textContent=this.value" onchange="cintSet('cintSeg',+this.value)"></div><div><label>Mostrar próximos</label><select onchange="cintSet('cintDias',+this.value)">${[7,14,30].map(d=>`<option value="${d}" ${k.dias===d?'selected':''}>${d} días</option>`).join('')}</select></div></div><label style="display:block;margin-top:12px">Qué mostrar</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:6px">${ck('cintCr','💰 Cobros a crédito',k.cr)}${ck('cintOt','📅 Otros eventos',k.ot)}${ck('cintVe','🔴 Vencidas',k.ve)}${ck('cintHo','🟢 Hoy',k.ho)}${ck('cintPr','🔜 Próximos días',k.pr)}${ck('cintMod','🎴 Modelos si no hay avisos',k.mod)}</div><p style="font-size:12px;color:var(--gris);margin:10px 0 0">Se detiene mientras la toca o pasa el mouse por encima. Deslice con el dedo para ver el siguiente aviso.</p>`}
 setInterval(()=>{cintillo()},30000);
 
-let _ac=null,AGN={},AGSN={};try{AGN=JSON.parse(localStorage.getItem('tj_ag_n')||'{}');Object.keys(AGN).forEach(k=>{if(Date.now()-AGN[k]>2.5*864e5)delete AGN[k]})}catch(e){}
-const agNSave=()=>{try{localStorage.setItem('tj_ag_n',JSON.stringify(AGN))}catch(e){}};
-function agAc(){try{if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume()}catch(e){}return _ac}
+let _ac=null,AGN={},AGSN={};try{AGN=JSON.parse(localStorage.getItem('tj_ag_n')||'{}');Object.keys(AGN).forEach(k=>{if(Date.now()-AGN[k]>2.5*864e5)delete AGN[k]})}catch(e){window._tjw&&_tjw(e)}
+const agNSave=()=>{try{localStorage.setItem('tj_ag_n',JSON.stringify(AGN))}catch(e){window._tjw&&_tjw(e)}};
+function agAc(){try{if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume()}catch(e){window._tjw&&_tjw(e)}return _ac}
 ['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,agAc,{passive:true}));
 const AGSND={campana:[[880,0,1.3,'sine'],[1320,.1,1.3,'sine'],[880,.8,1.3,'sine'],[1320,.9,1.3,'sine']],alerta:[[1000,0,.18,'square'],[1000,.28,.18,'square'],[1000,.56,.18,'square'],[1000,.84,.18,'square']],suave:[[523,0,.7,'triangle'],[659,.22,.7,'triangle'],[784,.44,1,'triangle']],digital:[[1500,0,.1,'sawtooth'],[1800,.14,.1,'sawtooth'],[1500,.5,.1,'sawtooth'],[1800,.64,.1,'sawtooth']]};
 function agSound(force,tono){const c=DB.cfg;if(!force&&!c.snd)return;const ac=agAc();if(!ac)return;const v=(c.vol||70)/100*.5;
@@ -1634,8 +1636,8 @@ async function agPerm(){if(!('Notification' in window))return alert('Este navega
 function agToast(o,key){let c=$('agToast');if(!c){c=document.createElement('div');c.id='agToast';document.body.appendChild(c)}const e=o.e,x=AGT[e.t]||AGT.otro,el=document.createElement('div');el.className='agt';el.style.setProperty('--c',x[2]);
  el.innerHTML=`<b>${x[0]}</b><div><strong>${esc(e.ti)}</strong><small>${o.d==hoy()?'Hoy':fdate(o.d)}${e.h?' · '+e.h:''}${e.cn?' · '+esc(e.cn):''}</small><div class="aga"><button class="btn s" data-a="d">✔ Hecho</button><button class="btn s" data-a="s">⏰ +10 min</button><button class="btn s" data-a="c">Cerrar</button></div></div>`;
  el.onclick=ev=>{const a=ev.target.dataset&&ev.target.dataset.a;if(!a)return;if(a==='d')agDone(e.id,o.d);if(a==='s'){delete AGN[key];AGSN[key]=Date.now()+6e5;agNSave()}el.remove()};c.appendChild(el)}
-function agAlert(o,key){const e=o.e;agSound();agToast(o,key);try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(x){}
- try{if(DB.cfg.nsys&&window.Notification&&Notification.permission==='granted')new Notification('📅 '+e.ti,{body:(o.d==hoy()?'Hoy':fdate(o.d))+(e.h?' · '+e.h:'')+(e.cn?' · '+e.cn:''),tag:key})}catch(x){}}
+function agAlert(o,key){const e=o.e;agSound();agToast(o,key);try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(x){window._tjw&&_tjw(x)}
+ try{if(DB.cfg.nsys&&window.Notification&&Notification.permission==='granted')new Notification('📅 '+e.ti,{body:(o.d==hoy()?'Hoy':fdate(o.d))+(e.h?' · '+e.h:'')+(e.cn?' · '+e.cn:''),tag:key})}catch(x){window._tjw&&_tjw(x)}}
 function agTest(){agAlert({e:{id:'test',ti:'Notificación de prueba',t:'rec',h:'',cn:''},d:hoy()},'test'+Date.now())}
 function agCheck(){if(!DB.agenda||!DB.agenda.length)return;const now=Date.now(),t=hoy(),q0=AG.q,c0=AG.c;AG.q='';AG.c='';const l=agOcc(addD(t,-1),addD(t,1));AG.q=q0;AG.c=c0;
  l.forEach(o=>{const e=o.e;if(e.av===undefined||e.av===''||agDn(o))return;const st=new Date(o.d+'T'+(e.h||'08:00')+':00').getTime(),key=e.id+'|'+o.d+'|'+e.av;
@@ -1878,7 +1880,7 @@ function pintarMapaUbi(){
 let ubiTmp=null;
 function ubiFull(on){const w=$('ubiWrap');if(!w)return;on=on===undefined?!w.classList.contains('ubifs'):!!on;if(on){if(!w._home){w._home=w.parentNode;w._homeNext=w.nextSibling}document.body.appendChild(w)}else if(w._home){if(w._homeNext&&w._homeNext.parentNode===w._home)w._home.insertBefore(w,w._homeNext);else w._home.appendChild(w)}w.classList.toggle('ubifs',on);document.body.style.overflow=on?'hidden':'';[50,150,400].forEach(ms=>setTimeout(()=>mapaUbi&&mapaUbi.invalidateSize(),ms))}
 addEventListener('keydown',e=>{if(e.key==='Escape'){const w=$('ubiWrap');if(w&&w.classList.contains('ubifs'))ubiFull(0)}});
-function ubiParse(t){t=String(t||'').trim();if(!t)return null;try{t=decodeURIComponent(t)}catch(e){}
+function ubiParse(t){t=String(t||'').trim();if(!t)return null;try{t=decodeURIComponent(t)}catch(e){window._tjw&&_tjw(e)}
  const rx=[/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,/[?&](?:q|ll|query|center|destination|daddr)=\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i,/^\s*(-?\d{1,2}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/];
  for(const r of rx){const m=t.match(r);if(m){const a=+m[1],b=+m[2];if(Math.abs(a)<=90&&Math.abs(b)<=180)return{lat:a,lng:b}}}return null}
 function ubiLinkGo(modo,id){const t=(($(id||'ubiLink')||{}).value||'').trim(),c=ubiParse(t);
@@ -1994,7 +1996,7 @@ const tam=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024
 const IMG_KB_MIN=500,IMG_KB_MAX=700,IMG_KB_DEF=500;
 function imgKBClamp(v){const n=Math.round(+v||IMG_KB_DEF);return Math.max(IMG_KB_MIN,Math.min(IMG_KB_MAX,n))}
 function imgKBPreference(){try{return imgKBClamp(localStorage.getItem('tj_img_kb')||IMG_KB_DEF)}catch(e){return IMG_KB_DEF}}
-function imgTargetKB(){const e=$('u_imgkb'),n=imgKBClamp(e?e.value:imgKBPreference());try{localStorage.setItem('tj_img_kb',n)}catch(x){}return n}
+function imgTargetKB(){const e=$('u_imgkb'),n=imgKBClamp(e?e.value:imgKBPreference());try{localStorage.setItem('tj_img_kb',n)}catch(x){window._tjw&&_tjw(x)}return n}
 function imgQualityOpts(){const now=imgKBPreference();return [500,550,600,650,700].map(n=>`<option value="${n}" ${n===now?'selected':''}>${n} KB${n===500?' — alta (recomendado)':n===700?' — máxima permitida':''}</option>`).join('')}
 function imgPicker(){const price=$('u_pr');if(!price||$('u_imgkb'))return;const box=document.createElement('div');box.innerHTML=`<label>Calidad de imágenes nuevas</label><select id="u_imgkb" onchange="imgTargetKB()">${imgQualityOpts()}</select><small style="display:block;color:var(--gris);margin-top:5px">Tope por imagen: 500–700 KB. Si el original pesa menos, se conserva sin reducir.</small>`;price.parentElement.insertAdjacentElement('afterend',box)}
 R.cat=async()=>{try{CL=await tx('readonly',s=>s.getAll())}catch(e){memW=1}
@@ -2020,11 +2022,11 @@ async function syncTiendaCat(f){
   return true
  }catch(e){console.warn('Categoría de tienda:',e);return false}
 }
-async function catSet(id,v){const f=gf(id);if(!f)return;f.cat=v||'General';try{await tx('readwrite',s=>s.put(f))}catch(e){}dib();subirArchivoNube(f);await syncTiendaCat(f)}
+async function catSet(id,v){const f=gf(id);if(!f)return;f.cat=v||'General';try{await tx('readwrite',s=>s.put(f))}catch(e){window._tjw&&_tjw(e)}dib();subirArchivoNube(f);await syncTiendaCat(f)}
 function catAutoPrev(){const L=CL.filter(f=>!CATS.includes(f.cat));if(!L.length)return alert('Todas las tarjetas ya tienen una de las categorías de la lista.');
  const m=L.map(f=>[f,catDetect(f)]),ok=m.filter(x=>x[1]),no=m.length-ok.length,cnt={};ok.forEach(x=>cnt[x[1]]=(cnt[x[1]]||0)+1);window._catAuto=ok.map(x=>[x[0].id,x[1]]);
  $('mb').innerHTML=`<h3 style="margin-top:0">🏷 Organizar por categoría</h3><p style="font-size:13px;color:var(--gris)">Se revisó el nombre y la descripción de ${L.length} tarjeta(s) que no tienen una categoría de la lista.</p>${ok.length?`<ul style="font-size:14px;line-height:1.7">${Object.keys(cnt).map(k=>`<li><b>${esc(k)}</b>: ${cnt[k]}</li>`).join('')}</ul>`:'<div class="vacio">No se reconoció ninguna por su nombre.</div>'}${no?`<p style="font-size:13px">⚠ ${no} tarjeta(s) no se pudieron reconocer por su nombre y quedarán como están. Asígneles la categoría con el selector de cada tarjeta.</p>`:''}<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" onclick="cerrar()">Cancelar</button>${ok.length?`<button class="btn p" onclick="catAutoDo()">✔ Aplicar a ${ok.length}</button>`:''}</div>`;$('md').classList.add('on')}
-async function catAutoDo(){const a=window._catAuto||[];cerrar();const fs=[];for(const [id,c] of a){const f=gf(id);if(!f)continue;f.cat=c;try{await tx('readwrite',s=>s.put(f))}catch(e){}fs.push(f)}dib();alert('✔ Categoría asignada a '+fs.length+' tarjeta(s).');(async()=>{for(const f of fs){await subirArchivoNube(f);await syncTiendaCat(f)}})()}
+async function catAutoDo(){const a=window._catAuto||[];cerrar();const fs=[];for(const [id,c] of a){const f=gf(id);if(!f)continue;f.cat=c;try{await tx('readwrite',s=>s.put(f))}catch(e){window._tjw&&_tjw(e)}fs.push(f)}dib();alert('✔ Categoría asignada a '+fs.length+' tarjeta(s).');(async()=>{for(const f of fs){await subirArchivoNube(f);await syncTiendaCat(f)}})()}
 async function ckToggle(e,id,field,label){
   const cb=e.target,f=gf(id);
   if(!cb.checked){ if(!confirm(`¿Quitar "${label}" a ${f.name}?`)){ e.preventDefault(); return false; } }
@@ -2037,8 +2039,8 @@ const rd=f=>new Promise((a,b)=>{const r=new FileReader();r.onload=()=>a(r.result
 const jpegBlob=(c,q)=>new Promise((res,rej)=>c.toBlob(b=>b?res(b):rej(new Error('No se pudo crear la imagen')),'image/jpeg',q));
 async function abrirImagenCatalogo(blob){try{return await createImageBitmap(blob)}catch(e){const u=URL.createObjectURL(blob);try{return await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=()=>rej(new Error('No se pudo leer la imagen'));i.src=u})}finally{URL.revokeObjectURL(u)}}}
 async function comprimirImagenCatalogo(blob,kb=IMG_KB_DEF){const target=imgKBClamp(kb)*1024;if(!blob||blob.size<=target)return blob;const im=await abrirImagenCatalogo(blob),w=im.width||im.naturalWidth,h=im.height||im.naturalHeight;let scale=Math.min(1,2400/Math.max(w,h));try{for(let pass=0;pass<11;pass++){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(w*scale));c.height=Math.max(1,Math.round(h*scale));const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);const low=await jpegBlob(c,.42);if(low.size>target){scale*=.78;continue}let min=.42,max=.97,best=low;for(let n=0;n<7;n++){const q=(min+max)/2,out=await jpegBlob(c,q);if(out.size<=target){best=out;min=q}else max=q}return best}}finally{if(im.close)im.close()}throw new Error('No se pudo ajustar la imagen al tamaño elegido')}
-async function mkThumb(f,mx=720){try{if(f.type.startsWith('image/')){try{const bm=await createImageBitmap(f.blob),k=Math.min(1,mx/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0,c.width,c.height);bm.close&&bm.close();return c.toDataURL('image/jpeg',.85)}catch(e){}const u=await rd(f.blob);return await new Promise(res=>{const i=new Image();i.onload=()=>{const k=Math.min(1,mx/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82))};i.onerror=()=>res('');i.src=u})}
- if(f.type=='application/pdf'&&window.pdfjsLib){const d=await pdfjsLib.getDocument({data:new Uint8Array(await f.blob.arrayBuffer())}).promise,pg=await d.getPage(1),k=mx*.78/pg.getViewport({scale:1}).width,v=pg.getViewport({scale:k}),c=document.createElement('canvas');c.width=v.width;c.height=v.height;await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise;return c.toDataURL('image/jpeg',.8)}}catch(e){}return''}
+async function mkThumb(f,mx=720){try{if(f.type.startsWith('image/')){try{const bm=await createImageBitmap(f.blob),k=Math.min(1,mx/Math.max(bm.width,bm.height)),c=document.createElement('canvas');c.width=Math.round(bm.width*k);c.height=Math.round(bm.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(bm,0,0,c.width,c.height);bm.close&&bm.close();return c.toDataURL('image/jpeg',.85)}catch(e){window._tjw&&_tjw(e)}const u=await rd(f.blob);return await new Promise(res=>{const i=new Image();i.onload=()=>{const k=Math.min(1,mx/Math.max(i.width,i.height)),c=document.createElement('canvas');c.width=Math.round(i.width*k);c.height=Math.round(i.height*k);const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,c.width,c.height);x.drawImage(i,0,0,c.width,c.height);res(c.toDataURL('image/jpeg',.82))};i.onerror=()=>res('');i.src=u})}
+ if(f.type=='application/pdf'&&window.pdfjsLib){const d=await pdfjsLib.getDocument({data:new Uint8Array(await f.blob.arrayBuffer()),isEvalSupported:false}).promise,pg=await d.getPage(1),k=mx*.78/pg.getViewport({scale:1}).width,v=pg.getViewport({scale:k}),c=document.createElement('canvas');c.width=v.width;c.height=v.height;await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise;return c.toDataURL('image/jpeg',.8)}}catch(e){window._tjw&&_tjw(e)}return''}
 let memW=0;
 const guardar=async o=>{try{await tx('readwrite',s=>s.put(o))}catch(e){memW=1}};
 async function subir(fs){fs=[...fs];if(!fs.length)return;const c=$('u_cat').value.trim()||'General',pr=+$('u_pr').value||0,kb=imgTargetKB();
@@ -2051,8 +2053,8 @@ const gf=id=>CL.find(f=>f.id==id);
 async function ver(id){const f=gf(id),u=cu(f);
  const hd=b=>{$('mb').innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:10px"><b>${esc(f.name)}</b><span><button class="btn s" onclick="desc('${id}')">⬇ Descargar</button> <button class="btn s" onclick="cerrar()">✕</button></span></div><div id="vb">${b}</div>`};
  hd('<div class="vacio">Cargando…</div>');$('md').classList.add('on');
- if(f.type.startsWith('image/')){let d=f.thumb;try{d=await rd(f.blob)}catch(e){}hd(`<img src="${d}" alt="">`)}
- else if(f.type=='application/pdf'){if(window.pdfjsLib){try{const d=await pdfjsLib.getDocument({data:new Uint8Array(await f.blob.arrayBuffer())}).promise;hd('');for(let n=1;n<=d.numPages;n++){const pg=await d.getPage(n),v=pg.getViewport({scale:900/pg.getViewport({scale:1}).width}),c=document.createElement('canvas');c.width=v.width;c.height=v.height;c.style.cssText='max-width:100%;display:block;margin:0 auto 10px;border:1px solid var(--linea)';$('vb')&&$('vb').appendChild(c);await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise}}catch(e){hd(`<iframe src="${u}" style="width:100%;height:78vh;border:0"></iframe>`)}}else hd(`<iframe src="${u}" style="width:100%;height:78vh;border:0"></iframe>`)}
+ if(f.type.startsWith('image/')){let d=f.thumb;try{d=await rd(f.blob)}catch(e){window._tjw&&_tjw(e)}hd(`<img src="${d}" alt="">`)}
+ else if(f.type=='application/pdf'){if(window.pdfjsLib){try{const d=await pdfjsLib.getDocument({data:new Uint8Array(await f.blob.arrayBuffer()),isEvalSupported:false}).promise;hd('');for(let n=1;n<=d.numPages;n++){const pg=await d.getPage(n),v=pg.getViewport({scale:900/pg.getViewport({scale:1}).width}),c=document.createElement('canvas');c.width=v.width;c.height=v.height;c.style.cssText='max-width:100%;display:block;margin:0 auto 10px;border:1px solid var(--linea)';$('vb')&&$('vb').appendChild(c);await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise}}catch(e){hd(`<iframe src="${u}" style="width:100%;height:78vh;border:0"></iframe>`)}}else hd(`<iframe src="${u}" style="width:100%;height:78vh;border:0"></iframe>`)}
  else if(f.type.startsWith('video/'))hd(`<video src="${u}" controls style="width:100%;max-height:78vh"></video>`);
  else if(f.type.startsWith('audio/'))hd(`<audio src="${u}" controls style="width:100%"></audio>`);
  else hd(`<div class="vacio">Este formato (${ext(f)}) no se puede previsualizar. Descárguelo para abrirlo.</div>`)}
@@ -2064,7 +2066,7 @@ async function delF(id){if(!confirm('¿Eliminar este archivo del catálogo?'))re
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 async function pdfToCompressedBlob(blob,maxEdge,quality){
  const data=new Uint8Array(await blob.arrayBuffer());
- const doc=await pdfjsLib.getDocument({data}).promise;
+ const doc=await pdfjsLib.getDocument({data,isEvalSupported:false}).promise;
  const {jsPDF}=window.jspdf;let outDoc=null;
  for(let n=1;n<=doc.numPages;n++){
   const pg=await doc.getPage(n),base=pg.getViewport({scale:1}),k=Math.min(1,maxEdge/Math.max(base.width,base.height))||1,v=pg.getViewport({scale:k});
@@ -2106,7 +2108,7 @@ async function comprimirCatalogo(){
     if(nuevo&&nuevo.size<sz*0.85){
      antes+=sz;despues+=nuevo.size;tocados++;
      f.blob=nuevo;f.size=nuevo.size;
-     try{f.thumb=await mkThumb(f)}catch(e){}
+     try{f.thumb=await mkThumb(f)}catch(e){window._tjw&&_tjw(e)}
      await guardar(f);subirArchivoNube(f)
     }else saltados++
    }catch(e){fallidos++}
@@ -2167,7 +2169,7 @@ async function _imgConv(blob,fmt){
 }
 async function _pdfImgs(blob,fmt){
  const want=fmt==='png'?'image/png':'image/jpeg',out=[];
- const d=await pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer())}).promise;
+ const d=await pdfjsLib.getDocument({data:new Uint8Array(await blob.arrayBuffer()),isEvalSupported:false}).promise;
  for(let n=1;n<=d.numPages;n++){
   const pg=await d.getPage(n),w0=pg.getViewport({scale:1}).width,v=pg.getViewport({scale:Math.min(3,Math.max(1,1800/w0))}),c=document.createElement('canvas');
   c.width=Math.round(v.width);c.height=Math.round(v.height);const g=c.getContext('2d');
@@ -2293,7 +2295,7 @@ async function precargarCatalogoDeFabrica(){
    await guardar(o)
   }
   if(vista==='cat'){CL=await tx('readonly',s=>s.getAll());dib()}
- }catch(e){}
+ }catch(e){window._tjw&&_tjw(e)}
 }
 if(!/[?&]tienda(=|&|$)/.test(location.search))precargarCatalogoDeFabrica();
 // ===== Usuarios, PIN y permisos por panel =====
@@ -2351,27 +2353,27 @@ let _idleTimer=null,_idleLast=Date.now(),_idleArmed=0,_idleW=0,_idleSrv=null,_id
 const _ACT='tj_act',_SMN='tj_sesmin';
 /* Marca de actividad: se guarda también en el navegador, para que cerrar/reabrir la pestaña o
    bloquear el celular NO reinicie el reloj de inactividad. */
-function idleStamp(){_idleLast=Date.now();if(_idleLast-_idleW>2000){_idleW=_idleLast;try{localStorage.setItem(_ACT,String(_idleLast))}catch(e){}}}
+function idleStamp(){_idleLast=Date.now();if(_idleLast-_idleW>2000){_idleW=_idleLast;try{localStorage.setItem(_ACT,String(_idleLast))}catch(e){window._tjw&&_tjw(e)}}}
 function idleBump(){idleStamp()}
 /* Minutos de inactividad: administrador = su configuración local; vendedor = lo que diga la nube
    (consultado directo al servidor), con copia local de respaldo por si la lectura falla. */
 function idleMin(){let m=+(DB.cfg.sesionMin||0);
- if(!esAdmin()){if(_idleSrv!==null)m=_idleSrv;else if(!m){try{m=+(localStorage.getItem(_SMN)||0)}catch(e){}}}
- try{if(m>0)localStorage.setItem(_SMN,String(m));else localStorage.removeItem(_SMN)}catch(e){}return m}
+ if(!esAdmin()){if(_idleSrv!==null)m=_idleSrv;else if(!m){try{m=+(localStorage.getItem(_SMN)||0)}catch(e){window._tjw&&_tjw(e)}}}
+ try{if(m>0)localStorage.setItem(_SMN,String(m));else localStorage.removeItem(_SMN)}catch(e){window._tjw&&_tjw(e)}return m}
 function idleFetch(force){try{if(!fbDocRef||!SES||esAdmin())return;const n=Date.now();if(!force&&n-_idleSrvT<120000)return;_idleSrvT=n;
- fbDocRef.get({source:'server'}).then(d=>{if(d.exists){const c=(d.data()||{}).cfg||{};_idleSrv=Math.max(0,Math.round(+c.sesionMin||0));idleCheck()}}).catch(()=>{})}catch(e){}}
-function idleOut(){if(window._idleOut)return;window._idleOut=1;try{localStorage.setItem('tj_sesion_note','Sesión cerrada por inactividad.')}catch(e){}try{localStorage.removeItem(_ACT)}catch(e){}
- try{salir()}catch(e){}
+ fbDocRef.get({source:'server'}).then(d=>{if(d.exists){const c=(d.data()||{}).cfg||{};_idleSrv=Math.max(0,Math.round(+c.sesionMin||0));idleCheck()}}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}
+function idleOut(){if(window._idleOut)return;window._idleOut=1;try{localStorage.setItem('tj_sesion_note','Sesión cerrada por inactividad.')}catch(e){window._tjw&&_tjw(e)}try{localStorage.removeItem(_ACT)}catch(e){window._tjw&&_tjw(e)}
+ try{salir()}catch(e){window._tjw&&_tjw(e)}
  /* Plan B: si salir() falla o se queda colgado, se cierra la sesión directamente. */
- setTimeout(()=>{try{firebase.auth().signOut()}catch(e){}setTimeout(()=>location.reload(),600)},2500)}
-function idleCheck(){if(!SES)return;const min=idleMin();if(!min)return;try{if(LL&&(LL.id||LL.incoming))return}catch(e){}
- let last=_idleLast;try{const st=+localStorage.getItem(_ACT)||0;if(st>last)last=st}catch(e){}
+ setTimeout(()=>{try{firebase.auth().signOut()}catch(e){window._tjw&&_tjw(e)}setTimeout(()=>location.reload(),600)},2500)}
+function idleCheck(){if(!SES)return;const min=idleMin();if(!min)return;try{if(LL&&(LL.id||LL.incoming))return}catch(e){window._tjw&&_tjw(e)}
+ let last=_idleLast;try{const st=+localStorage.getItem(_ACT)||0;if(st>last)last=st}catch(e){window._tjw&&_tjw(e)}
  if(Date.now()-last>=min*60000)idleOut()}
 function idleArm(){if(!_idleArmed){_idleArmed=1;
   ['mousedown','mousemove','keydown','touchstart','wheel','scroll','click','pointerdown'].forEach(ev=>document.addEventListener(ev,idleBump,{passive:true,capture:true}));
   document.addEventListener('visibilitychange',()=>{if(!document.hidden){idleCheck();idleFetch(1)}});addEventListener('pageshow',()=>{idleCheck();idleFetch(1)});addEventListener('focus',()=>idleCheck());
   /* Al reabrir la página con la sesión ya iniciada se respeta la última actividad real. */
-  let st=0;try{st=+localStorage.getItem(_ACT)||0}catch(e){}if(st&&st<=Date.now())_idleLast=st;else idleStamp()}
+  let st=0;try{st=+localStorage.getItem(_ACT)||0}catch(e){window._tjw&&_tjw(e)}if(st&&st<=Date.now())_idleLast=st;else idleStamp()}
  else idleStamp();
  if(_idleTimer)clearInterval(_idleTimer);_idleTimer=setInterval(()=>{idleCheck();idleFetch()},10000);idleFetch(1);idleCheck()}
 const _entrarSes=entrar;entrar=function(){_entrarSes.apply(this,arguments);idleArm()};
@@ -2381,12 +2383,12 @@ const _salirSes=salir;salir=function(){if(_idleTimer){clearInterval(_idleTimer);
 function credAg(f){if(!f||!f.credito||!f.credito.vence||f.anulada)return;if(DB.agenda.some(e=>e.fid===f.id))return;
  const c=DB.cli.find(x=>x.n===f.cli);
  DB.agenda.push({id:uid(),dn:{},fid:f.id,ti:'Cobro factura F-'+f.n+' — '+f.cli,f:f.credito.vence,h:'',h2:'',t:'cobro',r:'',av:'0',cn:f.cli,tel:c&&c.t||'',nt:'Crédito de '+$$(f.credito.monto)+' a '+crPlazo(f.credito)+'. Factura F-'+f.n+' del '+fdate(f.fecha)+'.'});
- save();if(vista==='agenda')R.agenda();try{cintillo()}catch(e){}}
+ save();if(vista==='agenda')R.agenda();try{cintillo()}catch(e){window._tjw&&_tjw(e)}}
 const _em=emitir;emitir=function(){const n=DB.fac.length,r=_em.apply(this,arguments);if(DB.fac.length>n){const f=DB.fac[DB.fac.length-1];if(SES&&!f.vend){f.vend=SES.id;f.vn=SES.id==='admin'?'Administrador':((usr()&&usr().n)||chatName(SES.id));save()}credAg(f)}return r};
 const _an=anular;anular=function(id){const a=DB.fac.find(f=>f.id==id),was=a&&a.anulada,r=_an.apply(this,arguments),b=DB.fac.find(f=>f.id==id);if(b&&b.anulada&&!was){DB.agenda=DB.agenda.filter(e=>e.fid!==id);save()}return r};
 // --- Galería de fotos ---
 let GAL=[],_galOn=false;
-function galListen(){if(_galOn||!fbDb)return;_galOn=true;try{fbDb.collection('galeria').onSnapshot(sn=>{GAL=sn.docs.map(d=>sanGal(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);if(vista==='gal'&&SES)R.gal()},()=>{})}catch(e){}}
+function galListen(){if(_galOn||!fbDb)return;_galOn=true;try{fbDb.collection('galeria').onSnapshot(sn=>{GAL=sn.docs.map(d=>sanGal(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);if(vista==='gal'&&SES)R.gal()},()=>{})}catch(e){window._tjw&&_tjw(e)}}
 function galComp(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{let w=im.width,h=im.height;const k=Math.min(1,1280/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);URL.revokeObjectURL(u);let q=.72,d=c.toDataURL('image/jpeg',q);while(d.length>900000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q)}res(d)};im.onerror=()=>rej(new Error('img'));im.src=u})}
 async function galAdd(inp,cam){if(!fbDb)return alert('La galería necesita conexión a internet.');const fs=[...inp.files];inp.value='';if(!fs.length)return;const b=$('galSt');if(b)b.textContent='Guardando…';let ok=0;
  for(const f of fs){if(!/^image\//.test(f.type))continue;try{const img=await galComp(f),id=uid(),u=usr();await fbDb.collection('galeria').doc(id).set({id,t:cam?'Foto '+new Date().toLocaleString('es-PA'):f.name.replace(/\.[^.]+$/,'').slice(0,60),n:'',by:esAdmin()?'Administrador':(u?u.n:''),o:SES.id,ts:Date.now(),img});ok++}catch(e){alert('No se pudo guardar una imagen.')}}
@@ -2406,21 +2408,21 @@ function vozDama(txt,ok,err){const ss=window.speechSynthesis;if(!ss)return;
  const go=()=>{try{const u=new SpeechSynthesisUtterance(vozTxt(txt));vozPerf(u);u.volume=Math.min(1,(DB.cfg.vol||70)/100+.25);u.onstart=()=>{ok&&ok()};u.onerror=()=>{err&&err()};ss.speak(u)}catch(e){err&&err()}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,900)}}
 const _vozQ=new Set();
-function cobroK(){let K={};const t=hoy();try{K=JSON.parse(localStorage.getItem('tj_voz')||'{}')}catch(e){}Object.keys(K).forEach(k=>{if(K[k]!==t)delete K[k]});return K}
+function cobroK(){let K={};const t=hoy();try{K=JSON.parse(localStorage.getItem('tj_voz')||'{}')}catch(e){window._tjw&&_tjw(e)}Object.keys(K).forEach(k=>{if(K[k]!==t)delete K[k]});return K}
 function cobroTxt(e,d){const f=DB.fac.find(x=>x.id===e.fid),m=f&&f.credito?+f.credito.monto:0,h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',t=hoy(),
  fv=x=>new Date(x+'T12:00').toLocaleDateString('es-PA',{day:'numeric',month:'long'}),cu=d<t?'venció el '+fv(d):d===t?'vence hoy':'vence el '+fv(d),
  en=Math.floor(m),ct=Math.round((m-en)*100);
  return sal+'. Le recuerdo amablemente que tiene una factura pendiente por cobrar a nombre de '+(e.cn||'un cliente')+(m?', por un monto de '+en+' dólares'+(ct?' con '+ct+' centavos':''):'')+'. Esta factura '+cu+'.'}
 function cobroDecir(o){const t=hoy(),id=o.e.id+'|'+t;if(_vozQ.has(id)||cobroK()[o.e.id]===t)return false;_vozQ.add(id);
- vozDama(cobroTxt(o.e,o.d),()=>{const k=cobroK();k[o.e.id]=t;try{localStorage.setItem('tj_voz',JSON.stringify(k))}catch(x){}},()=>_vozQ.delete(id));return true}
-function cobroVoz(){if(!esAdmin()||DB.cfg.vozCobro===0)return;const t=hoy(),q0=AG.q,c0=AG.c;AG.q='';AG.c='';let l=[];try{l=agOcc(addD(t,-30),t)}catch(e){}AG.q=q0;AG.c=c0;
+ vozDama(cobroTxt(o.e,o.d),()=>{const k=cobroK();k[o.e.id]=t;try{localStorage.setItem('tj_voz',JSON.stringify(k))}catch(x){window._tjw&&_tjw(x)}},()=>_vozQ.delete(id));return true}
+function cobroVoz(){if(!esAdmin()||DB.cfg.vozCobro===0)return;const t=hoy(),q0=AG.q,c0=AG.c;AG.q='';AG.c='';let l=[];try{l=agOcc(addD(t,-30),t)}catch(e){window._tjw&&_tjw(e)}AG.q=q0;AG.c=c0;
  l=l.filter(o=>o.e.fid&&!agDn(o));if(!l.length)return;let n=0,r=0;
  l.forEach(o=>{if(n<3){if(cobroDecir(o))n++}else if(cobroK()[o.e.id]!==t&&!_vozQ.has(o.e.id+'|'+t))r++});
  if(n&&r)vozDama('Y tiene '+r+' cobro'+(r>1?'s':'')+' pendiente'+(r>1?'s':'')+' más en la agenda.')}
-const _aa=agAlert;agAlert=function(o){_aa.apply(this,arguments);try{if(o&&o.e&&o.e.fid&&esAdmin()&&DB.cfg.vozCobro!==0)cobroDecir(o)}catch(e){}};
+const _aa=agAlert;agAlert=function(o){_aa.apply(this,arguments);try{if(o&&o.e&&o.e.fid&&esAdmin()&&DB.cfg.vozCobro!==0)cobroDecir(o)}catch(e){window._tjw&&_tjw(e)}};
 setInterval(cobroVoz,600000);document.addEventListener('pointerdown',()=>setTimeout(cobroVoz,400),{once:true});
 function vozCard(){const on=DB.cfg.vozCobro!==0;return `<h3 style="margin:0 0 4px">🗣 Voz de cobros pendientes</h3><p style="font-size:12.5px;color:var(--gris)">Una voz le recuerda en voz alta las facturas a crédito por cobrar, al abrir el panel y a la hora del aviso de la agenda.</p><div class="g"><div><label>Voz</label><select onchange="DB.cfg.vozCobro=+this.value;save()"><option value="1" ${on?'selected':''}>Activada</option><option value="0" ${on?'':'selected'}>Desactivada</option></select></div><div><label>Voz al llegar un mensaje del chat</label><select onchange="DB.cfg.vozChat=+this.value;save()"><option value="1" ${DB.cfg.vozChat!==0?'selected':''}>Activada</option><option value="0" ${DB.cfg.vozChat!==0?'':'selected'}>Desactivada</option></select></div></div>${vozSel()}<br><button class="btn p" onclick="vozProbar()">▶ Probar voz de cobros</button> <button class="btn" onclick="vozProbarChat()">▶ Probar aviso de chat</button>`}
-function vozProbar(){try{speechSynthesis.cancel()}catch(e){}vozDama('Buenos días. Le recuerdo amablemente que tiene una factura pendiente por cobrar a nombre de la empresa Ejemplo, por un monto de 250 dólares. Esta factura vence hoy.')}
+function vozProbar(){try{speechSynthesis.cancel()}catch(e){window._tjw&&_tjw(e)}vozDama('Buenos días. Le recuerdo amablemente que tiene una factura pendiente por cobrar a nombre de la empresa Ejemplo, por un monto de 250 dólares. Esta factura vence hoy.')}
 // --- Restaurar respaldo (solo administrador) ---
 function restaurarResp(){
  if(!esAdmin())return alert('Solo el administrador puede restaurar un respaldo.');
@@ -2436,7 +2438,7 @@ function restaurarResp(){
    if(perd>0)m+='\n\n⚠ El respaldo tiene '+perd+' factura(s) MENOS que las actuales: esas se perderían.';
    m+='\n\nSe descargará antes una copia de sus datos actuales. ¿Continuar?';
    if(!confirm(m))return;
-   try{const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB));a.download='antes_de_restaurar_'+new Date().toISOString().slice(0,10)+'.json';a.click()}catch(e){}
+   try{const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB));a.download='antes_de_restaurar_'+new Date().toISOString().slice(0,10)+'.json';a.click()}catch(e){window._tjw&&_tjw(e)}
    const users=DB.cfg.users;
    Object.keys(o).forEach(k=>{if(['__proto__','constructor','prototype','_ts','cfg'].includes(k))return;const v=o[k];if(Array.isArray(v)||(v&&typeof v==='object'))DB[k]=v});
    const cfg=Object.assign({},o.cfg);delete cfg.admin;delete cfg.users;delete cfg.__proto__;
@@ -2458,7 +2460,7 @@ const llamAud=()=>{let a=$('llau');if(!a){a=document.createElement('audio');a.id
 function llamTono(on,soft){clearInterval(LL.ring);LL.ring=null;if(!on)return;
  const play=()=>{try{const C=window._llCtx||(window._llCtx=new (window.AudioContext||window.webkitAudioContext)());if(C.state==='suspended')C.resume();
   [[0,659],[.28,523]].forEach(([d,f])=>{const o=C.createOscillator(),g=C.createGain(),t=C.currentTime+d;o.frequency.value=f;g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(soft?.08:.25,t+.03);g.gain.exponentialRampToValueAtTime(.0001,t+.24);o.connect(g);g.connect(C.destination);o.start(t);o.stop(t+.26)});
-  if(!soft&&navigator.vibrate)navigator.vibrate([300,150,300])}catch(e){}};play();LL.ring=setInterval(play,2200)}
+  if(!soft&&navigator.vibrate)navigator.vibrate([300,150,300])}catch(e){window._tjw&&_tjw(e)}};play();LL.ring=setInterval(play,2200)}
 const llamMic=()=>navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
 function llamPC(id,me){const pc=new RTCPeerConnection({iceServers:llamIce()});LL.pc=pc;LL.ready=false;LL.q=[];LL.pend=[];
  LL.stream.getTracks().forEach(k=>pc.addTrack(k,LL.stream));
@@ -2483,11 +2485,11 @@ async function llamar(chatId){
   await ref.set({id,chat:chatId,from:me,to:peer,fn:chatName(me),state:'ringing',offer:{type:off.type,sdp:off.sdp},ts:Date.now()});
   llamIceListen(id,me,pc);
   LL.unsub.push(ref.onSnapshot(async s=>{const d=s.data();if(!d||LL.id!==id)return;
-   if(d.answer&&pc.signalingState==='have-local-offer'){try{await pc.setRemoteDescription(d.answer);llamFlush(pc);llamSt('Conectando…')}catch(e){}}
+   if(d.answer&&pc.signalingState==='have-local-offer'){try{await pc.setRemoteDescription(d.answer);llamFlush(pc);llamSt('Conectando…')}catch(e){window._tjw&&_tjw(e)}}
    if(['declined','ended','missed'].includes(d.state))llamFin(d.state==='declined'?'Llamada rechazada':d.state==='missed'?'Sin respuesta':'Llamada finalizada')},()=>{}));
   LL.ringTm=setTimeout(()=>{if(LL.id===id&&!LL.t0){ref.update({state:'missed'}).catch(()=>{});llamFin('Sin respuesta')}},45000)
  }catch(e){console.warn('Llamada:',e);llamFin('No se pudo iniciar la llamada')}}
-function llamEntrante(d){LL.incoming=d;llamUI({p:d.from,n:d.fn||chatName(d.from),s:'Llamada entrante…',b:BT_IN,ring:1});llamTono(1);try{if(DB.cfg.vozChat!==0)vozDama('Atención. Llamada entrante de '+(d.from==='admin'?'la administración':chatName(d.from))+'.')}catch(e){}
+function llamEntrante(d){LL.incoming=d;llamUI({p:d.from,n:d.fn||chatName(d.from),s:'Llamada entrante…',b:BT_IN,ring:1});llamTono(1);try{if(DB.cfg.vozChat!==0)vozDama('Atención. Llamada entrante de '+(d.from==='admin'?'la administración':chatName(d.from))+'.')}catch(e){window._tjw&&_tjw(e)}
  clearTimeout(LL.ringTm);LL.ringTm=setTimeout(()=>{if(LL.incoming&&LL.incoming.id===d.id){LL.incoming=null;llamFin('Llamada perdida')}},45000)}
 async function llamAcepta(){const d=LL.incoming;if(!d||LL.id)return;llamTono(0);clearTimeout(LL.ringTm);
  try{LL.stream=await llamMic()}catch(e){llamRechazar();return alert('No se pudo usar el micrófono. Permita el acceso al micrófono en el navegador.')}
@@ -2501,8 +2503,8 @@ function llamRechazar(){const d=LL.incoming;if(!d)return;LL.incoming=null;fbDb.c
 function llamCuelga(){const id=LL.id;if(id)fbDb.collection('llamadas').doc(id).update({state:LL.t0?'ended':'missed'}).catch(()=>{});llamFin('Llamada finalizada')}
 function llamMute(){LL.muted=!LL.muted;(LL.stream?LL.stream.getAudioTracks():[]).forEach(k=>{k.enabled=!LL.muted});const b=$('llmu');if(b)b.classList.toggle('on',LL.muted)}
 function llamFin(msg){if(!LL.id&&!LL.incoming&&!$('llam'))return;
- llamTono(0);clearTimeout(LL.ringTm);clearInterval(LL.tm);LL.unsub.forEach(u=>{try{u()}catch(e){}});LL.unsub=[];
- try{LL.pc&&LL.pc.close()}catch(e){}try{LL.stream&&LL.stream.getTracks().forEach(k=>k.stop())}catch(e){}
+ llamTono(0);clearTimeout(LL.ringTm);clearInterval(LL.tm);LL.unsub.forEach(u=>{try{u()}catch(e){window._tjw&&_tjw(e)}});LL.unsub=[];
+ try{LL.pc&&LL.pc.close()}catch(e){window._tjw&&_tjw(e)}try{LL.stream&&LL.stream.getTracks().forEach(k=>k.stop())}catch(e){window._tjw&&_tjw(e)}
  const a=$('llau');if(a){a.srcObject=null;a.volume=1}const nom=LL.peer?chatName(LL.peer):'',pid=LL.peer;
  Object.assign(LL,{pc:null,id:null,stream:null,t0:0,tm:null,peer:null,ringTm:null,incoming:null,ready:false,q:[],pend:[],muted:false,priv:false});
  if(msg){llamUI({p:pid,n:nom||'Llamada',s:msg,b:''});LL.hTm=setTimeout(()=>{if(!LL.id&&!LL.incoming)llamUI(null)},1800)}else if(!LL.id&&!LL.incoming)llamUI(null)}
@@ -2513,7 +2515,7 @@ function llamListen(){if(window._llOn||!fbDb||!llamOn())return;window._llOn=true
 const llamHint=()=>(window.matchMedia&&matchMedia('(pointer:coarse)').matches)?'<small class="llh">En el celular el sonido sale por el altavoz. Para más privacidad toque 🔊 para bajar el volumen y acérquelo al oído, o use auriculares.</small>':'';
 function llamVol(){LL.priv=!LL.priv;const a=llamAud();a.volume=LL.priv?.3:1;const b=$('llvo');if(b){b.classList.toggle('on',LL.priv);b.textContent=LL.priv?'🔉':'🔊'}}
 async function llamSalidas(){const a=llamAud();if(!a.setSinkId||!navigator.mediaDevices||!navigator.mediaDevices.enumerateDevices)return;
- try{const d=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='audiooutput');if(d.length<2)return;const x=$('llx');if(x)x.innerHTML=`<label style="font-size:11.5px;color:var(--gris)">Salida de audio</label><select onchange="llamSalida(this.value)">${d.map(v=>`<option value="${esc(v.deviceId)}" ${a.sinkId===v.deviceId?'selected':''}>${esc(v.label||'Salida de audio')}</option>`).join('')}</select>`}catch(e){}}
+ try{const d=(await navigator.mediaDevices.enumerateDevices()).filter(x=>x.kind==='audiooutput');if(d.length<2)return;const x=$('llx');if(x)x.innerHTML=`<label style="font-size:11.5px;color:var(--gris)">Salida de audio</label><select onchange="llamSalida(this.value)">${d.map(v=>`<option value="${esc(v.deviceId)}" ${a.sinkId===v.deviceId?'selected':''}>${esc(v.label||'Salida de audio')}</option>`).join('')}</select>`}catch(e){window._tjw&&_tjw(e)}}
 async function llamSalida(id){try{await llamAud().setSinkId(id)}catch(e){alert('No se pudo cambiar la salida de audio.')}}
 async function llamProbarMic(){try{const s=await llamMic();s.getTracks().forEach(k=>k.stop());alert('Micrófono listo ✅')}catch(e){alert('No se pudo usar el micrófono. Permita el acceso en el navegador.')}}
 function llamCard(){const on=DB.cfg.llamOn!==0,v=k=>esc(DB.cfg[k]||'');
@@ -2533,7 +2535,7 @@ function avBig(id){const p=PERF[id]||{},nm=chatName(id),rol=id==='admin'?'Admini
  z.innerHTML=body+`<div class="avzc"><b>${esc(nm)}</b><small>${rol}</small></div><button aria-label="Cerrar">✕</button>`;document.body.appendChild(z)}
 document.addEventListener('click',e=>{const a=e.target.closest&&e.target.closest('.av[data-uid]');if(!a||a.closest('#uchip,#pf_pv,.lla'))return;const id=a.dataset.uid;if(!id)return;e.stopPropagation();e.preventDefault();avBig(id)},true);
 addEventListener('keydown',e=>{if(e.key==='Escape'){const z=document.getElementById('avzoom');if(z)z.remove()}});
-function avRefresh(){try{if(vista==='vend'&&$('vendCard')&&!$('md').classList.contains('on'))R.vend()}catch(e){}try{topUser()}catch(e){}try{if(vista==='chat'){chatList();chatConv()}}catch(e){}}
+function avRefresh(){try{if(vista==='vend'&&$('vendCard')&&!$('md').classList.contains('on'))R.vend()}catch(e){window._tjw&&_tjw(e)}try{topUser()}catch(e){window._tjw&&_tjw(e)}try{if(vista==='chat'){chatList();chatConv()}}catch(e){window._tjw&&_tjw(e)}}
 function perfListen(){if(window._pfOn||!fbDb)return;window._pfOn=true;
  fbDb.collection('perfiles').onSnapshot(sn=>{const o={};sn.docs.forEach(d=>{const x=d.data(),k=d.id||(x&&x.id);if(k)o[k]=x});PERF=o;avRefresh()},e=>console.warn('Perfiles:',e))}
 const PF_EM=['😀','😎','🤩','🥳','😇','🤓','😺','🦊','🐼','🦁','🐯','🐶','🦄','🐝','🦋','🌟','🔥','💎','🎴','👑','🚀','💼','🧁','🍀','🌈','⚡','🎨','🎯','🤝','💰'];
@@ -2742,7 +2744,7 @@ async function enviarFacAChat(chatId, text){
 }
 
 function chatRead(){try{return JSON.parse(localStorage.getItem(chatRK())||'{}')}catch(e){return {}}}
-function chatMark(id,ts){const r=chatRead();r[id]=Math.max(r[id]||0,ts||Date.now());try{localStorage.setItem(chatRK(),JSON.stringify(r))}catch(e){}chatBadge()}
+function chatMark(id,ts){const r=chatRead();r[id]=Math.max(r[id]||0,ts||Date.now());try{localStorage.setItem(chatRK(),JSON.stringify(r))}catch(e){window._tjw&&_tjw(e)}chatBadge()}
 const chatUn=c=>!!c.lastTs&&c.lastFrom!==chatMe()&&c.lastTs>(chatRead()[c.id]||0);
 const chatTitle=c=>c.type==='grp'?c.name:(esAdmin()?chatName(c.id.slice(3)):'Administrador');
 function chatVis(){const me=chatMe(),map={};CHS.forEach(c=>{map[c.id]=c});const out=[];
@@ -2750,10 +2752,10 @@ function chatVis(){const me=chatMe(),map={};CHS.forEach(c=>{map[c.id]=c});const 
  else if(me)out.push(map['dm_'+me]||{id:'dm_'+me,type:'dm',members:['admin',me],ph:1});
  CHS.filter(c=>c.type==='grp'&&chatMine(c)).forEach(c=>out.push(c));return out}
 function chatBadge(){if(!SES)return;const n=chatVis().filter(c=>chatUn(c)).length;document.querySelectorAll('.ni[data-k="chat"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
-const _nv=nav;nav=function(){_nv.apply(this,arguments);try{chatBadge()}catch(e){}};
+const _nv=nav;nav=function(){_nv.apply(this,arguments);try{chatBadge()}catch(e){window._tjw&&_tjw(e)}};
 function chatListen(){if(_chOn||!fbDb)return;_chOn=true;let first=true;
  fbDb.collection('chats').onSnapshot(sn=>{
-  if(!first)sn.docChanges().forEach(ch=>{const c=ch.doc.data();if(!c||!/^[\w-]{1,64}$/.test(ch.doc.id))return;if(ch.type!=='removed'&&SES&&c.lastFrom&&c.lastFrom!==chatMe()&&(c.type==='dm'?(esAdmin()||c.id==='dm_'+chatMe()):chatMine(c))){if(!(vista==='chat'&&CH.sel===c.id)){try{agSound()}catch(e){}}chatVoz(c)}});
+  if(!first)sn.docChanges().forEach(ch=>{const c=ch.doc.data();if(!c||!/^[\w-]{1,64}$/.test(ch.doc.id))return;if(ch.type!=='removed'&&SES&&c.lastFrom&&c.lastFrom!==chatMe()&&(c.type==='dm'?(esAdmin()||c.id==='dm_'+chatMe()):chatMine(c))){if(!(vista==='chat'&&CH.sel===c.id)){try{agSound()}catch(e){window._tjw&&_tjw(e)}}chatVoz(c)}});
   first=false;CHS=sn.docs.map(d=>{const o=d.data();return o&&/^[\w-]{1,64}$/.test(d.id)?Object.assign(o,{id:d.id}):null}).filter(Boolean);if(SES){chatBadge();if(vista==='chat')chatList()}},()=>{})}
 R.chat=function(){if(!fbDb){$('v').innerHTML='<div class="card"><div class="vacio">El chat necesita conexión a internet.</div></div>';return}chatListen();
  $('v').innerHTML=`<div class="chw ${CH.sel?'sel':''}" id="chw"><div class="chl card" id="chl"></div><div class="chm card" id="chm"></div></div>`;chatList();chatConv()};
@@ -2819,7 +2821,7 @@ function verFactura(id){const f=DB.fac.find(x=>x.id==id);if(!f)return;const adm=
  $('md').classList.add('on');vfFit()}
 function verTpl(id,k){const f=DB.fac.find(x=>x.id==id);if(!f||!esAdmin())return;if(k)f.tpl=k;else delete f.tpl;save();$('vfs').innerHTML=facHTML(id);vfFit()}
 function facCobrar(id,on){const f=DB.fac.find(x=>x.id==id);if(!f||!esAdmin())return;
- if(on){f.cobrada=hoy();DB.agenda=DB.agenda.filter(e=>e.fid!==id)}else{delete f.cobrada;try{credAg(f)}catch(e){}}
+ if(on){f.cobrada=hoy();DB.agenda=DB.agenda.filter(e=>e.fid!==id)}else{delete f.cobrada;try{credAg(f)}catch(e){window._tjw&&_tjw(e)}}
  save();verFactura(id);if(vista==='fac')R.fac()}
 // --- Check: sin exportar ni importar para vendedores ---
 function chkLock(d,w){
@@ -2909,9 +2911,9 @@ function vdAdmHTML(){const ids=['admin',...usuarios().map(u=>u.id)],
  return `<div class="card" id="vdAdm"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h3 style="margin:0">👥 Rendimiento de vendedores</h3><small style="color:var(--gris)">${VDP.find(x=>x[0]===VD.p)[1]} · toque “Ver dashboard” para el detalle de cada uno</small></div><div style="display:flex;gap:6px;flex-wrap:wrap">${vdChips()}</div></div>
 ${A.length?`<div class="tw" style="margin-top:12px"><table><tr><th>Vendedor</th><th class="r">Ventas</th><th class="r">Facturas</th><th class="r">Ticket prom.</th><th>Mejor cliente</th><th class="r">Por cobrar</th><th>Participación</th><th></th></tr>${A.map(r=>{const i=top.indexOf(r.id),b=r.s.cli[0],pc=T?Math.round(r.s.tot/T*100):0;return `<tr><td>${i>=0&&i<3?med[i]+' ':''}<b>${esc(vdName(r.id))}</b>${r.id==='admin'?'<br><small style="color:var(--gris)">incluye facturas anteriores</small>':''}</td><td class="r">${$$(r.s.tot)}</td><td class="r">${r.s.n}</td><td class="r">${$$(r.s.avg)}</td><td>${b?esc(b.n):'—'}</td><td class="r">${$$(r.pm)}</td><td style="min-width:110px"><div class="vdbar"><i style="width:${pc}%"></i></div><small style="color:var(--gris)">${pc}%</small></td><td class="r"><button class="btn s" onclick="vdDetail('${r.id}')">Ver dashboard</button></td></tr>`}).join('')}<tr><td><b>Total</b></td><td class="r"><b>${$$(T)}</b></td><td class="r"><b>${N}</b></td><td class="r"><b>${$$(N?T/N:0)}</b></td><td></td><td class="r"><b>${$$(PM)}</b></td><td></td><td></td></tr></table></div>`:'<div class="vacio">Aún no hay ventas ni vendedores.</div>'}</div>`}
 const _rhome=R.home;R.home=function(){const _tdw=()=>{const w=document.createElement('div');w.innerHTML=tdHomeHTML();return w.firstElementChild};if(esVend()){$('v').innerHTML=vdHTML(chatMe());const t=_tdw();if(t)$('v').insertBefore(t,$('v').firstChild);return}const r=_rhome.apply(this,arguments);if(esAdmin()){const c=document.createElement('div');c.innerHTML=vdAdmHTML();const v=$('v');v.insertBefore(c.firstElementChild,v.firstChild)}const t=_tdw();if(t){const v=$('v');v.insertBefore(t,v.children[1]||null)}return r};
-if(typeof dibujarGraficos==='function'){const _dg=dibujarGraficos;dibujarGraficos=function(){if(esVend())return;try{return _dg.apply(this,arguments)}catch(e){}}}
+if(typeof dibujarGraficos==='function'){const _dg=dibujarGraficos;dibujarGraficos=function(){if(esVend())return;try{return _dg.apply(this,arguments)}catch(e){window._tjw&&_tjw(e)}}}
 function tplMinOn(){try{return localStorage.getItem('tj_tpl_min')==='1'}catch(e){return false}}
-function tplMin(){try{localStorage.setItem('tj_tpl_min',tplMinOn()?'0':'1')}catch(e){}tplRef()}
+function tplMin(){try{localStorage.setItem('tj_tpl_min',tplMinOn()?'0':'1')}catch(e){window._tjw&&_tjw(e)}tplRef()}
 const _tc0=tplCard;tplCard=function(){const cur=TPLS.find(t=>t[0]===(DB.cfg.tpl||'clasica'))||TPLS[0];
  if(tplMinOn())return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0">🧾 Plantillas de factura</h3><small style="color:var(--gris)">Actual: <b>${cur[1]}</b> · Sello ${DB.cfg.sello===0?'desactivado':'activado'}</small></div><button class="btn s" onclick="tplMin()">⬆ Maximizar</button></div>`;
  return `<div style="position:relative"><button class="btn s" style="position:absolute;right:0;top:0;z-index:1" onclick="tplMin()">⬇ Minimizar</button>`+_tc0()+`</div>`};
@@ -2922,8 +2924,8 @@ const MIC={"💾": "M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2
 const MIRX=new RegExp('^\\s*('+Object.keys(MIC).map(k=>k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\uFE0F?\\s*');
 function navIcons(){document.querySelectorAll('.ni[data-k]').forEach(n=>{const d=NAVI[n.dataset.k],ic=n.querySelector('.ic');if(!d||!ic)return;ic.innerHTML='<svg viewBox="0 0 24 24"><path d="'+d[0]+'"/></svg>';ic.style.setProperty('--c1',d[1]);ic.style.setProperty('--c2',d[2])})}
 function iconize(root){(root||document.body).querySelectorAll('.btn').forEach(b=>{const t=b.firstChild;if(!t||t.nodeType!==3)return;const m=MIRX.exec(t.nodeValue);if(!m)return;const sp=document.createElement('span');sp.className='mi';sp.innerHTML='<svg viewBox="0 0 24 24"><path d="'+MIC[m[1]]+'"/></svg>';t.nodeValue=t.nodeValue.slice(m[0].length);b.insertBefore(sp,t)})}
-const _nvi=nav;nav=function(){_nvi.apply(this,arguments);try{navIcons()}catch(e){}};
-(()=>{let q=0;const run=()=>{q=0;try{iconize(document.body)}catch(e){}};new MutationObserver(()=>{if(!q){q=1;requestAnimationFrame(run)}}).observe(document.body,{childList:true,subtree:true});run()})();
+const _nvi=nav;nav=function(){_nvi.apply(this,arguments);try{navIcons()}catch(e){window._tjw&&_tjw(e)}};
+(()=>{let q=0;const run=()=>{q=0;try{iconize(document.body)}catch(e){window._tjw&&_tjw(e)}};new MutationObserver(()=>{if(!q){q=1;requestAnimationFrame(run)}}).observe(document.body,{childList:true,subtree:true});run()})();
 // ===================== TIENDA VIRTUAL =====================
 const SHOP=/[?&]tienda(=|&|$)/.test(location.search);
 const TD={items:[],leads:[],peds:[],cat:[]},SH={items:[],cart:{},cli:null,ref:'admin',cat:'',q:'',err:0};
@@ -2933,11 +2935,11 @@ const BUILD=(Date.parse(document.lastModified)||0).toString(36);const tdLink=()=
 const tdMoney=n=>+n>0?$$(+n):'Consultar';
 // ---------- Panel interno (admin y vendedores) ----------
 let _tdOn=false;
-function tdAviso(t){try{agSound()}catch(e){}if(DB.cfg.vozChat!==0)setTimeout(()=>vozDama('Atención. '+t),600)}
+function tdAviso(t){try{agSound()}catch(e){window._tjw&&_tjw(e)}if(DB.cfg.vozChat!==0)setTimeout(()=>vozDama('Atención. '+t),600)}
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
-const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){}};
+const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbDb.collection(c):fbDb.collection(c).where('ref','==',me);let f1=true,f2=true;
- fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'clasico';try{if(esAdmin()&&fbDb&&cd.build!==BUILD)fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&cd.base!==tdBase())fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'clasico';try{if(esAdmin()&&fbDb&&cd.build!==BUILD)fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&cd.base!==tdBase())fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -2959,7 +2961,7 @@ function tdRender(){if(vista!=='tienda'||!SES)return;const adm=esAdmin(),me=chat
  $('v').innerHTML=`<div class="card"><h3 style="margin:0 0 4px">🛍 Catálogo virtual</h3><p style="font-size:12.5px;color:var(--gris)">Comparta su enlace. El cliente se registra, ve productos, categorías y precios, arma su carrito y le envía el pedido. ${adm?'':'Los registros y pedidos quedan a su nombre.'}</p>${file}<label>Su enlace</label><input id="td_link" readonly value="${esc(link)}" onfocus="this.select()"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn p" onclick="tdCopy()">📋 Copiar enlace</button><button class="btn" onclick="window.open(tdLink(),'_blank')">👁 Ver como cliente</button><button class="btn p" onclick="window.open(tdLink()+'&dir=1','_blank')">📖 Ver catálogo directo</button><button class="btn" onclick="tdWaLink()">💬 Enviar por WhatsApp</button></div><div style="margin-top:14px"><label>Enviar el enlace a un cliente registrado</label><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="td_cli" style="flex:1;min-width:200px">${cls.map(c=>`<option value="${c.id}">${esc(c.n)} — ${esc(c.t)}</option>`).join('')||'<option value="">(sin clientes con teléfono)</option>'}</select><button class="btn p" onclick="tdSendCli()">💬 Enviar</button></div></div></div>
 <div class="card"><h3 style="margin:0 0 6px">🛒 Pedidos de la tienda (${TD.peds.length})</h3>${TD.peds.length?TD.peds.map(p=>{const l=p.lead||{},w=tdWa(l.tel,'Hola '+l.name+', recibimos su pedido de la tienda virtual. ');return `<div class="tdp ${p.estado==='nuevo'?'nw':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><b>${esc(l.name||'Cliente')}</b> · ${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}<br><small style="color:var(--gris)">${new Date(p.ts).toLocaleString('es-PA')} · Vendedor: ${esc(vdName(p.ref||'admin'))} · ${p.estado==='nuevo'?'<b style="color:var(--az)">NUEVO</b>':'Atendido'}</small></div><b style="font-size:17px">${$$(p.total)}</b></div><ul>${(p.items||[]).map(i=>`<li>${i.q} × ${esc(i.n)} — ${$$(i.p)}</li>`).join('')}</ul>${p.nota?`<small>📝 ${esc(p.nota)}</small><br>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn p s" onclick="tdFactura('${p.id}')">🧾 Crear factura</button>${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<button class="btn s" onclick="shopPdf(TD.peds.find(x=>x.id==='${p.id}'),'ver')">👁 Ver PDF</button><button class="btn s" onclick="shopPdf(TD.peds.find(x=>x.id==='${p.id}'))">⬇ Descargar</button><button class="btn s" onclick="tdEstado('${p.id}')">${p.estado==='nuevo'?'✔ Marcar atendido':'↩ Reabrir'}</button><button class="btn s d" onclick="tdPedDel('${p.id}')">🗑 Eliminar</button></div></div>`}).join(''):'<div class="vacio">Aún no hay pedidos.</div>'}</div>
 <div class="card"><h3 style="margin:0 0 6px">👥 Clientes registrados en la tienda (${TD.leads.length})</h3><p style="font-size:12.5px;color:var(--gris)">${adm?'Cada registro se agrega automáticamente a su lista de Clientes.':'Los clientes que se registraron con su enlace.'}</p>${TD.leads.length?`<div class="tw"><table><tr><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Correo</th><th>Vendedor</th><th></th></tr>${TD.leads.map(l=>{const w=tdWa(l.tel,'Hola '+l.name+', gracias por registrarse en nuestro catálogo virtual. ');return `<tr><td>${new Date(l.ts).toLocaleDateString('es-PA')}</td><td><b>${esc(l.name)}</b>${l.empresa?'<br><small>'+esc(l.empresa)+'</small>':''}</td><td>${esc(l.tel||'')}</td><td>${esc(l.email||'')}</td><td>${esc(vdName(l.ref||'admin'))}</td><td class="r">${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''} ${adm?`<button class="btn s d" onclick="tdLeadDel('${l.id}')">🗑 Eliminar</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="vacio">Aún no hay registros.</div>'}</div>
-${pubCard}`;try{tdAplicarFiltro()}catch(e){}}
+${pubCard}`;try{tdAplicarFiltro()}catch(e){window._tjw&&_tjw(e)}}
 let TDF='todos';const TDG_CLOSED=new Set();
 const TDSTK={ok:'✅ Disponible',low:'⚠️ Pocas existencias',out:'⛔ Agotado',disc:'🚫 Descontinuado'};
 const tdStkSel=(id,v)=>`<select class="tdstk" data-id="${id}" onchange="tdStockSet('${id}',this.value)">${Object.keys(TDSTK).map(k=>`<option value="${k}" ${k===v?'selected':''}>${TDSTK[k]}</option>`).join('')}</select>`;
@@ -3005,9 +3007,9 @@ async function tdImg(o){if(o.blob&&/^image\//.test(o.type||'')){const b=await co
  if(o.thumb)return o.thumb;throw new Error('sin imagen')}
 const tdRows=()=>{const ids=new Set(TD.cat.map(x=>x.id));return [...TD.cat,...TD.items.filter(x=>x&&x.img&&!ids.has(x.id)).map(x=>({id:x.id,name:x.name,cat:x.cat,price:x.price,desc:x.desc,tags:x.tags,thumb:x.img,_pub:1}))].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{numeric:true}))};
 const tdMinV=()=>{try{return localStorage.getItem('tj_td_min')==='1'}catch(e){return false}};
-function tdMin(){const m=!tdMinV();try{localStorage.setItem('tj_td_min',m?'1':'0')}catch(e){}const b=$('tdBody'),t=$('tdMinB');if(b)b.style.display=m?'none':'';if(t)t.textContent=m?'▸ Maximizar':'▾ Minimizar'}
+function tdMin(){const m=!tdMinV();try{localStorage.setItem('tj_td_min',m?'1':'0')}catch(e){window._tjw&&_tjw(e)}const b=$('tdBody'),t=$('tdMinB');if(b)b.style.display=m?'none':'';if(t)t.textContent=m?'▸ Maximizar':'▾ Minimizar'}
 function tdZoom(id){try{const o=tdRows().find(x=>x.id===id)||{},p=TD.items.find(x=>x.id===id),L=[];
- if(o.blob&&o.blob.size>0&&/^image\//.test(o.blob.type||o.type||'')){try{L.push(URL.createObjectURL(o.blob))}catch(e){}}
+ if(o.blob&&o.blob.size>0&&/^image\//.test(o.blob.type||o.type||'')){try{L.push(URL.createObjectURL(o.blob))}catch(e){window._tjw&&_tjw(e)}}
  if(p&&p.img)L.push(p.img);if(o.thumb)L.push(o.thumb);
  if(!L.length)return alert('Este producto no tiene imagen.');
  const old=document.getElementById('tdzoom');if(old)old.remove();const z=document.createElement('div');z.id='tdzoom';z.onclick=()=>z.remove();
@@ -3031,16 +3033,16 @@ async function tdUnpub(){if(!esAdmin()||!fbDb)return;const ids=[...document.quer
 function tdEstado(id){const p=TD.peds.find(x=>x.id===id);if(!p)return;fbDb.collection('tienda_pedidos').doc(id).update({estado:p.estado==='nuevo'?'atendido':'nuevo'}).catch(()=>alert('No se pudo actualizar el pedido.'))}
 function tdFactura(id){const p=TD.peds.find(x=>x.id===id);if(!p)return;const l=p.lead||{},d=String(l.tel||'').replace(/\D/g,''),c=DB.cli.find(x=>(d&&String(x.t||'').replace(/\D/g,'')===d)||x.n===l.name);
  items=(p.items||[]).map(i=>({d:i.n,q:i.q,p:i.p}));ir('nueva');
- setTimeout(()=>{try{if(c&&$('f_cs')){$('f_cs').value=c.id;selCli()}else{$('f_cn').value=l.name||'';$('f_cd').value=l.dir||''}$('f_nt').value='Pedido de tienda virtual'+(p.nota?' · '+p.nota:'');calc()}catch(e){}},80)}
+ setTimeout(()=>{try{if(c&&$('f_cs')){$('f_cs').value=c.id;selCli()}else{$('f_cn').value=l.name||'';$('f_cd').value=l.dir||''}$('f_nt').value='Pedido de tienda virtual'+(p.nota?' · '+p.nota:'');calc()}catch(e){window._tjw&&_tjw(e)}},80)}
 // ---------- Página pública para el cliente ----------
 async function shopPurge(){try{if(sessionStorage.getItem('tj_purged'))return;let need=false;
  if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations){const rs=await navigator.serviceWorker.getRegistrations();if(rs.length){need=true;await Promise.all(rs.map(r=>r.unregister()))}}
  if(window.caches){const ks=await caches.keys();if(ks.length){need=true;await Promise.all(ks.map(k=>caches.delete(k)))}}
- sessionStorage.setItem('tj_purged','1');if(need)location.replace(location.href.split('#')[0]+(location.search?'&':'?')+'_r='+Date.now())}catch(e){}}
+ sessionStorage.setItem('tj_purged','1');if(need)location.replace(location.href.split('#')[0]+(location.search?'&':'?')+'_r='+Date.now())}catch(e){window._tjw&&_tjw(e)}}
 function shopInit(){shopPurge();SH.openTs=Date.now();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
- try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){}
- const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){}
- if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'clasico';H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');try{shopXmas();shopSummer();shopPanama()}catch(e){}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){window._tjw&&_tjw(e)}
+ const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
+ if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'clasico';H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');try{shopXmas();shopSummer();shopPanama()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -3067,7 +3069,7 @@ const KI={user:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c
 const kico=(d,s)=>`<svg viewBox="0 0 24 24" width="${s||24}" height="${s||24}" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`;
 Object.assign(KI,{menu:'M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z',filter:'M3 5h18v2H3V5zm4 6h10v2H7v-2zm3 6h4v2h-4v-2z',grid:'M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z',list:'M4 6h3v3H4V6zm5 1h11v1H9V7zM4 11h3v3H4v-3zm5 1h11v1H9v-1zM4 16h3v3H4v-3zm5 1h11v1H9v-1z',star:'M12 2l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L12 2z'});
 const shopLogo=()=>{if(SH.logo!==undefined)return SH.logo;const g=document.querySelector('.logo img');return SH.logo=g?'<img src="'+g.src+'" alt="">':''};
-const shopSaveCart=()=>{try{localStorage.setItem('tj_shop_cart',JSON.stringify(SH.cart))}catch(e){}};
+const shopSaveCart=()=>{try{localStorage.setItem('tj_shop_cart',JSON.stringify(SH.cart))}catch(e){window._tjw&&_tjw(e)}};
 function shopRender(){const o=$('shop');if(!o)return;
  if(SH.err)return o.innerHTML=`<div class="kreg-w"><div class="kreg">${shopLogo()}<h2>Catálogo no disponible</h2><p>No se pudo conectar. Intente de nuevo en unos minutos.</p><button class="sbtn" onclick="location.reload()">Reintentar</button></div></div>`;
  shopCatalog()}
@@ -3081,16 +3083,16 @@ function shopHP(){return '<div style="position:absolute;left:-9999px;top:-9999px
 // página (eso solo lo frena Firebase App Check, pendiente de que Google lo vuelva a habilitar
 // gratis), pero sí frena a un script simple o a un clic repetido que reutiliza este navegador.
 const RL_KEY='tj_shop_rl',RL_MAX=6,RL_WIN=600000;
-function shopRateOk(){let a=[];try{a=JSON.parse(localStorage.getItem(RL_KEY)||'[]')}catch(e){}
+function shopRateOk(){let a=[];try{a=JSON.parse(localStorage.getItem(RL_KEY)||'[]')}catch(e){window._tjw&&_tjw(e)}
  const now=Date.now();a=a.filter(t=>now-t<RL_WIN);if(a.length>=RL_MAX)return false;
- a.push(now);try{localStorage.setItem(RL_KEY,JSON.stringify(a))}catch(e){}return true}
+ a.push(now);try{localStorage.setItem(RL_KEY,JSON.stringify(a))}catch(e){window._tjw&&_tjw(e)}return true}
 function shopAntiBot(){const hp=$('sh_hp');if(hp&&hp.value.trim())return'no';if(!SH.openTs||Date.now()-SH.openTs<2500)return'no';if(!shopRateOk())return'rl';return'ok'}
 const shopAntiBotMsg=r=>r==='rl'?'Demasiados envíos seguidos desde este dispositivo. Espere unos minutos e intente de nuevo.':'No se pudo registrar. Intente de nuevo.';
 async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('sh_t'),e=g('sh_e'),m=s=>{$('sh_m').textContent=s};
  if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');{const r=shopAntiBot();if(r!=='ok')return m(shopAntiBotMsg(r))}
  const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};$('sh_b').disabled=true;m('Registrando…');
  try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
- SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){}shopRender()}
+ SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){window._tjw&&_tjw(x)}shopRender()}
 function shopCatalog(){const o=$('shop');if(!o)return;
  o.innerHTML=`<div class="kwrap"><header class="khd"><div class="kh-top"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div><button class="kmenu-btn" id="k_menu_b" onclick="shopMenu()" aria-label="Abrir menú" aria-expanded="false">${kico(KI.menu,22)}</button></div><div class="kh-search"><label class="ksr">${kico(KI.search,20)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" oninput="shopQ(this.value)" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" onclick="shopQ('');$('sh_q').value='';$('sh_q').focus()" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><button class="kfilter-btn" onclick="shopFilterSheet()" aria-label="Abrir filtros">${kico(KI.filter,21)}</button><nav class="kh-links">${shopDNavHtml()}</nav></div><nav class="kmobile-menu" id="k_mmenu" hidden>${shopMobileNavHtml()}</nav></header><nav class="kdnav" id="k_dnav">${shopDNavHtml()}</nav><section class="khero" id="khero" aria-label="Diseños destacados"></section><section class="kcats" id="k_cats" hidden></section><section class="kdest" id="k_dest" hidden></section>
 <div class="kmain"><aside class="kside" id="k_side"></aside><div class="kcol"><div class="kstk"><div class="kchips" id="sh_ch"></div></div>
@@ -3180,8 +3182,8 @@ function shopView(){SH.view=SH.view==='mini'?'tiles':'mini';shopGrid(1)}
 const shopBtn=id=>{const it=SH.items.find(x=>x.id===id);if(noDisp(it))return '<span class="kno">'+stkLbl[it.stock]+'</span>';return shopBtn0(id)};
 const shopBtn0=id=>SH.cart[id]?`<div class="kst"><button onclick="shopQty('${id}',-1)" aria-label="Quitar uno">−</button><button class="kqn" onclick="shopPick('${id}')" aria-label="Cambiar cantidad">${SH.cart[id]}</button><button onclick="shopQty('${id}',1)" aria-label="Agregar uno">+</button></div>`:`<button class="kadd" onclick="shopPick('${id}')" aria-label="Agregar al carrito">${kico(KI.plus)}</button>`;
 function shopAct(id){document.querySelectorAll('[data-a="'+id+'"]').forEach(e=>e.innerHTML=shopBtn(id))}
-function shopFav(id){if(SH.fav[id])delete SH.fav[id];else SH.fav[id]=1;try{localStorage.setItem('tj_shop_fav',JSON.stringify(SH.fav))}catch(e){}
- try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
+function shopFav(id){if(SH.fav[id])delete SH.fav[id];else SH.fav[id]=1;try{localStorage.setItem('tj_shop_fav',JSON.stringify(SH.fav))}catch(e){window._tjw&&_tjw(e)}
+ try{navigator.vibrate&&navigator.vibrate(8)}catch(e){window._tjw&&_tjw(e)}
  document.querySelectorAll('[data-f="'+id+'"]').forEach(b=>{b.classList.toggle('on',!!SH.fav[id]);b.innerHTML=kico(SH.fav[id]?KI.heart:KI.heartO,20)});
  if(SH.favOnly&&!SH.fav[id]&&$('shopm').style.display!=='flex')shopGrid(1);if($('shopm').dataset.k==='det'&&$('shopm').dataset.id===id)shopDet(id)}
 function shopTab(k){const s=$('shop');if(k==='cart')return shopCart();if(k==='acc')return shopAcc();SH.favOnly=k==='fav';shopNav();shopGrid(1);if(s)s.scrollTo({top:0,behavior:'smooth'})}
@@ -3197,21 +3199,21 @@ function shopPickSet(v,typing){let n=Math.round(+v);if(!(n>=1))n=typing?SH.pq:1;
 function shopPickUpd(typing){const q=SH.pq,i=SH.items.find(x=>x.id===SH.pi)||{},m=$('shopm');if(!m||m.dataset.k!=='pick')return;
  m.querySelectorAll('.kqb').forEach(b=>b.classList.toggle('on',+b.dataset.n===q));const inp=$('k_pq');if(inp&&!typing)inp.value=q;
  $('k_ps').textContent=+i.price>0?$$(q*i.price):'Consultar';$('k_pb').textContent=(SH.cart[SH.pi]?'Actualizar carrito':'Agregar al carrito')+' · '+q+(docL(q)?' ('+docL(q)+')':'')}
-function shopPickOk(){const id=SH.pi,was=SH.cart[id]||0;SH.cart[id]=SH.pq;shopSaveCart();shopAct(id);shopNav();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
+function shopPickOk(){const id=SH.pi,was=SH.cart[id]||0;SH.cart[id]=SH.pq;shopSaveCart();shopAct(id);shopNav();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){window._tjw&&_tjw(e)}
  if(SH.pf==='cart')shopCart();else{shopClose();shopToast((was?'Cantidad actualizada: ':'Agregado: ')+SH.pq+' unidades','Ver',shopCart)}}
 const KTRASH='M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z';
-function shopDel(id,from){const q=SH.cart[id];if(!q)return;SH.undo={id,q};delete SH.cart[id];shopSaveCart();shopAct(id);shopNav();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}
+function shopDel(id,from){const q=SH.cart[id];if(!q)return;SH.undo={id,q};delete SH.cart[id];shopSaveCart();shopAct(id);shopNav();try{navigator.vibrate&&navigator.vibrate(8)}catch(e){window._tjw&&_tjw(e)}
  const m=$('shopm');if(m&&m.style.display==='flex'){if(from==='pick'&&SH.pf!=='cart')shopClose();else shopCart()}
  shopToast('Producto quitado del carrito','Deshacer',shopUndo);clearTimeout(SH.tt);SH.tt=setTimeout(()=>{const e=$('ksnack');if(e)e.innerHTML=''},5500)}
 function shopUndo(){const u=SH.undo;if(!u)return;SH.undo=null;SH.cart[u.id]=u.q;shopSaveCart();shopAct(u.id);shopNav();const m=$('shopm');if(m&&m.style.display==='flex'&&m.dataset.k==='cart')shopCart()}
 function shopQty(id,d){{const it=SH.items.find(x=>x.id===id);if(d>0&&noDisp(it)){shopToast('Producto no disponible');return}}const was=SH.cart[id]||0,n=Math.max(0,was+d);if(n)SH.cart[id]=n;else delete SH.cart[id];shopSaveCart();shopAct(id);shopNav();
- if(d>0){try{navigator.vibrate&&navigator.vibrate(8)}catch(e){}if(!was)shopToast('Agregado al carrito','Ver',shopCart)}
+ if(d>0){try{navigator.vibrate&&navigator.vibrate(8)}catch(e){window._tjw&&_tjw(e)}if(!was)shopToast('Agregado al carrito','Ver',shopCart)}
  const m=$('shopm');if(m.style.display==='flex'){if(m.dataset.k==='cart')shopCart();else if(m.dataset.k==='det')shopDet(m.dataset.id)}}
 function shopToast(t,lbl,fn){const s=$('ksnack');if(!s)return;clearTimeout(SH.tt);SH.tf=fn||null;s.innerHTML='<div class="ksn"><span>'+t+'</span>'+(lbl?'<button onclick="shopToastGo()">'+lbl+'</button>':'')+'</div>';SH.tt=setTimeout(()=>{s.innerHTML=''},2400)}
 function shopToastGo(){const f=SH.tf;$('ksnack').innerHTML='';f&&f()}
 function shopM(h,k,id,w){const m=$('shopm'),re=m.style.display==='flex',old=re&&m.firstChild?m.firstChild.scrollTop:0;m.innerHTML='<div class="ksheet'+(re?' re':'')+(w?' wide':'')+'"><div class="kgrab"></div>'+h+'</div>';m.dataset.k=k||'';m.dataset.id=id||'';m.style.display='flex';if(old)m.firstChild.scrollTop=old;
- if(!SH.hp){SH.hp=1;try{history.pushState({shop:1},'')}catch(e){}}}
-function shopClose(pop){const m=$('shopm');m.style.display='none';m.innerHTML='';m.dataset.k='';if(SH.hp){SH.hp=0;if(!pop)try{history.back()}catch(e){}}}
+ if(!SH.hp){SH.hp=1;try{history.pushState({shop:1},'')}catch(e){window._tjw&&_tjw(e)}}}
+function shopClose(pop){const m=$('shopm');m.style.display='none';m.innerHTML='';m.dataset.k='';if(SH.hp){SH.hp=0;if(!pop)try{history.back()}catch(e){window._tjw&&_tjw(e)}}}
 addEventListener('popstate',()=>{if(SH.hp)shopClose(1)});
 function shopZoom(id){const i=SH.items.find(x=>x.id===id);if(!i)return;let z=$('kzoom');if(z)z.remove();z=document.createElement('div');z.id='kzoom';z.onclick=()=>z.remove();z.innerHTML='<img src="'+i.img+'" alt=""><button aria-label="Cerrar">✕</button>';document.body.appendChild(z)}
 addEventListener('keydown',e=>{if(e.key!=='Escape')return;const z=$('kzoom');if(z)z.remove();else if(SH.hp)shopClose()});
@@ -3220,14 +3222,14 @@ function shopDet(id){const i=SH.items.find(x=>x.id===id);if(!i)return;const tg=[
 function shopCart(){const L=shopLines();if(!L.length)return shopM('<h2 style="margin:6px 0 12px">Su carrito está vacío</h2><button class="sbtn g" onclick="shopClose()">Seguir viendo</button>','cart');
  const t=L.reduce((s,l)=>s+l.q*l.p,0),nt=($('sh_nt')||{}).value||'';
  shopM(`<h2 style="margin:6px 0">🛒 Su pedido</h2>${L.map(l=>`<div class="kln"><img src="${l.img}" alt=""><div><b>${esc(l.n)}</b><small>${tdMoney(l.p)} c/u</small><button class="kdel" onclick="shopDel('${l.id}')">${kico(KTRASH,15)} Quitar</button></div><div class="kst"><button onclick="shopQty('${l.id}',-1)" aria-label="Quitar uno">−</button><button class="kqn" onclick="shopPick('${l.id}','cart')" aria-label="Cambiar cantidad">${l.q}</button><button onclick="shopQty('${l.id}',1)" aria-label="Agregar uno">+</button></div></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:19px;font-weight:800;margin:14px 0 4px"><span>Total</span><span>${t>0?$$(t):'Consultar'}</span></div><small style="color:var(--tx2)">Precios sin ITBMS. Le confirmaremos disponibilidad y forma de pago.</small><textarea id="sh_nt" rows="2" placeholder="Notas para el pedido (opcional)">${esc(nt)}</textarea>${shopHP()}<div class="serr" id="sh_m2" style="margin:6px 0"></div><div class="kact2"><button class="sbtn" id="sh_sb" onclick="shopSend()">Enviar pedido</button><button class="sbtn g" onclick="shopClose()">Seguir viendo</button></div>`,'cart')}
-function shopVoz(txt){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{ss.cancel();const u=new SpeechSynthesisUtterance(txt),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-MX';u.rate=.96;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){}};
+function shopVoz(txt){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{ss.cancel();const u=new SpeechSynthesisUtterance(txt),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-MX';u.rate=.96;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){window._tjw&&_tjw(e)}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,900)}}
 function shopPdfPrint(p){const l=p.lead||{},w=window.open('','_blank');if(!w)return alert('Permita las ventanas emergentes para descargar el comprobante.');
  const emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',num=String(p.id||'').slice(-6).toUpperCase();
  w.document.write(`<!DOCTYPE html><meta charset="utf-8"><title>Pedido ${num}</title><body style="font-family:Arial,sans-serif;max-width:720px;margin:24px auto;color:#222"><h2 style="color:#E0457B;margin:0">${esc(emp)}</h2><h3 style="margin:4px 0 14px">Comprobante de pedido N° ${num}</h3><p>${new Date(p.ts).toLocaleString('es-PA')}<br><b>${esc(l.name||'')}</b> · ${esc(l.tel||'')} · ${esc(l.email||'')}</p><table style="width:100%;border-collapse:collapse"><tr style="background:#f3f3f3"><th align="left">Cant.</th><th align="left">Descripción</th><th align="right">P. unit.</th><th align="right">Subtotal</th></tr>${(p.items||[]).map(i=>`<tr><td>${i.q}</td><td>${esc(i.n)}</td><td align="right">${i.p>0?$$(i.p):'Consultar'}</td><td align="right">${i.p>0?$$(i.q*i.p):'—'}</td></tr>`).join('')}</table><h3 align="right">Total: ${p.total>0?$$(p.total):'Consultar'}</h3>${p.nota?'<p>Nota: '+esc(p.nota)+'</p>':''}<p style="font-size:12px;color:#666">Precios sin ITBMS. Pedido sujeto a confirmación de disponibilidad.</p><script>onload=()=>print()<\/script>`);w.document.close()}
 function shopPdf(p,modo){if(!p)return;const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return shopPdfPrint(p);
  try{const d=new J({unit:'mm',format:'a4'}),W=210,M=16,l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',cl=t=>String(t||'').replace(/[^\u0000-\u00FF]/g,'').trim();let y=20;
-  try{const g=document.querySelector('.logo img');if(g&&/^data:image\/(png|jpe?g)/i.test(g.src))d.addImage(g.src,/png/i.test(g.src)?'PNG':'JPEG',M,8,0,18)}catch(e){}
+  try{const g=document.querySelector('.logo img');if(g&&/^data:image\/(png|jpe?g)/i.test(g.src))d.addImage(g.src,/png/i.test(g.src)?'PNG':'JPEG',M,8,0,18)}catch(e){window._tjw&&_tjw(e)}
   d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(224,69,123);d.text('COMPROBANTE DE PEDIDO',W-M,16,{align:'right'});
   d.setFontSize(10);d.setTextColor(90);d.setFont('helvetica','normal');d.text(cl(emp),W-M,22,{align:'right'});
   d.setDrawColor(224,69,123);d.setLineWidth(.8);d.line(M,30,W-M,30);y=40;
@@ -3289,17 +3291,17 @@ async function shopCodeResend(){const pr=SH.pendReg;if(!pr)return;const btn=$('s
  if(btn)btn.disabled=false}
 async function shopRegFinish(l){const m=s=>{const e=$('sh_m')||$('sh_cm');if(e)e.textContent=s};const b=$('sh_b')||$('sh_cb');if(b)b.disabled=true;m('Registrando…');
  try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){if(b)b.disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
- SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){}
+ SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){window._tjw&&_tjw(x)}
  const h=document.querySelector('#shop .khd .kht small');if(h)h.textContent='Hola, '+(l.name.split(' ')[0])+' 👋';
  shopCart();const nt=$('sh_nt');if(nt)nt.value=SH.pendNote||'';shopSend()}
 
 // ---------- Mi cuenta: pedidos del cliente ----------
 const OKEY='tj_shop_orders';
 function shopOrdLoad(){try{const a=JSON.parse(localStorage.getItem(OKEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
-function shopOrdSave(p){const a=shopOrdLoad().filter(x=>x.id!==p.id);a.push(p);try{localStorage.setItem(OKEY,JSON.stringify(a.slice(-150)))}catch(e){}}
+function shopOrdSave(p){const a=shopOrdLoad().filter(x=>x.id!==p.id);a.push(p);try{localStorage.setItem(OKEY,JSON.stringify(a.slice(-150)))}catch(e){window._tjw&&_tjw(e)}}
 function shopOrdMine(){const c=SH.cli;if(!c)return[];const tel=String(c.tel||'').replace(/\D/g,'');return shopOrdLoad().filter(p=>p.cid===c.id||(tel&&String((p.lead||{}).tel||'').replace(/\D/g,'')===tel)).sort((a,b)=>b.ts-a.ts)}
 async function shopOrdSync(){const c=SH.cli;if(!c||SH.guest||!fbDb)return;let ch=false;const tel=c.tel||'';
- for(const q of [['cid',c.id],['lead.tel',tel]]){if(!q[1])continue;try{const r=await fbDb.collection('tienda_pedidos').where(q[0],'==',q[1]).get();r.docs.forEach(d=>{const p=sanPed(d.data());if(p&&p.id){const o=shopOrdLoad().find(x=>x.id===p.id);if(!o||o.estado!==p.estado||o.total!==p.total){shopOrdSave(p);ch=true}}})}catch(e){}}
+ for(const q of [['cid',c.id],['lead.tel',tel]]){if(!q[1])continue;try{const r=await fbDb.collection('tienda_pedidos').where(q[0],'==',q[1]).get();r.docs.forEach(d=>{const p=sanPed(d.data());if(p&&p.id){const o=shopOrdLoad().find(x=>x.id===p.id);if(!o||o.estado!==p.estado||o.total!==p.total){shopOrdSave(p);ch=true}}})}catch(e){window._tjw&&_tjw(e)}}
  const m=$('shopm');if(ch&&m&&m.dataset.k==='acc')shopAcc(1)}
 const shopEst=e=>e==='atendido'?['Atendido','#2bb673']:['Recibido','#E8870A'];
 function shopOrdAct(id,modo){const p=shopOrdLoad().find(x=>x.id===id);if(!p)return;if(modo==='img')shopImgVer(p);else shopPdf(p,modo)}
@@ -3345,13 +3347,13 @@ function shopAcc(quiet){const c=SH.cli,L=shopOrdMine(),n=L.length,tot=L.reduce((
  ${n?L.map(p=>{const e=shopEst(p.estado),num=String(p.id||'').slice(-6).toUpperCase(),q=(p.items||[]).reduce((s,i)=>s+(+i.q||0),0);return `<details class="kord"><summary><div><b>Pedido N° ${num}</b><small>${fd(p.ts)} · ${q} diseño(s)</small></div><div style="text-align:right"><b>${p.total>0?$$(p.total):'Consultar'}</b><span class="kst2" style="background:${e[1]}22;color:${e[1]}">${e[0]}</span></div></summary><div class="kordb">${(p.items||[]).map(i=>`<div class="kodl"><span>${i.q} × ${esc(i.n)}</span><span>${i.p>0?$$(i.q*i.p):'—'}</span></div>`).join('')}${p.nota?`<small style="display:block;margin:6px 0;color:var(--tx2)">Nota: ${esc(p.nota)}</small>`:''}<div class="kodb"><button class="sbtn" onclick="shopOrdAct('${p.id}','img')">👁 Ver</button><button class="sbtn g" onclick="shopOrdAct('${p.id}')">📄 Descargar</button></div></div></details>`}).join(''):'<div class="kempty" style="padding:26px 10px"><span class="e">🧾</span>Todavía no ha hecho pedidos.</div>'}
  <div class="kact2"><button class="sbtn g" onclick="shopClose()">Cerrar</button></div>`,'acc');
  if(!quiet)shopOrdSync()}
-async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}{const r=shopAntiBot();if(r!=='ok'){const em=$('sh_m2');if(em)em.textContent=shopAntiBotMsg(r);return}}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){}try{shopMusPrime()}catch(e){}const c=SH.cli,id=uid();
+async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}{const r=shopAntiBot();if(r!=='ok'){const em=$('sh_m2');if(em)em.textContent=shopAntiBotMsg(r);return}}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){window._tjw&&_tjw(e)}try{shopMusPrime()}catch(e){window._tjw&&_tjw(e)}const c=SH.cli,id=uid();
  const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa||'',dir:c.dir||''},items:L.map(l=>({id:l.id,n:l.n,p:l.p,q:l.q})),total:L.reduce((s,l)=>s+l.q*l.p,0),nota:(($('sh_nt')||{}).value||SH.pendNote||'').trim().slice(0,500),ref:SH.ref,ts:Date.now(),estado:'nuevo'};
  try{await fbDb.collection('tienda_pedidos').doc(id).set(p)}catch(e){b.disabled=false;b.textContent='Enviar pedido';$('sh_m2').textContent='No se pudo enviar. Intente de nuevo.';return}
- SH.last=p;SH.pendNote='';shopOrdSave(p);try{shopConfetti()}catch(e){}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica();if(document.documentElement.classList.contains('panama'))shopPatrio(1)}SH.cart={};try{localStorage.removeItem('tj_shop_cart')}catch(e){}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
+ SH.last=p;SH.pendNote='';shopOrdSave(p);try{shopConfetti()}catch(e){window._tjw&&_tjw(e)}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica();if(document.documentElement.classList.contains('panama'))shopPatrio(1)}SH.cart={};try{localStorage.removeItem('tj_shop_cart')}catch(e){window._tjw&&_tjw(e)}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
  shopM('<div style="text-align:center;padding:10px 0"><div style="font-size:54px">✅</div><h2 style="margin:6px 0">¡Pedido enviado!</h2><p style="color:var(--tx2);margin:0 0 16px">Gracias, '+esc((c.name||'').split(' ')[0])+'. Nos pondremos en contacto con usted muy pronto para confirmar su pedido.</p>'+(document.documentElement.classList.contains('xmas')?'<div class="kxg">🎄 ¡Le deseamos una <b>feliz Navidad</b> y un <b>próspero Año Nuevo</b>! 🎁</div>':(document.documentElement.classList.contains('summer')?'<div class="kxg ksm">☀️ ¡Que disfrute un <b>verano increíble</b>! 🌴</div>':(document.documentElement.classList.contains('panama')?'<div class="kxg kpa2"><span class="kfl"></span> ¡<b>Viva Panamá</b>! Que disfrute un <b>feliz mes patrio</b></div>':'')))+'<button class="sbtn" onclick="shopImgVer(SH.last)" style="margin-bottom:8px">👁 Ver comprobante</button><button class="sbtn g" onclick="shopPdf(SH.last)" style="margin-bottom:8px">📄 Descargar PDF</button><button class="sbtn g" onclick="shopAcc()" style="margin-bottom:8px">🧾 Mis pedidos</button><button class="sbtn g" onclick="shopClose()">Seguir viendo el catálogo</button></div>','ok');}
 function shopFab(){const e=$('k_fab');if(!e)return;const L=shopLines(),n=L.reduce((a,l)=>a+l.q,0),t=L.reduce((a,l)=>a+l.q*l.p,0);e.innerHTML=n?`<button class="kfab" onclick="shopTab('cart')">${kico(KI.cart,22)}<span>Ver pedido · ${n}${t>0?' · '+$$(t):''}</span></button>`:''}
-const _kn=shopNav;shopNav=function(){_kn.apply(this,arguments);try{shopFab()}catch(e){}};
+const _kn=shopNav;shopNav=function(){_kn.apply(this,arguments);try{shopFab()}catch(e){window._tjw&&_tjw(e)}};
 function shopShare(id){const i=SH.items.find(x=>x.id===id);if(!i)return;const u=tdLink()+'&p='+encodeURIComponent(id),t=(i.name||'Producto')+' — Tarjetería Jhon';
  if(navigator.share)navigator.share({title:t,text:t,url:u}).catch(()=>{});else{try{navigator.clipboard.writeText(u);shopToast('Enlace copiado ✔')}catch(e){prompt('Copie el enlace:',u)}}}
 function shopConfetti(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const c=document.createElement('canvas');c.id='k_conf';c.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99999';c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
@@ -3363,10 +3365,10 @@ const bdgTags=(i,inl)=>{const L=bdgList(i);return L.length?`<div class="${inl?'k
 function shopDest(){const e=$('k_dest');if(!e)return;const L=SH.items.filter(i=>i&&i.img&&!noDisp(i)&&bdgList(i).length).sort((a,b)=>BDO.indexOf(bdgList(a)[0])-BDO.indexOf(bdgList(b)[0])).slice(0,12),key=L.map(i=>i.id+(i.badges||[]).join('')+i.price).join('|');
  if(!L.length){e.hidden=true;e.innerHTML='';e._k='';return}if(e._k===key)return;e._k=key;e.hidden=false;
  e.innerHTML=`<h3>Destacados de la semana</h3><div class="kdr">${L.map(i=>`<article class="kdc" onclick="shopDet('${i.id}')">${bdgTags(i)}<div class="ki"><img src="${i.img}" alt="${esc(i.name)}" loading="lazy"><button class="kfav ${SH.fav[i.id]?'on':''}" data-f="${i.id}" onclick="event.stopPropagation();shopFav('${i.id}')" aria-label="Favorito">${kico(SH.fav[i.id]?KI.heart:KI.heartO,18)}</button></div><div class="kb"><b>${esc(i.name)}</b><div class="kdc-foot"><span class="kpr">${+i.price>0?tdMoney(i.price):'Consultar'}</span>${noDisp(i)?`<span class="kno">${stkLbl[i.stock]}</span>`:`<button class="kdc-buy" onclick="event.stopPropagation();shopPick('${i.id}')">${kico(KI.plus,15)}<span>Comprar</span></button>`}</div></div></article>`).join('')}</div>`}
-function shopMusPrime(){const _c=document.documentElement.classList;if(!_c.contains('xmas')&&!_c.contains('panama'))return;try{SH.ac=SH.ac||new (window.AudioContext||window.webkitAudioContext)();SH.ac.resume()}catch(e){}}
+function shopMusPrime(){const _c=document.documentElement.classList;if(!_c.contains('xmas')&&!_c.contains('panama'))return;try{SH.ac=SH.ac||new (window.AudioContext||window.webkitAudioContext)();SH.ac.resume()}catch(e){window._tjw&&_tjw(e)}}
 function shopMusica(){const ac=SH.ac;if(!ac)return;try{ac.resume();const N={C:261.63,D:293.66,E:329.63,F:349.23,G:392},S=[['E',1],['E',1],['E',2],['E',1],['E',1],['E',2],['E',1],['G',1],['C',1.5],['D',.5],['E',4],['F',1],['F',1],['F',1.5],['F',.5],['F',1],['E',1],['E',1],['E',.5],['E',.5],['E',1],['D',1],['D',1],['E',1],['D',2],['G',2]],b=.27;let t=ac.currentTime+.05;
  S.forEach(([n,d])=>{const f=N[n],g=ac.createGain(),g2=ac.createGain(),o=ac.createOscillator(),o2=ac.createOscillator(),L=d*b;o.type='sine';o2.type='triangle';o.frequency.value=f*2;o2.frequency.value=f*4;g2.gain.value=.25;o.connect(g);o2.connect(g2);g2.connect(g);g.connect(ac.destination);
-  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.11,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+L+.35);o.start(t);o2.start(t);o.stop(t+L+.4);o2.stop(t+L+.4);t+=L})}catch(e){}}
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.11,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+L+.35);o.start(t);o2.start(t);o.stop(t+L+.4);o2.stop(t+L+.4);t+=L})}catch(e){window._tjw&&_tjw(e)}}
 
 const PATRIO_TXT='Gracias por celebrar con nosotros el mes de la patria. En Tarjetería Jhon honramos a Panamá: a su gente, a su bandera y a su historia. Recordamos el tres de noviembre, la separación de Panamá de Colombia; el cuatro, día de la bandera; y el veintiocho, la independencia de España. Que este mes patrio nos una el amor por nuestra tierra. ¡Viva Panamá! ¡Viva la patria!';
 function shopPatrioSnd(){let ac=SH.ac;try{ac=SH.ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){return}
@@ -3385,9 +3387,9 @@ function shopPatrioSnd(){let ac=SH.ac;try{ac=SH.ac=ac||new (window.AudioContext|
  let s=0;P.forEach(([f,l])=>{tone(f,T1+s*e,l*e*.95,'sawtooth',.06,2600);s+=l});
  const tf=T1+24*e;[523.25,659.25,783.99].forEach(f=>tone(f,tf,.9,'sawtooth',.07,2200));drum(tf,95,.6);hit(tf,2200,.35,.1);
 }
-function shopPatrioVoz(q){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{if(!q)ss.cancel();const u=new SpeechSynthesisUtterance(PATRIO_TXT),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-PA';u.rate=.95;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){}};
+function shopPatrioVoz(q){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{if(!q)ss.cancel();const u=new SpeechSynthesisUtterance(PATRIO_TXT),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-PA';u.rate=.95;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){window._tjw&&_tjw(e)}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,600)}}
-function shopPatrio(q){try{shopPatrioSnd()}catch(e){}shopPatrioVoz(q)}
+function shopPatrio(q){try{shopPatrioSnd()}catch(e){window._tjw&&_tjw(e)}shopPatrioVoz(q)}
 function shopSummer(){const H=document.documentElement,on=H.classList.contains('summer'),ids=['k_sw','k_sun','k_bub','k_sb','k_gs'];
  if(!on||!$('shop')){ids.forEach(i=>{const e=$(i);if(e)e.remove()});return}
  if(!$('k_sw')){const w=document.createElement('div');w.id='k_sw';document.body.appendChild(w)}
@@ -3416,22 +3418,22 @@ function shopPanama(){const on=document.documentElement.classList.contains('pana
   const col=['#D21034','#005293','#ffffff'],F=Array.from({length:46},()=>({x:Math.random(),y:Math.random(),s:4+Math.random()*6,v:.35+Math.random()*.9,a:Math.random()*6,w:Math.random()*.05+.01,k:Math.random()<.4?1:0,c:col[(Math.random()*3)|0]}));
   const star=(x,y,R)=>{g.beginPath();for(let k=0;k<10;k++){const a=-Math.PI/2+k*Math.PI/5,r=k%2?R*.42:R;g.lineTo(x+r*Math.cos(a),y+r*Math.sin(a))}g.closePath()};
   (function f(){if(!$('k_pcf'))return;g.clearRect(0,0,W,Hh);F.forEach(p=>{p.y+=p.v/Hh*3;p.a+=p.w;p.x+=Math.sin(p.a)*.0008;if(p.y>1.03){p.y=-.03;p.x=Math.random()}const x=p.x*W,y=p.y*Hh;g.save();g.translate(x,y);g.rotate(p.a);g.translate(-x,-y);g.fillStyle=p.c;g.strokeStyle='rgba(120,135,160,.55)';g.lineWidth=p.c==='#ffffff'?1:0;if(p.k){star(x,y,p.s);g.fill();if(p.c==='#ffffff')g.stroke()}else{g.fillRect(x-p.s/2,y-p.s/3,p.s,p.s*.66);if(p.c==='#ffffff')g.strokeRect(x-p.s/2,y-p.s/3,p.s,p.s*.66)}g.restore()});requestAnimationFrame(f)})()}}
-function shopEnh(){const sh=$('shop');if(!sh)return;try{shopDest();shopXmas();shopSummer();shopPanama()}catch(e){}
+function shopEnh(){const sh=$('shop');if(!sh)return;try{shopDest();shopXmas();shopSummer();shopPanama()}catch(e){window._tjw&&_tjw(e)}
  if(!$('k_top')){const b=document.createElement('button');b.id='k_top';b.setAttribute('aria-label','Subir al inicio');b.textContent='↑';b.onclick=()=>[sh,document.scrollingElement].forEach(el=>el&&el.scrollTo&&el.scrollTo({top:0,behavior:'smooth'}));sh.appendChild(b)}
- if(SH.deep&&SH.items&&SH.items.find(x=>x.id===SH.deep)){const d=SH.deep;SH.deep=null;setTimeout(()=>{try{shopDet(d)}catch(e){}},300)}}
+ if(SH.deep&&SH.items&&SH.items.find(x=>x.id===SH.deep)){const d=SH.deep;SH.deep=null;setTimeout(()=>{try{shopDet(d)}catch(e){window._tjw&&_tjw(e)}},300)}}
 const _sf0=shopFab;shopFab=function(){_sf0();const e=$('k_fab'),n=shopLines().reduce((a,l)=>a+l.q,0);if(n!==SH._fn){const had=SH._fn!==undefined;SH._fn=n;const b=e&&e.firstElementChild;if(b&&had){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump')}}};
-const _kn2=shopNav;shopNav=function(){_kn2.apply(this,arguments);try{shopEnh()}catch(e){}};
+const _kn2=shopNav;shopNav=function(){_kn2.apply(this,arguments);try{shopEnh()}catch(e){window._tjw&&_tjw(e)}};
 if(document.documentElement.classList.contains('shopmode')){
  addEventListener('scroll',e=>{const t=$('k_top');if(!t)return;const el=e.target===document?document.scrollingElement:e.target;if(el&&el.scrollTop!==undefined)t.classList.toggle('on',el.scrollTop>500)},true);
  addEventListener('offline',()=>shopToast('Sin conexión: algunos datos pueden no actualizarse'));addEventListener('online',()=>shopToast('Conexión restablecida ✔'));
  document.addEventListener('pointerdown',e=>{const t=e.target.closest&&e.target.closest('#shop .kadd,#shop .kchip,#shop .kfab,#shopm .sbtn,#shopm .kshare');if(!t)return;
-  if(t.matches('.kadd,.sbtn,.kfab')&&navigator.vibrate)try{navigator.vibrate(10)}catch(x){}
+  if(t.matches('.kadd,.sbtn,.kfab')&&navigator.vibrate)try{navigator.vibrate(10)}catch(x){window._tjw&&_tjw(x)}
   if(getComputedStyle(t).position==='static')t.style.position='relative';t.style.overflow='hidden';
   const r=t.getBoundingClientRect(),d=Math.max(r.width,r.height)*2,s=document.createElement('span');s.className='krip';s.style.cssText='width:'+d+'px;height:'+d+'px;left:'+(e.clientX-r.left-d/2)+'px;top:'+(e.clientY-r.top-d/2)+'px';t.appendChild(s);setTimeout(()=>s.remove(),650)},{passive:true});
  (()=>{let y0=null,sh=null,dy=0;
   document.addEventListener('touchstart',e=>{const s=e.target.closest&&e.target.closest('#shopm .ksheet');y0=null;if(!s||s.scrollTop>0)return;let el=e.target;while(el&&el!==s){if(el.scrollTop>0)return;el=el.parentElement}sh=s;y0=e.touches[0].clientY;dy=0},{passive:true});
   document.addEventListener('touchmove',e=>{if(y0===null)return;dy=e.touches[0].clientY-y0;if(dy>0){sh.style.transition='none';sh.style.transform='translateY('+dy+'px)'}},{passive:true});
-  document.addEventListener('touchend',()=>{if(y0===null)return;const s=sh;s.style.transition='transform .22s';if(dy>120){s.style.transform='translateY(100%)';setTimeout(()=>{try{shopClose()}catch(e){}s.style.transform='';s.style.transition=''},200)}else{s.style.transform='';setTimeout(()=>{s.style.transition=''},250)}y0=null})})()}
+  document.addEventListener('touchend',()=>{if(y0===null)return;const s=sh;s.style.transition='transform .22s';if(dy>120){s.style.transform='translateY(100%)';setTimeout(()=>{try{shopClose()}catch(e){window._tjw&&_tjw(e)}s.style.transform='';s.style.transition=''},200)}else{s.style.transform='';setTimeout(()=>{s.style.transition=''},250)}y0=null})})()}
 NAVI.tienda=['M18 6h-2c0-2.21-1.79-4-4-4S8 3.79 8 6H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-8 4c0 .55-.45 1-1 1s-1-.45-1-1V8h2v2zm2-6c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2zm4 6c0 .55-.45 1-1 1s-1-.45-1-1V8h2v2z','#06b6d4','#0e7490'];
 const _mr=mergeRemote;mergeRemote=function(r){_mr(r);authRefresh()};
 function authUI(h){let o=$('auth');if(!o){o=document.createElement('div');o.id='auth';o.dataset.r='a';o.innerHTML='<div class="abg"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div><div id="authc"></div>';document.body.appendChild(o)}const lg=document.querySelector('.logo img');$('authc').innerHTML='<div class="authb">'+(lg?'<div class="alogo"><img src="'+lg.src+'" alt="Tarjetería Jhon"></div>':'')+h+'<div class="afoot">🔒 Acceso restringido · Panel de Facturación</div></div>';o.style.display='flex'}
@@ -3456,14 +3458,14 @@ function authLogin(){authUI(`<h2>Tarjetería Jhon</h2><p>Inicie sesión para con
 async function authGo(){const e=$('au_e').value.trim(),p=$('au_p').value;if(!e||!p)return authMsg('Escriba correo y contraseña.');authMsg('Verificando…');
  try{idleStamp();await firebase.auth().signInWithEmailAndPassword(e,p)}catch(x){const c=x.code||String(x.message||x);const m={'auth/invalid-credential':'Correo o contraseña incorrectos','auth/wrong-password':'Contraseña incorrecta','auth/user-not-found':'No existe ese usuario','auth/invalid-email':'Correo no válido','auth/too-many-requests':'Demasiados intentos, espere unos minutos','auth/network-request-failed':'Sin conexión o bloqueado por la red','auth/operation-not-allowed':'Correo/contraseña no está habilitado en Firebase'};authMsg((m[c]||'No se pudo entrar')+' ['+c+']')}}
 async function authReset(){const e=($('au_e')&&$('au_e').value||'').trim();if(!e)return authMsg('Escriba su correo arriba y toque el enlace otra vez.');
- try{await firebase.auth().sendPasswordResetEmail(e)}catch(x){}authMsg('Si el correo existe, le enviamos un enlace para crear una nueva contraseña.')}
+ try{await firebase.auth().sendPasswordResetEmail(e)}catch(x){window._tjw&&_tjw(x)}authMsg('Si el correo existe, le enviamos un enlace para crear una nueva contraseña.')}
 function authLimpia(){if(!esAdmin())return;if(DB.cfg.admin||usuarios().some(u=>u.h||u.s)){delete DB.cfg.admin;usuarios().forEach(u=>{delete u.h;delete u.s});save()}}
 function entrar(){const f=navOrd().find(x=>puede(x[0]));topUser();if(!f){authUI('<h2>Sin accesos</h2><p>Su usuario aún no tiene paneles asignados. Pídale al administrador que se los active.</p><button class="btn" onclick="salir()">Salir</button>');return}
  if(!window._syncOn){window._syncOn=1;iniciarSincronizacionNube()}
  if(!window._catSync){window._catSync=1;sincronizarCatalogoNube()}
  setTimeout(authLimpia,4000);authOff();nav();galListen();chatListen();llamListen();perfListen();presListen();presStart();tiendaListen();setTimeout(cobroVoz,3500);ir(f[0])}
 function authRefresh(){if(!SES)return;topUser();nav();if(!puede(vista))ir(vista)}
-function salir(){try{presBeat(true)}catch(e){}try{if(LL.id)llamCuelga();else if(LL.incoming)llamRechazar()}catch(e){}if(CH.unsub){CH.unsub();CH.unsub=null}firebase.auth().signOut().finally(()=>location.reload())}
+function salir(){try{presBeat(true)}catch(e){window._tjw&&_tjw(e)}try{if(LL.id)llamCuelga();else if(LL.incoming)llamRechazar()}catch(e){window._tjw&&_tjw(e)}if(CH.unsub){CH.unsub();CH.unsub=null}firebase.auth().signOut().finally(()=>location.reload())}
 // --- Administración de vendedores (solo admin, en Configuración) ---
 R.vend=function(){if(!esAdmin())return;$('v').innerHTML='<div class="card" id="vendCard">'+vendHTML()+'</div>'};
 function vendHTML(){const us=usuarios();return `<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0">🧑‍💼 Vendedores y accesos</h3><button class="btn p s" onclick="vendForm()">+ Crear vendedor</button></div><p style="font-size:12.5px;color:var(--gris)">Cada vendedor entra con su correo y contraseña y solo ve los paneles que usted marque.</p>${1?`<div class="tw"><table><tr><th>Usuario</th><th>Paneles</th><th></th></tr><tr><td><span class="avn"><span class="avc" onclick="avBig('admin')" title="Ver foto">${avHTML('admin',44)}</span><b>Administrador</b></span></td><td><small>Todos</small></td><td></td></tr>${us.map(u=>`<tr><td><span class="avn"><span class="avc" onclick="avBig('${u.id}')" title="Ver foto">${avHTML(u.id,44)}</span>${esc(u.n)}</span></td><td>${(u.panels||[]).map(k=>{const p=V.find(x=>x[0]===k);return p?p[1]+' '+p[2]:''}).join(', ')||'<small>Ninguno</small>'}</td><td class="r"><button class="btn s" onclick="vendForm('${u.id}')">✏️</button> <button class="btn s d" onclick="vendDel('${u.id}')">🗑</button></td></tr>`).join('')}${us.length?'':'<tr><td colspan="3"><small>Aún no hay vendedores.</small></td></tr>'}</table></div>`:''}<div style="margin-top:12px"><button class="btn s" onclick="adminPin()">🔑 Cambiar mi contraseña</button></div>`}
@@ -3481,7 +3483,7 @@ async function vendSave(id){const n=$('vf_n').value.trim(),panels=[...document.q
    u.n=n;u.panels=panels;await fbDb.collection('roles').doc(id).set({rol:'vend',n,email:u.email,panels})}
   save();cerrar();R.vend()
  }catch(x){m(x.code==='auth/email-already-in-use'?'Ese correo ya tiene cuenta.':'No se pudo guardar ('+(x.code||'error')+').')}}
-async function vendDel(id){const u=usuarios().find(x=>x.id===id);if(!u||!confirm('¿Eliminar al vendedor '+u.n+'? Perderá el acceso de inmediato.'))return;try{await fbDb.collection('roles').doc(id).delete()}catch(e){}DB.cfg.users=usuarios().filter(x=>x.id!==id);save();R.vend()}
+async function vendDel(id){const u=usuarios().find(x=>x.id===id);if(!u||!confirm('¿Eliminar al vendedor '+u.n+'? Perderá el acceso de inmediato.'))return;try{await fbDb.collection('roles').doc(id).delete()}catch(e){window._tjw&&_tjw(e)}DB.cfg.users=usuarios().filter(x=>x.id!==id);save();R.vend()}
 async function adminPin(){const e=firebase.auth().currentUser&&firebase.auth().currentUser.email;if(!e)return;if(!confirm('Le enviaremos un correo a '+e+' para cambiar su contraseña. ¿Continuar?'))return;try{await firebase.auth().sendPasswordResetEmail(e);alert('Correo enviado.')}catch(x){alert('No se pudo enviar.')}}
 // --- Chat: ajustar la altura al espacio real (celular) para que el cuadro de texto no quede bajo la barra de iconos ---
 function fitChat(){const w=$('chw');if(!w)return;
@@ -3496,11 +3498,11 @@ const LBG={k:'tj_lbg',db:null,url:null,sig:''};
 const LBG_PRE=[['medianoche','Medianoche','radial-gradient(120% 90% at 20% 0%,#2b3a7a 0%,#0b0e1a 62%)'],['oceano','Océano','linear-gradient(135deg,#0f2027,#203a43,#2c5364,#0f2027)'],['atardecer','Atardecer','linear-gradient(135deg,#ff512f,#dd2476 50%,#4a1c6b,#ff512f)'],['grafito','Grafito','linear-gradient(160deg,#111,#3a3a3c 55%,#111)'],['esmeralda','Esmeralda','linear-gradient(135deg,#06201a,#0f5b4a 50%,#06201a)']];
 const LBG_DEF={mode:'aurora',dim:35,blur:0,url:'',kind:'',name:'',size:0,cts:0,cloud:null};
 const lbgMeta=()=>{try{return Object.assign({},LBG_DEF,JSON.parse(localStorage.getItem(LBG.k)||'{}'))}catch(e){return Object.assign({},LBG_DEF)}};
-const lbgSave=m=>{try{localStorage.setItem(LBG.k,JSON.stringify(m))}catch(e){}};
+const lbgSave=m=>{try{localStorage.setItem(LBG.k,JSON.stringify(m))}catch(e){window._tjw&&_tjw(e)}};
 function lbgDb(){return new Promise((res,rej)=>{if(LBG.db)return res(LBG.db);let r;try{r=indexedDB.open('tj_loginbg',1)}catch(e){return rej(e)}r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>{LBG.db=r.result;res(r.result)};r.onerror=()=>rej(r.error)})}
 async function lbgPut(file){const d=await lbgDb();return new Promise((res,rej)=>{const t=d.transaction('f','readwrite');t.objectStore('f').put({blob:file,type:file.type,name:file.name,size:file.size},'bg');t.oncomplete=res;t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}
 async function lbgGet(){try{const d=await lbgDb();return await new Promise(res=>{const q=d.transaction('f').objectStore('f').get('bg');q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})}catch(e){return null}}
-async function lbgDel(){try{const d=await lbgDb();await new Promise(res=>{const t=d.transaction('f','readwrite');t.objectStore('f').delete('bg');t.oncomplete=res;t.onerror=res})}catch(e){}}
+async function lbgDel(){try{const d=await lbgDb();await new Promise(res=>{const t=d.transaction('f','readwrite');t.objectStore('f').delete('bg');t.oncomplete=res;t.onerror=res})}catch(e){window._tjw&&_tjw(e)}}
 const lbgIsVid=(u,t)=>/^video\//.test(t||'')||/\.(mp4|webm|mov|m4v|ogv)(\?|#|$)/i.test(u||'');
 // Rellena un contenedor con el fondo configurado
 async function lbgFill(el,m){if(!el)return;el.innerHTML='';el.style.background='';el.classList.remove('pre');
@@ -3518,7 +3520,7 @@ async function lbgApply(){const o=document.getElementById('auth');if(!o)return;c
  const sig=JSON.stringify(m)+(m.mode==='file'?(LBG.fts||''):'');if(L&&LBG.sig===sig)return;
  if(!L){L=document.createElement('div');L.id='lbg';L.className='lbgv';o.insertBefore(L,o.firstChild)}
  o.classList.add('hasbg');LBG.sig=sig;await lbgFill(L,m)}
-const _au0=authUI;authUI=function(){const r=_au0.apply(this,arguments);try{lbgApply()}catch(e){}return r};
+const _au0=authUI;authUI=function(){const r=_au0.apply(this,arguments);try{lbgApply()}catch(e){window._tjw&&_tjw(e)}return r};
 // ---- Tarjeta en Configuración ----
 function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
  return `<h3 style="margin:0 0 4px">🎬 Fondo del inicio de sesión</h3><p style="font-size:12.5px;color:var(--gris);margin:0 0 12px">Personalice la pantalla donde entra con su correo: imagen en alta resolución, video en movimiento o un fondo animado. Sin límite de resolución ni de tamaño.</p>
@@ -3547,12 +3549,12 @@ async function lbgCompress(f){const bmp=await createImageBitmap(f);let W=Math.mi
 async function lbgCloudUpload(f){const kind=lbgIsVid(f.name,f.type)?'video':'image';
  try{if(!(window.firebase&&firebase.storage))throw 0;const ref=firebase.storage().ref('loginbg/'+Date.now()+'_'+f.name.replace(/[^\w.\-]+/g,'_'));
   await new Promise((res,rej)=>{const t=ref.put(f,f.type?{contentType:f.type}:undefined);let last=-1,idle=0,fin=0;
-   const wd=setInterval(()=>{if(fin)return;idle++;if(idle>=(last>0?30:12)){fin=1;clearInterval(wd);try{t.cancel()}catch(e){}rej(new Error('stall'))}},1000);
+   const wd=setInterval(()=>{if(fin)return;idle++;if(idle>=(last>0?30:12)){fin=1;clearInterval(wd);try{t.cancel()}catch(e){window._tjw&&_tjw(e)}rej(new Error('stall'))}},1000);
    t.on('state_changed',s=>{if(s.bytesTransferred!==last){last=s.bytesTransferred;idle=0}lbgStatus('☁ Subiendo a la nube… '+Math.round(s.bytesTransferred/(s.totalBytes||1)*100)+'%')},e=>{fin=1;clearInterval(wd);rej(e)},()=>{fin=1;clearInterval(wd);res()})});
-  const url=await ref.getDownloadURL();return{mode:'url',url,kind,spath:ref.fullPath}}catch(e){}
- if(kind==='image'){try{lbgStatus('☁ La subida directa no respondió. Subiendo versión optimizada…');return{mode:'img',kind,img:await lbgCompress(f)}}catch(e){}}
+  const url=await ref.getDownloadURL();return{mode:'url',url,kind,spath:ref.fullPath}}catch(e){window._tjw&&_tjw(e)}
+ if(kind==='image'){try{lbgStatus('☁ La subida directa no respondió. Subiendo versión optimizada…');return{mode:'img',kind,img:await lbgCompress(f)}}catch(e){window._tjw&&_tjw(e)}}
  return null}
-function lbgDelStorage(c){try{if(c&&c.spath&&window.firebase&&firebase.storage)firebase.storage().ref(c.spath).delete().catch(()=>{})}catch(e){}}
+function lbgDelStorage(c){try{if(c&&c.spath&&window.firebase&&firebase.storage)firebase.storage().ref(c.spath).delete().catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}
 async function lbgPull(force){if(LBG.pulling||typeof fbDb==='undefined'||!fbDb)return;LBG.pulling=1;
  try{const s=await LBG_DOC().get();LBG.pulled=1;if(!s.exists)return;const c=s.data(),m=lbgMeta();if(!force&&m.cts===c.ts)return;
   const n=Object.assign({},LBG_DEF,{dim:c.dim==null?35:c.dim,blur:c.blur||0,kind:c.kind||'',name:c.name||'',size:c.size||0,cts:c.ts});
@@ -3561,8 +3563,8 @@ async function lbgPull(force){if(LBG.pulling||typeof fbDb==='undefined'||!fbDb)r
   else n.mode=c.mode||'aurora';
   lbgSave(n);LBG.sig='';lbgApply();lbgRef()}catch(e){LBG.pulled=0}finally{LBG.pulling=0}}
 let _lbgPl=0;function lbgPullSoon(){if(Date.now()-_lbgPl<30000)return;_lbgPl=Date.now();lbgPull()}
-const _au1=authUI;authUI=function(){const r=_au1.apply(this,arguments);try{if(!LBG.pulled)lbgPull()}catch(e){}return r};
-const _mrl=mergeRemote;mergeRemote=function(){const r=_mrl.apply(this,arguments);try{lbgPullSoon()}catch(e){}return r};
+const _au1=authUI;authUI=function(){const r=_au1.apply(this,arguments);try{if(!LBG.pulled)lbgPull()}catch(e){window._tjw&&_tjw(e)}return r};
+const _mrl=mergeRemote;mergeRemote=function(){const r=_mrl.apply(this,arguments);try{lbgPullSoon()}catch(e){window._tjw&&_tjw(e)}return r};
 
 const lbgSz=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB';
 function lbgRef(){const c=$('lbgCard');if(!c)return;c.innerHTML=lbgCard();lbgFill($('lbgPrev'),lbgMeta())}
@@ -3571,7 +3573,7 @@ let _lbgT=0;function lbgSet(k,v){const m=lbgMeta();m[k]=v;lbgSave(m);const e=$(k
 async function lbgFile(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;if(!/^(image|video)\//.test(f.type)&&!/\.(mp4|webm|mov|m4v|jpe?g|png|webp|avif|gif)$/i.test(f.name))return alert('Elija una imagen o un video.');
  const i=$('lbgInfo');if(i)i.textContent='Guardando…';
  try{await lbgPut(f)}catch(e){if(i)i.textContent='';return alert('El navegador no pudo guardar este archivo (espacio insuficiente o modo privado). Pruebe con un archivo más liviano o use un enlace (URL).')}
- try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){}
+ try{navigator.storage&&navigator.storage.persist&&navigator.storage.persist()}catch(e){window._tjw&&_tjw(e)}
  const old=lbgMeta().cloud;const m=lbgMeta();m.mode='file';m.name=f.name;m.size=f.size;m.kind=lbgIsVid(f.name,f.type)?'video':'image';m.url='';m.cloud=null;lbgSave(m);LBG.fts=Date.now();lbgRef();lbgApply();
  lbgStatus('☁ Preparando sincronización…');const cl=await lbgCloudUpload(f);
  if(cl){const m2=lbgMeta();m2.cloud={mode:cl.mode,url:cl.url||'',kind:cl.kind,spath:cl.spath||''};lbgSave(m2);lbgDelStorage(old);await lbgPush(cl.mode==='img'?{img:cl.img}:{})}
@@ -3613,7 +3615,7 @@ function waListen(){if(WA.on||!fbDb)return;WA.on=true;
  try{fbDb.collection('wa_conversaciones').where('estado','==','humano').onSnapshot(sn=>{
   WA.list=sn.docs.map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));
   waRefreshCard();waRefreshHome()
- },e=>console.warn('Agente WhatsApp: no se pudo escuchar conversaciones.',e))}catch(e){}
+ },e=>console.warn('Agente WhatsApp: no se pudo escuchar conversaciones.',e))}catch(e){window._tjw&&_tjw(e)}
 }
 function waUltimo(c){const h=c.historial||[];for(let i=h.length-1;i>=0;i--)if(h[i].role==='user')return h[i].content||'';return''}
 function waBack(phone){if(!fbDb)return;fbDb.collection('wa_conversaciones').doc(phone).set({estado:'bot'},{merge:true}).catch(()=>alert('No se pudo devolver la conversación al agente. Revise su conexión o permisos.'))}
