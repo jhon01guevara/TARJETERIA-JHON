@@ -1350,7 +1350,7 @@ try{
  if(window.firebase){
   firebase.initializeApp(firebaseConfig);
   if(firebase.appCheck && RECAPTCHA_V3_SITE_KEY!=='RECAPTCHA_V3_SITE_KEY'){
-   try{firebase.appCheck().activate(new firebase.appCheck.ReCaptchaV3Provider(RECAPTCHA_V3_SITE_KEY),true)}catch(e){window._tjw&&_tjw(e)}
+   try{firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(RECAPTCHA_V3_SITE_KEY),true)}catch(e){window._tjw&&_tjw(e)}
   }
   fbDb=firebase.firestore();
   fbDocRef=fbDb.collection('panel').doc('data');
