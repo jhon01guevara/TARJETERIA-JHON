@@ -1,7 +1,9 @@
 // Service worker de Tarjetería Jhon: siempre busca la versión más nueva en internet
 // y usa la copia guardada solo si no hay conexión.
-const V='tj-net-first-1';
-self.addEventListener('install',()=>self.skipWaiting());
+const V='tj-net-first-2';
+// Archivos que se guardan al instalar para que el panel funcione sin conexión (si alguno falla, se ignora).
+const PRE=['index.html','apps/modelos.html','apps/investigacion.html','assets/logo.png','assets/logo-t.png'];
+self.addEventListener('install',e=>{self.skipWaiting();e.waitUntil(caches.open(V).then(c=>Promise.all(PRE.map(u=>fetch(u,{cache:'reload'}).then(r=>r.ok&&c.put(u,r)).catch(()=>{})))).catch(()=>{}))});
 self.addEventListener('activate',e=>e.waitUntil((async()=>{for(const k of await caches.keys())if(k!==V)await caches.delete(k);await self.clients.claim()})()));
 self.addEventListener('fetch',e=>{
   const r=e.request;if(r.method!=='GET')return;
