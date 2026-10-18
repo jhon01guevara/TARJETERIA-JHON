@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Modelos Tarjetería John</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js" integrity="sha384-qovJwSBbRDPP5cEjCp8S0UP66wrvnjaa60XMOGzTNanrThcrGfXfnZkvgY8N1KT3" crossorigin="anonymous"></script>
 <style>
   :root {
     --bg:#F2F2F5; --card:#fff; --text:#1D1D1F; --muted:#6E6E73; --line:#E4E4E9; --soft:#F5F5F7;
@@ -246,8 +246,8 @@
 <input id="biz" class="biz" type="text" placeholder="🏪 Nombre del negocio" autocomplete="off">
 <div class="jobbar">
   <select id="jobSelect"></select>
-  <button onclick="saveJob()">💾 Guardar</button>
-  <button class="danger" onclick="deleteJob()">🗑</button>
+  <button data-act="saveJob">💾 Guardar</button>
+  <button class="danger" data-act="deleteJob">🗑</button>
 </div>
 <div class="jobLabel" id="jobLabel"></div>
 <div class="sticky">
@@ -257,14 +257,14 @@
   <div class="total"><span>Total: <b id="totAll">0</b> pcs</span><span>Acotejado: <b id="totDone">0</b> pcs</span><span>Sacado: <b id="totOut">0</b> pcs</span></div>
 </div>
 <div class="toolbar">
-  <button onclick="saveNow()">💾 Guardar</button>
-  <button onclick="exportJSON()">⬇️ Exportar</button>
-  <button onclick="document.getElementById('imp').click()">⬆️ Importar</button>
-  <button onclick="window.print()">🖨️ Imprimir</button>
-  <button onclick="shareList()">📤 Compartir</button>
-  <button onclick="checkVisible(true)">✔ Marcar visibles</button>
+  <button data-act="saveNow">💾 Guardar</button>
+  <button data-act="exportJSON">⬇️ Exportar</button>
+  <button data-act="impClick">⬆️ Importar</button>
+  <button data-act="print">🖨️ Imprimir</button>
+  <button data-act="shareList">📤 Compartir</button>
+  <button data-act="checkVisibleOn">✔ Marcar visibles</button>
 </div>
-<button class="addbtn" type="button" onclick="toggleAddBox()">➕ Agregar modelo no listado</button>
+<button class="addbtn" type="button" data-act="toggleAddBox">➕ Agregar modelo no listado</button>
 <div class="addbox" id="addbox" hidden>
   <input id="addCode" placeholder="Código (ej. NUEVO1)" autocomplete="off">
   <input id="addDesc" placeholder="Descripción" autocomplete="off">
@@ -273,15 +273,15 @@
   </label>
   <img id="addImgPreview" class="addImgPreview" alt="Vista previa" hidden>
   <div class="row2">
-    <button type="button" onclick="confirmAddCustom()">Agregar</button>
-    <button type="button" onclick="cancelAddBox()">Cancelar</button>
+    <button type="button" data-act="confirmAddCustom">Agregar</button>
+    <button type="button" data-act="cancelAddBox">Cancelar</button>
   </div>
 </div>
 <input type="file" id="imp" accept=".json,application/json" hidden>
 <div class="status" id="status"></div>
 <div id="list"></div>
 <div class="empty" id="empty" hidden>No hay modelos con ese filtro</div>
-<button class="reset" onclick="resetAll()">Reiniciar</button>
+<button class="reset" data-act="resetAll">Reiniciar</button>
 
 <div id="lb"><img id="lbImg" alt=""><p id="lbCap"></p></div>
 <script>
@@ -691,6 +691,15 @@ try { if (navigator.storage && navigator.storage.persist) navigator.storage.pers
 $('biz').value = biz; $('biz').addEventListener('input', () => persist(false));
 populateJobSelect();
 apply();
+
+/* Despachador de clics: sustituye a los onclick en línea (necesario para una CSP estricta). */
+(function(){
+  const A={saveJob:()=>saveJob(),deleteJob:()=>deleteJob(),saveNow:()=>saveNow(),exportJSON:()=>exportJSON(),
+    impClick:()=>document.getElementById('imp').click(),print:()=>window.print(),shareList:()=>shareList(),
+    checkVisibleOn:()=>checkVisible(true),toggleAddBox:()=>toggleAddBox(),confirmAddCustom:()=>confirmAddCustom(),
+    cancelAddBox:()=>cancelAddBox(),resetAll:()=>resetAll()};
+  document.addEventListener('click',e=>{const b=e.target&&e.target.closest?e.target.closest('[data-act]'):null;if(!b)return;const f=A[b.getAttribute('data-act')];if(f)f(e)});
+})();
 </script>
 </body>
 </html>
