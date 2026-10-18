@@ -2049,11 +2049,11 @@ async function subir(fs){fs=[...fs];if(!fs.length)return;const c=$('u_cat').valu
 R.aviso=()=>{const a=$('av');if(a)a.style.display=memW?'block':'none'};
 async function fixT(){let ch=0;for(const f of CL)if(!f.thumb&&!f.tf){f.tf=1;f.thumb=await mkThumb(f);if(f.thumb){ch=1;await guardar(f)}}if(ch)dib()}
 const gf=id=>CL.find(f=>f.id==id);
-async function ver(id){const f=gf(id),u=cu(f);
+async function ver(id){const f=gf(id),u=cu(f),pu=()=>CU['p_'+f.id]||(CU['p_'+f.id]=URL.createObjectURL(new Blob([f.blob],{type:'application/pdf'})));
  const hd=b=>{$('mb').innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:10px"><b>${esc(f.name)}</b><span><button class="btn s" onclick="desc('${id}')">⬇ Descargar</button> <button class="btn s" onclick="cerrar()">✕</button></span></div><div id="vb">${b}</div>`};
  hd('<div class="vacio">Cargando…</div>');$('md').classList.add('on');
  if(f.type.startsWith('image/')){let d=f.thumb;try{d=await rd(f.blob)}catch(e){window._tjw&&_tjw(e)}hd(`<img src="${d}" alt="">`)}
- else if(f.type=='application/pdf'){if(window.pdfjsLib){try{const d=await pdfjsLib.getDocument({data:new Uint8Array(await f.blob.arrayBuffer()),isEvalSupported:false}).promise;hd('');for(let n=1;n<=d.numPages;n++){const pg=await d.getPage(n),v=pg.getViewport({scale:900/pg.getViewport({scale:1}).width}),c=document.createElement('canvas');c.width=v.width;c.height=v.height;c.style.cssText='max-width:100%;display:block;margin:0 auto 10px;border:1px solid var(--linea)';$('vb')&&$('vb').appendChild(c);await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise}}catch(e){hd(`<iframe src="${u}" style="width:100%;height:78vh;border:0"></iframe>`)}}else hd(`<iframe src="${u}" style="width:100%;height:78vh;border:0"></iframe>`)}
+ else if(f.type=='application/pdf'){if(window.pdfjsLib){try{const d=await pdfjsLib.getDocument({data:new Uint8Array(await f.blob.arrayBuffer()),isEvalSupported:false}).promise;hd('');for(let n=1;n<=d.numPages;n++){const pg=await d.getPage(n),v=pg.getViewport({scale:900/pg.getViewport({scale:1}).width}),c=document.createElement('canvas');c.width=v.width;c.height=v.height;c.style.cssText='max-width:100%;display:block;margin:0 auto 10px;border:1px solid var(--linea)';$('vb')&&$('vb').appendChild(c);await pg.render({canvasContext:c.getContext('2d'),viewport:v}).promise}}catch(e){hd(`<iframe src="${pu()}" style="width:100%;height:78vh;border:0"></iframe>`)}}else hd(`<iframe src="${pu()}" style="width:100%;height:78vh;border:0"></iframe>`)}
  else if(f.type.startsWith('video/'))hd(`<video src="${u}" controls style="width:100%;max-height:78vh"></video>`);
  else if(f.type.startsWith('audio/'))hd(`<audio src="${u}" controls style="width:100%"></audio>`);
  else hd(`<div class="vacio">Este formato (${ext(f)}) no se puede previsualizar. Descárguelo para abrirlo.</div>`)}
@@ -3224,8 +3224,21 @@ function shopCart(){const L=shopLines();if(!L.length)return shopM('<h2 style="ma
 function shopVoz(txt){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{ss.cancel();const u=new SpeechSynthesisUtterance(txt),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-MX';u.rate=.96;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){window._tjw&&_tjw(e)}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,900)}}
 function shopPdfPrint(p){const l=p.lead||{},w=window.open('','_blank');if(!w)return alert('Permita las ventanas emergentes para descargar el comprobante.');
+ try{w.opener=null}catch(e){window._tjw&&_tjw(e)}
  const emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',num=String(p.id||'').slice(-6).toUpperCase();
- w.document.write(`<!DOCTYPE html><meta charset="utf-8"><title>Pedido ${num}</title><body style="font-family:Arial,sans-serif;max-width:720px;margin:24px auto;color:#222"><h2 style="color:#E0457B;margin:0">${esc(emp)}</h2><h3 style="margin:4px 0 14px">Comprobante de pedido N° ${num}</h3><p>${new Date(p.ts).toLocaleString('es-PA')}<br><b>${esc(l.name||'')}</b> · ${esc(l.tel||'')} · ${esc(l.email||'')}</p><table style="width:100%;border-collapse:collapse"><tr style="background:#f3f3f3"><th align="left">Cant.</th><th align="left">Descripción</th><th align="right">P. unit.</th><th align="right">Subtotal</th></tr>${(p.items||[]).map(i=>`<tr><td>${i.q}</td><td>${esc(i.n)}</td><td align="right">${i.p>0?$$(i.p):'Consultar'}</td><td align="right">${i.p>0?$$(i.q*i.p):'—'}</td></tr>`).join('')}</table><h3 align="right">Total: ${p.total>0?$$(p.total):'Consultar'}</h3>${p.nota?'<p>Nota: '+esc(p.nota)+'</p>':''}<p style="font-size:12px;color:#666">Precios sin ITBMS. Pedido sujeto a confirmación de disponibilidad.</p><script>onload=()=>print()<\/script>`);w.document.close()}
+ const d=w.document;d.open();d.write('<!DOCTYPE html><meta charset="utf-8"><title></title>');d.close();
+ if(!d.body)d.documentElement.appendChild(d.createElement('body'));
+ d.title='Pedido '+num;d.body.style.cssText='font-family:Arial,sans-serif;max-width:720px;margin:24px auto;color:#222';
+ /* Todo el contenido entra como texto (textContent): nada de lo que escriba un cliente se interpreta como HTML. */
+ const E=(t,st,tx,at)=>{const e=d.createElement(t);if(st)e.style.cssText=st;if(tx!=null)e.textContent=tx;if(at)for(const k in at)e.setAttribute(k,at[k]);return e};
+ const B=d.body,hd=E('p');hd.append(new Date(p.ts).toLocaleString('es-PA'),E('br'),E('b',null,l.name||''),' · '+(l.tel||'')+' · '+(l.email||''));
+ const tb=E('table','width:100%;border-collapse:collapse'),h=E('tr','background:#f3f3f3');
+ [['Cant.','left'],['Descripción','left'],['P. unit.','right'],['Subtotal','right']].forEach(c=>h.appendChild(E('th',null,c[0],{align:c[1]})));tb.appendChild(h);
+ (p.items||[]).forEach(i=>{const r=E('tr');r.appendChild(E('td',null,String(i.q)));r.appendChild(E('td',null,i.n));r.appendChild(E('td',null,i.p>0?$$(i.p):'Consultar',{align:'right'}));r.appendChild(E('td',null,i.p>0?$$(i.q*i.p):'—',{align:'right'}));tb.appendChild(r)});
+ B.append(E('h2','color:#E0457B;margin:0',emp),E('h3','margin:4px 0 14px','Comprobante de pedido N° '+num),hd,tb,E('h3',null,'Total: '+(p.total>0?$$(p.total):'Consultar'),{align:'right'}));
+ if(p.nota)B.appendChild(E('p',null,'Nota: '+p.nota));
+ B.appendChild(E('p','font-size:12px;color:#666','Precios sin ITBMS. Pedido sujeto a confirmación de disponibilidad.'));
+ setTimeout(()=>{try{w.focus();w.print()}catch(e){window._tjw&&_tjw(e)}},250)}
 function shopPdf(p,modo){if(!p)return;const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return shopPdfPrint(p);
  try{const d=new J({unit:'mm',format:'a4'}),W=210,M=16,l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',cl=t=>String(t||'').replace(/[^\u0000-\u00FF]/g,'').trim();let y=20;
   try{const g=document.querySelector('.logo img');if(g&&/^data:image\/(png|jpe?g)/i.test(g.src))d.addImage(g.src,/png/i.test(g.src)?'PNG':'JPEG',M,8,0,18)}catch(e){window._tjw&&_tjw(e)}
@@ -3243,7 +3256,7 @@ function shopPdf(p,modo){if(!p)return;const J=window.jspdf&&window.jspdf.jsPDF;i
   d.setTextColor(110);d.setFontSize(8.5);d.text('Precios sin ITBMS. Pedido sujeto a confirmación de disponibilidad y forma de pago.',M,285);d.text('Gracias por su confianza en '+cl(emp)+'.'+(document.documentElement.classList.contains('xmas')?' ¡Feliz Navidad y próspero Año Nuevo!':''),M,290);
   if(modo==='ver')shopPdfVer(d.output('blob'),'Pedido-'+num+'.pdf');else d.save('Pedido-'+num+'.pdf')}catch(e){shopPdfPrint(p)}}
 function shopPdfVer(blob,name){const old=document.getElementById('pdfv');if(old)old.remove();const u=URL.createObjectURL(blob),v=document.createElement('div');v.id='pdfv';
- v.innerHTML=`<div class="pdfvb"><b>${name}</b><span><a class="btn s" href="${u}" download="${name}">⬇ Descargar</a> <a class="btn s" href="${u}" target="_blank" rel="noopener">↗ Pestaña nueva</a> <button class="btn s d" id="pdfvx">✕ Cerrar</button></span></div><iframe src="${u}" title="Comprobante"></iframe>`;
+ v.innerHTML=`<div class="pdfvb"><b>${esc(name)}</b><span><a class="btn s" href="${u}" download="${esc(name)}">⬇ Descargar</a> <a class="btn s" href="${u}" target="_blank" rel="noopener">↗ Pestaña nueva</a> <button class="btn s d" id="pdfvx">✕ Cerrar</button></span></div><iframe src="${u}" title="Comprobante"></iframe>`;
  document.body.appendChild(v);const cl=()=>{v.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)};document.getElementById('pdfvx').onclick=cl;
  const k=e=>{if(e.key==='Escape'){cl();removeEventListener('keydown',k)}};addEventListener('keydown',k)}
 function tdPedDel(id){const p=TD.peds.find(x=>x.id===id);if(!p||!fbDb)return;const l=p.lead||{};if(!confirm('¿Eliminar el pedido de '+(l.name||'este cliente')+(p.total>0?' por '+$$(p.total):'')+'?\nEsta acción no se puede deshacer.'))return;
