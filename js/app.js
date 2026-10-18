@@ -20,7 +20,7 @@ function _hcall(c){var m=/^(\w+)\((?:'([^']*)')?\)$/.exec(c);return m?(m[2]===un
  });
 })();
 
-if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='js/pdf.worker.min.js';
 const $=id=>document.getElementById(id);
 function b64ToUtf8(b64){const bin=atob(b64);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new TextDecoder('utf-8').decode(bytes)}
 const _appC={};function appHtml(n){if(!_appC[n])_appC[n]=fetch('apps/'+n+'.html',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('apps/'+n+' '+r.status);return r.text()}).catch(e=>{delete _appC[n];throw e});return _appC[n]}

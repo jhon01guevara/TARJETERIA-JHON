@@ -1,11 +1,8 @@
 <!DOCTYPE html>
 <html lang="es"><head><meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<!-- CSP mínima: el panel no usa <object>/<embed>/<base> ni formularios HTML, así que esto
-     se puede restringir sin romper nada. No incluye script-src porque el panel usa manejadores
-     onclick en línea por todo el código (exigiría 'unsafe-inline', que anula casi toda la
-     protección), y no hay forma de probarla aquí sin acceso a un navegador real. -->
-<meta http-equiv="Content-Security-Policy" content="object-src 'none'; base-uri 'self'; form-action 'self'">
+<!-- CSP estricta (SEG-04 etapa 3): solo se ejecutan scripts de este sitio y de los CDN listados; no hay scripts ni manejadores en línea. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://www.google.com https://www.recaptcha.net https://apis.google.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; media-src 'self' data: blob: https:; connect-src 'self' data: blob: https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com https://api.emailjs.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com; frame-src 'self' blob: data: https://*.firebaseapp.com https://www.google.com https://www.recaptcha.net https://recaptcha.google.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'">
 <!-- Protección anti-clickjacking: si alguien intenta cargar este panel dentro de un iframe
      (una página ajena superpuesta para engañar al usuario a hacer clic), la página se queda
      oculta. GitHub Pages no permite fijar la cabecera X-Frame-Options, así que esta es la
@@ -1286,4 +1283,4 @@ html.panama #shopm h2::after{content:' ★';color:#D21034}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js" integrity="sha384-NElt3Op+9NBMCYaef5HxeJmU4Xeard/Lku8ek6hoPTvYkQPh3zLIrJP7KiRocsxO" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" integrity="sha384-/1qUCSGwTur9vjf/z9lmu/eCUYbpOTgSjmpbMQZ1/CtX2v/WcAIKqRv+U1DUCG6e" crossorigin="anonymous"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" integrity="sha384-ZZ1pncU3bQe8y31yfZdMFdSpttDoPmOZg2wguVK9almUodir1PghgT0eY7Mrty8H" crossorigin="anonymous"></script>
-<script src="js/app.js?v=830b54a148"></script></body></html>
+<script src="js/app.js?v=c54b632757"></script></body></html>
