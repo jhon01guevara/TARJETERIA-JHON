@@ -92,11 +92,11 @@ const privatePayload=ts=>({cli:Array.isArray(DB.cli)?DB.cli:[],fac:Array.isArray
 function limpiarMemoriaVendedor(){
  DB.prod=[];DB.cli=[];DB.fac=[];DB.ubi=[];DB.agenda=[];DB.cfg=Object.assign({},pickCfg(DB.cfg));saveLocal();
 }
-function mergeRemote(remote){const c=DB.cfg;const ts=remote._ts||0;DB=Object.assign(DB,remote);DB.cfg=Object.assign(c,remote.cfg||{});_lastTs=ts;if(esAdmin())aplicarFacVend();saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0)}
+function mergeRemote(remote){const c=DB.cfg,prevCli=DB.cli;const ts=remote._ts||0;DB=Object.assign(DB,remote);DB.cfg=Object.assign(c,remote.cfg||{});_lastTs=ts;restaurarClientes(prevCli);if(esAdmin())aplicarFacVend();saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0)}
 function mergeVendedor(pub,priv){
- const b=privatePayload(0),p=pub||{},v=priv||{};
+ const b=privatePayload(0),p=pub||{},v=priv||{},prevCli=DB.cli;
  DB={prod:Array.isArray(p.prod)?p.prod:[],cli:Array.isArray(v.cli)?v.cli:[],fac:Array.isArray(v.fac)?v.fac:[],ubi:Array.isArray(v.ubi)?v.ubi:[],agenda:Array.isArray(v.agenda)?v.agenda:[],cfg:Object.assign({},b.cfg,p.cfg||{},v.cfg||{})};
- _lastTs=Math.max(p._ts||0,v._ts||0);saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0);
+ _lastTs=Math.max(p._ts||0,v._ts||0);restaurarClientes(prevCli);saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0);
 }
 
 /* Administración recibe en tiempo real las facturas de todos los vendedores.
@@ -171,6 +171,70 @@ async function reservarNumeroFactura(){
   const n=Math.max(a,piso);tx.set(ref,{sig:n+1});return n
  });
 }
+
+/* Clientes compartidos: administración y vendedores trabajan sobre una sola lista
+   (panel_public/clientes). Los cambios se fusionan por id dentro de una transacción para no
+   pisar lo que otra cuenta agregó al mismo tiempo. Solo administración puede eliminar. */
+let _cliBase=null,_cliUnsub=null;
+const clientesRef=()=>fbDb&&fbDb.collection('panel_public').doc('clientes');
+const _cliNorm=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+const _cliId=t=>String(t||'').replace(/[^A-Za-z0-9]/g,'').toLowerCase();
+const _cliDig=t=>String(t||'').replace(/\D/g,'');
+function mismoCliente(a,b){
+ if(!a||!b)return false;
+ const na=_cliNorm(a.n),nb=_cliNorm(b.n),ra=_cliId(a.r),rb=_cliId(b.r),ta=_cliDig(a.t),tb=_cliDig(b.t);
+ return (!!na&&na===nb)||(ra.length>=4&&ra===rb)||(ta.length>=7&&ta===tb)
+}
+const clienteDuplicado=(n,r,t)=>(DB.cli||[]).find(c=>mismoCliente(c,{n,r,t}));
+function fusionarClientes(remote,base,local,puedeBorrar){
+ const bm=new Map((base||[]).map(c=>[c.id,JSON.stringify(c)])),lm=new Map((local||[]).map(c=>[c.id,c]));
+ const cambios=(local||[]).filter(c=>c&&c.id&&bm.get(c.id)!==JSON.stringify(c));
+ const borradas=puedeBorrar?new Set([...bm.keys()].filter(k=>!lm.has(k))):new Set();
+ const res=(remote||[]).filter(c=>!borradas.has(c.id));
+ cambios.forEach(c=>{const i=res.findIndex(x=>x.id===c.id);if(i>=0)res[i]=c;else if(!res.some(x=>mismoCliente(x,c)))res.push(c)});
+ return res
+}
+function aplicarClientes(remote,inicial){
+ const rem=Array.isArray(remote)?remote.map(c=>Object.assign({},c)):[];
+ DB.cli=(_cliBase===null||inicial)?rem.map(c=>Object.assign({},c)):fusionarClientes(rem,_cliBase,Array.isArray(DB.cli)?DB.cli:[],esAdmin());
+ _cliBase=rem;saveLocal();
+ if(vista==='cli'&&R.cli&&!(($('cn')&&$('cn').value)||($('cu_link')&&$('cu_link').value)))R.cli()
+}
+function restaurarClientes(prev){
+ if(_cliBase===null)return;
+ DB.cli=fusionarClientes(_cliBase.map(c=>Object.assign({},c)),_cliBase,Array.isArray(prev)?prev:[],esAdmin())
+}
+function guardarClientes(){
+ const ref=clientesRef();if(!ref||_cliBase===null||JSON.stringify(DB.cli)===JSON.stringify(_cliBase))return null;
+ const base=_cliBase,local=(DB.cli||[]).map(c=>Object.assign({},c)),enviado=JSON.stringify(DB.cli);
+ return fbDb.runTransaction(async tx=>{
+  const d=await tx.get(ref),remoto=d.exists&&Array.isArray(d.data().cli)?d.data().cli:[];
+  const res=fusionarClientes(remoto,base,local,esAdmin());
+  tx.set(ref,{cli:res,_ts:Date.now()},{merge:true});return res
+ }).then(res=>{_cliBase=res.map(c=>Object.assign({},c));if(JSON.stringify(DB.cli)===enviado){DB.cli=res.map(c=>Object.assign({},c));saveLocal();if(vista==='cli'&&R.cli&&!(($('cn')&&$('cn').value)||($('cu_link')&&$('cu_link').value)))R.cli()}})
+}
+async function migrarClientes(ref){
+ const us=((DB.cfg||{}).users||[]).filter(u=>u&&typeof u.id==='string');
+ const docs=await Promise.all(us.map(u=>fbDb.collection('vendedores').doc(u.id).collection('privado').doc('data').get().catch(()=>null)));
+ const union=[],ids=new Set();
+ const add=c=>{if(!c||!c.id||!c.n||ids.has(c.id))return;
+  if(union.some(x=>_cliNorm(x.n)===_cliNorm(c.n)&&_cliId(x.r)===_cliId(c.r)&&_cliDig(x.t)===_cliDig(c.t)))return;
+  ids.add(c.id);union.push(c)};
+ (DB.cli||[]).forEach(add);docs.forEach(d=>{if(d&&d.exists)(Array.isArray(d.data().cli)?d.data().cli:[]).forEach(add)});
+ await fbDb.runTransaction(async tx=>{const d=await tx.get(ref);if(!d.exists)tx.set(ref,{cli:union,_ts:Date.now(),mig:1})});
+ return ref.get()
+}
+async function iniciarClientesCompartidos(){
+ const ref=clientesRef();if(!ref)return;
+ _cliBase=null;
+ try{
+  let doc=await ref.get();
+  if(!doc.exists&&esAdmin())doc=await migrarClientes(ref);
+  if(doc&&doc.exists)aplicarClientes(doc.data().cli||[],true)
+ }catch(e){window._tjw&&_tjw(e);console.warn('No se pudieron cargar los clientes compartidos',e)}
+ if(_cliUnsub){try{_cliUnsub()}catch(e){}_cliUnsub=null}
+ _cliUnsub=ref.onSnapshot(doc=>{if(doc.exists)aplicarClientes(doc.data().cli||[],false)},()=>{})
+}
 function syncToCloud(){
  if(!fbDocRef)return;
  clearTimeout(_syncTimer);
@@ -179,6 +243,7 @@ function syncToCloud(){
   const own=esAdmin()?Object.assign({},DB,{fac:(DB.fac||[]).filter(f=>!f._v),_ts:ts}):privatePayload(ts);
   const jobs=[fbDocRef.set(own)];
   if(esAdmin()){jobs.push(publicRef().set(publicPayload(ts)));devolverFacVend().forEach(j=>jobs.push(j));escucharVendedores()}
+  {const jc=guardarClientes();if(jc)jobs.push(jc)}
   Promise.all(jobs).then(()=>cloudEstado('☁ Sincronizado',true)).catch(er=>{window._tjw&&_tjw(er);window._tjFails=(window._tjFails||0)+1;const grande=er&&(er.code==='invalid-argument'||er.code==='resource-exhausted');cloudEstado(grande?'☁ NO se pudo guardar: el panel superó el tamaño permitido. Descarga una copia JSON':'☁ Sin conexión, guardado localmente',false)}).finally(()=>{setTimeout(()=>_cloudWriting=false,600)})
  },700)
 }
@@ -207,6 +272,7 @@ function iniciarSincronizacionNube(){
   if(esAdmin())await migrarPanelPorRoles();
   if(esAdmin()){
    const doc=await fbDocRef.get();if(doc.exists)mergeRemote(doc.data());
+   await iniciarClientesCompartidos();
    escucharVendedores();
    cloudEstado('☁ Sincronizado',true);
    _cloudUnsub=fbDocRef.onSnapshot(doc=>{if(!doc.exists||_cloudWriting)return;const remote=doc.data();if((remote._ts||0)>_lastTs){mergeRemote(remote);cloudEstado('☁ Actualizado desde otro dispositivo',true)}},()=>cloudEstado('☁ Sin conexión, guardado localmente',false));
@@ -215,6 +281,7 @@ function iniciarSincronizacionNube(){
    const [pub,priv]=await Promise.all([publicRef().get(),fbDocRef.get()]);
    mergeVendedor(pub.exists?pub.data():{},priv.exists?priv.data():{});
    if(!priv.exists)await fbDocRef.set(privatePayload(Date.now()),{merge:true});
+   await iniciarClientesCompartidos();
    cloudEstado('☁ Sincronizado',true);
    _cloudUnsub=fbDocRef.onSnapshot(doc=>{if(!doc.exists||_cloudWriting)return;mergeVendedor((window._pubData||{}),doc.data());},()=>cloudEstado('☁ Sin conexión, guardado localmente',false));
    publicRef().onSnapshot(doc=>{window._pubData=doc.exists?doc.data():{};if(doc.exists)mergeVendedor(window._pubData,DB);},()=>{});
@@ -345,8 +412,11 @@ nueva(){const opts=DB.prod.map(p=>`<option value="${p.id}">${esc(p.n)} — ${$$(
 fac(){$('v').innerHTML=`<div class="card"><h3>Historial de facturas</h3>${tabFac(DB.fac.slice().reverse(),1)}</div>`},
 prod(){$('v').innerHTML=`<div class="card"><h3>Agregar producto</h3><div class="g"><div><label>Nombre</label><input id="pn"></div><div><label>Precio ($)</label><input id="pp" type="number" step="0.01"></div></div><br><button class="btn p" data-h-click="h309">Agregar</button></div>
  <div class="card"><h3>Catálogo</h3><div class="tw"><table><tr><th>Producto</th><th class="r">Precio</th><th></th></tr>${DB.prod.map(p=>`<tr><td>${esc(p.n)}</td><td class="r">${$$(p.p)}</td><td class="r"><button class="btn s" data-h-click="h308" data-a-click="${_ha(p.id)}">Editar</button> <button class="btn s d" data-h-click="h307" data-a-click="${_ha(p.id)}">Eliminar</button></td></tr>`).join('')}</table></div></div>`},
-cli(){$('v').innerHTML=`<div class="card"><h3>Agregar cliente</h3><div class="g"><div><label>Nombre</label><input id="cn"></div><div><label>RUC / Cédula</label><input id="cr"></div><div><label>Teléfono</label><input id="ct2"></div><div><label>Dirección / Ubicación</label><input id="cd2"></div></div><br><button class="btn p" data-h-click="h306">Agregar</button></div>
- <div class="card"><h3>Clientes</h3>${DB.cli.length?`<div class="tw"><table><tr><th>Nombre</th><th>RUC/Cédula</th><th>Teléfono</th><th></th></tr>${DB.cli.map(c=>`<tr><td>${esc(c.n)}</td><td>${esc(c.r)}</td><td>${esc(c.t)}</td><td class="r">${waBtn(c)}<button class="btn s" data-h-click="h305" data-a-click="${_ha(c.id)}">Editar</button> <button class="btn s d" data-h-click="h304" data-a-click="${_ha(c.id)}">Eliminar</button></td></tr>`).join('')}</table></div>`:'<div class="vacio">Aún no hay clientes registrados.</div>'}</div>`},
+cli(){$('v').innerHTML=`<div class="card"><h3>Agregar cliente</h3><div class="g"><div><label>Nombre</label><input id="cn"></div><div><label>RUC / Cédula</label><input id="cr"></div><div><label>Teléfono</label><input id="ct2"></div><div><label>Dirección / Ubicación</label><input id="cd2"></div></div>
+ <div class="g" style="margin-top:10px"><div style="grid-column:1/-1"><label>📍 Ubicación del negocio (opcional)</label><input id="cu_link" placeholder="Pegue el link de Google Maps o las coordenadas, o use su ubicación actual" data-h-input="h330"></div></div>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn s" id="cu_gps" data-h-click="h329">🎯 Usar mi ubicación actual</button><button class="btn s" data-h-click="h331">↗ Abrir en Google Maps</button></div>
+ <div id="cu_est" style="margin-top:8px;font-size:13px;color:var(--gris)"></div><br><button class="btn p" data-h-click="h306">Agregar</button></div>
+ <div class="card"><h3>Clientes</h3>${DB.cli.length?`<div class="tw"><table><tr><th>Nombre</th><th>RUC/Cédula</th><th>Teléfono</th><th>Ubicación</th><th></th></tr>${DB.cli.map(c=>`<tr><td>${esc(c.n)}</td><td>${esc(c.r)}</td><td>${esc(c.t)}</td><td>${cliLocBtn(c)}</td><td class="r">${waBtn(c)}${esAdmin()?`<button class="btn s" data-h-click="h305" data-a-click="${_ha(c.id)}">Editar</button> <button class="btn s d" data-h-click="h304" data-a-click="${_ha(c.id)}">Eliminar</button>`:''}</td></tr>`).join('')}</table></div>`:'<div class="vacio">Aún no hay clientes registrados.</div>'}</div>`},
 ubi(){const cliOpts=DB.cli.map(c=>`<option value="${c.id}">${esc(c.n)}</option>`).join('');
  $('v').innerHTML=`<div class="card"><h3>Registrar ubicación</h3>
  <div class="g">
@@ -761,9 +831,54 @@ function shareFac(id,btn){const f=DB.fac.find(x=>x.id==id),c=DB.cfg;
 function addP(){const n=$('pn').value.trim(),p=+$('pp').value;if(!n||!(p>=0))return;DB.prod.push({id:uid(),n,p});save();R.prod()}
 function delP(id){DB.prod=DB.prod.filter(p=>p.id!=id);save();R.prod()}
 function editP(id){const p=DB.prod.find(x=>x.id==id);if(!p)return;const n=prompt('Nombre:',p.n);if(n===null)return;const pr=prompt('Precio ($):',p.p);if(pr===null)return;const v=+pr;if(!n.trim()||!(v>=0))return alert('Nombre o precio no válido.');p.n=n.trim();p.p=v;save();R.prod()}
-function addC(){const n=$('cn').value.trim();if(!n)return;DB.cli.push({id:uid(),n,r:$('cr').value,t:$('ct2').value,d:$('cd2').value});save();R.cli()}
+
+/* Ubicación del negocio dentro del formulario de cliente. El campo guarda las coordenadas
+   (o el link pegado); la ubicación se guarda en el propio cliente, por lo que la ven todos,
+   y también se registra en el mapa de Ubicación de quien crea el cliente. */
+const cliLocBtn=c=>(c&&typeof c.lat==='number'&&typeof c.lng==='number')?`<a class="btn s" href="https://www.google.com/maps?q=${c.lat},${c.lng}" target="_blank" rel="noopener">📍 Mapa</a>`:'<small style="color:var(--gris)">—</small>';
+function cliLocLeer(){const i=$('cu_link');if(!i)return{vacio:true};const t=i.value.trim();if(!t)return{vacio:true};const c=ubiParse(t);if(!c)return{error:true,texto:t};const a=+i.dataset.acc;return{lat:c.lat,lng:c.lng,acc:a>0?a:null,link:/^https?:\/\//i.test(t)?t:''}}
+function cliLocEstado(){
+ const e=$('cu_est');if(!e)return;const l=cliLocLeer();
+ if(l.vacio){e.textContent='';return}
+ if(l.error){e.style.color='#b3261e';e.textContent=/goo\.gl|maps\.app/i.test(l.texto)?'Ese es un link corto y no se puede leer. Ábralo en Google Maps, copie el link completo de la barra de direcciones (o las coordenadas) y péguelo aquí.':'No encontré coordenadas en ese texto. Pegue el link completo de Google Maps o las coordenadas, por ejemplo: 8.9824, -79.5199';return}
+ e.style.color='#1e7a43';e.textContent='✔ Ubicación lista: '+l.lat.toFixed(6)+', '+l.lng.toFixed(6)+(l.acc?' (±'+Math.round(l.acc)+' m)':'')
+}
+function cliLocInput(){const i=$('cu_link');if(i)delete i.dataset.acc;cliLocEstado()}
+function cliLocGPS(){
+ if(!navigator.geolocation)return alert('Este navegador no soporta geolocalización.');
+ if(!window.isSecureContext)return alert('El GPS no funciona abriendo el archivo directamente. Abra la página desde el link de internet (https://...).');
+ const b=$('cu_gps'),e=$('cu_est');if(b){b.disabled=true;b.textContent='🎯 Obteniendo ubicación…'}
+ if(e){e.style.color='';e.textContent='Esperando señal del GPS… puede tardar unos segundos; mejor al aire libre o dentro del negocio del cliente.'}
+ navigator.geolocation.getCurrentPosition(pos=>{
+  const c=pos.coords,i=$('cu_link');if(b){b.disabled=false;b.textContent='🎯 Usar mi ubicación actual'}
+  if(i){i.value=c.latitude.toFixed(6)+', '+c.longitude.toFixed(6);i.dataset.acc=String(c.accuracy||'')}
+  cliLocEstado()
+ },err=>{
+  if(b){b.disabled=false;b.textContent='🎯 Usar mi ubicación actual'}if(e)e.textContent='';
+  const msgs={1:'Permiso de ubicación denegado. Actívelo en los ajustes del navegador o del teléfono.',2:'No se pudo determinar la ubicación. Intente al aire libre o con el GPS activado.',3:'Se agotó el tiempo esperando el GPS. Intente de nuevo.'};
+  alert(msgs[err.code]||'No se pudo obtener la ubicación.')
+ },{enableHighAccuracy:true,timeout:20000,maximumAge:0})
+}
+function cliLocAbrir(){const l=cliLocLeer(),i=$('cu_link'),t=i?i.value.trim():'';
+ if(l.lat!==undefined)return void window.open('https://www.google.com/maps?q='+l.lat+','+l.lng,'_blank');
+ if(/^https?:\/\//i.test(t))return void window.open(t,'_blank');
+ window.open('https://www.google.com/maps','_blank')}
+function addC(){const n=$('cn').value.trim();if(!n)return;
+ if(fbDb&&_cliBase===null)return alert('Los clientes compartidos todavía no están activos. Pida al administrador que abra el panel una vez e intente de nuevo.');
+ const dup=clienteDuplicado(n,$('cr').value,$('ct2').value);
+ if(dup)return alert('Este cliente ya existe y no se agregó para evitar duplicados:\n\n'+dup.n+(dup.r?'\nRUC/Cédula: '+dup.r:'')+(dup.t?'\nTeléfono: '+dup.t:''));
+ const loc=cliLocLeer();if(loc.error)return alert('La ubicación del negocio no es válida. Corríjala o déjela vacía para guardar el cliente sin ubicación.');
+ const cid=uid(),nuevo={id:cid,n,r:$('cr').value,t:$('ct2').value,d:$('cd2').value};
+ if(loc.lat!==undefined){nuevo.lat=loc.lat;nuevo.lng=loc.lng;if(loc.acc)nuevo.acc=loc.acc;
+  DB.ubi.push({id:uid(),n,cliId:cid,nota:'Ubicación del negocio',lat:loc.lat,lng:loc.lng,acc:loc.acc,alt:null,fecha:hoy(),hora:new Date().toLocaleTimeString('es-PA'),manual:!loc.acc,link:loc.link||''})}
+ DB.cli.push(nuevo);save();R.cli()}
 function delC(id){DB.cli=DB.cli.filter(c=>c.id!=id);save();R.cli()}
-function editC(id){const c=DB.cli.find(x=>x.id==id);if(!c)return;const n=prompt('Nombre:',c.n);if(n===null)return;const r=prompt('RUC / Cédula:',c.r||'');if(r===null)return;const t=prompt('Teléfono:',c.t||'');if(t===null)return;const d=prompt('Dirección / Ubicación:',c.d||'');if(d===null)return;if(!n.trim())return alert('El nombre no puede quedar vacío.');c.n=n.trim();c.r=r;c.t=t;c.d=d;save();R.cli()}
+function editC(id){const c=DB.cli.find(x=>x.id==id);if(!c)return;const n=prompt('Nombre:',c.n);if(n===null)return;const r=prompt('RUC / Cédula:',c.r||'');if(r===null)return;const t=prompt('Teléfono:',c.t||'');if(t===null)return;const d=prompt('Dirección / Ubicación:',c.d||'');if(d===null)return;
+ const lt=prompt('Ubicación del negocio (link de Google Maps o coordenadas; vacío = sin ubicación):',typeof c.lat==='number'?c.lat.toFixed(6)+', '+c.lng.toFixed(6):'');if(lt===null)return;
+ let g=null;if(lt.trim()){g=ubiParse(lt);if(!g)return alert('La ubicación no es válida. No se guardaron cambios.')}
+ if(!n.trim())return alert('El nombre no puede quedar vacío.');c.n=n.trim();c.r=r;c.t=t;c.d=d;
+ if(g){if(c.lat!==g.lat||c.lng!==g.lng)delete c.acc;c.lat=g.lat;c.lng=g.lng}else{delete c.lat;delete c.lng;delete c.acc}
+ save();R.cli()}
 function toggleEditCfg(on){
  ['c1','c3','c4','c5','c6','c7','c8','c9','c10','c11'].forEach(id=>{const el=$(id);if(el)el.disabled=!on});
  const ed=$('btnEditCfg'),sv=$('btnSaveCfg'),cn=$('btnCancelCfg');
@@ -836,10 +951,10 @@ R.cat=async()=>{try{CL=await tx('readonly',s=>s.getAll())}catch(e){memW=1}
  <div class="up" id="dz" data-h-click="h219" data-h-dragover="h218" data-h-dragleave="h217" data-h-drop="h216"><div style="font-size:30px">📂</div><b>Arrastre archivos aquí o haga clic para seleccionarlos</b><br><small>PDF, JPG, PNG, WEBP, GIF, Word, Excel, video y más · varios a la vez</small></div><input id="fi2" type="file" multiple style="display:none" data-h-change="h215"></div>
  <div class="card"><div class="g" style="margin-bottom:16px;align-items:end"><div><label>Buscar</label><input id="q" placeholder="Nombre o descripción" data-h-input="h214"></div><div><label>Categoría</label><select id="qc" data-h-change="h213"></select></div><div><button class="btn p" data-h-click="h212">📖 Vista previa / Imprimir catálogo</button></div></div>
  <div class="g" style="margin-bottom:16px"><div><button class="btn s" data-h-click="h211">🏷 Organizar por categoría (auto)</button></div><div><button class="btn s" id="btnCompCat" data-h-click="h210">🗜 Comprimir catálogo</button></div><div><button class="btn s" id="btnExpCat" data-h-click="h209">⬇ Respaldo del catálogo</button></div><div><button class="btn s" id="btnImgJ" data-h-click="h208">🖼 Descargar todo en JPG</button></div><div><button class="btn s" id="btnImgP" data-h-click="h207">🖼 Descargar todo en PNG</button></div><div><button class="btn s" data-h-click="h206">⬆ Importar catálogo</button><input id="impCatInput" type="file" accept=".zip,application/zip" multiple hidden data-h-change="h205"></div></div>
-  <div id="gc"></div><p style="font-size:12px;color:var(--gris);margin:14px 0 0">Use "Respaldo del catálogo" para guardar sus archivos fuera de este navegador, y "Importar catálogo" para recuperarlos aquí o en otro dispositivo.</p></div>`;imgPicker();cc='';cq='';dib();R.aviso();fixT();if(esVend()){const d=$('dz');if(d&&d.closest('.card'))d.closest('.card').remove();const i=$('impCatInput');if(i&&i.parentNode)i.parentNode.remove()}};
+  <div id="gc"></div><p style="font-size:12px;color:var(--gris);margin:14px 0 0">Use "Respaldo del catálogo" para guardar sus archivos fuera de este navegador, y "Importar catálogo" para recuperarlos aquí o en otro dispositivo.</p></div>`;imgPicker();cc='';cq='';dib();R.aviso();fixT();if(esVend()){const d=$('dz');if(d&&d.closest('.card'))d.closest('.card').remove();const i=$('impCatInput');if(i&&i.parentNode)i.parentNode.remove();['#btnCompCat','#btnExpCat','[data-h-click="h211"]'].forEach(q=>{const b=document.querySelector(q);if(b&&b.parentNode)b.parentNode.remove()})}};
 function dib(){const cats=[...new Set([...CATS,...CL.map(f=>f.cat)])].filter(Boolean).sort((a,b)=>a.localeCompare(b,'es'));$('qc').innerHTML='<option value="">Todas las categorías</option>'+cats.map(c=>`<option ${c==cc?'selected':''}>${esc(c)}</option>`).join('');
  const q=cq.toLowerCase(),l=CL.filter(f=>(!cc||f.cat==cc)&&(f.name+' '+f.desc).toLowerCase().includes(q)).sort((a,b)=>b.date.localeCompare(a.date));
- const itH=f=>`<div class="it${f.sac?' sacadoIt':''}"><div class="th" data-h-click="h201" data-a-click="${_ha(f.id)}">${f.thumb?`<img src="${f.thumb}" alt="">`:`<div class="ft2">${f.type=='application/pdf'?'📄':f.type.startsWith('image/')?'🖼':'📎'}<small>${ext(f)}</small></div>`}</div><div class="ckrow"><label class="ckitem"><input type="checkbox" class="cbA" ${f.acot?'checked':''} data-h-click="h204" data-a-click="${_ha(f.id)}"><span>Acotejado</span></label><label class="ckitem"><input type="checkbox" class="cbS" ${f.sac?'checked':''} data-h-click="h203" data-a-click="${_ha(f.id)}"><span>Sacado</span></label></div><div class="ib"><span class="itcat" title="Categoría">${esc(f.cat||'Sin categoría')}</span><b>${esc(f.name)}</b><select class="catsel" data-h-change="h202" data-a-change="${_ha(f.id)}" title="Categoría">${catOpts(f.cat)}</select>${f.price?`<small><b style="display:inline;font-size:13px">${$$(f.price)}</b></small>`:''}${f.desc?`<small>${esc(f.desc)}</small>`:''}<small>${ext(f)} · ${tam(f.size)}</small></div><div class="ia"><button class="btn s" data-h-click="h201" data-a-click="${_ha(f.id)}">👁 Ver</button><button class="btn s" data-h-click="h195" data-a-click="${_ha(f.id)}">⬇</button><button class="btn s" data-h-click="h200" data-a-click="${_ha(f.id)}">✏️</button>${f.price?`<button class="btn s" data-h-click="h199" data-a-click="${_ha(f.id)}">🧾</button>`:''}<button class="btn s d" data-h-click="h198" data-a-click="${_ha(f.id)}">🗑</button></div></div>`;const G={};l.forEach(f=>{const k=f.cat||'Sin categoría';(G[k]=G[k]||[]).push(f)});$('gc').innerHTML=l.length?Object.keys(G).sort().map(k=>`<details class="cg2" data-k="${esc(k)}" ${cq||!catCl.has(k)?'open':''} data-h-toggle="h197"><summary><b>${esc(k)}</b><span>${G[k].length}</span></summary><div class="gc">${G[k].map(itH).join('')}</div></details>`).join(''):'<div class="vacio">'+(CL.length?'Sin resultados.':'El catálogo está vacío. Suba su primer archivo arriba.')+'</div>'}
+ const itH=f=>`<div class="it${f.sac?' sacadoIt':''}"><div class="th" data-h-click="h201" data-a-click="${_ha(f.id)}">${f.thumb?`<img src="${f.thumb}" alt="">`:`<div class="ft2">${f.type=='application/pdf'?'📄':f.type.startsWith('image/')?'🖼':'📎'}<small>${ext(f)}</small></div>`}</div>${esVend()?'':`<div class="ckrow"><label class="ckitem"><input type="checkbox" class="cbA" ${f.acot?'checked':''} data-h-click="h204" data-a-click="${_ha(f.id)}"><span>Acotejado</span></label><label class="ckitem"><input type="checkbox" class="cbS" ${f.sac?'checked':''} data-h-click="h203" data-a-click="${_ha(f.id)}"><span>Sacado</span></label></div>`}<div class="ib"><span class="itcat" title="Categoría">${esc(f.cat||'Sin categoría')}</span><b>${esc(f.name)}</b>${esVend()?'':`<select class="catsel" data-h-change="h202" data-a-change="${_ha(f.id)}" title="Categoría">${catOpts(f.cat)}</select>`}${f.price?`<small><b style="display:inline;font-size:13px">${$$(f.price)}</b></small>`:''}${f.desc?`<small>${esc(f.desc)}</small>`:''}<small>${ext(f)} · ${tam(f.size)}</small></div><div class="ia"><button class="btn s" data-h-click="h201" data-a-click="${_ha(f.id)}">👁 Ver</button><button class="btn s" data-h-click="h195" data-a-click="${_ha(f.id)}">⬇</button>${esVend()?'':`<button class="btn s" data-h-click="h200" data-a-click="${_ha(f.id)}">✏️</button>${f.price?`<button class="btn s" data-h-click="h199" data-a-click="${_ha(f.id)}">🧾</button>`:''}<button class="btn s d" data-h-click="h198" data-a-click="${_ha(f.id)}">🗑</button>`}</div></div>`;const G={};l.forEach(f=>{const k=f.cat||'Sin categoría';(G[k]=G[k]||[]).push(f)});$('gc').innerHTML=l.length?Object.keys(G).sort().map(k=>`<details class="cg2" data-k="${esc(k)}" ${cq||!catCl.has(k)?'open':''} data-h-toggle="h197"><summary><b>${esc(k)}</b><span>${G[k].length}</span></summary><div class="gc">${G[k].map(itH).join('')}</div></details>`).join(''):'<div class="vacio">'+(CL.length?'Sin resultados.':'El catálogo está vacío. Suba su primer archivo arriba.')+'</div>'}
 const CAT_RX=[['Quinceaños',/quince|\bxv\b|15 ?anos/],['Revelación de sexo',/revelacion|gender|sexo|nino o nina|team ?(boy|girl)/],['Baby shower',/baby|bebe|nacimiento|shower|recien nacid/],['Boda',/boda|matrimonio|novios|wedding|save the date|nupcial/],['Graduación',/gradua|egres/],['Aniversario',/aniversario|anniversary/],['Pésame',/pesame|condolenc|descanse|luto|q\.?e\.?p\.?d|funeb|duelo/],['Agradecimiento',/gracias|agradec|thank/],['Felicidades',/felicid|enhorabuena|congrat|logro/],['Amor',/\bamor\b|enamor|valentin|te quiero|te amo|love|amistad/],['Cumpleaños',/cumple|birthday|bday/],['Día de la Madre',/dia de la madre|\bmama\b|madre/],['Día del Padre',/dia del padre|\bpapa\b|padre/],['Navidad',/navid|christmas|ano nuevo/]];
 const catDetect=f=>{const t=shopN((f.name||'')+' '+(f.desc||'')+' '+(f.cat||''));const r=CAT_RX.find(x=>x[1].test(t));return r?r[0]:null};
 const catOpts=c=>{const L=[...CATS];if(c&&!L.includes(c))L.push(c);return '<option value="">Sin categoría</option>'+L.map(k=>`<option value="${esc(k)}" ${k===c?'selected':''}>${esc(k)}</option>`).join('')};
@@ -1142,7 +1257,13 @@ const puede=k=>esAdmin()||(!!usr()&&k!=='config'&&k!=='vend'&&(usr().panels||[])
 const _no=navOrd;navOrd=()=>_no().filter(v=>puede(v[0]));
 const _ir=ir;ir=function(v){if(!SES)return;if(!puede(v)){const f=navOrd().find(x=>puede(x[0]));if(!f)return;v=f[0]}return _ir(v)};
 const esVend=()=>!!SES&&!esAdmin();
-['delFac','anular','delE','addP','delP','editP','delC','editC','edC','delF','delUbi','agDel','comprimirCatalogo','expCatBackup','desc','pdfCat','repPDF','facPDF','exportUbiCSV','agIcs','respaldo','dlBlob'].forEach(n=>{const o=window[n];if(typeof o!=='function')return;window[n]=function(){if(esVend()){alert('Su usuario no tiene permiso para esta acción.');return}return o.apply(this,arguments)}});
+['delFac','anular','delE','addP','delP','editP','delC','editC','edC','delF','delUbi','agDel','comprimirCatalogo','expCatBackup','repPDF','facPDF','exportUbiCSV','agIcs','respaldo'].forEach(n=>{const o=window[n];if(typeof o!=='function')return;window[n]=function(){if(esVend()){alert('Su usuario no tiene permiso para esta acción.');return}return o.apply(this,arguments)}});
+/* Catálogo: un vendedor puede ver, descargar y compartir; subir, editar, categorizar,
+   comprimir, respaldar, importar y eliminar quedan solo para administración. dlBlob solo
+   se permite mientras corre una de las acciones de descarga/compartir del catálogo. */
+{const o=window.dlBlob;window.dlBlob=function(){if(esVend()&&!window._catDl){alert('Su usuario no tiene permiso para esta acción.');return}return o.apply(this,arguments)}}
+['pdfCat','shareCat','descTodoImg'].forEach(n=>{const o=window[n];if(typeof o!=='function')return;window[n]=function(){window._catDl=(window._catDl||0)+1;let r;try{r=o.apply(this,arguments)}catch(e){window._catDl--;throw e}return Promise.resolve(r).finally(()=>{window._catDl--})}});
+['catSet','ckToggle','catAutoPrev','catAutoDo'].forEach(n=>{const o=window[n];if(typeof o!=='function')return;window[n]=function(){if(esVend()){alert('Su usuario no tiene permiso para modificar el catálogo.');return}return o.apply(this,arguments)}});
 const _af=agForm;agForm=function(id){if(id&&esVend()){alert('Su usuario no tiene permiso para editar.');return}return _af.apply(this,arguments)};
 function waNum(t){for(const p of String(t||'').split(/[\/,;|]| y /)){let d=p.replace(/\D/g,'');if(!d)continue;if(d.startsWith('00'))d=d.slice(2);if(d.length===7||d.length===8)d='507'+d;if(d.length>=10&&d.length<=15)return d}return ''}
 const waBtn=c=>waNum(c.t)?`<button class="btn s wa" data-h-click="h191" data-a-click="${_ha(c.id)}">💬 WhatsApp</button> `:'';
@@ -2828,6 +2949,9 @@ __H.h303=function(event,a){toggleUbiOtro()};
 __H.h304=function(event,a){delC(a[0])};
 __H.h305=function(event,a){editC(a[0])};
 __H.h306=function(event,a){addC()};
+__H.h329=function(event,a){cliLocGPS()};
+__H.h330=function(event,a){cliLocInput()};
+__H.h331=function(event,a){cliLocAbrir()};
 __H.h307=function(event,a){delP(a[0])};
 __H.h308=function(event,a){editP(a[0])};
 __H.h309=function(event,a){addP()};
