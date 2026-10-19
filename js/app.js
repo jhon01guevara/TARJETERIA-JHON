@@ -2419,7 +2419,7 @@ R.config=function(){
 };
 /* Inicio también tenía capas sucesivas. Todas sus tarjetas se agrupan aquí para
    que vendedores, administradores y la vista general sigan la misma ruta clara. */
-function homeCard(html){const w=document.createElement('div');w.innerHTML=html();return w.firstElementChild}
+function homeCard(html){const w=document.createElement('div');w.innerHTML=(typeof html==='function'?html():html)||'';return w.firstElementChild}
 R.home=function(){
  const v=$('v'),tienda=()=>homeCard(tdHomeHTML());
  if(esVend()){
