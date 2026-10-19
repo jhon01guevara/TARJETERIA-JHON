@@ -79,3 +79,10 @@ test('El inicio de sesión no queda verificando indefinidamente si Firestore no 
   assert.match(app,/firestore\/timeout/);
   assert.match(app,/12000/);
 });
+
+test('Un error al cargar el panel no invalida una sesión cuyo rol ya fue verificado',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/let d;/);
+  assert.match(app,/try\{entrar\(\)\}catch\(e\)/);
+  assert.match(app,/Acceso aceptado/);
+});
