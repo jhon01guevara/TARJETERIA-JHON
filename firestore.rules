@@ -80,6 +80,19 @@ service cloud.firestore {
         && request.resource.data.sig == resource.data.sig + 1;
     }
 
+    // Lista de clientes compartida entre administración y vendedores. Todos pueden
+    // leerla y agregar o editar clientes, pero un vendedor no puede reducir la lista:
+    // solo administración crea el documento y elimina clientes.
+    match /panel_public/clientes {
+      allow read: if logged();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin();
+      allow update: if logged()
+        && request.resource.data.keys().hasOnly(['cli', '_ts'])
+        && request.resource.data.cli is list
+        && request.resource.data.cli.size() >= resource.data.cli.size();
+    }
+
     // Espacio privado de cada vendedor: clientes, facturas, ubicaciones y agenda.
     // Administración puede auditarlo; un vendedor solo puede acceder a su UID.
     match /vendedores/{uid}/privado/{doc} {
