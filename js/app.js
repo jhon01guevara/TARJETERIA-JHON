@@ -429,7 +429,7 @@ function emitir(){const l=items.filter(i=>i.d&&(i.p>0)).map(i=>({d:i.d,q:i.q||1,
  DB.fac.push(f);save();items=[];imprimir(f.id);ir('fac')}
 const PGM=['Efectivo','Yappy','Tarjeta','Transferencia','Crédito'];
 let mix=[],crN=30,crU='dias';
-function addDias(f,n,u){const d=new Date(f+'T12:00');if(u==='meses')d.setMonth(d.getMonth()+n);else d.setDate(d.getDate()+n*(u==='semanas'?7:1));return ymd(d)}
+function addDias(f,n,u){return TJFacturacion.sumarPlazo(f,n,u)||f}
 function crPlazo(c){return c.n+' '+({dias:'día(s)',semanas:'semana(s)',meses:'mes(es)'}[c.u]||c.u)}
 function credMonto(){const p=$('f_pg')?.value;return p==='Crédito'?totales().tot:p==='Pago mixto'?mix.filter(r=>r.m==='Crédito').reduce((a,r)=>a+(+r.v||0),0):0}
 function pgUI(){const b=$('pgBox');if(!b)return;const p=$('f_pg').value;let h='';
@@ -439,15 +439,7 @@ function pgUI(){const b=$('pgBox');if(!b)return;const p=$('f_pg').value;let h=''
 function pgSum(){const e=$('pgSum');if(e){const t=totales().tot,s=mix.reduce((a,r)=>a+(+r.v||0),0),d=Math.round((t-s)*100)/100;e.innerHTML=d===0?'<b style="color:#2fa84f">✔ Pagos completos</b>':`Asignado ${$$(s)} de ${$$(t)} · <b style="color:${d>0?'#d92d20':'#FF9F0A'}">${d>0?'Falta '+$$(d):'Se pasa por '+$$(-d)}</b>`}pgVence()}
 function pgVence(){const v=$('cr_v'),m=$('cr_m');if(v)v.textContent=crN>0?fdate(addDias($('f_fecha')?.value||hoy(),crN,crU)):'—';if(m)m.textContent='Monto a crédito: '+$$(credMonto())}
 function pgResto(){if(!mix.length)return;const i=mix.findIndex(r=>!(+r.v)),k=i<0?mix.length-1:i,o=mix.reduce((a,r,j)=>a+(j==k?0:(+r.v||0)),0);mix[k].v=Math.max(0,Math.round((totales().tot-o)*100)/100);pgUI()}
-function pgDatos(tot){const p=$('f_pg').value,fe=$('f_fecha').value||hoy();let pagos,cm=0;
- if(p==='Pago mixto'){pagos=mix.map(r=>({m:r.m,v:Math.round((+r.v||0)*100)/100})).filter(r=>r.v>0);const s=pagos.reduce((a,r)=>a+r.v,0);
-  if(pagos.length<2)return alert('El pago mixto necesita al menos 2 métodos con monto.'),0;
-  if(Math.abs(s-tot)>0.011)return alert('La suma de los pagos ('+$$(s)+') debe ser igual al total ('+$$(tot)+').'),0;
-  cm=pagos.filter(r=>r.m==='Crédito').reduce((a,r)=>a+r.v,0)}
- else{pagos=[{m:p,v:Math.round(tot*100)/100}];if(p==='Crédito')cm=tot}
- let credito=null;
- if(cm>0){if(!(crN>=1))return alert('Indique el plazo del crédito.'),0;credito={n:crN,u:crU,monto:Math.round(cm*100)/100,vence:addDias(fe,crN,crU)}}
- return{pago:p==='Pago mixto'?'Mixto ('+[...new Set(pagos.map(r=>r.m))].join(' + ')+')':p,pagos,credito}}
+function pgDatos(tot){const r=TJFacturacion.prepararPago({pago:$('f_pg').value,total:tot,pagosMixtos:mix,fecha:$('f_fecha').value||hoy(),plazo:crN,unidad:crU});if(!r.ok){alert(r.error);return 0}return r}
 function facL(f){const L=[],m=f.pagos&&f.pagos.length>1;if(m||f.credito)L.push(['Forma de pago:',m?f.pagos.map(p=>esc(p.m)+' '+$$(p.v)).join(' + '):esc(f.pago)]);if(f.credito)L.push(['Crédito:',$$(f.credito.monto)+' a '+crPlazo(f.credito)+' · vence '+fdate(f.credito.vence)]);if(f.nota)L.push(['Notas:',esc(f.nota)]);return L}
 function facTxt(f){return facL(f).map(([a,b])=>a+' '+b.replace(/\s*\n\s*/g,' ')).join('\n')}
 function facExtra(f){const L=facL(f);return L.length?'<div class="fx">'+L.map(([a,b])=>'<div><b>'+a+'</b> '+b.replace(/\n/g,'<br>')+'</div>').join('')+'</div>':''}
