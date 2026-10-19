@@ -11,8 +11,11 @@ service cloud.firestore {
     }
 
     function isAdmin() {
+      // UID de la cuenta administradora creada en Firebase Authentication. El UID no
+      // procede del navegador y Firebase no permite falsificarlo, por lo que evita
+      // depender de una lectura adicional de /roles para autorizar el panel.
       return logged()
-        && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.rol == 'admin';
+        && request.auth.uid == 'o7bHndKtswSHreFnVwORqBSUKL43';
     }
 
     // El administrador usa la identidad interna "admin"; los vendedores usan su UID.
