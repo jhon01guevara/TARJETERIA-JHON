@@ -55,3 +55,9 @@ test('Los datos del panel se separan entre catálogo común y espacio privado po
   assert.match(rules,/match \/vendedores\/\{uid\}\/privado\/\{doc\} \{/);
   assert.match(rules,/match \/panel\/data \{\s*allow read, write: if isAdmin\(\);/);
 });
+
+test('La conexión reutiliza Firebase ya inicializado tras una actualización',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/if\(!\(firebase\.apps&&firebase\.apps\.length\)\)firebase\.initializeApp\(firebaseConfig\)/);
+  assert.match(app,/No se pudo verificar su acceso \['\+c\+'\]/);
+});

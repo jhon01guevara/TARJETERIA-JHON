@@ -65,7 +65,9 @@ const emailjsListo=()=>EMAILJS_PUBLIC_KEY!=='EMAILJS_PUBLIC_KEY'&&EMAILJS_SERVIC
 try{if(window.emailjs&&emailjsListo())emailjs.init({publicKey:EMAILJS_PUBLIC_KEY})}catch(e){window._tjw&&_tjw(e)}
 try{
  if(window.firebase){
-  firebase.initializeApp(firebaseConfig);
+  // Tras una actualización o una restauración desde caché, Firebase puede ya estar
+  // inicializado. Reutilizarlo evita abortar antes de poder leer el rol del usuario.
+  if(!(firebase.apps&&firebase.apps.length))firebase.initializeApp(firebaseConfig);
   if(firebase.appCheck && RECAPTCHA_V3_SITE_KEY!=='RECAPTCHA_V3_SITE_KEY'){
    try{firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(RECAPTCHA_V3_SITE_KEY),true)}catch(e){window._tjw&&_tjw(e)}
   }
@@ -2215,7 +2217,7 @@ function authInit(){
    const d=await fbDb.collection('roles').doc(u.uid).get();
    if(!d.exists){_note='Su cuenta no tiene acceso. Pídale al administrador que la active.';return firebase.auth().signOut()}
    const r=d.data();SES={id:r.rol==='admin'?'admin':u.uid,u:r};entrar()
-  }catch(e){_note='No se pudo verificar su acceso. Revise su conexión.';firebase.auth().signOut()}
+  }catch(e){const c=(e&&e.code)||'error';_note='No se pudo verificar su acceso ['+c+']. Revise su conexión.';firebase.auth().signOut()}
  })}
 function authLogin(){authUI(`<h2>Tarjetería Jhon</h2><p>Inicie sesión para continuar.</p><label>Correo</label><input id="au_e" type="email" autocomplete="username"><label>Contraseña</label><input id="au_p" type="password" autocomplete="current-password" data-h-keydown="h23"><label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0"><input type="checkbox" style="width:auto" data-h-change="h22"> Mostrar contraseña</label><div id="au_m"></div><button class="btn p" data-h-click="h21">Entrar</button><a href="#" data-h-click="h20" style="display:block;text-align:center;margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.85);text-decoration:underline">¿Olvidó su contraseña?</a>`);if(_note){authMsg(_note);_note=''}}
 async function authGo(){const e=$('au_e').value.trim(),p=$('au_p').value;if(!e||!p)return authMsg('Escriba correo y contraseña.');authMsg('Verificando…');
