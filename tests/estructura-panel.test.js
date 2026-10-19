@@ -92,3 +92,12 @@ test('El administrador entra por su UID autenticado sin depender de una lectura 
   assert.match(app,/const ADMIN_UID='o7bHndKtswSHreFnVwORqBSUKL43';/);
   assert.match(app,/if\(u\.uid===ADMIN_UID\)/);
 });
+
+test('Administración recibe las facturas de todos los vendedores sin copiarlas a panel/data',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/function escucharVendedores\(\)/);
+  assert.match(app,/collection\('vendedores'\)\.doc\(id\)\.collection\('privado'\)\.doc\('data'\)\.onSnapshot/);
+  assert.match(app,/fac:\(DB\.fac\|\|\[\]\)\.filter\(f=>!f\._v\)/);
+  assert.match(app,/function devolverFacVend\(\)/);
+  assert.match(app,/<th>Vendedor<\/th>/);
+});
