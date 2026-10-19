@@ -34,11 +34,15 @@ service cloud.firestore {
       allow create, update, delete: if isAdmin();
     }
 
-    // Transición: la aplicación actual sincroniza clientes, facturas y configuración
-    // en un único documento. No publicar una regla que lo cierre hasta migrar esos
-    // datos a documentos por vendedor; vea docs/migracion-panel-roles.md.
+    // Datos históricos completos: solo administración. Al actualizar la aplicación,
+    // se copian automáticamente las facturas ya identificadas a cada vendedor.
     match /panel/data {
-      allow read, write: if logged();
+      allow read, write: if isAdmin();
+    }
+
+    // Marca de migración; evita volver a copiar datos antiguos en cada acceso.
+    match /panel/migracion_roles_v1 {
+      allow read, write: if isAdmin();
     }
 
     // El fondo de inicio puede contener una URL privada de Storage: solo administración.
@@ -49,6 +53,18 @@ service cloud.firestore {
     // No permitir documentos inesperados dentro de panel.
     match /panel/{doc} {
       allow read, write: if false;
+    }
+
+    // Datos comunes sin información de clientes, usuarios, agenda o credenciales.
+    match /panel_public/general {
+      allow read: if logged();
+      allow write: if isAdmin();
+    }
+
+    // Espacio privado de cada vendedor: clientes, facturas, ubicaciones y agenda.
+    // Administración puede auditarlo; un vendedor solo puede acceder a su UID.
+    match /vendedores/{uid}/privado/{doc} {
+      allow read, write: if isAdmin() || (logged() && request.auth.uid == uid);
     }
 
     match /catalogo/{doc} {
