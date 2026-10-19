@@ -63,3 +63,10 @@ test('La conexión reutiliza Firebase ya inicializado tras una actualización',(
   assert.match(app,/if\(!fbDb\)try\{iniciarFirebase\(\)\}/);
   assert.match(app,/No se pudo verificar su acceso \['\+c\+'\]/);
 });
+
+test('Las consultas autenticadas no repiten la búsqueda de rol por cada documento',()=>{
+  const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
+  assert.match(rules,/function logged\(\) \{\s*return request\.auth != null;/);
+  assert.match(rules,/function isAdmin\(\)/);
+  assert.match(rules,/roles\/\$\(request\.auth\.uid\)\)\.data\.rol == 'admin'/);
+});
