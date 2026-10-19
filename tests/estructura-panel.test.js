@@ -43,3 +43,23 @@ test('Chat consulta solo conversaciones propias y las reglas separan participant
   assert.match(rules,/match \/panel\/loginbg \{\s*allow read, write: if isAdmin\(\);/);
   assert.match(rules,/match \/panel\/data \{/);
 });
+
+test('Los datos del panel se separan entre catálogo común y espacio privado por vendedor',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
+  assert.match(app,/const publicRef=.*panel_public.*general/);
+  assert.match(app,/const privateRef=.*vendedores/);
+  assert.match(app,/function migrarPanelPorRoles\(\)/);
+  assert.match(app,/clientes_y_agenda_heredados_admin/);
+  assert.match(rules,/match \/panel_public\/general \{/);
+  assert.match(rules,/match \/vendedores\/\{uid\}\/privado\/\{doc\} \{/);
+  assert.match(rules,/match \/panel\/data \{\s*allow read, write: if isAdmin\(\);/);
+});
+
+test('La conexión reutiliza Firebase ya inicializado tras una actualización',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/if\(!\(firebase\.apps&&firebase\.apps\.length\)\)firebase\.initializeApp\(firebaseConfig\)/);
+  assert.match(app,/function iniciarFirebase\(\)/);
+  assert.match(app,/if\(!fbDb\)try\{iniciarFirebase\(\)\}/);
+  assert.match(app,/No se pudo verificar su acceso \['\+c\+'\]/);
+});
