@@ -48,7 +48,7 @@ const save=()=>{saveLocal();syncToCloud()};
 
 // ===== Sincronización en la nube (Firebase) =====
 const firebaseConfig={apiKey:"AIzaSyBle5zbvVjXIVXvOz8tgxBBbu8-Ty1Msrs",authDomain:"tarjeteria-jhon.firebaseapp.com",projectId:"tarjeteria-jhon",storageBucket:"tarjeteria-jhon.firebasestorage.app",messagingSenderId:"386602273549",appId:"1:386602273549:web:8d97182d91d33a79e17e44"};
-let fbDb=null,fbDocRef=null,_cloudWriting=false,_syncTimer=null,_lastTs=0,_cloudOn=false;
+let fbDb=null,fbDocRef=null,_cloudWriting=false,_syncTimer=null,_lastTs=0,_cloudOn=false,_cloudUnsub=null;
 // App Check: certifica ante Firebase que las peticiones salen de esta página real
 // (no de un bot ni de un script copiando la API). Reemplace RECAPTCHA_V3_SITE_KEY por
 // la clave de sitio reCAPTCHA v3 creada en la consola de Firebase (App Check > Apps >
@@ -65,40 +65,82 @@ const emailjsListo=()=>EMAILJS_PUBLIC_KEY!=='EMAILJS_PUBLIC_KEY'&&EMAILJS_SERVIC
 try{if(window.emailjs&&emailjsListo())emailjs.init({publicKey:EMAILJS_PUBLIC_KEY})}catch(e){window._tjw&&_tjw(e)}
 try{
  if(window.firebase){
-  firebase.initializeApp(firebaseConfig);
+  // Tras una actualización o una restauración desde caché, Firebase puede ya estar
+  // inicializado. Reutilizarlo evita abortar antes de poder leer el rol del usuario.
+  if(!(firebase.apps&&firebase.apps.length))firebase.initializeApp(firebaseConfig);
   if(firebase.appCheck && RECAPTCHA_V3_SITE_KEY!=='RECAPTCHA_V3_SITE_KEY'){
    try{firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(RECAPTCHA_V3_SITE_KEY),true)}catch(e){window._tjw&&_tjw(e)}
   }
   fbDb=firebase.firestore();
-  fbDocRef=fbDb.collection('panel').doc('data');
  }
 }catch(e){window._tjw&&_tjw(e)}
 function cloudEstado(txt,ok){_cloudOn=!!ok;const els=document.querySelectorAll('.cloudSt');els.forEach(e=>{e.textContent=txt;e.style.color=ok?'#2fae6b':(ok===false?'#c0392b':'')})}
+// Datos compartidos mínimos para emitir facturas. No contienen usuarios, credenciales,
+// historial de clientes ni la agenda. Cada vendedor guarda su trabajo en su propio documento.
+const PUBLIC_CFG=['sig','itbms','nombre','ruc','tel','email','dir','banco','tcuenta','cuenta','yappy','dests','tema','snd','tono','vol','nsys'];
+const pickCfg=(cfg,keys=PUBLIC_CFG)=>keys.reduce((o,k)=>(Object.prototype.hasOwnProperty.call(cfg||{},k)&&(o[k]=cfg[k]),o),{});
+const publicRef=()=>fbDb&&fbDb.collection('panel_public').doc('general');
+const privateRef=()=>fbDb&&(esAdmin()?fbDb.collection('panel').doc('data'):fbDb.collection('vendedores').doc(SES.id).collection('privado').doc('data'));
+const publicPayload=ts=>({prod:Array.isArray(DB.prod)?DB.prod:[],cfg:pickCfg(DB.cfg),_ts:ts});
+const privatePayload=ts=>({cli:Array.isArray(DB.cli)?DB.cli:[],fac:Array.isArray(DB.fac)?DB.fac:[],ubi:Array.isArray(DB.ubi)?DB.ubi:[],agenda:Array.isArray(DB.agenda)?DB.agenda:[],cfg:pickCfg(DB.cfg),_ts:ts});
+function limpiarMemoriaVendedor(){
+ DB.prod=[];DB.cli=[];DB.fac=[];DB.ubi=[];DB.agenda=[];DB.cfg=Object.assign({},pickCfg(DB.cfg));saveLocal();
+}
 function mergeRemote(remote){const c=DB.cfg;const ts=remote._ts||0;DB=Object.assign(DB,remote);DB.cfg=Object.assign(c,remote.cfg||{});_lastTs=ts;saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0)}
+function mergeVendedor(pub,priv){
+ const b=privatePayload(0),p=pub||{},v=priv||{};
+ DB={prod:Array.isArray(p.prod)?p.prod:[],cli:Array.isArray(v.cli)?v.cli:[],fac:Array.isArray(v.fac)?v.fac:[],ubi:Array.isArray(v.ubi)?v.ubi:[],agenda:Array.isArray(v.agenda)?v.agenda:[],cfg:Object.assign({},b.cfg,p.cfg||{},v.cfg||{})};
+ _lastTs=Math.max(p._ts||0,v._ts||0);saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0);
+}
 function syncToCloud(){
  if(!fbDocRef)return;
  clearTimeout(_syncTimer);
  _syncTimer=setTimeout(()=>{
   const ts=Date.now();_lastTs=ts;_cloudWriting=true;
-  const payload=Object.assign({},DB,{_ts:ts});
-  fbDocRef.set(payload).then(()=>cloudEstado('☁ Sincronizado',true)).catch(er=>{window._tjw&&_tjw(er);window._tjFails=(window._tjFails||0)+1;const grande=er&&(er.code==='invalid-argument'||er.code==='resource-exhausted');cloudEstado(grande?'☁ NO se pudo guardar: el panel superó el tamaño permitido. Descarga una copia JSON':'☁ Sin conexión, guardado localmente',false)}).finally(()=>{setTimeout(()=>_cloudWriting=false,600)})
+  const own=esAdmin()?Object.assign({},DB,{_ts:ts}):privatePayload(ts);
+  const jobs=[fbDocRef.set(own)];
+  if(esAdmin())jobs.push(publicRef().set(publicPayload(ts)));
+  Promise.all(jobs).then(()=>cloudEstado('☁ Sincronizado',true)).catch(er=>{window._tjw&&_tjw(er);window._tjFails=(window._tjFails||0)+1;const grande=er&&(er.code==='invalid-argument'||er.code==='resource-exhausted');cloudEstado(grande?'☁ NO se pudo guardar: el panel superó el tamaño permitido. Descarga una copia JSON':'☁ Sin conexión, guardado localmente',false)}).finally(()=>{setTimeout(()=>_cloudWriting=false,600)})
  },700)
 }
+async function migrarPanelPorRoles(){
+ if(!esAdmin()||!fbDb)return;
+ const marca=fbDb.collection('panel').doc('migracion_roles_v1');
+ const ya=await marca.get();if(ya.exists)return;
+ const antiguo=await fbDb.collection('panel').doc('data').get();
+ const d=antiguo.exists?antiguo.data():DB,us=((d.cfg||{}).users||[]).filter(u=>u&&typeof u.id==='string');
+ const ts=Date.now(),lotes=[];
+ // Clientes, ubicaciones y agenda heredados no tienen dueño: se conservan solo en panel/data.
+ // Las facturas que sí guardan vend pasan a su propietario.
+ for(let i=0;i<us.length;i+=400){const b=fbDb.batch();us.slice(i,i+400).forEach(u=>{
+   const fac=(d.fac||[]).filter(f=>f&&f.vend===u.id);
+   b.set(fbDb.collection('vendedores').doc(u.id).collection('privado').doc('data'),{cli:[],fac,ubi:[],agenda:[],cfg:pickCfg(d.cfg),_ts:ts,migrado:true},{merge:true});
+  });lotes.push(b.commit())}
+ await Promise.all([publicRef().set({prod:d.prod||[],cfg:pickCfg(d.cfg),_ts:ts},{merge:true}),...lotes]);
+ await marca.set({version:1,ts,criterio:'clientes_y_agenda_heredados_admin; facturas_con_vend_al_vendedor'});
+}
 function iniciarSincronizacionNube(){
- if(!fbDocRef)return cloudEstado('Este navegador guarda solo localmente.',null);
+ if(!fbDb)return cloudEstado('Este navegador guarda solo localmente.',null);
+ fbDocRef=privateRef();if(!fbDocRef)return cloudEstado('Este navegador guarda solo localmente.',null);
+ if(_cloudUnsub){try{_cloudUnsub()}catch(e){window._tjw&&_tjw(e)}_cloudUnsub=null}
  cloudEstado('☁ Conectando…',null);
- fbDocRef.get().then(doc=>{
-  if(doc.exists){
-   const remote=doc.data();
-   if((remote._ts||0)>=_lastTs)mergeRemote(remote)
+ const cargar=async()=>{
+  if(esAdmin())await migrarPanelPorRoles();
+  if(esAdmin()){
+   const doc=await fbDocRef.get();if(doc.exists)mergeRemote(doc.data());
+   cloudEstado('☁ Sincronizado',true);
+   _cloudUnsub=fbDocRef.onSnapshot(doc=>{if(!doc.exists||_cloudWriting)return;const remote=doc.data();if((remote._ts||0)>_lastTs){mergeRemote(remote);cloudEstado('☁ Actualizado desde otro dispositivo',true)}},()=>cloudEstado('☁ Sin conexión, guardado localmente',false));
+  }else{
+   limpiarMemoriaVendedor();
+   const [pub,priv]=await Promise.all([publicRef().get(),fbDocRef.get()]);
+   mergeVendedor(pub.exists?pub.data():{},priv.exists?priv.data():{});
+   if(!priv.exists)await fbDocRef.set(privatePayload(Date.now()),{merge:true});
+   cloudEstado('☁ Sincronizado',true);
+   _cloudUnsub=fbDocRef.onSnapshot(doc=>{if(!doc.exists||_cloudWriting)return;mergeVendedor((window._pubData||{}),doc.data());},()=>cloudEstado('☁ Sin conexión, guardado localmente',false));
+   publicRef().onSnapshot(doc=>{window._pubData=doc.exists?doc.data():{};if(doc.exists)mergeVendedor(window._pubData,DB);},()=>{});
   }
-  cloudEstado('☁ Sincronizado',true);
-  fbDocRef.onSnapshot(doc=>{
-   if(!doc.exists||_cloudWriting)return;
-   const remote=doc.data();
-   if((remote._ts||0)>_lastTs){mergeRemote(remote);cloudEstado('☁ Actualizado desde otro dispositivo',true)}
-  },()=>cloudEstado('☁ Sin conexión, guardado localmente',false))
- }).catch(()=>cloudEstado('☁ Sin conexión, guardado localmente',false))
+ };
+ cargar().catch(e=>{window._tjw&&_tjw(e);cloudEstado('☁ Sin conexión, guardado localmente',false)})
 }
 
 // ===== Sincronización de fotos/archivos del catálogo (subidos manualmente) =====
@@ -1020,7 +1062,7 @@ const puede=k=>esAdmin()||(!!usr()&&k!=='config'&&k!=='vend'&&(usr().panels||[])
 const _no=navOrd;navOrd=()=>_no().filter(v=>puede(v[0]));
 const _ir=ir;ir=function(v){if(!SES)return;if(!puede(v)){const f=navOrd().find(x=>puede(x[0]));if(!f)return;v=f[0]}return _ir(v)};
 const esVend=()=>!!SES&&!esAdmin();
-['delFac','anular','delE','delP','editP','delC','editC','edC','delF','delUbi','agDel','comprimirCatalogo','expCatBackup','desc','pdfCat','repPDF','facPDF','exportUbiCSV','agIcs','respaldo','dlBlob'].forEach(n=>{const o=window[n];if(typeof o!=='function')return;window[n]=function(){if(esVend()){alert('Su usuario no tiene permiso para esta acción.');return}return o.apply(this,arguments)}});
+['delFac','anular','delE','addP','delP','editP','delC','editC','edC','delF','delUbi','agDel','comprimirCatalogo','expCatBackup','desc','pdfCat','repPDF','facPDF','exportUbiCSV','agIcs','respaldo','dlBlob'].forEach(n=>{const o=window[n];if(typeof o!=='function')return;window[n]=function(){if(esVend()){alert('Su usuario no tiene permiso para esta acción.');return}return o.apply(this,arguments)}});
 const _af=agForm;agForm=function(id){if(id&&esVend()){alert('Su usuario no tiene permiso para editar.');return}return _af.apply(this,arguments)};
 function waNum(t){for(const p of String(t||'').split(/[\/,;|]| y /)){let d=p.replace(/\D/g,'');if(!d)continue;if(d.startsWith('00'))d=d.slice(2);if(d.length===7||d.length===8)d='507'+d;if(d.length>=10&&d.length<=15)return d}return ''}
 const waBtn=c=>waNum(c.t)?`<button class="btn s wa" data-h-click="h191" data-a-click="${_ha(c.id)}">💬 WhatsApp</button> `:'';
@@ -2175,7 +2217,7 @@ function authInit(){
    const d=await fbDb.collection('roles').doc(u.uid).get();
    if(!d.exists){_note='Su cuenta no tiene acceso. Pídale al administrador que la active.';return firebase.auth().signOut()}
    const r=d.data();SES={id:r.rol==='admin'?'admin':u.uid,u:r};entrar()
-  }catch(e){_note='No se pudo verificar su acceso. Revise su conexión.';firebase.auth().signOut()}
+  }catch(e){const c=(e&&e.code)||'error';_note='No se pudo verificar su acceso ['+c+']. Revise su conexión.';firebase.auth().signOut()}
  })}
 function authLogin(){authUI(`<h2>Tarjetería Jhon</h2><p>Inicie sesión para continuar.</p><label>Correo</label><input id="au_e" type="email" autocomplete="username"><label>Contraseña</label><input id="au_p" type="password" autocomplete="current-password" data-h-keydown="h23"><label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0"><input type="checkbox" style="width:auto" data-h-change="h22"> Mostrar contraseña</label><div id="au_m"></div><button class="btn p" data-h-click="h21">Entrar</button><a href="#" data-h-click="h20" style="display:block;text-align:center;margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.85);text-decoration:underline">¿Olvidó su contraseña?</a>`);if(_note){authMsg(_note);_note=''}}
 async function authGo(){const e=$('au_e').value.trim(),p=$('au_p').value;if(!e||!p)return authMsg('Escriba correo y contraseña.');authMsg('Verificando…');
