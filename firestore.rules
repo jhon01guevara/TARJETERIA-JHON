@@ -1,0 +1,171 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Una cuenta del panel solo queda habilitada cuando tiene su documento de rol.
+    function logged() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/roles/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return logged()
+        && get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.rol == 'admin';
+    }
+
+    // El administrador usa la identidad interna "admin"; los vendedores usan su UID.
+    function me() {
+      return isAdmin() ? 'admin' : request.auth.uid;
+    }
+
+    function validRef(ref) {
+      return ref is string && ref.size() <= 80
+        && (ref == 'admin' || exists(/databases/$(database)/documents/roles/$(ref)));
+    }
+
+    function chatMember(data) {
+      return logged()
+        && data.members is list
+        && data.members.hasAny([me()]);
+    }
+
+    match /roles/{uid} {
+      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Transición: la aplicación actual sincroniza clientes, facturas y configuración
+    // en un único documento. No publicar una regla que lo cierre hasta migrar esos
+    // datos a documentos por vendedor; vea docs/migracion-panel-roles.md.
+    match /panel/data {
+      allow read, write: if logged();
+    }
+
+    // El fondo de inicio puede contener una URL privada de Storage: solo administración.
+    match /panel/loginbg {
+      allow read, write: if isAdmin();
+    }
+
+    // No permitir documentos inesperados dentro de panel.
+    match /panel/{doc} {
+      allow read, write: if false;
+    }
+
+    match /catalogo/{doc} {
+      allow read: if logged();
+      allow write: if isAdmin();
+    }
+
+    match /galeria/{doc} {
+      allow read: if logged();
+      allow create: if logged() && request.resource.data.o == me();
+      allow update, delete: if isAdmin() || resource.data.o == me();
+    }
+
+    // Un chat y sus mensajes solo existen para integrantes declarados. La consulta
+    // del navegador debe llevar where('members', 'array-contains', me()).
+    match /chats/{chat} {
+      allow read: if chatMember(resource.data);
+      allow create: if chatMember(request.resource.data);
+      allow update: if chatMember(resource.data)
+        && request.resource.data.members == resource.data.members;
+      allow delete: if isAdmin()
+        || (resource.data.type == 'grp' && resource.data.by == me());
+
+      match /msgs/{msg} {
+        allow read: if chatMember(get(/databases/$(database)/documents/chats/$(chat)).data);
+        allow create: if chatMember(get(/databases/$(database)/documents/chats/$(chat)).data)
+          && request.resource.data.from == me()
+          && request.resource.data.t is string
+          && request.resource.data.t.size() > 0
+          && request.resource.data.t.size() <= 2000;
+        // El creador del grupo puede borrarlo mediante un lote que incluye sus mensajes.
+        allow delete: if isAdmin()
+          || get(/databases/$(database)/documents/chats/$(chat)).data.by == me();
+      }
+    }
+
+    // Llamadas de voz: solo entre administrador y vendedor.
+    match /llamadas/{id} {
+      allow create: if logged()
+        && request.resource.data.from == me()
+        && (request.resource.data.from == 'admin' || request.resource.data.to == 'admin');
+      allow read, update: if logged()
+        && (resource.data.from == me() || resource.data.to == me());
+      allow delete: if isAdmin();
+
+      match /ice/{c} {
+        allow read, create: if logged()
+          && (get(/databases/$(database)/documents/llamadas/$(id)).data.from == me()
+            || get(/databases/$(database)/documents/llamadas/$(id)).data.to == me());
+      }
+    }
+
+    match /perfiles/{uid} {
+      allow read: if logged();
+      allow write: if logged()
+        && (request.auth.uid == uid || (isAdmin() && uid == 'admin'));
+    }
+
+    match /presencia/{uid} {
+      allow read: if isAdmin();
+      allow write: if logged() && request.auth.uid == uid;
+    }
+
+    // Catálogo público; las publicaciones proceden exclusivamente del administrador.
+    match /tienda_items/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /tienda_leads/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['id','name','tel','email','empresa','dir','ref','ts','imp'])
+        && request.resource.data.id == id
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 1 && request.resource.data.name.size() <= 120
+        && request.resource.data.tel is string && request.resource.data.tel.size() <= 40
+        && request.resource.data.email is string && request.resource.data.email.size() <= 120
+        && validRef(request.resource.data.ref)
+        && request.resource.data.ts is number
+        && request.resource.data.imp == false;
+      allow read: if isAdmin() || (logged() && resource.data.ref == me());
+      // Un vendedor únicamente marca como importado su propio lead; administración gestiona todo.
+      allow update: if isAdmin() || (logged() && resource.data.ref == me()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['imp'])
+        && request.resource.data.imp == true);
+      allow delete: if isAdmin();
+    }
+
+    match /tienda_pedidos/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['id','cid','lead','items','total','nota','ref','ts','estado'])
+        && request.resource.data.id == id
+        && request.resource.data.cid is string && request.resource.data.cid.size() <= 100
+        && request.resource.data.lead is map
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 100
+        && request.resource.data.total is number && request.resource.data.total >= 0
+        && request.resource.data.estado == 'nuevo'
+        && request.resource.data.nota is string && request.resource.data.nota.size() <= 500
+        && validRef(request.resource.data.ref)
+        && request.resource.data.ts is number;
+      allow read: if isAdmin() || (logged() && resource.data.ref == me());
+      // El vendedor responsable solo cambia el estado; no puede alterar pedido, total o cliente.
+      allow update: if isAdmin() || (logged() && resource.data.ref == me()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado'])
+        && (request.resource.data.estado == 'nuevo' || request.resource.data.estado == 'atendido'));
+      allow delete: if isAdmin();
+    }
+
+    match /investigacion_items/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /wa_conversaciones/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
