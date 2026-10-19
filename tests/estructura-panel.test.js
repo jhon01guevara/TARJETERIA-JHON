@@ -70,3 +70,10 @@ test('Las consultas autenticadas no repiten la búsqueda de rol por cada documen
   assert.match(rules,/function isAdmin\(\)/);
   assert.match(rules,/roles\/\$\(request\.auth\.uid\)\)\.data\.rol == 'admin'/);
 });
+
+test('El inicio de sesión no queda verificando indefinidamente si Firestore no responde',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/get\(\{source:'server'\}\)/);
+  assert.match(app,/firestore\/timeout/);
+  assert.match(app,/12000/);
+});
