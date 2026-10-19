@@ -1035,13 +1035,10 @@ const recList=()=>{const r=DB.cfg.recMails||[];if(r.length)return r;const d=recD
 function recCard(){const L=DB.cfg.recMails||[];return `<h3 style="margin:0">🔑 Recuperación de cuenta</h3><p style="font-size:12.5px;color:var(--gris)">Si olvida su PIN de administrador, el enlace de recuperación se envía a estos correos. Puede agregar uno o varios.</p><div class="g" style="margin:8px 0 10px"><div><label>Correo de recuperación</label><input id="rc_m" type="email" placeholder="correo@ejemplo.com"></div></div><button class="btn p s" data-h-click="h189">+ Agregar correo</button><div style="margin-top:12px">${L.length?L.map((m,i)=>`<div class="dl"><span><b>${esc(m)}</b></span><button class="btn s d" data-h-click="h188" data-a-click="${_ha(i)}">Eliminar</button></div>`).join(''):'<div class="vacio">Aún no hay correos de recuperación.</div>'}</div>`}
 function recAdd(){const m=$('rc_m').value.trim().toLowerCase();if(!/^\S+@\S+\.\S+$/.test(m))return alert('Ingrese un correo válido.');const L=DB.cfg.recMails||(DB.cfg.recMails=[]);if(!L.includes(m))L.push(m);save();R.config()}
 function recDel(i){if(!confirm('¿Quitar este correo de recuperación?'))return;(DB.cfg.recMails||[]).splice(i,1);save();R.config()}
-const _rc=R.config;
-R.config=function(){_rc();if(!esAdmin())return;const c=document.createElement('div');c.className='card';c.id='recCard';c.innerHTML=recCard();const v=$('v');v.insertBefore(c,v.firstChild);const vc=document.createElement('div');vc.className='card';vc.innerHTML=vozCard();c.after(vc);const cc=document.createElement('div');cc.className='card';cc.innerHTML=cintCard();vc.after(cc);const lc=document.createElement('div');lc.className='card';lc.innerHTML=llamCard();cc.after(lc);const tc=document.createElement('div');tc.className='card';tc.id='tplCard';tc.innerHTML=tplCard();v.insertBefore(tc,v.firstChild)};
+const _configBase=R.config;
 // --- Cierre de sesión por inactividad (configurable por el administrador) ---
 function sesCard(){const m=+(DB.cfg.sesionMin||0);const op=[0,5,10,15,30,60,120];return `<h3 style="margin:0">⏱ Cierre de sesión por inactividad</h3><p style="font-size:12.5px;color:var(--gris)">Si deja el panel abierto sin tocarlo (como administrador o como vendedor), la sesión se cerrará sola pasado este tiempo. Use 0 para desactivarlo.</p><div class="g" style="margin:8px 0 6px"><div><label>Minutos de inactividad</label><select id="ses_m" data-h-change="h187">${op.map(n=>`<option value="${n}" ${n===m?'selected':''}>${n===0?'Nunca (desactivado)':n+' minutos'}</option>`).join('')}</select></div></div><p style="font-size:11.5px;color:var(--gris)">${m>0?'✅ Activo: la sesión se cerrará tras '+m+' min. sin actividad.':'⛔ Desactivado: la sesión no se cierra sola.'}</p>`}
 function sesSet(v){DB.cfg.sesionMin=Math.max(0,Math.round(+v||0));save();idleArm();R.config()}
-const _rcs=R.config;
-R.config=function(){_rcs();if(!esAdmin())return;const sc=document.createElement('div');sc.className='card';sc.id='sesCard';sc.innerHTML=sesCard();const v=$('v');v.insertBefore(sc,v.firstChild)};
 
 // --- Copia de seguridad completa (clientes, facturas, productos, catálogo, agenda, config) ---
 // Guarda TODO lo que hay en DB (lo mismo que se sincroniza a Firebase) en un archivo .json que
@@ -1057,8 +1054,6 @@ async function bkImport(file){const m=t=>{const e=$('bk_m');if(e)e.textContent=t
   DB=data;save();m('✅ Copia restaurada. Recargando…');setTimeout(()=>location.reload(),900)
  }catch(e){m('⚠ No se pudo leer ese archivo. Asegúrese de que sea una copia de seguridad generada por este mismo panel.')}
  $('bk_f').value=''}
-const _rcb=R.config;
-R.config=function(){_rcb();if(!esAdmin())return;const bc=document.createElement('div');bc.className='card';bc.id='bkCard';bc.innerHTML=bkCard();const v=$('v');v.insertBefore(bc,v.firstChild)};
 let _idleTimer=null,_idleLast=Date.now(),_idleArmed=0,_idleW=0,_idleSrv=null,_idleSrvT=0;
 const _ACT='tj_act',_SMN='tj_sesmin';
 /* Marca de actividad: se guarda también en el navegador, para que cerrar/reabrir la pestaña o
@@ -1691,7 +1686,6 @@ function linksRefresh(){if(!fbDb)return;fbDb.collection('tienda_items').doc('__c
 function temaSet(t){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,tema:t,navidad:t==='navidad',ts:Date.now()},{merge:true}).then(()=>{TD.tema=t;TD.xmas=t==='navidad';R.config()}).catch(()=>alert('No se pudo guardar. Revise su conexión o permisos.'))}
 function heroModeSet(m){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,heroMode:m,ts:Date.now()},{merge:true}).then(()=>{TD.heroMode=m;R.config()}).catch(()=>alert('No se pudo guardar la configuración del carrusel. Revise su conexión o permisos.'))}
 function paletaSet(p){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,paleta:p,ts:Date.now()},{merge:true}).then(()=>{TD.paleta=p;R.config()}).catch(()=>alert('No se pudo guardar la paleta. Revise su conexión o permisos.'))}
-const _rcx=R.config;R.config=function(){_rcx();if(!esAdmin())return;const c=document.createElement('div');c.className='card';c.id='xmasCard';c.innerHTML=xmasCard();const v=$('v');v.insertBefore(c,v.firstChild)};
 function tdRowHTML(o,pub){const isp=pub.has(o.id),pi=TD.items.find(x=>x.id===o.id),sel=new Set(pi&&Array.isArray(pi.tags)?pi.tags:temaOf(o)),ch=TEMAS.filter(t=>sel.has(t.id));
  const tm=`<details class="tdtm" id="tdd_${o.id}"><summary><span class="tdsum">${ch.length?ch.map(t=>t.e).join(' '):'<em>Sin tema</em>'}</span><i>▾</i></summary><div class="tdpop">${TEMAS.map(t=>`<label class="tdtg"><input type="checkbox" class="tdtgk" data-id="${o.id}" value="${t.id}" ${sel.has(t.id)?'checked':''} data-h-change="h98" data-a-change="${_ha(o.id)}"><span>${t.e} ${t.n}</span></label>`).join('')}</div></details>`;
  return `<tr data-pub="${isp?1:0}"><td><input type="checkbox" class="tdck mck" value="${o.id}"></td><td><img class="tdth" src="${o.thumb||''}" alt="" data-h-click="h97" data-a-click="${_ha(o.id)}" title="Ampliar"></td><td>${esc(o.name||'')}</td><td>${tm}</td><td class="r">${+o.price>0?$$(+o.price):'<small>Sin precio</small>'}</td><td>${tdStkSel(o.id,(pi&&pi.stock)||'ok')}</td><td>${tdBdSel(o.id,(pi&&pi.badges)||[])}</td><td>${isp?'<b style="color:#2fa84f">✔ Publicado</b>':'<small>No publicado</small>'}</td><td><button class="btn s d" data-h-click="h96" data-a-click="${_ha(o.id)}" title="Eliminar">🗑</button></td></tr>`}
@@ -2303,7 +2297,6 @@ async function lbgFile(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)r
  else lbgStatus('Guardado solo en este dispositivo: no se pudo subir a la nube (Firebase Storage no habilitado o sin permiso). Para sincronizar un video use un enlace (URL).',false)}
 function lbgUrl(){const u=($('lbgUrl').value||'').trim();if(!/^https?:\/\//i.test(u))return alert('Pegue un enlace que empiece con https://');const m=lbgMeta();m.mode='url';m.url=u;m.kind=lbgIsVid(u)?'video':'image';lbgSave(m);lbgRef();lbgApply();lbgPush()}
 async function lbgReset(){const m=lbgMeta();lbgDelStorage(m.cloud);await lbgDel();lbgSave(Object.assign({},LBG_DEF,{cts:m.cts}));lbgRef();lbgApply();lbgPush()}
-const _rcl=R.config;R.config=function(){const r=_rcl.apply(this,arguments);if(!esAdmin())return r;const c=document.createElement('div');c.className='card';c.id='lbgCard';c.innerHTML=lbgCard();const v=$('v');if(v)v.insertBefore(c,v.firstChild);lbgFill($('lbgPrev'),lbgMeta());return r};
 
 aplicarTema(getTemaUser(),false);ir('home');
 if(SHOP)shopInit();else authInit();
@@ -2322,7 +2315,6 @@ function investigacionAbrir(){const old=document.getElementById('investOv');if(o
  document.body.appendChild(v);document.getElementById('investX').onclick=()=>v.remove();
  const _if=document.getElementById('investFrame');appHtml('investigacion').then(h=>{_if.srcdoc=h}).catch(e=>{window._tjw&&_tjw(e);_if.srcdoc='<p style="font:15px sans-serif;padding:24px">No se pudo cargar el panel. Recargue la página (Ctrl+F5).</p>'})}
 function investCard(){return `<h3 style="margin:0">📦 Investigación de productos</h3><p style="font-size:12.5px;color:var(--gris)">Guarde y compare proveedores de Alibaba: precios, MOQ, fletes, certificaciones y fotos de cada producto, con una ruta de seguimiento por etapas (investigando → contactado → muestra → comparación → seleccionado → aprobado). Los datos se sincronizan con la nube (Firestore) y se comparten entre sus dispositivos; si no hay conexión, se usa una copia guardada en el navegador.</p><button class="btn p" data-h-click="h2">📦 Abrir panel de investigación</button>`}
-const _rcInv=R.config;R.config=function(){const r=_rcInv.apply(this,arguments);if(!esAdmin())return r;const c=document.createElement('div');c.className='card';c.id='investCard';c.innerHTML=investCard();const v=$('v');if(v)v.insertBefore(c,v.firstChild);return r};
 function investHomeHTML(){return `<div class="card" id="investHome"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">📦 Investigación de productos</h3><button class="btn s" data-h-click="h2">Abrir →</button></div><p style="font-size:13px;color:var(--gris);margin:6px 0 0">Compare proveedores de Alibaba: precios, MOQ, fletes y certificaciones, con una ruta de seguimiento por etapas. Sincronizado con la nube.</p></div>`}
 const _rhInv=R.home;R.home=function(){const r=_rhInv.apply(this,arguments);if(!esAdmin())return r;const w=document.createElement('div');w.innerHTML=investHomeHTML();const v=$('v');if(v&&w.firstElementChild)v.appendChild(w.firstElementChild);return r};
 
@@ -2347,7 +2339,19 @@ function waCard(){return `<h3 style="margin:0">🤖 Agente de ventas (WhatsApp)<
 function waRefreshCard(){const e=$('waCard');if(!e||vista!=='config')return;e.innerHTML=waCard()}
 function waHomeHTML(){return `<div class="card" id="waHome"><h3 style="margin:0">🤖 ${WA.list.length} conversación${WA.list.length==1?'':'es'} de WhatsApp esperando un asesor</h3><div>${WA.list.slice(0,5).map(waRow).join('')}</div></div>`}
 function waRefreshHome(){if(vista!=='home')return;const e=$('waHome');if(!WA.list.length){if(e)e.remove();return}const w=document.createElement('div');w.innerHTML=waHomeHTML();if(!w.firstElementChild)return;if(e)e.replaceWith(w.firstElementChild);else{const v=$('v');if(v)v.insertBefore(w.firstElementChild,v.firstChild)}}
-const _rcWa=R.config;R.config=function(){const r=_rcWa.apply(this,arguments);if(!esAdmin())return r;const c=document.createElement('div');c.className='card';c.id='waCard';c.innerHTML=waCard();const v=$('v');if(v)v.insertBefore(c,v.firstChild);waListen();return r};
+/* Las tarjetas adicionales de Configuración se renderizan en un solo lugar.
+   Antes cada mejora envolvía R.config otra vez; eso hacía que el orden dependiera
+   de la fecha de cada parche y volvía frágil cualquier cambio futuro. */
+R.config=function(){
+ const r=_configBase.apply(this,arguments);if(!esAdmin())return r;const v=$('v');if(!v)return r;
+ const cards=[
+  ['waCard',waCard],['investCard',investCard],['lbgCard',lbgCard],['xmasCard',xmasCard],
+  ['bkCard',bkCard],['sesCard',sesCard],['tplCard',tplCard],['recCard',recCard],
+  ['vozCard',vozCard],['cintCard',cintCard],['llamCard',llamCard]
+ ];
+ cards.slice().reverse().forEach(([id,html])=>{const c=document.createElement('div');c.className='card';c.id=id;c.innerHTML=html();v.insertBefore(c,v.firstChild)});
+ lbgFill($('lbgPrev'),lbgMeta());waListen();return r
+};
 const _rhWa=R.home;R.home=function(){const r=_rhWa.apply(this,arguments);if(!esAdmin())return r;waListen();if(WA.list.length){const w=document.createElement('div');w.innerHTML=waHomeHTML();const v=$('v');if(v&&w.firstElementChild)v.insertBefore(w.firstElementChild,v.firstChild)}return r};
 
 __H.h1=function(event,a){waBack(a[0])};
