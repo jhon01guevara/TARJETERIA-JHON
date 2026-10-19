@@ -110,6 +110,7 @@ function aplicarFacVend(){
  const propias=(Array.isArray(DB.fac)?DB.fac:[]).filter(f=>f&&!f._v&&!ids.has(f.id));
  const ajenas=[];Object.keys(_vendSnap).forEach(k=>(_vendSnap[k]||[]).forEach(f=>{if(f&&f.id)ajenas.push(Object.assign({},f,{_v:1,vend:f.vend||k}))}));
  DB.fac=propias.concat(ajenas).sort((a,b)=>(a.fecha<b.fecha?-1:a.fecha>b.fecha?1:(a.n||0)-(b.n||0)));
+ try{asegurarContador()}catch(e){window._tjw&&_tjw(e)}
 }
 function escucharVendedores(){
  if(!esAdmin()||!fbDb)return;
@@ -140,6 +141,35 @@ function devolverFacVend(){
    tx.set(ref,{fac,_ts:Date.now()},{merge:true});
   });
  }).filter(Boolean);
+}
+
+/* Contador único de facturas para administración y vendedores: panel_public/contador.
+   Guarda el próximo número libre y se reserva con una transacción, así dos cuentas
+   nunca reciben el mismo número. Administración lo mantiene por encima de todas las
+   facturas conocidas; los vendedores solo pueden avanzarlo de uno en uno. */
+let _ctrT=0,_ctrVal=0;
+const contadorRef=()=>fbDb&&fbDb.collection('panel_public').doc('contador');
+function asegurarContador(){
+ if(!esAdmin()||!fbDb)return;
+ const mx=(DB.fac||[]).reduce((m,f)=>Math.max(m,+f.n||0),0),piso=Math.max(mx+1,+(DB.cfg||{}).sig||0);
+ if(piso<=_ctrVal)return;
+ clearTimeout(_ctrT);
+ _ctrT=setTimeout(()=>{
+  const ref=contadorRef();if(!ref)return;
+  fbDb.runTransaction(async tx=>{
+   const d=await tx.get(ref),a=d.exists&&Number.isInteger(d.data().sig)?d.data().sig:0;
+   if(a<piso)tx.set(ref,{sig:piso});return Math.max(a,piso)
+  }).then(v=>{_ctrVal=v}).catch(e=>{window._tjw&&_tjw(e)});
+ },1500);
+}
+async function reservarNumeroFactura(){
+ const ref=contadorRef();if(!ref)return 0;
+ const piso=esAdmin()?Math.max(+(DB.cfg||{}).sig||1,...(DB.fac||[]).map(f=>(+f.n||0)+1)):0;
+ return fbDb.runTransaction(async tx=>{
+  const d=await tx.get(ref),a=d.exists&&Number.isInteger(d.data().sig)?d.data().sig:0;
+  if(!d.exists&&!esAdmin())throw new Error('contador-no-iniciado');
+  const n=Math.max(a,piso);tx.set(ref,{sig:n+1});return n
+ });
 }
 function syncToCloud(){
  if(!fbDocRef)return;
@@ -1182,6 +1212,18 @@ function credAg(f){if(!f||!f.credito||!f.credito.vence||f.anulada)return;if(DB.a
  DB.agenda.push({id:uid(),dn:{},fid:f.id,ti:'Cobro factura F-'+f.n+' — '+f.cli,f:f.credito.vence,h:'',h2:'',t:'cobro',r:'',av:'0',cn:f.cli,tel:c&&c.t||'',nt:'Crédito de '+$$(f.credito.monto)+' a '+crPlazo(f.credito)+'. Factura F-'+f.n+' del '+fdate(f.fecha)+'.'});
  save();if(vista==='agenda')R.agenda();try{cintillo()}catch(e){window._tjw&&_tjw(e)}}
 const _em=emitir;emitir=function(){const n=DB.fac.length,r=_em.apply(this,arguments);if(DB.fac.length>n){const f=DB.fac[DB.fac.length-1];if(SES&&!f.vend){f.vend=SES.id;f.vn=SES.id==='admin'?'Administrador':((usr()&&usr().n)||chatName(SES.id));save()}credAg(f)}return r};
+/* El número se reserva antes de emitir, solo cuando la factura es válida, para no dejar huecos. */
+const _emBase=emitir;let _emBusy=false;
+emitir=function(){
+ if(_emBusy)return;
+ if(!fbDb||!SES)return _emBase.apply(this,arguments);
+ const self=this,args=arguments,t=totales();
+ if(!items.filter(i=>i.d&&(i.p>0)).length)return _emBase.apply(self,args);
+ const pr=TJFacturacion.prepararPago({pago:$('f_pg').value,total:t.tot,pagosMixtos:mix,fecha:$('f_fecha').value||hoy(),plazo:crN,unidad:crU});
+ if(!pr.ok)return _emBase.apply(self,args);
+ _emBusy=true;
+ reservarNumeroFactura().then(n=>{if(n>0)DB.cfg.sig=n}).catch(e=>{window._tjw&&_tjw(e);console.warn('No se pudo reservar el número de factura; se usa el número local',e)}).finally(()=>{_emBusy=false;_emBase.apply(self,args)});
+};
 const _an=anular;anular=function(id){const a=DB.fac.find(f=>f.id==id),was=a&&a.anulada,r=_an.apply(this,arguments),b=DB.fac.find(f=>f.id==id);if(b&&b.anulada&&!was){DB.agenda=DB.agenda.filter(e=>e.fid!==id);save()}return r};
 // --- Galería de fotos ---
 let GAL=[],_galOn=false;
