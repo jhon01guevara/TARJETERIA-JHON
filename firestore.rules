@@ -2,10 +2,12 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Una cuenta del panel solo queda habilitada cuando tiene su documento de rol.
+    // La sesión se valida con Firebase Authentication. El rol se consulta de forma
+    // específica en isAdmin() y los recursos privados además validan propietario o
+    // participante. Evitamos una consulta exists() repetida en cada documento de una
+    // colección, que puede hacer que Firestore rechace consultas completas.
     function logged() {
-      return request.auth != null
-        && exists(/databases/$(database)/documents/roles/$(request.auth.uid));
+      return request.auth != null;
     }
 
     function isAdmin() {
