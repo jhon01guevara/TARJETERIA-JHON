@@ -16,3 +16,19 @@ test('Inicio usa un solo renderizador para sus tarjetas adicionales',()=>{
   assert.equal((app.match(/R\.home=function\(/g)||[]).length,1);
   for(const name of ['vdAdmHTML','tdHomeHTML','investHomeHTML','waHomeHTML'])assert.match(app,new RegExp(name+'\\('));
 });
+
+test('Chat integra el ajuste de móvil sin encadenar renderizadores',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.equal((app.match(/R\.chat=function\(/g)||[]).length,1);
+  assert.match(app,/function chatFitSoon\(\)/);
+  assert.match(app,/chatConv\(\);chatFitSoon\(\)/);
+});
+
+test('Catálogo y Check integran permisos y ajuste móvil sin capas extras',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.equal((app.match(/R\.cat\s*=/g)||[]).length,1);
+  assert.equal((app.match(/R\.check=function\(/g)||[]).length,0);
+  assert.doesNotMatch(app,/const _rcat=|const _rck=/);
+  assert.match(app,/if\(esVend\(\)\)\{const d=\$\('dz'\)/);
+  assert.match(app,/checkFitSoon\(\)/);
+});
