@@ -145,3 +145,24 @@ test('El formulario de cliente permite registrar la ubicación del negocio',()=>
   assert.match(app,/<th>Ubicación<\/th>/);
   assert.match(app,/__H\.h329=/);
 });
+
+test('El formulario de cliente incluye un mapa para marcar el negocio',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/id="cuMap"/);
+  assert.match(app,/function cliMapaIniciar\(\)/);
+  assert.match(app,/function cliMapSync\(centrar\)/);
+  assert.match(app,/;cliMapaIniciar\(\)\},\s*ubi\(\)\{/);
+  assert.match(app,/cliLocEstado\(\);cliMapSync\(true\)/);
+});
+
+test('El mapa general de clientes es solo para administración y se ve en Inicio',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.equal((app.match(/R\.mapa=function\(/g)||[]).length,1);
+  assert.match(app,/V\.push\(\['mapa','🗺️','Mapa de clientes'\]\)/);
+  assert.match(app,/const PANELES=V\.filter\(v=>v\[0\]!=='config'&&v\[0\]!=='vend'&&v\[0\]!=='mapa'\)/);
+  assert.match(app,/k!=='vend'&&k!=='mapa'&&/);
+  assert.match(app,/mcPintar\('mcHomeMap'\)/);
+  assert.match(app,/function mcStats\(\)/);
+  for(const h of ['h332','h333','h334'])assert.match(app,new RegExp('__H\\.'+h+'='));
+});
+
