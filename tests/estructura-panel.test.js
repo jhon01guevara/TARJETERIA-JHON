@@ -113,3 +113,35 @@ test('Las facturas toman su número de un contador único compartido',()=>{
   assert.match(rules,/request\.resource\.data\.sig == resource\.data\.sig \+ 1/);
   assert.match(rules,/match \/\{document=\*\*\} \{\s*allow read, write: if false;/);
 });
+
+test('Vendedores solo ven, descargan y comparten el catálogo',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/\$\{esVend\(\)\?'':`<div class="ckrow">/);
+  assert.match(app,/\$\{esVend\(\)\?'':`<select class="catsel"/);
+  assert.match(app,/\$\{esVend\(\)\?'':`<button class="btn s" data-h-click="h200"/);
+  assert.match(app,/\['pdfCat','shareCat','descTodoImg'\]/);
+  assert.doesNotMatch(app,/'expCatBackup','desc','pdfCat'/);
+  assert.match(app,/'expCatBackup','repPDF'/);
+});
+
+test('Los clientes son una lista compartida, sin duplicados y solo administración elimina',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
+  assert.match(app,/panel_public'\)\.doc\('clientes'\)/);
+  assert.match(app,/function fusionarClientes\(/);
+  assert.match(app,/const dup=clienteDuplicado\(/);
+  assert.match(app,/\$\{esAdmin\(\)\?`<button class="btn s" data-h-click="h305"/);
+  assert.match(app,/'delC','editC'/);
+  assert.match(rules,/match \/panel_public\/clientes \{/);
+  assert.match(rules,/allow create, delete: if isAdmin\(\);/);
+  assert.match(rules,/request\.resource\.data\.cli\.size\(\) >= resource\.data\.cli\.size\(\)/);
+});
+
+test('El formulario de cliente permite registrar la ubicación del negocio',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/id="cu_link"/);
+  assert.match(app,/function cliLocGPS\(\)/);
+  assert.match(app,/nuevo\.lat=loc\.lat;nuevo\.lng=loc\.lng/);
+  assert.match(app,/<th>Ubicación<\/th>/);
+  assert.match(app,/__H\.h329=/);
+});
