@@ -1615,7 +1615,7 @@ function vdAdmHTML(){const ids=['admin',...usuarios().map(u=>u.id)],
  A.sort((a,b)=>b.s.tot-a.s.tot);
  return `<div class="card" id="vdAdm"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px"><div><h3 style="margin:0">👥 Rendimiento de vendedores</h3><small style="color:var(--gris)">${VDP.find(x=>x[0]===VD.p)[1]} · toque “Ver dashboard” para el detalle de cada uno</small></div><div style="display:flex;gap:6px;flex-wrap:wrap">${vdChips()}</div></div>
 ${A.length?`<div class="tw" style="margin-top:12px"><table><tr><th>Vendedor</th><th class="r">Ventas</th><th class="r">Facturas</th><th class="r">Ticket prom.</th><th>Mejor cliente</th><th class="r">Por cobrar</th><th>Participación</th><th></th></tr>${A.map(r=>{const i=top.indexOf(r.id),b=r.s.cli[0],pc=T?Math.round(r.s.tot/T*100):0;return `<tr><td>${i>=0&&i<3?med[i]+' ':''}<b>${esc(vdName(r.id))}</b>${r.id==='admin'?'<br><small style="color:var(--gris)">incluye facturas anteriores</small>':''}</td><td class="r">${$$(r.s.tot)}</td><td class="r">${r.s.n}</td><td class="r">${$$(r.s.avg)}</td><td>${b?esc(b.n):'—'}</td><td class="r">${$$(r.pm)}</td><td style="min-width:110px"><div class="vdbar"><i style="width:${pc}%"></i></div><small style="color:var(--gris)">${pc}%</small></td><td class="r"><button class="btn s" data-h-click="h122" data-a-click="${_ha(r.id)}">Ver dashboard</button></td></tr>`}).join('')}<tr><td><b>Total</b></td><td class="r"><b>${$$(T)}</b></td><td class="r"><b>${N}</b></td><td class="r"><b>${$$(N?T/N:0)}</b></td><td></td><td class="r"><b>${$$(PM)}</b></td><td></td><td></td></tr></table></div>`:'<div class="vacio">Aún no hay ventas ni vendedores.</div>'}</div>`}
-const _rhome=R.home;R.home=function(){const _tdw=()=>{const w=document.createElement('div');w.innerHTML=tdHomeHTML();return w.firstElementChild};if(esVend()){$('v').innerHTML=vdHTML(chatMe());const t=_tdw();if(t)$('v').insertBefore(t,$('v').firstChild);return}const r=_rhome.apply(this,arguments);if(esAdmin()){const c=document.createElement('div');c.innerHTML=vdAdmHTML();const v=$('v');v.insertBefore(c.firstElementChild,v.firstChild)}const t=_tdw();if(t){const v=$('v');v.insertBefore(t,v.children[1]||null)}return r};
+const _homeBase=R.home;
 if(typeof dibujarGraficos==='function'){const _dg=dibujarGraficos;dibujarGraficos=function(){if(esVend())return;try{return _dg.apply(this,arguments)}catch(e){window._tjw&&_tjw(e)}}}
 function tplMinOn(){try{return localStorage.getItem('tj_tpl_min')==='1'}catch(e){return false}}
 function tplMin(){try{localStorage.setItem('tj_tpl_min',tplMinOn()?'0':'1')}catch(e){window._tjw&&_tjw(e)}tplRef()}
@@ -2316,7 +2316,6 @@ function investigacionAbrir(){const old=document.getElementById('investOv');if(o
  const _if=document.getElementById('investFrame');appHtml('investigacion').then(h=>{_if.srcdoc=h}).catch(e=>{window._tjw&&_tjw(e);_if.srcdoc='<p style="font:15px sans-serif;padding:24px">No se pudo cargar el panel. Recargue la página (Ctrl+F5).</p>'})}
 function investCard(){return `<h3 style="margin:0">📦 Investigación de productos</h3><p style="font-size:12.5px;color:var(--gris)">Guarde y compare proveedores de Alibaba: precios, MOQ, fletes, certificaciones y fotos de cada producto, con una ruta de seguimiento por etapas (investigando → contactado → muestra → comparación → seleccionado → aprobado). Los datos se sincronizan con la nube (Firestore) y se comparten entre sus dispositivos; si no hay conexión, se usa una copia guardada en el navegador.</p><button class="btn p" data-h-click="h2">📦 Abrir panel de investigación</button>`}
 function investHomeHTML(){return `<div class="card" id="investHome"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">📦 Investigación de productos</h3><button class="btn s" data-h-click="h2">Abrir →</button></div><p style="font-size:13px;color:var(--gris);margin:6px 0 0">Compare proveedores de Alibaba: precios, MOQ, fletes y certificaciones, con una ruta de seguimiento por etapas. Sincronizado con la nube.</p></div>`}
-const _rhInv=R.home;R.home=function(){const r=_rhInv.apply(this,arguments);if(!esAdmin())return r;const w=document.createElement('div');w.innerHTML=investHomeHTML();const v=$('v');if(v&&w.firstElementChild)v.appendChild(w.firstElementChild);return r};
 
 /* ===== Agente de ventas por WhatsApp (IA) =====
    El bot en sí corre en una Cloud Function aparte (no en esta página, porque necesita
@@ -2352,7 +2351,24 @@ R.config=function(){
  cards.slice().reverse().forEach(([id,html])=>{const c=document.createElement('div');c.className='card';c.id=id;c.innerHTML=html();v.insertBefore(c,v.firstChild)});
  lbgFill($('lbgPrev'),lbgMeta());waListen();return r
 };
-const _rhWa=R.home;R.home=function(){const r=_rhWa.apply(this,arguments);if(!esAdmin())return r;waListen();if(WA.list.length){const w=document.createElement('div');w.innerHTML=waHomeHTML();const v=$('v');if(v&&w.firstElementChild)v.insertBefore(w.firstElementChild,v.firstChild)}return r};
+/* Inicio también tenía capas sucesivas. Todas sus tarjetas se agrupan aquí para
+   que vendedores, administradores y la vista general sigan la misma ruta clara. */
+function homeCard(html){const w=document.createElement('div');w.innerHTML=html();return w.firstElementChild}
+R.home=function(){
+ const v=$('v'),tienda=()=>homeCard(tdHomeHTML());
+ if(esVend()){
+  v.innerHTML=vdHTML(chatMe());const t=tienda();if(t)v.insertBefore(t,v.firstChild);return;
+ }
+ const r=_homeBase.apply(this,arguments);if(!v)return r;
+ if(esAdmin()){
+  const vd=homeCard(vdAdmHTML());if(vd)v.insertBefore(vd,v.firstChild);
+ }
+ const t=tienda();if(t)v.insertBefore(t,v.children[1]||null);
+ if(!esAdmin())return r;
+ const inv=homeCard(investHomeHTML());if(inv)v.appendChild(inv);
+ waListen();if(WA.list.length){const wa=homeCard(waHomeHTML());if(wa)v.insertBefore(wa,v.firstChild)}
+ return r
+};
 
 __H.h1=function(event,a){waBack(a[0])};
 __H.h2=function(event,a){investigacionAbrir()};

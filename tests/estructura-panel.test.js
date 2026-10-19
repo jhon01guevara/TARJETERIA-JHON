@@ -10,3 +10,9 @@ test('Configuración usa un solo renderizador de tarjetas adicionales',()=>{
     assert.match(app,new RegExp("\\['"+id+"',"));
   }
 });
+
+test('Inicio usa un solo renderizador para sus tarjetas adicionales',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.equal((app.match(/R\.home=function\(/g)||[]).length,1);
+  for(const name of ['vdAdmHTML','tdHomeHTML','investHomeHTML','waHomeHTML'])assert.match(app,new RegExp(name+'\\('));
+});
