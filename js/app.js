@@ -422,7 +422,7 @@ function filas(){$('fi').innerHTML=items.map((it,i)=>`<tr><td><select data-h-cha
  items.forEach((it,i)=>{const sel=$('fi').rows[i].querySelector('select');sel.value=it.pid||''});calc()}
 function selP(i,id){const p=DB.prod.find(x=>x.id==id);items[i].pid=id;if(p){items[i].d=p.n;items[i].p=p.p}filas()}
 function selCli(){const c=DB.cli.find(x=>x.id==$('f_cs').value);$('f_cn').value=c?c.n:'';$('f_cr').value=c?c.r:'';$('f_cd').value=c?(c.d||''):''}
-function totales(){const sub=items.reduce((s,i)=>s+(i.q||1)*(i.p||0),0),ds=Math.min(+($('f_ds')?.value)||0,sub),b=sub-ds,it=$('f_it')?.checked?b*DB.cfg.itbms/100:0;return{sub,ds,it,tot:b+it}}
+function totales(){return TJFacturacion.calcularTotales(items,$('f_ds')?.value,DB.cfg.itbms,$('f_it')?.checked)}
 function calc(){items.forEach((it,i)=>{const e=$('s'+i);if(e)e.textContent=$$((it.q||1)*(it.p||0))});const t=totales();$('t1').textContent=$$(t.sub);$('t2').textContent=$$(t.it);$('t3').textContent=$$(t.tot);pgSum()}
 function emitir(){const l=items.filter(i=>i.d&&(i.p>0)).map(i=>({d:i.d,q:i.q||1,p:i.p}));if(!l.length)return alert('Agregue al menos un artículo con descripción y precio.');
  const t=totales(),pg=pgDatos(t.tot);if(!pg)return;const f={id:uid(),n:DB.cfg.sig++,fecha:$('f_fecha').value||hoy(),cli:$('f_cn').value||'Consumidor final',ruc:$('f_cr').value,dir:$('f_cd').value,pago:pg.pago,pagos:pg.pagos,credito:pg.credito,nota:($('f_nt').value||'').trim(),items:l,sub:t.sub,ds:t.ds,itbms:t.it,itbmsp:DB.cfg.itbms,total:t.tot};
