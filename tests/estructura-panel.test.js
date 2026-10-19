@@ -101,3 +101,15 @@ test('Administración recibe las facturas de todos los vendedores sin copiarlas 
   assert.match(app,/function devolverFacVend\(\)/);
   assert.match(app,/<th>Vendedor<\/th>/);
 });
+
+test('Las facturas toman su número de un contador único compartido',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
+  assert.match(app,/panel_public'\)\.doc\('contador'\)/);
+  assert.match(app,/async function reservarNumeroFactura\(\)/);
+  assert.match(app,/function asegurarContador\(\)/);
+  assert.match(app,/reservarNumeroFactura\(\)\.then/);
+  assert.match(rules,/match \/panel_public\/contador \{/);
+  assert.match(rules,/request\.resource\.data\.sig == resource\.data\.sig \+ 1/);
+  assert.match(rules,/match \/\{document=\*\*\} \{\s*allow read, write: if false;/);
+});
