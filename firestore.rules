@@ -32,7 +32,10 @@ service cloud.firestore {
     }
 
     match /roles/{uid} {
-      allow read: if request.auth != null && (request.auth.uid == uid || isAdmin());
+      // Leer el rol propio no necesita volver a consultar el rol dentro de isAdmin().
+      // Esto evita una evaluación circular cuando arranca la sesión.
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list: if isAdmin();
       allow create, update, delete: if isAdmin();
     }
 
