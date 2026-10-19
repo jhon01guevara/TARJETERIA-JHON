@@ -2219,7 +2219,10 @@ function authInit(){
  firebase.auth().onAuthStateChanged(async u=>{
   if(!u){SES=null;authLogin();return}
   try{
-   const d=await fbDb.collection('roles').doc(u.uid).get();
+   // Una lectura que queda esperando por la conexión no debe dejar el formulario
+   // bloqueado para siempre. Se pide al servidor y se corta tras 12 segundos.
+   const espera=new Promise((_,no)=>setTimeout(()=>no(Object.assign(new Error('Tiempo de espera al verificar el acceso'),{code:'firestore/timeout'})),12000));
+   const d=await Promise.race([fbDb.collection('roles').doc(u.uid).get({source:'server'}),espera]);
    if(!d.exists){_note='Su cuenta no tiene acceso. Pídale al administrador que la active.';return firebase.auth().signOut()}
    const r=d.data();SES={id:r.rol==='admin'?'admin':u.uid,u:r};entrar()
   }catch(e){const c=(e&&e.code)||'error';_note='No se pudo verificar su acceso ['+c+']. Revise su conexión.';firebase.auth().signOut()}
