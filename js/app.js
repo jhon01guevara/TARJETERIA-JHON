@@ -62,6 +62,9 @@ const RECAPTCHA_V3_SITE_KEY='6Ld9hOktAAAAALfcLgikIHsm0rvaJCaWQ_lIXf-y';
 // Key). Mientras queden con el texto de ejemplo, el registro funciona SIN pedir código (no se
 // rompe nada), para no dejar la tienda sin poder registrar clientes mientras se configura esto.
 const EMAILJS_PUBLIC_KEY='7uMfxbPHkkks7YCGu',EMAILJS_SERVICE_ID='service_uy10xlg',EMAILJS_TEMPLATE_ID='template_wybv8ea';
+// Cuenta administradora de Firebase Authentication. Esta comprobación solo mejora el
+// arranque; los permisos reales continúan protegidos por las reglas de Firestore.
+const ADMIN_UID='o7bHndKtswSHreFnVwORqBSUKL43';
 const emailjsListo=()=>EMAILJS_PUBLIC_KEY!=='EMAILJS_PUBLIC_KEY'&&EMAILJS_SERVICE_ID!=='EMAILJS_SERVICE_ID'&&EMAILJS_TEMPLATE_ID!=='EMAILJS_TEMPLATE_ID'&&window.emailjs;
 try{if(window.emailjs&&emailjsListo())emailjs.init({publicKey:EMAILJS_PUBLIC_KEY})}catch(e){window._tjw&&_tjw(e)}
 function iniciarFirebase(){
@@ -2218,14 +2221,21 @@ function authInit(){
  if(!fbDb)return authUI('<h2>Sin conexión</h2><p>No se pudo iniciar Firestore ['+esc(_fbInitError||'error')+']. Actualice la página e intente nuevamente.</p><button class="btn p" data-h-click="h24">Reintentar</button>');
  firebase.auth().onAuthStateChanged(async u=>{
   if(!u){SES=null;authLogin();return}
+  // El administrador no debe quedar bloqueado esperando una lectura de rol que ya
+  // está respaldada por las reglas mediante su UID autenticado.
+  if(u.uid===ADMIN_UID){SES={id:'admin',u:{rol:'admin',n:'John Guevara'}};try{entrar()}catch(e){window._tjw&&_tjw(e);authUI('<h2>Acceso aceptado</h2><p>Su sesión está activa, pero una sección del panel no pudo cargarse. Actualice la página.</p><button class="btn p" data-h-click="h24">Actualizar</button>')}return}
+  let d;
   try{
    // Una lectura que queda esperando por la conexión no debe dejar el formulario
    // bloqueado para siempre. Se pide al servidor y se corta tras 12 segundos.
    const espera=new Promise((_,no)=>setTimeout(()=>no(Object.assign(new Error('Tiempo de espera al verificar el acceso'),{code:'firestore/timeout'})),12000));
-   const d=await Promise.race([fbDb.collection('roles').doc(u.uid).get({source:'server'}),espera]);
-   if(!d.exists){_note='Su cuenta no tiene acceso. Pídale al administrador que la active.';return firebase.auth().signOut()}
-   const r=d.data();SES={id:r.rol==='admin'?'admin':u.uid,u:r};entrar()
-  }catch(e){const c=(e&&e.code)||'error';_note='No se pudo verificar su acceso ['+c+']. Revise su conexión.';firebase.auth().signOut()}
+   d=await Promise.race([fbDb.collection('roles').doc(u.uid).get({source:'server'}),espera]);
+  }catch(e){const c=(e&&e.code)||'error';_note='No se pudo verificar su acceso ['+c+']. Revise su conexión.';firebase.auth().signOut();return}
+  if(!d.exists){_note='Su cuenta no tiene acceso. Pídale al administrador que la active.';firebase.auth().signOut();return}
+  // La autenticación y el rol ya fueron validados. Un fallo posterior al cargar
+  // una sección del panel nunca debe cerrar esta sesión por error.
+  const r=d.data();SES={id:r.rol==='admin'?'admin':u.uid,u:r};
+  try{entrar()}catch(e){window._tjw&&_tjw(e);authUI('<h2>Acceso aceptado</h2><p>Su sesión está activa, pero una sección del panel no pudo cargarse. Actualice la página.</p><button class="btn p" data-h-click="h24">Actualizar</button>')}
  })}
 function authLogin(){authUI(`<h2>Tarjetería Jhon</h2><p>Inicie sesión para continuar.</p><label>Correo</label><input id="au_e" type="email" autocomplete="username"><label>Contraseña</label><input id="au_p" type="password" autocomplete="current-password" data-h-keydown="h23"><label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0"><input type="checkbox" style="width:auto" data-h-change="h22"> Mostrar contraseña</label><div id="au_m"></div><button class="btn p" data-h-click="h21">Entrar</button><a href="#" data-h-click="h20" style="display:block;text-align:center;margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.85);text-decoration:underline">¿Olvidó su contraseña?</a>`);if(_note){authMsg(_note);_note=''}}
 async function authGo(){const e=$('au_e').value.trim(),p=$('au_p').value;if(!e||!p)return authMsg('Escriba correo y contraseña.');authMsg('Verificando…');
