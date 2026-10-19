@@ -1459,7 +1459,9 @@ function chatVis(){const me=chatMe(),map={};CHS.forEach(c=>{map[c.id]=c});const 
 function chatBadge(){if(!SES)return;const n=chatVis().filter(c=>chatUn(c)).length;document.querySelectorAll('.ni[data-k="chat"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nv=nav;nav=function(){_nv.apply(this,arguments);try{chatBadge()}catch(e){window._tjw&&_tjw(e)}};
 function chatListen(){if(_chOn||!fbDb)return;_chOn=true;let first=true;
- fbDb.collection('chats').onSnapshot(sn=>{
+ // La consulta coincide con la regla de Firestore: cada cuenta solo descarga los
+ // chats cuyo arreglo members la incluye. Nunca se carga la lista global de chats.
+ fbDb.collection('chats').where('members','array-contains',chatMe()).onSnapshot(sn=>{
   if(!first)sn.docChanges().forEach(ch=>{const c=ch.doc.data();if(!c||!/^[\w-]{1,64}$/.test(ch.doc.id))return;if(ch.type!=='removed'&&SES&&c.lastFrom&&c.lastFrom!==chatMe()&&(c.type==='dm'?(esAdmin()||c.id==='dm_'+chatMe()):chatMine(c))){if(!(vista==='chat'&&CH.sel===c.id)){try{agSound()}catch(e){window._tjw&&_tjw(e)}}chatVoz(c)}});
   first=false;CHS=sn.docs.map(d=>{const o=d.data();return o&&/^[\w-]{1,64}$/.test(d.id)?Object.assign(o,{id:d.id}):null}).filter(Boolean);if(SES){chatBadge();if(vista==='chat')chatList()}},()=>{})}
 R.chat=function(){if(!fbDb){$('v').innerHTML='<div class="card"><div class="vacio">El chat necesita conexión a internet.</div></div>';chatFitSoon();return}chatListen();
@@ -1467,7 +1469,10 @@ R.chat=function(){if(!fbDb){$('v').innerHTML='<div class="card"><div class="vaci
 function chatList(){const el=$('chl');if(!el)return;const L=chatVis().sort((a,b)=>(b.lastTs||0)-(a.lastTs||0)),dms=L.filter(c=>c.type==='dm'),gs=L.filter(c=>c.type==='grp');
  const it=c=>`<div class="chi ${CH.sel===c.id?'on':''}" data-h-click="h147" data-a-click="${_ha(c.id)}"><div class="cha">${c.type==='grp'?'👥':avHTML(esAdmin()?c.id.slice(3):'admin',38)}</div><div class="chn"><b>${esc(chatTitle(c))}</b><small>${esc(c.lastTxt||(c.ph?'Sin mensajes':''))}</small></div>${c.type==='grp'?'':semHTML(esAdmin()?c.id.slice(3):'')}${chatUn(c)?'<i class="cbd">•</i>':''}</div>`;
  el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><h3 style="margin:0">💬 Chat</h3><button class="btn p s" data-h-click="h146">+ Grupo</button></div><div class="chs">Mensajes directos</div>${dms.map(it).join('')||'<div class="vacio">Sin contactos.</div>'}<div class="chs">Grupos</div>${gs.map(it).join('')||'<div class="vacio">Aún no hay grupos.</div>'}`}
-function chatOpen(id){CH.sel=id;CH.msgs=[];if(CH.unsub){CH.unsub();CH.unsub=null}const w=$('chw');if(w)w.classList.add('sel');
+async function chatOpen(id){CH.sel=id;CH.msgs=[];if(CH.unsub){CH.unsub();CH.unsub=null}const w=$('chw');if(w)w.classList.add('sel');
+ // El chat directo aparece inicialmente como un contacto local. Créelo antes de
+ // escuchar sus mensajes, pues las reglas comprueban la membresía del padre.
+ const c=chatVis().find(x=>x.id===id);if(c&&c.ph)try{await fbDb.collection('chats').doc(id).set({id,type:'dm',members:c.members||[],ts:Date.now(),lastTs:0,lastFrom:'',lastTxt:''},{merge:true})}catch(e){alert('No se pudo abrir el chat. Revise su conexión.');return}
  CH.unsub=fbDb.collection('chats').doc(id).collection('msgs').orderBy('ts').limitToLast(300).onSnapshot(sn=>{CH.msgs=sn.docs.map(d=>d.data());if(CH.sel===id){chatConv();chatMark(id,(CH.msgs[CH.msgs.length-1]||{}).ts);chatList()}},()=>{});chatList();chatConv()}
 function chatBack(){CH.sel=null;if(CH.unsub){CH.unsub();CH.unsub=null}const w=$('chw');if(w)w.classList.remove('sel');chatList();chatConv()}
 function chatConv(){const el=$('chm');if(!el)return;const c=chatVis().find(x=>x.id===CH.sel);
@@ -1478,7 +1483,9 @@ function chatConv(){const el=$('chm');if(!el)return;const c=chatVis().find(x=>x.
 async function chatSend(){const i=$('chin');if(!i||!CH.sel||!fbDb)return;const t=(i.value||'').trim().slice(0,2000);if(!t)return;const c=chatVis().find(x=>x.id===CH.sel);if(!c)return;i.value='';
  const me=chatMe(),ts=Date.now(),id=uid(),base={id:c.id,type:c.type,members:c.members||[],lastTs:ts,lastFrom:me,lastTxt:((c.type==='grp'?chatName(me)+': ':'')+chatPrev(t)).slice(0,60)};
  if(c.type==='grp'){base.name=c.name;base.by=c.by||''}
- try{const ref=fbDb.collection('chats').doc(c.id);await ref.collection('msgs').doc(id).set({id,from:me,fn:chatName(me),t,ts});await ref.set(base,{merge:true});chatMark(c.id,ts)}catch(e){alert('No se pudo enviar. Revise su conexión.')}}
+ // Primero existe/actualiza el chat y después se agrega el mensaje: las reglas de
+ // Firestore verifican que el remitente sea integrante del documento padre.
+ try{const ref=fbDb.collection('chats').doc(c.id);await ref.set(base,{merge:true});await ref.collection('msgs').doc(id).set({id,from:me,fn:chatName(me),t,ts});chatMark(c.id,ts)}catch(e){alert('No se pudo enviar. Revise su conexión.')}}
 function chatNewGrp(){const me=chatMe(),op=usuarios().filter(u=>u.id!==me);
  $('mb').innerHTML=`<h3 style="margin-top:0">Nuevo grupo</h3><label>Nombre del grupo</label><input id="cg_n" placeholder="Ej. Ventas Panamá Oeste"><label style="display:block;margin-top:12px">Integrantes</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:6px">${op.map(u=>`<label class="pchk"><input type="checkbox" value="${u.id}"> ${esc(u.n)}</label>`).join('')||'<div class="vacio">Aún no hay otros vendedores.</div>'}</div><div id="cg_m" style="color:#d92d20;font-size:13px;margin-top:8px"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" data-h-click="h12">Cancelar</button><button class="btn p" data-h-click="h138">Crear grupo</button></div>`;$('md').classList.add('on')}
 async function chatMkGrp(){const n=$('cg_n').value.trim(),sel=[...document.querySelectorAll('#mb .pchk input:checked')].map(x=>x.value),me=chatMe(),m=t=>{$('cg_m').textContent=t};
