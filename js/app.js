@@ -92,20 +92,63 @@ const privatePayload=ts=>({cli:Array.isArray(DB.cli)?DB.cli:[],fac:Array.isArray
 function limpiarMemoriaVendedor(){
  DB.prod=[];DB.cli=[];DB.fac=[];DB.ubi=[];DB.agenda=[];DB.cfg=Object.assign({},pickCfg(DB.cfg));saveLocal();
 }
-function mergeRemote(remote){const c=DB.cfg;const ts=remote._ts||0;DB=Object.assign(DB,remote);DB.cfg=Object.assign(c,remote.cfg||{});_lastTs=ts;saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0)}
+function mergeRemote(remote){const c=DB.cfg;const ts=remote._ts||0;DB=Object.assign(DB,remote);DB.cfg=Object.assign(c,remote.cfg||{});_lastTs=ts;if(esAdmin())aplicarFacVend();saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0)}
 function mergeVendedor(pub,priv){
  const b=privatePayload(0),p=pub||{},v=priv||{};
  DB={prod:Array.isArray(p.prod)?p.prod:[],cli:Array.isArray(v.cli)?v.cli:[],fac:Array.isArray(v.fac)?v.fac:[],ubi:Array.isArray(v.ubi)?v.ubi:[],agenda:Array.isArray(v.agenda)?v.agenda:[],cfg:Object.assign({},b.cfg,p.cfg||{},v.cfg||{})};
  _lastTs=Math.max(p._ts||0,v._ts||0);saveLocal();if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0);
+}
+
+/* Administración recibe en tiempo real las facturas de todos los vendedores.
+   Cada vendedor las guarda en vendedores/{id}/privado/data. En memoria llevan _v:1,
+   no se copian a panel/data y los cambios del administrador (anular, cobrar, eliminar)
+   se devuelven al documento del vendedor dentro de una transacción. */
+const _vendSnap={},_vendUnsub={};
+const _limpiaFac=f=>{const o=Object.assign({},f);delete o._v;return o};
+function aplicarFacVend(){
+ const ids=new Set();Object.keys(_vendSnap).forEach(k=>(_vendSnap[k]||[]).forEach(f=>f&&f.id&&ids.add(f.id)));
+ const propias=(Array.isArray(DB.fac)?DB.fac:[]).filter(f=>f&&!f._v&&!ids.has(f.id));
+ const ajenas=[];Object.keys(_vendSnap).forEach(k=>(_vendSnap[k]||[]).forEach(f=>{if(f&&f.id)ajenas.push(Object.assign({},f,{_v:1,vend:f.vend||k}))}));
+ DB.fac=propias.concat(ajenas).sort((a,b)=>(a.fecha<b.fecha?-1:a.fecha>b.fecha?1:(a.n||0)-(b.n||0)));
+}
+function escucharVendedores(){
+ if(!esAdmin()||!fbDb)return;
+ const ids=new Set(((DB.cfg||{}).users||[]).filter(u=>u&&typeof u.id==='string').map(u=>u.id));
+ Object.keys(_vendUnsub).forEach(id=>{if(!ids.has(id)){try{_vendUnsub[id]()}catch(e){}delete _vendUnsub[id];delete _vendSnap[id];aplicarFacVend()}});
+ ids.forEach(id=>{
+  if(_vendUnsub[id])return;
+  _vendUnsub[id]=fbDb.collection('vendedores').doc(id).collection('privado').doc('data').onSnapshot(doc=>{
+   const fac=doc.exists&&Array.isArray(doc.data().fac)?doc.data().fac:[];
+   _vendSnap[id]=fac.map(f=>Object.assign({},f,{vend:f.vend||id}));
+   aplicarFacVend();saveLocal();
+   if(vista&&R[vista])R[vista]();if(vista==='home')setTimeout(dibujarGraficos,0);
+  },er=>{window._tjw&&_tjw(er);console.warn('No se pudieron leer las facturas del vendedor',id,er)});
+ });
+}
+function devolverFacVend(){
+ if(!esAdmin()||!fbDb)return [];
+ const por={};DB.fac.filter(f=>f&&f._v&&f.vend).forEach(f=>{(por[f.vend]=por[f.vend]||[]).push(_limpiaFac(f))});
+ return Object.keys(_vendSnap).map(id=>{
+  const antes=new Map((_vendSnap[id]||[]).map(f=>[f.id,JSON.stringify(f)])),ahora=new Map((por[id]||[]).map(f=>[f.id,f]));
+  const cambiadas=[...ahora.values()].filter(f=>antes.get(f.id)!==JSON.stringify(f)),borradas=new Set([...antes.keys()].filter(k=>!ahora.has(k)));
+  if(!cambiadas.length&&!borradas.size)return null;
+  const ref=fbDb.collection('vendedores').doc(id).collection('privado').doc('data');
+  return fbDb.runTransaction(async tx=>{
+   const d=await tx.get(ref),dat=d.exists?d.data():{};
+   let fac=(Array.isArray(dat.fac)?dat.fac:[]).filter(f=>!borradas.has(f.id));
+   cambiadas.forEach(c=>{const i=fac.findIndex(f=>f.id===c.id);if(i>=0)fac[i]=c;else fac.push(c)});
+   tx.set(ref,{fac,_ts:Date.now()},{merge:true});
+  });
+ }).filter(Boolean);
 }
 function syncToCloud(){
  if(!fbDocRef)return;
  clearTimeout(_syncTimer);
  _syncTimer=setTimeout(()=>{
   const ts=Date.now();_lastTs=ts;_cloudWriting=true;
-  const own=esAdmin()?Object.assign({},DB,{_ts:ts}):privatePayload(ts);
+  const own=esAdmin()?Object.assign({},DB,{fac:(DB.fac||[]).filter(f=>!f._v),_ts:ts}):privatePayload(ts);
   const jobs=[fbDocRef.set(own)];
-  if(esAdmin())jobs.push(publicRef().set(publicPayload(ts)));
+  if(esAdmin()){jobs.push(publicRef().set(publicPayload(ts)));devolverFacVend().forEach(j=>jobs.push(j));escucharVendedores()}
   Promise.all(jobs).then(()=>cloudEstado('☁ Sincronizado',true)).catch(er=>{window._tjw&&_tjw(er);window._tjFails=(window._tjFails||0)+1;const grande=er&&(er.code==='invalid-argument'||er.code==='resource-exhausted');cloudEstado(grande?'☁ NO se pudo guardar: el panel superó el tamaño permitido. Descarga una copia JSON':'☁ Sin conexión, guardado localmente',false)}).finally(()=>{setTimeout(()=>_cloudWriting=false,600)})
  },700)
 }
@@ -134,6 +177,7 @@ function iniciarSincronizacionNube(){
   if(esAdmin())await migrarPanelPorRoles();
   if(esAdmin()){
    const doc=await fbDocRef.get();if(doc.exists)mergeRemote(doc.data());
+   escucharVendedores();
    cloudEstado('☁ Sincronizado',true);
    _cloudUnsub=fbDocRef.onSnapshot(doc=>{if(!doc.exists||_cloudWriting)return;const remote=doc.data();if((remote._ts||0)>_lastTs){mergeRemote(remote);cloudEstado('☁ Actualizado desde otro dispositivo',true)}},()=>cloudEstado('☁ Sin conexión, guardado localmente',false));
   }else{
@@ -456,7 +500,7 @@ function repModal(asunto,cuerpo){const chks=DB.cfg.dests.map(d=>`<label class="c
  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end"><button class="btn s" data-h-click="h246">⬇ Descargar PDF</button><button class="btn" data-h-click="h245">📱 WhatsApp con PDF</button><button class="btn s" data-h-click="h222">✉ Solo texto</button><button class="btn p" data-h-click="h244">📎 Correo con PDF</button></div>`;$('md').classList.add('on')}
 function tabFac(l,acc){if(!l.length)return'<div class="vacio">Todav\u00EDa no hay facturas.</div>';
   const admin = esAdmin();
-  return`<div class="tw"><table><tr><th>N.\u00BA</th><th>Fecha</th><th>Cliente</th><th>Pago</th><th class="r">Total</th><th></th></tr>${l.map(f=>`<tr><td>${f.n}</td><td>${fdate(f.fecha)}</td><td>${esc(f.cli)}</td><td>${f.pago}${f.credito?`<br><small style="color:var(--gris)">Vence ${fdate(f.credito.vence)}</small>`:''}</td><td class="r">${$$(f.total)} ${f.anulada?'<span class="bd x">Anulada</span>':''}</td><td class="r">
+  return`<div class="tw"><table><tr><th>N.\u00BA</th><th>Fecha</th><th>Cliente</th>${admin?'<th>Vendedor</th>':''}<th>Pago</th><th class="r">Total</th><th></th></tr>${l.map(f=>`<tr><td>${f.n}</td><td>${fdate(f.fecha)}</td><td>${esc(f.cli)}</td>${admin?`<td>${esc(f.vn||vdName(f.vend||'admin'))}</td>`:''}<td>${f.pago}${f.credito?`<br><small style="color:var(--gris)">Vence ${fdate(f.credito.vence)}</small>`:''}</td><td class="r">${$$(f.total)} ${f.anulada?'<span class="bd x">Anulada</span>':''}</td><td class="r">
     <button class="btn s" data-h-click="h243" data-a-click="${_ha(f.id)}" title="Ver y cambiar plantilla">\uD83D\uDC41\uFE0F Ver</button>
     <button class="btn s" data-h-click="h130" data-a-click="${_ha(f.id)}" title="Imprimir">\uD83D\uDDA8\uFE0F</button>
     <button class="btn s" data-h-click="h242" data-a-click="${_ha(f.id)}" title="Descargar PDF">\uD83D\uDCC4 PDF</button>
