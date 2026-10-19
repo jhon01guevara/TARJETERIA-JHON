@@ -68,7 +68,9 @@ test('Las consultas autenticadas no repiten la búsqueda de rol por cada documen
   const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
   assert.match(rules,/function logged\(\) \{\s*return request\.auth != null;/);
   assert.match(rules,/function isAdmin\(\)/);
-  assert.match(rules,/roles\/\$\(request\.auth\.uid\)\)\.data\.rol == 'admin'/);
+  assert.match(rules,/request\.auth\.uid == 'o7bHndKtswSHreFnVwORqBSUKL43'/);
+  assert.match(rules,/allow get: if request\.auth != null && request\.auth\.uid == uid;/);
+  assert.match(rules,/allow list: if isAdmin\(\);/);
 });
 
 test('El inicio de sesión no queda verificando indefinidamente si Firestore no responde',()=>{
@@ -76,4 +78,17 @@ test('El inicio de sesión no queda verificando indefinidamente si Firestore no 
   assert.match(app,/get\(\{source:'server'\}\)/);
   assert.match(app,/firestore\/timeout/);
   assert.match(app,/12000/);
+});
+
+test('Un error al cargar el panel no invalida una sesión cuyo rol ya fue verificado',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/let d;/);
+  assert.match(app,/try\{entrar\(\)\}catch\(e\)/);
+  assert.match(app,/Acceso aceptado/);
+});
+
+test('El administrador entra por su UID autenticado sin depender de una lectura de rol',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/const ADMIN_UID='o7bHndKtswSHreFnVwORqBSUKL43';/);
+  assert.match(app,/if\(u\.uid===ADMIN_UID\)/);
 });
