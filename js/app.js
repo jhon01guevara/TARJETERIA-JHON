@@ -198,7 +198,8 @@ function aplicarClientes(remote,inicial){
  const rem=Array.isArray(remote)?remote.map(c=>Object.assign({},c)):[];
  DB.cli=(_cliBase===null||inicial)?rem.map(c=>Object.assign({},c)):fusionarClientes(rem,_cliBase,Array.isArray(DB.cli)?DB.cli:[],esAdmin());
  _cliBase=rem;saveLocal();
- if(vista==='cli'&&R.cli&&!(($('cn')&&$('cn').value)||($('cu_link')&&$('cu_link').value)))R.cli()
+ if(vista==='cli'&&R.cli&&!(($('cn')&&$('cn').value)||($('cu_link')&&$('cu_link').value)))R.cli();
+ if(vista==='mapa'&&typeof mcCapa==='function'&&MC.s.mcMap)mcCapa('mcMap',false)
 }
 function restaurarClientes(prev){
  if(_cliBase===null)return;
@@ -415,8 +416,9 @@ prod(){$('v').innerHTML=`<div class="card"><h3>Agregar producto</h3><div class="
 cli(){$('v').innerHTML=`<div class="card"><h3>Agregar cliente</h3><div class="g"><div><label>Nombre</label><input id="cn"></div><div><label>RUC / Cédula</label><input id="cr"></div><div><label>Teléfono</label><input id="ct2"></div><div><label>Dirección / Ubicación</label><input id="cd2"></div></div>
  <div class="g" style="margin-top:10px"><div style="grid-column:1/-1"><label>📍 Ubicación del negocio (opcional)</label><input id="cu_link" placeholder="Pegue el link de Google Maps o las coordenadas, o use su ubicación actual" data-h-input="h330"></div></div>
  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px"><button class="btn s" id="cu_gps" data-h-click="h329">🎯 Usar mi ubicación actual</button><button class="btn s" data-h-click="h331">↗ Abrir en Google Maps</button></div>
- <div id="cu_est" style="margin-top:8px;font-size:13px;color:var(--gris)"></div><br><button class="btn p" data-h-click="h306">Agregar</button></div>
- <div class="card"><h3>Clientes</h3>${DB.cli.length?`<div class="tw"><table><tr><th>Nombre</th><th>RUC/Cédula</th><th>Teléfono</th><th>Ubicación</th><th></th></tr>${DB.cli.map(c=>`<tr><td>${esc(c.n)}</td><td>${esc(c.r)}</td><td>${esc(c.t)}</td><td>${cliLocBtn(c)}</td><td class="r">${waBtn(c)}${esAdmin()?`<button class="btn s" data-h-click="h305" data-a-click="${_ha(c.id)}">Editar</button> <button class="btn s d" data-h-click="h304" data-a-click="${_ha(c.id)}">Eliminar</button>`:''}</td></tr>`).join('')}</table></div>`:'<div class="vacio">Aún no hay clientes registrados.</div>'}</div>`},
+ <div id="cu_est" style="margin-top:8px;font-size:13px;color:var(--gris)"></div>
+ <div id="cuMap" class="mcmap mcmap-pick"></div><small style="color:var(--gris)">Toque el mapa para marcar el negocio. Puede arrastrar el marcador para afinar el punto.</small><br><br><button class="btn p" data-h-click="h306">Agregar</button></div>
+ <div class="card"><h3>Clientes</h3>${DB.cli.length?`<div class="tw"><table><tr><th>Nombre</th><th>RUC/Cédula</th><th>Teléfono</th><th>Ubicación</th><th></th></tr>${DB.cli.map(c=>`<tr><td>${esc(c.n)}</td><td>${esc(c.r)}</td><td>${esc(c.t)}</td><td>${cliLocBtn(c)}</td><td class="r">${waBtn(c)}${esAdmin()?`<button class="btn s" data-h-click="h305" data-a-click="${_ha(c.id)}">Editar</button> <button class="btn s d" data-h-click="h304" data-a-click="${_ha(c.id)}">Eliminar</button>`:''}</td></tr>`).join('')}</table></div>`:'<div class="vacio">Aún no hay clientes registrados.</div>'}</div>`;cliMapaIniciar()},
 ubi(){const cliOpts=DB.cli.map(c=>`<option value="${c.id}">${esc(c.n)}</option>`).join('');
  $('v').innerHTML=`<div class="card"><h3>Registrar ubicación</h3>
  <div class="g">
@@ -838,12 +840,12 @@ function editP(id){const p=DB.prod.find(x=>x.id==id);if(!p)return;const n=prompt
 const cliLocBtn=c=>(c&&typeof c.lat==='number'&&typeof c.lng==='number')?`<a class="btn s" href="https://www.google.com/maps?q=${c.lat},${c.lng}" target="_blank" rel="noopener">📍 Mapa</a>`:'<small style="color:var(--gris)">—</small>';
 function cliLocLeer(){const i=$('cu_link');if(!i)return{vacio:true};const t=i.value.trim();if(!t)return{vacio:true};const c=ubiParse(t);if(!c)return{error:true,texto:t};const a=+i.dataset.acc;return{lat:c.lat,lng:c.lng,acc:a>0?a:null,link:/^https?:\/\//i.test(t)?t:''}}
 function cliLocEstado(){
- const e=$('cu_est');if(!e)return;const l=cliLocLeer();
+ const e=$('cu_est');if(!e)return;const l=cliLocLeer();cliMapSync(false);
  if(l.vacio){e.textContent='';return}
  if(l.error){e.style.color='#b3261e';e.textContent=/goo\.gl|maps\.app/i.test(l.texto)?'Ese es un link corto y no se puede leer. Ábralo en Google Maps, copie el link completo de la barra de direcciones (o las coordenadas) y péguelo aquí.':'No encontré coordenadas en ese texto. Pegue el link completo de Google Maps o las coordenadas, por ejemplo: 8.9824, -79.5199';return}
  e.style.color='#1e7a43';e.textContent='✔ Ubicación lista: '+l.lat.toFixed(6)+', '+l.lng.toFixed(6)+(l.acc?' (±'+Math.round(l.acc)+' m)':'')
 }
-function cliLocInput(){const i=$('cu_link');if(i)delete i.dataset.acc;cliLocEstado()}
+function cliLocInput(){const i=$('cu_link');if(i)delete i.dataset.acc;cliLocEstado();cliMapSync(true)}
 function cliLocGPS(){
  if(!navigator.geolocation)return alert('Este navegador no soporta geolocalización.');
  if(!window.isSecureContext)return alert('El GPS no funciona abriendo el archivo directamente. Abra la página desde el link de internet (https://...).');
@@ -852,7 +854,7 @@ function cliLocGPS(){
  navigator.geolocation.getCurrentPosition(pos=>{
   const c=pos.coords,i=$('cu_link');if(b){b.disabled=false;b.textContent='🎯 Usar mi ubicación actual'}
   if(i){i.value=c.latitude.toFixed(6)+', '+c.longitude.toFixed(6);i.dataset.acc=String(c.accuracy||'')}
-  cliLocEstado()
+  cliLocEstado();cliMapSync(true)
  },err=>{
   if(b){b.disabled=false;b.textContent='🎯 Usar mi ubicación actual'}if(e)e.textContent='';
   const msgs={1:'Permiso de ubicación denegado. Actívelo en los ajustes del navegador o del teléfono.',2:'No se pudo determinar la ubicación. Intente al aire libre o con el GPS activado.',3:'Se agotó el tiempo esperando el GPS. Intente de nuevo.'};
@@ -1246,14 +1248,14 @@ async function precargarCatalogoDeFabrica(){
 }
 if(!/[?&]tienda(=|&|$)/.test(location.search))precargarCatalogoDeFabrica();
 // ===== Usuarios, PIN y permisos por panel =====
-V.push(['vend','🧑‍💼','Vendedores']);V.push(['gal','📷','Galería']);V.push(['chat','💬','Chat']);V.push(['tienda','🛍','Tienda virtual']);
-const PANELES=V.filter(v=>v[0]!=='config'&&v[0]!=='vend'),SK='tj_sess';
+V.push(['vend','🧑‍💼','Vendedores']);V.push(['mapa','🗺️','Mapa de clientes']);V.push(['gal','📷','Galería']);V.push(['chat','💬','Chat']);V.push(['tienda','🛍','Tienda virtual']);
+const PANELES=V.filter(v=>v[0]!=='config'&&v[0]!=='vend'&&v[0]!=='mapa'),SK='tj_sess';
 let SES=null,_authMode='',_fail=0,_lock=0;
 const usuarios=()=>DB.cfg.users||(DB.cfg.users=[]);
 const esAdmin=()=>!!SES&&SES.id==='admin';
 window.__panelBridge=()=>({db:fbDb,admin:esAdmin()});
 const usr=()=>SES&&!esAdmin()?SES.u:null;
-const puede=k=>esAdmin()||(!!usr()&&k!=='config'&&k!=='vend'&&(usr().panels||[]).includes(k));
+const puede=k=>esAdmin()||(!!usr()&&k!=='config'&&k!=='vend'&&k!=='mapa'&&(usr().panels||[]).includes(k));
 const _no=navOrd;navOrd=()=>_no().filter(v=>puede(v[0]));
 const _ir=ir;ir=function(v){if(!SES)return;if(!puede(v)){const f=navOrd().find(x=>puede(x[0]));if(!f)return;v=f[0]}return _ir(v)};
 const esVend=()=>!!SES&&!esAdmin();
@@ -2413,6 +2415,7 @@ if(document.documentElement.classList.contains('shopmode')){
   document.addEventListener('touchmove',e=>{if(y0===null)return;dy=e.touches[0].clientY-y0;if(dy>0){sh.style.transition='none';sh.style.transform='translateY('+dy+'px)'}},{passive:true});
   document.addEventListener('touchend',()=>{if(y0===null)return;const s=sh;s.style.transition='transform .22s';if(dy>120){s.style.transform='translateY(100%)';setTimeout(()=>{try{shopClose()}catch(e){window._tjw&&_tjw(e)}s.style.transform='';s.style.transition=''},200)}else{s.style.transform='';setTimeout(()=>{s.style.transition=''},250)}y0=null})})()}
 NAVI.tienda=['M18 6h-2c0-2.21-1.79-4-4-4S8 3.79 8 6H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-8 4c0 .55-.45 1-1 1s-1-.45-1-1V8h2v2zm2-6c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2zm4 6c0 .55-.45 1-1 1s-1-.45-1-1V8h2v2z','#06b6d4','#0e7490'];
+NAVI.mapa=['M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z','#10b981','#047857'];
 const _mr=mergeRemote;mergeRemote=function(r){_mr(r);authRefresh()};
 function authUI(h){let o=$('auth');if(!o){o=document.createElement('div');o.id='auth';o.dataset.r='a';o.innerHTML='<div class="abg"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div><div id="authc"></div>';document.body.appendChild(o)}const lg=document.querySelector('.logo img');$('authc').innerHTML='<div class="authb">'+(lg?'<div class="alogo"><img src="'+lg.src+'" alt="Tarjetería Jhon"></div>':'')+h+'<div class="afoot">🔒 Acceso restringido · Panel de Facturación</div></div>';o.style.display='flex'}
 function authOff(){const o=$('auth');if(o)o.style.display='none'}
@@ -2626,6 +2629,103 @@ R.config=function(){
 };
 /* Inicio también tenía capas sucesivas. Todas sus tarjetas se agrupan aquí para
    que vendedores, administradores y la vista general sigan la misma ruta clara. */
+
+/* ===== Mapa de clientes: selector en el formulario, mapa general (admin) y tarjeta del Inicio ===== */
+const MC={s:{},q:'',f:'todos'};
+(function(){if(document.getElementById('mcCss'))return;const st=document.createElement('style');st.id='mcCss';
+ st.textContent='.mcmap{position:relative;z-index:0;height:min(70vh,540px);min-height:320px;border-radius:12px;margin-top:10px;overflow:hidden}.mcmap-s{height:340px;min-height:260px}.mcmap-pick{height:260px;min-height:220px}.mc-tt{background:rgba(255,255,255,.93);border:0;box-shadow:0 1px 3px rgba(0,0,0,.35);font-weight:600;font-size:11px;padding:1px 6px;color:#222}.mc-nolbl .mc-tt{display:none}.mcleg{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;margin-top:8px;color:var(--gris)}.mcleg i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:4px}.mcbar{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.mcbar input{flex:1;min-width:160px}.mcsum{display:flex;gap:8px;flex-wrap:wrap}.mcsum span{background:rgba(127,127,127,.14);border-radius:20px;padding:4px 10px;font-size:13px}.mcp{font-size:13px;line-height:1.5;min-width:200px}.mcp hr{border:0;border-top:1px solid #ddd;margin:6px 0}.mcpb{margin-top:6px}';
+ document.head.appendChild(st)})();
+const MC_VACIO=()=>({t:0,n:0,ult:'',pend:0,venc:0,vend:{}});
+const mcTieneLoc=c=>!!c&&typeof c.lat==='number'&&typeof c.lng==='number';
+function mcCapas(m,def){
+ const calle=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Tiles © Esri — Esri, HERE, Garmin, FAO, NOAA, USGS'}),
+  sat=L.layerGroup([L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:18,attribution:'Tiles © Esri — Esri, Maxar, Earthstar Geographics'}),L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:20,maxNativeZoom:18})]);
+ (def==='sat'?sat:calle).addTo(m);L.control.layers({'Calle':calle,'Satélite':sat}).addTo(m)
+}
+// Lo comprado por cada cliente: se suman las facturas no anuladas (de todos los vendedores) que llevan su nombre.
+function mcStats(){
+ const por=new Map(),h=hoy();
+ act().forEach(f=>{const k=_cliNorm(f.cli);if(!k)return;let o=por.get(k);if(!o){o=MC_VACIO();por.set(k,o)}
+  const t=+f.total||0;o.t+=t;o.n++;if(f.fecha>o.ult)o.ult=f.fecha;
+  if(f.credito&&!f.cobrada){const m=+f.credito.monto||0;o.pend+=m;if(f.credito.vence&&f.credito.vence<h)o.venc+=m}
+  const vn=f.vn||vdName(f.vend||'admin');o.vend[vn]=(o.vend[vn]||0)+t});
+ return por
+}
+function mcVisibles(filtro,q){
+ const por=mcStats(),nq=_cliNorm(q);
+ return (DB.cli||[]).filter(c=>c&&c.n).map(c=>({c,s:por.get(_cliNorm(c.n))||MC_VACIO(),loc:mcTieneLoc(c)})).filter(x=>{
+  if(nq&&!_cliNorm([x.c.n,x.c.r,x.c.t].join(' ')).includes(nq))return false;
+  return filtro==='compra'?x.s.n>0:filtro==='sin'?x.s.n===0:filtro==='deuda'?x.s.pend>0:filtro==='venc'?x.s.venc>0:true})
+}
+function mcPop(x){
+ const c=x.c,s=x.s,vs=Object.entries(s.vend).sort((a,b)=>b[1]-a[1]).map(e=>esc(e[0])).join(', ');
+ return `<div class="mcp"><b>${esc(c.n)}</b>${c.r?`<br><small>RUC/Céd.: ${esc(c.r)}</small>`:''}${c.t?`<br><small>Tel.: ${esc(c.t)}</small>`:''}${c.d?`<br><small>${esc(c.d)}</small>`:''}<hr>
+ <div>💰 Comprado: <b>${$$(s.t)}</b> (${s.n} factura${s.n===1?'':'s'})</div>${s.n?`<div>🧾 Promedio por factura: ${$$(s.t/s.n)}</div><div>📅 Última compra: ${fdate(s.ult)}</div>`:'<div>Sin compras todavía</div>'}${s.pend>0?`<div style="color:${s.venc>0?'#d92d20':'#b54708'}">⏳ Por cobrar: <b>${$$(s.pend)}</b>${s.venc>0?` (vencido ${$$(s.venc)})`:''}</div>`:''}${vs?`<div>🧑‍💼 ${vs}</div>`:''}
+ <div class="mcpb"><a href="https://www.google.com/maps?q=${c.lat},${c.lng}" target="_blank" rel="noopener">Abrir en Google Maps</a> · <a href="https://www.google.com/maps/dir/?api=1&destination=${c.lat},${c.lng}" target="_blank" rel="noopener">Cómo llegar</a></div></div>`
+}
+const mcLeyenda=()=>'<div class="mcleg"><span><i style="background:#12b76a"></i>Con compras</span><span><i style="background:#f79009"></i>Saldo por cobrar</span><span><i style="background:#d92d20"></i>Saldo vencido</span><span><i style="background:#98a2b3"></i>Sin compras</span><span>El tamaño del punto crece con lo comprado</span></div>';
+function mcPintar(slot){
+ const el=$(slot);if(!el||!window.L)return;
+ const ant=MC.s[slot];if(ant&&ant.map){try{ant.map.remove()}catch(e){window._tjw&&_tjw(e)}}
+ const home=slot==='mcHomeMap',map=L.map(slot,{zoomControl:true,scrollWheelZoom:!home});
+ mcCapas(map,'calle');
+ if(home){map.on('focus',()=>map.scrollWheelZoom.enable());map.on('blur',()=>map.scrollWheelZoom.disable())}
+ map.on('zoomend',()=>el.classList.toggle('mc-nolbl',map.getZoom()<13));
+ map.setView([8.9824,-79.5199],11);
+ MC.s[slot]={map,grupo:L.featureGroup().addTo(map),mk:{}};
+ mcCapa(slot,true);
+ setTimeout(()=>map&&map.invalidateSize(),150)
+}
+function mcCapa(slot,ajustar){
+ const o=MC.s[slot];if(!o||!o.map||!$(slot))return;
+ const full=slot==='mcMap',datos=mcVisibles(full?MC.f:'todos',full?MC.q:'');
+ o.grupo.clearLayers();o.mk={};
+ datos.filter(x=>x.loc).forEach(x=>{
+  const col=x.s.venc>0?'#d92d20':x.s.pend>0?'#f79009':x.s.n>0?'#12b76a':'#98a2b3',r=8+Math.min(12,Math.sqrt(x.s.t)/4);
+  const m=L.circleMarker([x.c.lat,x.c.lng],{radius:r,color:'#fff',weight:2,fillColor:col,fillOpacity:.9}).bindPopup(mcPop(x),{maxWidth:290}).bindTooltip(esc(x.c.n),{permanent:true,direction:'top',offset:[0,-r],className:'mc-tt'});
+  m.addTo(o.grupo);o.mk[x.c.id]=m});
+ if(ajustar&&datos.some(x=>x.loc))o.map.fitBounds(o.grupo.getBounds().pad(.2),{maxZoom:16});
+ $(slot).classList.toggle('mc-nolbl',o.map.getZoom()<13);
+ if(!full)return;
+ const con=datos.filter(x=>x.loc),sin=datos.filter(x=>!x.loc),sum=a=>a.reduce((t,x)=>t+x.s.t,0),pen=datos.reduce((t,x)=>t+x.s.pend,0);
+ const S=$('mcSum');if(S)S.innerHTML=`<span>📍 ${con.length} con ubicación</span><span>❔ ${sin.length} sin ubicación</span><span>💰 ${$$(sum(datos))} comprado</span><span>⏳ ${$$(pen)} por cobrar</span>`;
+ const Li=$('mcList');if(Li)Li.innerHTML=(con.length?`<table><tr><th>Cliente</th><th class="r">Comprado</th><th class="r">Fact.</th><th>Última</th><th class="r">Por cobrar</th><th></th></tr>${con.slice().sort((a,b)=>b.s.t-a.s.t).map(x=>`<tr><td>${esc(x.c.n)}</td><td class="r">${$$(x.s.t)}</td><td class="r">${x.s.n}</td><td>${x.s.ult?fdate(x.s.ult):'—'}</td><td class="r">${x.s.pend>0?$$(x.s.pend):'—'}</td><td class="r"><button class="btn s" data-h-click="h333" data-a-click="${_ha(x.c.id)}">Ver en el mapa</button></td></tr>`).join('')}</table>`:'<div class="vacio">Ningún cliente con ubicación coincide con este filtro.</div>')+(sin.length?`<details style="margin-top:10px"><summary>Clientes sin ubicación (${sin.length})</summary><div style="font-size:13px;margin-top:6px">${sin.map(x=>esc(x.c.n)).join(' · ')}</div></details>`:'')
+}
+function mcIr(id){
+ const o=MC.s.mcMap,m=o&&o.mk[id];if(!m)return;
+ const e=$('mcMap');if(e)e.scrollIntoView({behavior:'smooth',block:'center'});
+ o.map.flyTo(m.getLatLng(),17,{duration:.8});setTimeout(()=>{try{m.openPopup()}catch(x){window._tjw&&_tjw(x)}},900)
+}
+function mcHomeHTML(){
+ const n=(DB.cli||[]).filter(mcTieneLoc).length;
+ return `<div class="card" id="mcHomeCard"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">🗺️ Mapa de clientes</h3><button class="btn s" data-h-click="h334">Ver mapa completo</button></div><small style="color:var(--gris)">${n} cliente${n===1?'':'s'} con ubicación · toque un punto para ver lo que ha comprado</small><div id="mcHomeMap" class="mcmap mcmap-s"></div>${mcLeyenda()}</div>`
+}
+R.mapa=function(){
+ if(!esAdmin()){ir('home');return}
+ $('v').innerHTML=`<div class="card"><h3>🗺️ Mapa de clientes</h3><div class="mcsum" id="mcSum"></div>
+ <div class="mcbar"><input id="mcQ" placeholder="Buscar cliente por nombre, RUC o teléfono…" value="${esc(MC.q)}" data-h-input="h332"><select id="mcF" data-h-change="h332">${[['todos','Todos los clientes'],['compra','Con compras'],['sin','Sin compras'],['deuda','Con saldo por cobrar'],['venc','Con saldo vencido']].map(o=>`<option value="${o[0]}" ${MC.f===o[0]?'selected':''}>${o[1]}</option>`).join('')}</select></div>
+ <div id="mcMap" class="mcmap"></div>${mcLeyenda()}</div>
+ <div class="card"><h3>Detalle por cliente</h3><div class="tw" id="mcList"></div></div>`;
+ mcPintar('mcMap')
+};
+// Selector de ubicación dentro del formulario de cliente
+let _cuMap=null,_cuMk=null;
+function cliMapaIniciar(){
+ const el=$('cuMap');if(!el||!window.L)return;
+ if(_cuMap){try{_cuMap.remove()}catch(e){window._tjw&&_tjw(e)}_cuMap=null;_cuMk=null}
+ _cuMap=L.map('cuMap',{zoomControl:true});mcCapas(_cuMap,'calle');_cuMap.setView([8.9824,-79.5199],12);
+ _cuMap.on('click',e=>{const i=$('cu_link');if(!i)return;i.value=e.latlng.lat.toFixed(6)+', '+e.latlng.lng.toFixed(6);delete i.dataset.acc;cliLocEstado()});
+ setTimeout(()=>_cuMap&&_cuMap.invalidateSize(),150)
+}
+function cliMapSync(centrar){
+ if(!_cuMap||!$('cuMap'))return;
+ const l=cliLocLeer();
+ if(l.lat===undefined){if(_cuMk){_cuMap.removeLayer(_cuMk);_cuMk=null}return}
+ if(!_cuMk){_cuMk=L.marker([l.lat,l.lng],{draggable:true}).addTo(_cuMap);
+  _cuMk.on('dragend',()=>{const p=_cuMk.getLatLng(),i=$('cu_link');if(!i)return;i.value=p.lat.toFixed(6)+', '+p.lng.toFixed(6);delete i.dataset.acc;cliLocEstado()})
+ }else _cuMk.setLatLng([l.lat,l.lng]);
+ if(centrar)_cuMap.setView([l.lat,l.lng],Math.max(_cuMap.getZoom(),17))
+}
 function homeCard(html){const w=document.createElement('div');w.innerHTML=(typeof html==='function'?html():html)||'';return w.firstElementChild}
 R.home=function(){
  const v=$('v'),tienda=()=>homeCard(tdHomeHTML());
@@ -2638,6 +2738,7 @@ R.home=function(){
  }
  const t=tienda();if(t)v.insertBefore(t,v.children[1]||null);
  if(!esAdmin())return r;
+ try{const mc=homeCard(mcHomeHTML());if(mc){const kp=v.querySelector('.kp');if(kp)kp.insertAdjacentElement('afterend',mc);else v.appendChild(mc);mcPintar('mcHomeMap')}}catch(e){window._tjw&&_tjw(e)}
  const inv=homeCard(investHomeHTML());if(inv)v.appendChild(inv);
  waListen();if(WA.list.length){const wa=homeCard(waHomeHTML());if(wa)v.insertBefore(wa,v.firstChild)}
  return r
@@ -2952,6 +3053,9 @@ __H.h306=function(event,a){addC()};
 __H.h329=function(event,a){cliLocGPS()};
 __H.h330=function(event,a){cliLocInput()};
 __H.h331=function(event,a){cliLocAbrir()};
+__H.h332=function(event,a){MC.q=($('mcQ')||{}).value||'';MC.f=($('mcF')||{}).value||'todos';mcCapa('mcMap',true)};
+__H.h333=function(event,a){mcIr(a[0])};
+__H.h334=function(event,a){ir('mapa')};
 __H.h307=function(event,a){delP(a[0])};
 __H.h308=function(event,a){editP(a[0])};
 __H.h309=function(event,a){addP()};
