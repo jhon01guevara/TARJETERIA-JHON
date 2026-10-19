@@ -69,6 +69,17 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Contador único de facturas: guarda el próximo número libre. Administración lo
+    // gestiona; un vendedor solo puede avanzarlo de uno en uno al reservar un número.
+    match /panel_public/contador {
+      allow read: if logged();
+      allow create, update, delete: if isAdmin();
+      allow update: if logged()
+        && request.resource.data.keys().hasOnly(['sig'])
+        && request.resource.data.sig is int
+        && request.resource.data.sig == resource.data.sig + 1;
+    }
+
     // Espacio privado de cada vendedor: clientes, facturas, ubicaciones y agenda.
     // Administración puede auditarlo; un vendedor solo puede acceder a su UID.
     match /vendedores/{uid}/privado/{doc} {
