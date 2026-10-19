@@ -49,6 +49,7 @@ const save=()=>{saveLocal();syncToCloud()};
 // ===== Sincronización en la nube (Firebase) =====
 const firebaseConfig={apiKey:"AIzaSyBle5zbvVjXIVXvOz8tgxBBbu8-Ty1Msrs",authDomain:"tarjeteria-jhon.firebaseapp.com",projectId:"tarjeteria-jhon",storageBucket:"tarjeteria-jhon.firebasestorage.app",messagingSenderId:"386602273549",appId:"1:386602273549:web:8d97182d91d33a79e17e44"};
 let fbDb=null,fbDocRef=null,_cloudWriting=false,_syncTimer=null,_lastTs=0,_cloudOn=false,_cloudUnsub=null;
+let _fbInitError='';
 // App Check: certifica ante Firebase que las peticiones salen de esta página real
 // (no de un bot ni de un script copiando la API). Reemplace RECAPTCHA_V3_SITE_KEY por
 // la clave de sitio reCAPTCHA v3 creada en la consola de Firebase (App Check > Apps >
@@ -63,17 +64,19 @@ const RECAPTCHA_V3_SITE_KEY='6Ld9hOktAAAAALfcLgikIHsm0rvaJCaWQ_lIXf-y';
 const EMAILJS_PUBLIC_KEY='7uMfxbPHkkks7YCGu',EMAILJS_SERVICE_ID='service_uy10xlg',EMAILJS_TEMPLATE_ID='template_wybv8ea';
 const emailjsListo=()=>EMAILJS_PUBLIC_KEY!=='EMAILJS_PUBLIC_KEY'&&EMAILJS_SERVICE_ID!=='EMAILJS_SERVICE_ID'&&EMAILJS_TEMPLATE_ID!=='EMAILJS_TEMPLATE_ID'&&window.emailjs;
 try{if(window.emailjs&&emailjsListo())emailjs.init({publicKey:EMAILJS_PUBLIC_KEY})}catch(e){window._tjw&&_tjw(e)}
-try{
- if(window.firebase){
-  // Tras una actualización o una restauración desde caché, Firebase puede ya estar
-  // inicializado. Reutilizarlo evita abortar antes de poder leer el rol del usuario.
-  if(!(firebase.apps&&firebase.apps.length))firebase.initializeApp(firebaseConfig);
-  if(firebase.appCheck && RECAPTCHA_V3_SITE_KEY!=='RECAPTCHA_V3_SITE_KEY'){
-   try{firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(RECAPTCHA_V3_SITE_KEY),true)}catch(e){window._tjw&&_tjw(e)}
-  }
-  fbDb=firebase.firestore();
+function iniciarFirebase(){
+ if(!window.firebase)throw new Error('Firebase no se cargó');
+ // Tras una actualización o una restauración desde caché, Firebase puede ya estar
+ // inicializado. Reutilizarlo evita abortar antes de poder leer el rol del usuario.
+ if(!(firebase.apps&&firebase.apps.length))firebase.initializeApp(firebaseConfig);
+ if(!firebase.firestore)throw new Error('Firestore no se cargó');
+ fbDb=firebase.firestore();
+ if(firebase.appCheck && RECAPTCHA_V3_SITE_KEY!=='RECAPTCHA_V3_SITE_KEY'){
+  try{firebase.appCheck().activate(new firebase.appCheck.ReCaptchaEnterpriseProvider(RECAPTCHA_V3_SITE_KEY),true)}catch(e){window._tjw&&_tjw(e)}
  }
-}catch(e){window._tjw&&_tjw(e)}
+ return fbDb;
+}
+try{iniciarFirebase()}catch(e){_fbInitError=(e&&e.message)||'error';window._tjw&&_tjw(e)}
 function cloudEstado(txt,ok){_cloudOn=!!ok;const els=document.querySelectorAll('.cloudSt');els.forEach(e=>{e.textContent=txt;e.style.color=ok?'#2fae6b':(ok===false?'#c0392b':'')})}
 // Datos compartidos mínimos para emitir facturas. No contienen usuarios, credenciales,
 // historial de clientes ni la agenda. Cada vendedor guarda su trabajo en su propio documento.
@@ -2211,6 +2214,8 @@ let _note=(function(){try{const n=localStorage.getItem('tj_sesion_note');if(n)lo
 function authInit(){
  authUI('<p style="margin:0;text-align:center">☁ Conectando…</p>');
  if(!window.firebase||!firebase.auth)return authUI('<h2>Sin conexión</h2><p>Se necesita internet para iniciar sesión.</p><button class="btn p" data-h-click="h24">Reintentar</button>');
+ if(!fbDb)try{iniciarFirebase()}catch(e){_fbInitError=(e&&e.message)||'error'}
+ if(!fbDb)return authUI('<h2>Sin conexión</h2><p>No se pudo iniciar Firestore ['+esc(_fbInitError||'error')+']. Actualice la página e intente nuevamente.</p><button class="btn p" data-h-click="h24">Reintentar</button>');
  firebase.auth().onAuthStateChanged(async u=>{
   if(!u){SES=null;authLogin();return}
   try{
