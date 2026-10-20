@@ -356,7 +356,7 @@ const RED_SVG={
  tiktok:'<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.1 4.2 5 4.5"/>',
  instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>',
  facebook:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'};
-const CONT_DEF=[['tel','Teléfono','+507 6074-1150'],['wa','WhatsApp (con código de país)','50760741150'],['email','Correo','ventas@ejemplo.com'],['dir','Dirección','Calle principal, Panamá Oeste'],['horario','Horario','Lunes a sábado, 9:00 a.m. a 6:00 p.m.']];
+const CONT_DEF=[['tel','Teléfono','+507 6074-1150'],['wa','WhatsApp (botón flotante)','60741150'],['email','Correo','ventas@ejemplo.com'],['dir','Dirección','Calle principal, Panamá Oeste'],['horario','Horario','Lunes a sábado, 9:00 a.m. a 6:00 p.m.']];
 let RS_DRAFT={},RS_MSG=null;
 // Acepta @usuario, usuario o un link de la red; devuelve un link https seguro o '' si no es válido.
 function redUrl(red,txt){
@@ -385,13 +385,14 @@ function contLimpio(c){
  return o
 }
 (function(){if(document.getElementById('redCss'))return;const st=document.createElement('style');st.id='redCss';
- st.textContent='.kredes{max-width:1100px;margin:28px auto 96px;padding:0 16px;text-align:center}.kredes h3{margin:0 0 12px}.kred-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.kred{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}.kred:hover{filter:brightness(1.08)}.kred svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.kred-tiktok{background:#111}.kred-instagram{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)}.kred-facebook{background:#1877f2}.kredh{display:inline-flex;gap:8px;align-items:center;margin-left:auto}.kredh:empty{display:none}.kredh .kred{width:34px;height:34px;padding:0;justify-content:center;box-shadow:none}.kmobile-menu .kredh{grid-column:1/-1;justify-content:center;margin:4px 0 8px}.kcont{margin:8px 0 14px}.kcr{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(127,127,127,.25)}.kcr>span{font-size:20px;line-height:1.3}.kcr small{opacity:.7}.kcr a{color:inherit;font-weight:600;word-break:break-word}';
+ st.textContent='.kredes{max-width:1100px;margin:28px auto 96px;padding:0 16px;text-align:center}.kredes h3{margin:0 0 12px}.kred-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.kred{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}.kred:hover{filter:brightness(1.08)}.kred svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.kred-tiktok{background:#111}.kred-instagram{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)}.kred-facebook{background:#1877f2}.kredh{display:inline-flex;gap:8px;align-items:center;margin-left:auto}.kredh:empty{display:none}.kredh .kred{width:34px;height:34px;padding:0;justify-content:center;box-shadow:none}.kmobile-menu .kredh{grid-column:1/-1;justify-content:center;margin:4px 0 8px}.kcont{margin:8px 0 14px}.kcr{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(127,127,127,.25)}.kcr>span{font-size:20px;line-height:1.3}.kcr small{opacity:.7}.kcr a{color:inherit;font-weight:600;word-break:break-word}.kwa{position:fixed;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:24;width:58px;height:58px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -6px rgba(0,0,0,.45);text-decoration:none}.kwa[hidden]{display:none}.kwa:hover{filter:brightness(1.07)}.kwa svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}@media (max-width:820px){.kwa{bottom:calc(124px + env(safe-area-inset-bottom))}}';
  document.head.appendChild(st)})();
 const redesLista=r=>{r=r&&typeof r==='object'?r:{};return RED_DEF.map(([k,n])=>[k,n,redUrl(k,r[k])]).filter(x=>x[2])};
 const redLink=(k,n,u,mini)=>`<a class="kred kred-${k}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" aria-hidden="true">${RED_SVG[k]}</svg>${mini?'':`<span>${n}</span>`}</a>`;
 // Tienda pública: iconos junto al menú y botones al final de la página.
 function shopRedes(){
- const L=redesLista(typeof SH!=='undefined'?SH.redes:null);
+ const L=redesLista(typeof SH!=='undefined'?SH.redes:null),w=$('k_wa'),num=contLimpio(typeof SH!=='undefined'?SH.contacto:null).wa;
+ if(w){if(num){w.href='https://wa.me/'+num+'?text='+encodeURIComponent('Hola, vi su catálogo virtual de Tarjetería Jhon y quisiera más información.');w.hidden=false}else{w.hidden=true;w.removeAttribute('href')}}
  document.querySelectorAll('.kredh').forEach(e=>{e.innerHTML=L.map(([k,n,u])=>redLink(k,n,u,1)).join('')});
  const e=$('k_redes');if(!e)return;
  if(!L.length){e.hidden=true;e.innerHTML='';return}
@@ -412,7 +413,7 @@ function shopContacto(){
 function redesCard(){
  const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph={tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'};
  const val=(id,saved)=>id in RS_DRAFT?RS_DRAFT[id]:saved;
- return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. Deje vacío lo que no use.</p>
+ return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. El número de WhatsApp además aparece como botón verde flotante en la tienda (8 dígitos o con código de país). Deje vacío lo que no use.</p>
  <div class="g">${RED_DEF.map(([k,n])=>`<div><label>${n}</label><input id="rs_${k}" value="${esc(val('rs_'+k,redUrl(k,r[k])))}" placeholder="${ph[k]}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
  <div class="g" style="margin-top:10px">${CONT_DEF.map(([k,n,p])=>`<div><label>${n}</label><input id="ct_${k}" value="${esc(val('ct_'+k,ct[k]))}" placeholder="${esc(p)}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h335">Guardar redes y contacto</button><span id="rs_est" style="font-size:13px;color:${RS_MSG?RS_MSG.ok?'#1e7a43':'#b3261e':'inherit'}">${RS_MSG?esc(RS_MSG.t):''}</span></div>`
@@ -443,6 +444,27 @@ async function redesGuardar(){
   RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i)i.value=redes[k]});CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i)i.value=ct[k]});
   msg(true,'✔ Guardado. Ya se ve en la tienda virtual.')
  }catch(e){window._tjw&&_tjw(e);msg(false,'✖ No se pudo guardar. Revise su conexión o permisos.')}
+}
+/* ===== Destacados de la semana: carrusel automático (cada 5 s) y ajuste para móvil ===== */
+(function(){if(document.getElementById('destCss'))return;const st=document.createElement('style');st.id='destCss';
+ st.textContent='@media(max-width:600px){#shop .kdest h3{font-size:17px}#shop .kdr{gap:10px;padding:2px 2px 12px;scroll-snap-type:x mandatory;overscroll-behavior-x:contain;-webkit-overflow-scrolling:touch}#shop .kdr .kdc{flex:0 0 min(44vw,200px);-webkit-tap-highlight-color:transparent}#shop .kdr .kdc .kb b{white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;line-height:1.25;min-height:2.5em}#shop .kdr .kdc-buy{height:36px;padding:0 12px;font-size:12.5px}#shop .kdr .kdc .kfav{width:38px;height:38px}}@media(max-width:360px){#shop .kdr .kdc-buy span{display:none}}';
+ document.head.appendChild(st)})();
+function shopDestTick(){
+ const r=document.querySelector('#k_dest .kdr');
+ if(!r||document.hidden||r.scrollWidth<=r.clientWidth+8)return;
+ if(Date.now()<(typeof SH!=='undefined'&&SH._dh||0)||(r.matches&&r.matches(':hover')))return;
+ if(window.matchMedia&&window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+ const rb=r.getBoundingClientRect();if(rb.bottom<0||rb.top>(window.innerHeight||document.documentElement.clientHeight))return;
+ const cs=[].slice.call(r.children);if(cs.length<2)return;
+ const off=c=>c.getBoundingClientRect().left-rb.left+r.scrollLeft,fin=r.scrollLeft+r.clientWidth>=r.scrollWidth-4;
+ const nx=fin?null:cs.find(c=>off(c)>r.scrollLeft+4);
+ r.scrollTo({left:nx?off(nx):0,behavior:'smooth'})
+}
+// Un solo temporizador para toda la página: si el usuario toca o desliza, el avance se pausa unos segundos.
+function shopDestAuto(){
+ if(SH._dt)return;SH._dt=setInterval(shopDestTick,5000);
+ const hold=ev=>{if(ev.target&&ev.target.closest&&ev.target.closest('#k_dest'))SH._dh=Date.now()+8000};
+ ['pointerdown','touchstart','wheel','keydown'].forEach(t=>document.addEventListener(t,hold,{passive:true}))
 }
 // --- Saneo de documentos públicos (tienda_leads, tienda_pedidos, galería) ---
 // Cualquiera puede crear un registro o un pedido sin iniciar sesión (y cualquier vendedor puede
@@ -2158,7 +2180,7 @@ async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('s
 function shopCatalog(){const o=$('shop');if(!o)return;
  o.innerHTML=`<div class="kwrap"><header class="khd"><div class="kh-top"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div><button class="kmenu-btn" id="k_menu_b" data-h-click="h83" aria-label="Abrir menú" aria-expanded="false">${kico(KI.menu,22)}</button></div><div class="kh-search"><label class="ksr">${kico(KI.search,20)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" data-h-click="h81" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><button class="kfilter-btn" data-h-click="h80" aria-label="Abrir filtros">${kico(KI.filter,21)}</button><nav class="kh-links">${shopDNavHtml()}</nav></div><nav class="kmobile-menu" id="k_mmenu" hidden>${shopMobileNavHtml()}</nav></header><nav class="kdnav" id="k_dnav">${shopDNavHtml()}</nav><section class="khero" id="khero" aria-label="Diseños destacados"></section><section class="kcats" id="k_cats" hidden></section><section class="kdest" id="k_dest" hidden></section>
 <div class="kmain"><aside class="kside" id="k_side"></aside><div class="kcol"><div class="kstk"><div class="kchips" id="sh_ch"></div></div>
-<div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g" aria-label="Resultados"></div><div id="k_more"></div></div></div></div><section class="kredes" id="k_redes" hidden></section><nav class="knav" id="k_nav"></nav><div id="k_fab"></div>`;
+<div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g" aria-label="Resultados"></div><div id="k_more"></div></div></div></div><section class="kredes" id="k_redes" hidden></section><nav class="knav" id="k_nav"></nav><div id="k_fab"></div><a class="kwa" id="k_wa" target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9.2 8.6c.3 2.4 2.7 5 5.5 5.6l1.1-1.2-1.7-.9-.8.6c-.9-.4-1.8-1.3-2.2-2.2l.6-.8-.9-1.7z"/></svg></a>`;
  shopFilters();shopNav();shopHdrScroll();shopRedes()}
 function shopHdrScroll(){const o=$('shop');if(!o||SH._hs)return;SH._hs=1;let last=0,tk=false;
  o.addEventListener('scroll',()=>{if(tk)return;tk=true;requestAnimationFrame(()=>{tk=false;if(innerWidth>820)return;const y=o.scrollTop,d=y-last,h=o.querySelector('.khd'),f=$('k_fab'),q=$('sh_q');
@@ -2439,7 +2461,7 @@ const bdgList=i=>BDO.filter(k=>Array.isArray(i.badges)&&i.badges.includes(k));
 const bdgTags=(i,inl)=>{const L=bdgList(i);return L.length?`<div class="${inl?'krbi':'krbs'}">${L.map(k=>`<span class="krb">${BDL[k]}</span>`).join('')}</div>`:''};
 function shopDest(){const e=$('k_dest');if(!e)return;const L=SH.items.filter(i=>i&&i.img&&!noDisp(i)&&bdgList(i).length).sort((a,b)=>BDO.indexOf(bdgList(a)[0])-BDO.indexOf(bdgList(b)[0])).slice(0,12),key=L.map(i=>i.id+(i.badges||[]).join('')+i.price).join('|');
  if(!L.length){e.hidden=true;e.innerHTML='';e._k='';return}if(e._k===key)return;e._k=key;e.hidden=false;
- e.innerHTML=`<h3>Destacados de la semana</h3><div class="kdr">${L.map(i=>`<article class="kdc" data-h-click="h29" data-a-click="${_ha(i.id)}">${bdgTags(i)}<div class="ki"><img src="${i.img}" alt="${esc(i.name)}" loading="lazy"><button class="kfav ${SH.fav[i.id]?'on':''}" data-f="${i.id}" data-h-click="h28" data-a-click="${_ha(i.id)}" aria-label="Favorito">${kico(SH.fav[i.id]?KI.heart:KI.heartO,18)}</button></div><div class="kb"><b>${esc(i.name)}</b><div class="kdc-foot"><span class="kpr">${+i.price>0?tdMoney(i.price):'Consultar'}</span>${noDisp(i)?`<span class="kno">${stkLbl[i.stock]}</span>`:`<button class="kdc-buy" data-h-click="h27" data-a-click="${_ha(i.id)}">${kico(KI.plus,15)}<span>Comprar</span></button>`}</div></div></article>`).join('')}</div>`}
+ e.innerHTML=`<h3>Destacados de la semana</h3><div class="kdr">${L.map(i=>`<article class="kdc" data-h-click="h29" data-a-click="${_ha(i.id)}">${bdgTags(i)}<div class="ki"><img src="${i.img}" alt="${esc(i.name)}" loading="lazy"><button class="kfav ${SH.fav[i.id]?'on':''}" data-f="${i.id}" data-h-click="h28" data-a-click="${_ha(i.id)}" aria-label="Favorito">${kico(SH.fav[i.id]?KI.heart:KI.heartO,18)}</button></div><div class="kb"><b>${esc(i.name)}</b><div class="kdc-foot"><span class="kpr">${+i.price>0?tdMoney(i.price):'Consultar'}</span>${noDisp(i)?`<span class="kno">${stkLbl[i.stock]}</span>`:`<button class="kdc-buy" data-h-click="h27" data-a-click="${_ha(i.id)}">${kico(KI.plus,15)}<span>Comprar</span></button>`}</div></div></article>`).join('')}</div>`;shopDestAuto()}
 function shopMusPrime(){const _c=document.documentElement.classList;if(!_c.contains('xmas')&&!_c.contains('panama'))return;try{SH.ac=SH.ac||new (window.AudioContext||window.webkitAudioContext)();SH.ac.resume()}catch(e){window._tjw&&_tjw(e)}}
 function shopMusica(){const ac=SH.ac;if(!ac)return;try{ac.resume();const N={C:261.63,D:293.66,E:329.63,F:349.23,G:392},S=[['E',1],['E',1],['E',2],['E',1],['E',1],['E',2],['E',1],['G',1],['C',1.5],['D',.5],['E',4],['F',1],['F',1],['F',1.5],['F',.5],['F',1],['E',1],['E',1],['E',.5],['E',.5],['E',1],['D',1],['D',1],['E',1],['D',2],['G',2]],b=.27;let t=ac.currentTime+.05;
  S.forEach(([n,d])=>{const f=N[n],g=ac.createGain(),g2=ac.createGain(),o=ac.createOscillator(),o2=ac.createOscillator(),L=d*b;o.type='sine';o2.type='triangle';o.frequency.value=f*2;o2.frequency.value=f*4;g2.gain.value=.25;o.connect(g);o2.connect(g2);g2.connect(g);g.connect(ac.destination);
