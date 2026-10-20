@@ -165,3 +165,127 @@ html.shopmode:not([data-kt=dark]) #shop .kimg{background:var(--sf2)}
 #shop .ksr-btn-go:hover{filter:brightness(1.08)}
 #shop .ksr-btn-go:active{transform:scale(.92)}
 #shop .ksr-btn-go svg{width:18px;height:18px;stroke:#fff;fill:none}
+
+/* ===== PALETAS DE COMBINACIÓN PRO (FONDO DE PÁGINA + SUPERFICIES + ACENTOS) ===== */
+/* 1. Shop Original (Canvas Mist & Violeta) */
+html.shopmode[data-paleta=shop], html.shopmode[data-paleta=shop] body, html.shopmode:not([data-paleta]), html.shopmode:not([data-paleta]) body {
+  background: #f2f4f5 !important;
+}
+html[data-paleta=shop] :is(#shop,#shopm,#ksnack), html:not([data-paleta]) :is(#shop,#shopm,#ksnack) {
+  --bg: #f2f4f5; --sf: #ffffff; --sf2: #e8ebed; --tx: #000000; --tx2: #787574; --ol: #ebebeb;
+  --p: #5433eb; --pt: #ffffff; --pc: #f2f4f5; --onpc: #000000; --shv: 0 4px 24px rgba(69,36,219,.34);
+}
+
+/* 2. Lino Cálido & Ámbar (Lino nórdico) */
+html.shopmode[data-paleta=lino], html.shopmode[data-paleta=lino] body, html.shopmode[data-paleta=dorado], html.shopmode[data-paleta=dorado] body {
+  background: #f7f4ed !important;
+}
+html[data-paleta=lino] :is(#shop,#shopm,#ksnack), html[data-paleta=dorado] :is(#shop,#shopm,#ksnack) {
+  --bg: #f7f4ed; --sf: #ffffff; --sf2: #ede8dc; --tx: #201b14; --tx2: #7c7467; --ol: #e2dcd0;
+  --p: #8a5a12; --pt: #ffffff; --pc: #f7f1e4; --onpc: #4e330a; --shv: 0 4px 24px rgba(138,90,18,.30);
+}
+
+/* 3. Rosa Blush (Porcelana & Frambuesa) */
+html.shopmode[data-paleta=rosa], html.shopmode[data-paleta=rosa] body {
+  background: #faf1f4 !important;
+}
+html[data-paleta=rosa] :is(#shop,#shopm,#ksnack) {
+  --bg: #faf1f4; --sf: #ffffff; --sf2: #f2e2e8; --tx: #241419; --tx2: #7d666e; --ol: #edd6df;
+  --p: #c8183c; --pt: #ffffff; --pc: #fae4eb; --onpc: #75091f; --shv: 0 4px 24px rgba(200,24,60,.30);
+}
+
+/* 4. Eucalipto Salvia & Esmeralda */
+html.shopmode[data-paleta=esmeralda], html.shopmode[data-paleta=esmeralda] body {
+  background: #f0f5f2 !important;
+}
+html[data-paleta=esmeralda] :is(#shop,#shopm,#ksnack) {
+  --bg: #f0f5f2; --sf: #ffffff; --sf2: #e0ece5; --tx: #101f19; --tx2: #5a7266; --ol: #d1e2d7;
+  --p: #0e3c30; --pt: #ffffff; --pc: #e1ede6; --onpc: #07261e; --shv: 0 4px 24px rgba(14,60,48,.30);
+}
+
+/* 5. Lavanda & Púrpura Imperial */
+html.shopmode[data-paleta=violeta], html.shopmode[data-paleta=violeta] body {
+  background: #f4f0fa !important;
+}
+html[data-paleta=violeta] :is(#shop,#shopm,#ksnack) {
+  --bg: #f4f0fa; --sf: #ffffff; --sf2: #e7def5; --tx: #191126; --tx2: #6c5f7d; --ol: #dbd0ee;
+  --p: #6b32b8; --pt: #ffffff; --pc: #ece4f8; --onpc: #3f1975; --shv: 0 4px 24px rgba(107,50,184,.32);
+}
+
+/* 6. Hielo Nórdico & Océano */
+html.shopmode[data-paleta=oceano], html.shopmode[data-paleta=oceano] body {
+  background: #eef4f7 !important;
+}
+html[data-paleta=oceano] :is(#shop,#shopm,#ksnack) {
+  --bg: #eef4f7; --sf: #ffffff; --sf2: #d9e8ee; --tx: #0f1f24; --tx2: #536d75; --ol: #cce0e8;
+  --p: #0e6b78; --pt: #ffffff; --pc: #dbf0f3; --onpc: #064047; --shv: 0 4px 24px rgba(14,107,120,.30);
+}
+
+/* 7. Marino & Oro (Borgona) */
+html.shopmode[data-paleta=borgona], html.shopmode[data-paleta=borgona] body {
+  background: #f0f2f7 !important;
+}
+html[data-paleta=borgona] :is(#shop,#shopm,#ksnack) {
+  --bg: #f0f2f7; --sf: #ffffff; --sf2: #dee4f1; --tx: #0b1122; --tx2: #56617a; --ol: #d0d7e6;
+  --p: #121e42; --pt: #ffffff; --pc: #e2e7f4; --onpc: #0c152e; --shv: 0 4px 24px rgba(18,30,66,.32);
+}
+
+/* 8. Clásico Blanco Puro */
+html.shopmode[data-paleta=clasico], html.shopmode[data-paleta=clasico] body {
+  background: #ffffff !important;
+}
+html[data-paleta=clasico] :is(#shop,#shopm,#ksnack) {
+  --bg: #ffffff; --sf: #ffffff; --sf2: #f4f4f6; --tx: #1D1D1F; --tx2: #6E6E73; --ol: #e5e5ea;
+  --p: #1D1D1F; --pt: #ffffff; --pc: #ececee; --onpc: #1D1D1F; --shv: 0 4px 24px rgba(0,0,0,.22);
+}
+
+/* 9. Carbón & Piedra */
+html.shopmode[data-paleta=carbon], html.shopmode[data-paleta=carbon] body {
+  background: #f0f1f3 !important;
+}
+html[data-paleta=carbon] :is(#shop,#shopm,#ksnack) {
+  --bg: #f0f1f3; --sf: #ffffff; --sf2: #e5e7ea; --tx: #1e2226; --tx2: #606870; --ol: #d8dce1;
+  --p: #30363D; --pt: #ffffff; --pc: #e4e7eb; --onpc: #1e2226; --shv: 0 4px 24px rgba(48,54,61,.28);
+}
+
+/* 10. Dark Obsidian Pro */
+html.shopmode[data-paleta=dark], html.shopmode[data-paleta=dark] body, html[data-kt=dark].shopmode, html[data-kt=dark].shopmode body {
+  background: #0c0c0e !important;
+}
+html[data-paleta=dark] :is(#shop,#shopm,#ksnack), html[data-kt=dark] :is(#shop,#shopm,#ksnack) {
+  --bg: #0c0c0e; --sf: #18181b; --sf2: #232327; --tx: #ffffff; --tx2: #a8a5a3; --ol: #2e2e33;
+  --p: #7c66ff; --pt: #ffffff; --pc: #26262a; --onpc: #ffffff; --shv: 0 4px 24px rgba(124,102,255,.35);
+  color-scheme: dark;
+}
+
+/* Banners promocionales sobre 'Explora por ocasión' */
+#shop .kpromo-carousel {
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  box-shadow: var(--sh);
+  margin: 18px 0 24px;
+  background: var(--sf);
+}
+#shop .kpromo-carousel[hidden] { display: none; }
+#shop .kpromo-track {
+  display: flex;
+  transition: transform .48s cubic-bezier(.2,.8,.2,1);
+  will-change: transform;
+}
+#shop .kpromo-track .khero-slide {
+  flex: 0 0 100%;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  min-height: 0;
+}
+#shop .kpromo-track picture {
+  display: block;
+}
+#shop .kpromo-track img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
