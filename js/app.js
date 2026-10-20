@@ -349,6 +349,101 @@ async function sincronizarCatalogoNube(){
 
 const $$=n=>'$'+(+n).toFixed(2);const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+/* ===== Redes sociales y contacto de la tienda virtual ===== */
+const RED_DEF=[['tiktok','TikTok'],['instagram','Instagram'],['facebook','Facebook']];
+const RED_HOST={tiktok:/^(?:[a-z0-9-]+\.)*tiktok\.com$/i,instagram:/^(?:[a-z0-9-]+\.)*instagram\.com$/i,facebook:/^(?:[a-z0-9-]+\.)*(?:facebook\.com|fb\.com)$/i};
+const RED_SVG={
+ tiktok:'<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.1 4.2 5 4.5"/>',
+ instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>',
+ facebook:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'};
+const CONT_DEF=[['tel','Teléfono','+507 6074-1150'],['wa','WhatsApp (con código de país)','50760741150'],['email','Correo','ventas@ejemplo.com'],['dir','Dirección','Calle principal, Panamá Oeste'],['horario','Horario','Lunes a sábado, 9:00 a.m. a 6:00 p.m.']];
+let RS_DRAFT={},RS_MSG=null;
+// Acepta @usuario, usuario o un link de la red; devuelve un link https seguro o '' si no es válido.
+function redUrl(red,txt){
+ let t=String(txt==null?'':txt).trim();if(!t||t.length>300||!RED_HOST[red])return'';
+ if(/^[a-z][a-z0-9+.-]*:/i.test(t)){if(!/^https?:\/\//i.test(t))return''}
+ else if(/^(?:[a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#]|$)/i.test(t))t='https://'+t;
+ if(/^https?:\/\//i.test(t)){
+  let u;try{u=new URL(t)}catch(e){return''}
+  if(u.username||u.password||!RED_HOST[red].test(u.hostname))return'';
+  u.protocol='https:';u.hash='';
+  const id=u.searchParams.get('id');
+  u.search=(/\/profile\.php$/i.test(u.pathname)&&/^\d{5,25}$/.test(id||''))?'?id='+id:'';
+  return u.href
+ }
+ t=t.replace(/^@/,'');if(!/^[A-Za-z0-9._-]{1,60}$/.test(t))return'';
+ return red==='tiktok'?'https://www.tiktok.com/@'+t:red==='instagram'?'https://www.instagram.com/'+t+'/':'https://www.facebook.com/'+t
+}
+// Datos de contacto: lo que no sea válido queda vacío (se vuelve a limpiar al leerlo en la tienda pública).
+function contLimpio(c){
+ c=c&&typeof c==='object'?c:{};
+ const tx=(v,m)=>String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,m),o={};
+ const tel=tx(c.tel,25);o.tel=/^[+\d][\d\s().-]{5,24}$/.test(tel)?tel:'';
+ let w=String(c.wa==null?'':c.wa).replace(/\D/g,'');if(w.length===8)w='507'+w;o.wa=/^\d{10,15}$/.test(w)?w:'';
+ const em=tx(c.email,120);o.email=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)?em:'';
+ o.dir=tx(c.dir,200);o.horario=tx(c.horario,150);
+ return o
+}
+(function(){if(document.getElementById('redCss'))return;const st=document.createElement('style');st.id='redCss';
+ st.textContent='.kredes{max-width:1100px;margin:28px auto 96px;padding:0 16px;text-align:center}.kredes h3{margin:0 0 12px}.kred-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.kred{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}.kred:hover{filter:brightness(1.08)}.kred svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.kred-tiktok{background:#111}.kred-instagram{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)}.kred-facebook{background:#1877f2}.kredh{display:inline-flex;gap:8px;align-items:center;margin-left:auto}.kredh:empty{display:none}.kredh .kred{width:34px;height:34px;padding:0;justify-content:center;box-shadow:none}.kmobile-menu .kredh{grid-column:1/-1;justify-content:center;margin:4px 0 8px}.kcont{margin:8px 0 14px}.kcr{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(127,127,127,.25)}.kcr>span{font-size:20px;line-height:1.3}.kcr small{opacity:.7}.kcr a{color:inherit;font-weight:600;word-break:break-word}';
+ document.head.appendChild(st)})();
+const redesLista=r=>{r=r&&typeof r==='object'?r:{};return RED_DEF.map(([k,n])=>[k,n,redUrl(k,r[k])]).filter(x=>x[2])};
+const redLink=(k,n,u,mini)=>`<a class="kred kred-${k}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" aria-hidden="true">${RED_SVG[k]}</svg>${mini?'':`<span>${n}</span>`}</a>`;
+// Tienda pública: iconos junto al menú y botones al final de la página.
+function shopRedes(){
+ const L=redesLista(typeof SH!=='undefined'?SH.redes:null);
+ document.querySelectorAll('.kredh').forEach(e=>{e.innerHTML=L.map(([k,n,u])=>redLink(k,n,u,1)).join('')});
+ const e=$('k_redes');if(!e)return;
+ if(!L.length){e.hidden=true;e.innerHTML='';return}
+ e.hidden=false;e.innerHTML=`<h3>Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>redLink(k,n,u)).join('')}</div>`
+}
+// Botón "Contacto" de la tienda: muestra los datos que configuró el administrador.
+function shopContacto(){
+ const c=contLimpio(typeof SH!=='undefined'?SH.contacto:null),L=redesLista(typeof SH!=='undefined'?SH.redes:null),f=[];
+ if(c.wa)f.push(['💬','WhatsApp',`<a href="https://wa.me/${c.wa}" target="_blank" rel="noopener noreferrer">+${c.wa}</a>`]);
+ if(c.tel)f.push(['📞','Teléfono',`<a href="tel:${esc(c.tel.replace(/[^\d+]/g,''))}">${esc(c.tel)}</a>`]);
+ if(c.email)f.push(['✉️','Correo',`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`]);
+ if(c.dir)f.push(['📍','Dirección',`<a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(c.dir)}" target="_blank" rel="noopener noreferrer">${esc(c.dir)}</a>`]);
+ if(c.horario)f.push(['🕒','Horario',esc(c.horario)]);
+ if(!f.length)f.push(['✉️','Correo','<a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a>']);
+ shopM(`<h2 style="margin:6px 0">Contacto</h2><div class="kcont">${f.map(([i,l,h])=>`<div class="kcr"><span>${i}</span><div><small>${l}</small><br>${h}</div></div>`).join('')}</div>${L.length?`<h3 style="margin:6px 0 10px">Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>redLink(k,n,u)).join('')}</div>`:''}<div class="kact2" style="margin-top:14px"><button class="sbtn g" data-h-click="h31">Cerrar</button></div>`,'contact')
+}
+// Configuración (administrador). Lo escrito sin guardar y el aviso sobreviven a los redibujados de la pantalla.
+function redesCard(){
+ const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph={tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'};
+ const val=(id,saved)=>id in RS_DRAFT?RS_DRAFT[id]:saved;
+ return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. Deje vacío lo que no use.</p>
+ <div class="g">${RED_DEF.map(([k,n])=>`<div><label>${n}</label><input id="rs_${k}" value="${esc(val('rs_'+k,redUrl(k,r[k])))}" placeholder="${ph[k]}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
+ <div class="g" style="margin-top:10px">${CONT_DEF.map(([k,n,p])=>`<div><label>${n}</label><input id="ct_${k}" value="${esc(val('ct_'+k,ct[k]))}" placeholder="${esc(p)}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
+ <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h335">Guardar redes y contacto</button><span id="rs_est" style="font-size:13px;color:${RS_MSG?RS_MSG.ok?'#1e7a43':'#b3261e':'inherit'}">${RS_MSG?esc(RS_MSG.t):''}</span></div>`
+}
+function redesFill(){
+ if(typeof TD==='undefined')return;const r=TD.redes||{},ct=contLimpio(TD.contacto);
+ RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=redUrl(k,r[k])});
+ CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=ct[k]})
+}
+async function redesGuardar(){
+ if(!esAdmin())return alert('Solo el administrador puede cambiar las redes sociales y el contacto.');
+ if(!fbDb)return alert('Sin conexión con Firebase. Intente de nuevo en un momento.');
+ const est=$('rs_est'),msg=(ok,t)=>{RS_MSG={ok,t};if(est){est.style.color=ok?'#1e7a43':'#b3261e';est.textContent=t}},redes={},raw={};
+ for(const [k,n] of RED_DEF){
+  const i=$('rs_'+k),t=i?i.value.trim():'',u=redUrl(k,t);
+  if(t&&!u){msg(false,'✖ '+n+': no es válido. Escriba el @usuario o el link de su perfil de '+n+'.');if(i)i.focus();return}
+  redes[k]=u
+ }
+ CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);raw[k]=i?i.value:''});
+ const ct=contLimpio(raw);
+ for(const [k,n] of CONT_DEF){
+  if(String(raw[k]).trim()&&!ct[k]){msg(false,'✖ '+n.replace(/ \(.*\)/,'')+': el dato no es válido.');const i=$('ct_'+k);if(i)i.focus();return}
+ }
+ msg(true,'Guardando…');
+ try{
+  await fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,redes,contacto:ct,ts:Date.now()},{merge:true});
+  TD.redes=redes;TD.contacto=ct;RS_DRAFT={};
+  RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i)i.value=redes[k]});CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i)i.value=ct[k]});
+  msg(true,'✔ Guardado. Ya se ve en la tienda virtual.')
+ }catch(e){window._tjw&&_tjw(e);msg(false,'✖ No se pudo guardar. Revise su conexión o permisos.')}
+}
 // --- Saneo de documentos públicos (tienda_leads, tienda_pedidos, galería) ---
 // Cualquiera puede crear un registro o un pedido sin iniciar sesión (y cualquier vendedor puede
 // subir a la galería). Antes de dibujar esos datos en el panel se limpian aquí: el id solo puede
@@ -2727,101 +2822,6 @@ function cliMapSync(centrar){
  if(centrar)_cuMap.setView([l.lat,l.lng],Math.max(_cuMap.getZoom(),17))
 }
 
-/* ===== Redes sociales y contacto de la tienda virtual ===== */
-const RED_DEF=[['tiktok','TikTok'],['instagram','Instagram'],['facebook','Facebook']];
-const RED_HOST={tiktok:/^(?:[a-z0-9-]+\.)*tiktok\.com$/i,instagram:/^(?:[a-z0-9-]+\.)*instagram\.com$/i,facebook:/^(?:[a-z0-9-]+\.)*(?:facebook\.com|fb\.com)$/i};
-const RED_SVG={
- tiktok:'<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.1 4.2 5 4.5"/>',
- instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>',
- facebook:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'};
-const CONT_DEF=[['tel','Teléfono','+507 6074-1150'],['wa','WhatsApp (con código de país)','50760741150'],['email','Correo','ventas@ejemplo.com'],['dir','Dirección','Calle principal, Panamá Oeste'],['horario','Horario','Lunes a sábado, 9:00 a.m. a 6:00 p.m.']];
-let RS_DRAFT={},RS_MSG=null;
-// Acepta @usuario, usuario o un link de la red; devuelve un link https seguro o '' si no es válido.
-function redUrl(red,txt){
- let t=String(txt==null?'':txt).trim();if(!t||t.length>300||!RED_HOST[red])return'';
- if(/^[a-z][a-z0-9+.-]*:/i.test(t)){if(!/^https?:\/\//i.test(t))return''}
- else if(/^(?:[a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#]|$)/i.test(t))t='https://'+t;
- if(/^https?:\/\//i.test(t)){
-  let u;try{u=new URL(t)}catch(e){return''}
-  if(u.username||u.password||!RED_HOST[red].test(u.hostname))return'';
-  u.protocol='https:';u.hash='';
-  const id=u.searchParams.get('id');
-  u.search=(/\/profile\.php$/i.test(u.pathname)&&/^\d{5,25}$/.test(id||''))?'?id='+id:'';
-  return u.href
- }
- t=t.replace(/^@/,'');if(!/^[A-Za-z0-9._-]{1,60}$/.test(t))return'';
- return red==='tiktok'?'https://www.tiktok.com/@'+t:red==='instagram'?'https://www.instagram.com/'+t+'/':'https://www.facebook.com/'+t
-}
-// Datos de contacto: lo que no sea válido queda vacío (se vuelve a limpiar al leerlo en la tienda pública).
-function contLimpio(c){
- c=c&&typeof c==='object'?c:{};
- const tx=(v,m)=>String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,m),o={};
- const tel=tx(c.tel,25);o.tel=/^[+\d][\d\s().-]{5,24}$/.test(tel)?tel:'';
- let w=String(c.wa==null?'':c.wa).replace(/\D/g,'');if(w.length===8)w='507'+w;o.wa=/^\d{10,15}$/.test(w)?w:'';
- const em=tx(c.email,120);o.email=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)?em:'';
- o.dir=tx(c.dir,200);o.horario=tx(c.horario,150);
- return o
-}
-(function(){if(document.getElementById('redCss'))return;const st=document.createElement('style');st.id='redCss';
- st.textContent='.kredes{max-width:1100px;margin:28px auto 96px;padding:0 16px;text-align:center}.kredes h3{margin:0 0 12px}.kred-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.kred{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}.kred:hover{filter:brightness(1.08)}.kred svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.kred-tiktok{background:#111}.kred-instagram{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)}.kred-facebook{background:#1877f2}.kredh{display:inline-flex;gap:8px;align-items:center;margin-left:auto}.kredh:empty{display:none}.kredh .kred{width:34px;height:34px;padding:0;justify-content:center;box-shadow:none}.kmobile-menu .kredh{grid-column:1/-1;justify-content:center;margin:4px 0 8px}.kcont{margin:8px 0 14px}.kcr{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(127,127,127,.25)}.kcr>span{font-size:20px;line-height:1.3}.kcr small{opacity:.7}.kcr a{color:inherit;font-weight:600;word-break:break-word}';
- document.head.appendChild(st)})();
-const redesLista=r=>{r=r&&typeof r==='object'?r:{};return RED_DEF.map(([k,n])=>[k,n,redUrl(k,r[k])]).filter(x=>x[2])};
-const redLink=(k,n,u,mini)=>`<a class="kred kred-${k}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" aria-hidden="true">${RED_SVG[k]}</svg>${mini?'':`<span>${n}</span>`}</a>`;
-// Tienda pública: iconos junto al menú y botones al final de la página.
-function shopRedes(){
- const L=redesLista(typeof SH!=='undefined'?SH.redes:null);
- document.querySelectorAll('.kredh').forEach(e=>{e.innerHTML=L.map(([k,n,u])=>redLink(k,n,u,1)).join('')});
- const e=$('k_redes');if(!e)return;
- if(!L.length){e.hidden=true;e.innerHTML='';return}
- e.hidden=false;e.innerHTML=`<h3>Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>redLink(k,n,u)).join('')}</div>`
-}
-// Botón "Contacto" de la tienda: muestra los datos que configuró el administrador.
-function shopContacto(){
- const c=contLimpio(typeof SH!=='undefined'?SH.contacto:null),L=redesLista(typeof SH!=='undefined'?SH.redes:null),f=[];
- if(c.wa)f.push(['💬','WhatsApp',`<a href="https://wa.me/${c.wa}" target="_blank" rel="noopener noreferrer">+${c.wa}</a>`]);
- if(c.tel)f.push(['📞','Teléfono',`<a href="tel:${esc(c.tel.replace(/[^\d+]/g,''))}">${esc(c.tel)}</a>`]);
- if(c.email)f.push(['✉️','Correo',`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`]);
- if(c.dir)f.push(['📍','Dirección',`<a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(c.dir)}" target="_blank" rel="noopener noreferrer">${esc(c.dir)}</a>`]);
- if(c.horario)f.push(['🕒','Horario',esc(c.horario)]);
- if(!f.length)f.push(['✉️','Correo','<a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a>']);
- shopM(`<h2 style="margin:6px 0">Contacto</h2><div class="kcont">${f.map(([i,l,h])=>`<div class="kcr"><span>${i}</span><div><small>${l}</small><br>${h}</div></div>`).join('')}</div>${L.length?`<h3 style="margin:6px 0 10px">Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>redLink(k,n,u)).join('')}</div>`:''}<div class="kact2" style="margin-top:14px"><button class="sbtn g" data-h-click="h31">Cerrar</button></div>`,'contact')
-}
-// Configuración (administrador). Lo escrito sin guardar y el aviso sobreviven a los redibujados de la pantalla.
-function redesCard(){
- const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph={tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'};
- const val=(id,saved)=>id in RS_DRAFT?RS_DRAFT[id]:saved;
- return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. Deje vacío lo que no use.</p>
- <div class="g">${RED_DEF.map(([k,n])=>`<div><label>${n}</label><input id="rs_${k}" value="${esc(val('rs_'+k,redUrl(k,r[k])))}" placeholder="${ph[k]}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
- <div class="g" style="margin-top:10px">${CONT_DEF.map(([k,n,p])=>`<div><label>${n}</label><input id="ct_${k}" value="${esc(val('ct_'+k,ct[k]))}" placeholder="${esc(p)}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
- <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h335">Guardar redes y contacto</button><span id="rs_est" style="font-size:13px;color:${RS_MSG?RS_MSG.ok?'#1e7a43':'#b3261e':'inherit'}">${RS_MSG?esc(RS_MSG.t):''}</span></div>`
-}
-function redesFill(){
- if(typeof TD==='undefined')return;const r=TD.redes||{},ct=contLimpio(TD.contacto);
- RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=redUrl(k,r[k])});
- CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=ct[k]})
-}
-async function redesGuardar(){
- if(!esAdmin())return alert('Solo el administrador puede cambiar las redes sociales y el contacto.');
- if(!fbDb)return alert('Sin conexión con Firebase. Intente de nuevo en un momento.');
- const est=$('rs_est'),msg=(ok,t)=>{RS_MSG={ok,t};if(est){est.style.color=ok?'#1e7a43':'#b3261e';est.textContent=t}},redes={},raw={};
- for(const [k,n] of RED_DEF){
-  const i=$('rs_'+k),t=i?i.value.trim():'',u=redUrl(k,t);
-  if(t&&!u){msg(false,'✖ '+n+': no es válido. Escriba el @usuario o el link de su perfil de '+n+'.');if(i)i.focus();return}
-  redes[k]=u
- }
- CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);raw[k]=i?i.value:''});
- const ct=contLimpio(raw);
- for(const [k,n] of CONT_DEF){
-  if(String(raw[k]).trim()&&!ct[k]){msg(false,'✖ '+n.replace(/ \(.*\)/,'')+': el dato no es válido.');const i=$('ct_'+k);if(i)i.focus();return}
- }
- msg(true,'Guardando…');
- try{
-  await fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,redes,contacto:ct,ts:Date.now()},{merge:true});
-  TD.redes=redes;TD.contacto=ct;RS_DRAFT={};
-  RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i)i.value=redes[k]});CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i)i.value=ct[k]});
-  msg(true,'✔ Guardado. Ya se ve en la tienda virtual.')
- }catch(e){window._tjw&&_tjw(e);msg(false,'✖ No se pudo guardar. Revise su conexión o permisos.')}
-}
 function homeCard(html){const w=document.createElement('div');w.innerHTML=(typeof html==='function'?html():html)||'';return w.firstElementChild}
 R.home=function(){
  const v=$('v'),tienda=()=>homeCard(tdHomeHTML());
