@@ -280,7 +280,7 @@ test('El directorio de transportistas trae las 13 empresas y se ofrece desde Con
 test('El cliente elige transportista al pedir y la etiqueta lo recibe con sus datos',()=>{
   const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
   assert.match(app,/\$\{shopFleHTML\(\)\}<textarea id="sh_nt"/);
-  assert.match(app,/p\.envio=\{agencia:fl\.n,fid:fl\.id\}/);
+  assert.match(app,/ed=shopEnvDatos\(fl\);p\.envio=sanEnv\(ed\)/);
   assert.match(app,/Envío por: /);
   assert.match(app,/\['agencia',80\],\['fid',30\]/);
   assert.match(app,/\$\{fleLinea\(p\)\}\$\{p\.nota\?/);
@@ -298,4 +298,29 @@ test('El cliente elige transportista al pedir y la etiqueta lo recibe con sus da
   assert.ok(m.calls.includes('Premier Plaza'));assert.ok(m.calls.includes('IMG'));
   m=mk(false);assert.equal(m.api.etqPDF([e],m.api.ETQ_TAM.e100x150).paginas,1);
   assert.ok(m.calls.some(t=>/AGENCIA: Tel\./.test(t)));
+});
+
+test('Al elegir transportista el cliente llena los datos de quien recibe y llegan a la etiqueta',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  for(const id of ['ev_n','ev_a','ev_tel','ev_ced','ev_prov','ev_ciu','ev_suc','ev_dir','ev_ref','ev_yo'])assert.match(app,new RegExp("id=\""+id+"\"|'"+id+"'"));
+  assert.match(app,/<div id="sh_env">/);
+  assert.match(app,/const er=shopEnvErr\(\)/);
+  assert.match(app,/p\.envio=sanEnv\(ed\)/);
+  assert.match(app,/\['rec',120\],\['rtel',40\],\['rced',30\],\['suc',100\],\['ref',200\]/);
+  for(const h of ['h353','h354'])assert.match(app,new RegExp('__H\\.'+h+'='));
+  const g=(a,b)=>app.slice(app.indexOf(a),app.indexOf(b));
+  const code=g('/*FLE-INI*/','/*FLE-FIN*/')+g('function fleNotaTxt','/*FLE-UI-FIN*/')+g('function etqDatos','function etqExpandir')+`
+  const TD={fletes:{on:['uno']}},DB={cfg:{}},etqNum=p=>p.id.slice(-6).toUpperCase(),etqEnvio=p=>p.envio||{};
+  this.api={etqDatos,fleNotaTxt,fleNotaEnv,FLE_DEF};`;
+  const ctx={};vm.createContext(ctx);vm.runInContext(code,ctx);
+  const {etqDatos,fleNotaTxt,FLE_DEF}=ctx.api;
+  const base={id:'abc123def',lead:{name:'Cliente Tienda',tel:'111'},items:[{q:2,n:'Tarjeta'}]};
+  const uno=FLE_DEF.find(c=>c.id==='uno');
+  const d1=etqDatos(Object.assign({envio:{agencia:'Uno Express Panamá',fid:'uno',rec:'Ana Pérez',rtel:'6000-1111',rced:'8-123-456',prov:'Chiriquí',ciudad:'David',suc:'Boquete',dir:'Calle 1',ref:'Frente al parque'}},base),{});
+  assert.equal(d1.dest.name,'Ana Pérez');assert.equal(d1.dest.tel,'6000-1111');assert.equal(d1.dest.ced,'8-123-456');
+  assert.equal(d1.dest.suc,'Boquete');assert.equal(d1.dest.prov,'Chiriquí');assert.equal(d1.ag.tel,'6781-4532');
+  const nota=fleNotaTxt(uno,{rec:'Ana Pérez',rtel:'6000-1111',rced:'8-123-456',prov:'Chiriquí',ciudad:'David',suc:'Boquete',dir:'Calle 1',ref:'Frente al parque'});
+  const d2=etqDatos(Object.assign({nota:'gracias\n'+nota},base),{});
+  assert.equal(d2.agencia,'Uno Express Panamá');assert.equal(d2.dest.name,'Ana Pérez');assert.equal(d2.dest.suc,'Boquete');assert.equal(d2.dest.dir,'Calle 1');
+  const d3=etqDatos(base,{});assert.equal(d3.dest.name,'Cliente Tienda');assert.equal(d3.agencia,'');
 });
