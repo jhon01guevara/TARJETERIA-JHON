@@ -2164,13 +2164,51 @@ function shopFlePrev(id){
  const {C,L}=fleShopLista(),c=L.find(x=>x.id===id);if(!c)return'';
  return `<div style="display:flex;gap:10px;align-items:center;margin-top:8px;padding:8px;border-radius:12px;background:rgba(128,128,128,.1)"><img src="${fleLogo(c,C)}" alt="" width="44" height="44" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none"><div style="min-width:0;font-size:12.5px;line-height:1.45"><b style="font-size:13.5px">${esc(c.n)}</b><br>${esc(c.d||'')}${c.tel&&c.tel.length?'<br>📞 '+esc(fleTelTxt(c)):''}${c.wa?'<br>💬 '+esc(c.wa):''}${c.dir?'<br>📍 '+esc(c.dir):''}</div></div>`
 }
+const FLE_PROV=['Bocas del Toro','Chiriquí','Coclé','Colón','Darién','Herrera','Los Santos','Panamá','Panamá Oeste','Veraguas','Guna Yala','Emberá-Wounaan','Ngäbe-Buglé'];
+SH.ev=SH.ev||{};
+function shopEnvForm(c){
+ if(!c)return'';const v=id=>esc(SH.ev[id]||''),i=c.t==='i',inp=(id,lb,ph,ex)=>`<div><label for="${id}" style="font-size:12.5px;font-weight:600;display:block;margin:0 0 3px">${lb}</label><input id="${id}" value="${v(id)}" placeholder="${ph||''}" maxlength="${ex||100}" autocomplete="off" data-h-input="h353"></div>`;
+ const prov=i?inp('ev_prov','Estado / Provincia','',80):`<div><label for="ev_prov" style="font-size:12.5px;font-weight:600;display:block;margin:0 0 3px">Provincia</label><select id="ev_prov" data-h-change="h353" style="width:100%;padding:13px 10px;border-radius:12px;border:0;background:rgba(118,118,128,.12);color:inherit;font:inherit;font-size:16px"><option value="">Elegir…</option>${FLE_PROV.map(x=>`<option ${SH.ev.ev_prov===x?'selected':''}>${x}</option>`).join('')}</select></div>`;
+ const suc=c.suc&&c.suc.length?`<div style="grid-column:1/-1"><label for="ev_suc" style="font-size:12.5px;font-weight:600;display:block;margin:0 0 3px">Sucursal de ${esc(c.n)} donde retira</label><select id="ev_suc" data-h-change="h353" style="width:100%;padding:13px 10px;border-radius:12px;border:0;background:rgba(118,118,128,.12);color:inherit;font:inherit;font-size:16px"><option value="">Que me indiquen / entrega a domicilio</option>${c.suc.map(x=>`<option ${SH.ev.ev_suc===x[0]?'selected':''}>${esc(x[0])}</option>`).join('')}</select></div>`:'';
+ return `<div class="kf" style="margin-top:12px"><b style="font-size:14px">📦 Datos del envío</b><small style="display:block;color:var(--tx2);margin:2px 0 8px">Escriba los datos de la persona que recibirá el pedido. Con esto preparamos su etiqueta.</small>
+  <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;margin:0 0 8px"><input type="checkbox" id="ev_yo" data-h-change="h354" style="width:auto;margin:0"> Yo soy quien recibe</label>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">${inp('ev_n','Nombre','',60)}${inp('ev_a','Apellido','',60)}${inp('ev_tel','Número de celular','6000-0000',30)}${inp('ev_ced','Cédula / ID (opcional)','',30)}
+  ${i?inp('ev_pais','País de destino','',60):''}${prov}${inp('ev_ciu',i?'Ciudad':'Distrito / corregimiento','',80)}${suc}
+  <div style="grid-column:1/-1">${inp('ev_dir','Dirección de entrega','Calle, casa o edificio, barrio',200)}</div><div style="grid-column:1/-1">${inp('ev_ref','Referencia (opcional)','Cerca de…, color de la casa…',200)}</div></div></div>`
+}
 function shopFleHTML(){
  const {C,L}=fleShopLista();if(!L.length)return'';
  const sel=(($('sh_fl')||{}).value)||SH.fle||'',op=t=>L.filter(c=>c.t===t).map(c=>`<option value="${esc(c.id)}" ${c.id===sel?'selected':''}>${esc(c.n)}</option>`).join(''),n=op('n'),i=op('i');
- return `<div id="k_fle"><label for="sh_fl" style="display:block;font-weight:700;font-size:14px;margin:14px 0 4px">🚚 Transportista para su envío</label><select id="sh_fl" data-h-change="h352" style="width:100%"><option value="">Que la tienda lo coordine</option>${n?'<optgroup label="Nacionales">'+n+'</optgroup>':''}${i?'<optgroup label="Internacionales">'+i+'</optgroup>':''}</select><div id="sh_fle_p">${shopFlePrev(sel)}</div></div>`
+ return `<div id="k_fle"><label for="sh_fl" style="display:block;font-weight:700;font-size:14px;margin:14px 0 4px">🚚 Transportista para su envío</label><select id="sh_fl" data-h-change="h352" style="width:100%"><option value="">Que la tienda lo coordine</option>${n?'<optgroup label="Nacionales">'+n+'</optgroup>':''}${i?'<optgroup label="Internacionales">'+i+'</optgroup>':''}</select><div id="sh_fle_p">${shopFlePrev(sel)}</div><div id="sh_env">${shopEnvForm(L.find(c=>c.id===sel))}</div></div>`
 }
 function shopFleSel(){const {L}=fleShopLista(),id=(($('sh_fl')||{}).value)||SH.fle||'';return L.find(c=>c.id===id)||null}
-function shopFleCambio(v){SH.fle=v;const p=$('sh_fle_p');if(p)p.innerHTML=shopFlePrev(v)}
+function shopFleCambio(v){SH.fle=v;const p=$('sh_fle_p');if(p)p.innerHTML=shopFlePrev(v);const e=$('sh_env');if(e)e.innerHTML=shopEnvForm(shopFleSel())}
+function shopEvSet(id,val){SH.ev[id]=val}
+function shopEvYo(on){
+ if(!on)return;const c=SH.cli||{},nm=String(c.name||'').trim().split(/\s+/),m={ev_n:nm[0]||'',ev_a:nm.slice(1).join(' '),ev_tel:c.tel||'',ev_dir:SH.ev.ev_dir||c.dir||''};
+ Object.keys(m).forEach(k=>{SH.ev[k]=m[k];const e=$(k);if(e)e.value=m[k]})
+}
+function shopEnvDatos(c){
+ const g=k=>String(SH.ev[k]||'').trim(),i=c.t==='i';
+ return{agencia:c.n,fid:c.id,tipo:i?'internacional':'nacional',rec:(g('ev_n')+' '+g('ev_a')).trim(),rtel:g('ev_tel'),rced:g('ev_ced'),pais:i?g('ev_pais'):'Panamá',prov:g('ev_prov'),ciudad:g('ev_ciu'),suc:c.suc&&c.suc.length?g('ev_suc'):'',dir:g('ev_dir'),ref:g('ev_ref')}
+}
+function shopEnvErr(){
+ const c=shopFleSel();if(!c)return'';const d=shopEnvDatos(c),g=k=>String(SH.ev[k]||'').trim();
+ if(!g('ev_n')||!g('ev_a'))return'Escriba el nombre y apellido de quien recibe el pedido.';
+ if(d.rtel.replace(/\D/g,'').length<7)return'Escriba un número de celular válido de quien recibe.';
+ if(c.t==='i'&&!d.pais)return'Indique el país de destino.';
+ if(!d.dir&&!d.suc)return'Escriba la dirección de entrega'+(c.suc&&c.suc.length?' o elija la sucursal donde retira.':'.');
+ return''
+}
+/* Respaldo: si las reglas no admiten el campo envío, los datos viajan en la nota y el panel los lee de ahí. */
+function fleNotaTxt(c,d){
+ return ['🚚 Envío por: '+c.n,d.rec&&'Recibe: '+d.rec,d.rtel&&'Cel. recibe: '+d.rtel,d.rced&&'Cédula: '+d.rced,d.pais&&c.t==='i'&&'País: '+d.pais,d.prov&&'Provincia: '+d.prov,d.ciudad&&'Ciudad: '+d.ciudad,d.suc&&'Sucursal: '+d.suc,d.dir&&'Dirección: '+d.dir,d.ref&&'Ref.: '+d.ref].filter(Boolean).join('\n')
+}
+function fleNotaEnv(nota){
+ const t=String(nota||''),o={},m=(re,k)=>{const x=re.exec(t);if(x&&x[1].trim())o[k]=x[1].trim()};
+ m(/^Recibe: (.+)$/m,'rec');m(/^Cel\. recibe: (.+)$/m,'rtel');m(/^Cédula: (.+)$/m,'rced');m(/^País: (.+)$/m,'pais');m(/^Provincia: (.+)$/m,'prov');m(/^Ciudad: (.+)$/m,'ciudad');m(/^Sucursal: (.+)$/m,'suc');m(/^Dirección: (.+)$/m,'dir');m(/^Ref\.: (.+)$/m,'ref');
+ return o
+}
 /* ----- Panel: transportista elegido por el cliente en cada pedido ----- */
 function fleLinea(p){
  const d=etqDatos(p,{});if(!d.agencia)return'';
@@ -2215,8 +2253,11 @@ function etqFlow(d,W,H,e,s,ox,oy,dib){
  bloque(e.dest.name||'-',17,1,2,.8);
  bloque(e.dest.empresa,10,0,1,.8);
  bloque(e.dest.tel?('Tel.: '+e.dest.tel):'',14,1,1,.8);
+ bloque(e.dest.ced?('Cédula / ID: '+e.dest.ced):'',9,0,1,.8);
  bloque(e.dest.email,8.5,0,1,1.2);
+ bloque(e.dest.suc?('RETIRA EN: '+e.dest.suc):'',11,1,2,.8);
  bloque(e.dest.dir,11.5,0,4,.8);
+ bloque(e.dest.ref?('Ref.: '+e.dest.ref):'',8.5,0,2,.8);
  bloque([e.dest.ciudad,e.dest.prov].filter(Boolean).join(', '),11.5,1,2,.4);
  bloque((e.dest.pais||'').toUpperCase(),15,1,1,1.6);
  // Datos del envío en cuadros: agencia, guía, bulto y peso
@@ -2263,7 +2304,7 @@ const etqCfgSet=o=>{try{localStorage.setItem('tj_etq_cfg',JSON.stringify(Object.
 const etqLocal=()=>{try{return JSON.parse(localStorage.getItem('tj_etq_env')||'{}')||{}}catch(e){return{}}};
 function sanEnv(v){if(!v||typeof v!=='object')return null;const o={};
  if(v.tipo)o.tipo=v.tipo==='internacional'?'internacional':'nacional';
- [['agencia',80],['fid',30],['pais',60],['prov',80],['ciudad',80],['dir',200],['guia',60],['cont',300],['obs',200]].forEach(([k,n])=>{if(v[k]!=null&&String(v[k])!=='')o[k]=sTxt(v[k],n)});
+ [['agencia',80],['fid',30],['rec',120],['rtel',40],['rced',30],['suc',100],['ref',200],['pais',60],['prov',80],['ciudad',80],['dir',200],['guia',60],['cont',300],['obs',200]].forEach(([k,n])=>{if(v[k]!=null&&String(v[k])!=='')o[k]=sTxt(v[k],n)});
  if(v.bultos!=null)o.bultos=Math.min(99,Math.max(1,Math.round(sNum(v.bultos))||1));
  if(sNum(v.peso)>0)o.peso=sNum(v.peso);
  if(sNum(v.etq)>0)o.etq=sNum(v.etq);
@@ -2279,7 +2320,7 @@ function etqGuardar(p,env,marcar){
 }
 /* Datos de una etiqueta: lo guardado del pedido, completado con los valores comunes (def) del lote. */
 function etqDatos(p,def){
- const l=p.lead||{},env=etqEnvio(p),c=(typeof DB!=='undefined'&&DB.cfg)||{};def=def||{};
+ const l=p.lead||{},env=Object.assign({},fleNotaEnv(p.nota),etqEnvio(p)),c=(typeof DB!=='undefined'&&DB.cfg)||{};def=def||{};
  // Agencia: lo escrito en el pedido > la que eligió el cliente en la tienda > la nota > la última usada
  const FC=fleSanCfg(typeof TD!=='undefined'?TD.fletes:null);let car=null,nm=env.agencia||'',porFid=false;
  if(!nm){car=fleAll(FC).find(x=>x.id===env.fid)||null;if(car){nm=car.n;porFid=true}else{const m=/🚚 Envío por: (.+)/.exec(p.nota||'');if(m)nm=m[1].trim().slice(0,80)}}
@@ -2291,7 +2332,7 @@ function etqDatos(p,def){
   ag:car?{tel:(car.tel&&car.tel[0])||'',wa:car.wa||'',dir:car.dir||''}:null,logo:car?fleLogo(car,FC):'',
   codigo:'TJ-'+etqNum(p),fecha:new Date().toLocaleDateString('es-PA'),
   rem:{nombre:c.nombre||'Tarjetería Jhon',tel:c.tel||'',dir:c.dir||''},
-  dest:{name:l.name||'',empresa:l.empresa||'',tel:l.tel||'',email:l.email||'',dir:env.dir||l.dir||'',ciudad:env.ciudad||'',prov:env.prov||'',pais},
+  dest:{name:env.rec||l.name||'',empresa:l.empresa||'',tel:env.rtel||l.tel||'',email:l.email||'',ced:env.rced||'',suc:env.suc||'',ref:env.ref||'',dir:env.dir||l.dir||'',ciudad:env.ciudad||'',prov:env.prov||'',pais},
   nb:Math.min(99,Math.max(1,+env.bultos||1))}
 }
 function etqExpandir(datos){const L=[];datos.forEach(e=>{for(let i=1;i<=e.nb;i++)L.push(Object.assign({},e,{bulto:[i,e.nb]}))});return L}
@@ -2314,11 +2355,16 @@ function etqAbrir(id){
  <div class="g">
   <div><label>Tipo de envío</label><select id="et_tipo" data-h-change="h343"><option value="nacional" ${d.tipo==='nacional'?'selected':''}>Nacional</option><option value="internacional" ${d.tipo==='internacional'?'selected':''}>Internacional</option></select></div>
   <div><label>Agencia de carga</label><input id="et_ag" list="et_agl" value="${esc(d.agencia)}" placeholder="Ej. MRW, DHL, Aeroparcel"><datalist id="et_agl">${etqAgOpts()}</datalist></div>
+  <div style="grid-column:1/-1"><label>Quien recibe (nombre y apellido)</label><input id="et_rec" value="${esc(d.dest.name)}" maxlength="120"></div>
+  <div><label>Celular de quien recibe</label><input id="et_rtel" value="${esc(d.dest.tel)}" maxlength="40"></div>
+  <div><label>Cédula / ID</label><input id="et_rced" value="${esc(d.dest.ced)}" maxlength="30"></div>
+  <div style="grid-column:1/-1"><label>Sucursal donde retira (si aplica)</label><input id="et_suc" value="${esc(d.dest.suc)}" maxlength="100"></div>
   <div><label>País</label><input id="et_pais" value="${esc(d.dest.pais)}"></div>
   <div><label>Provincia / Estado</label><input id="et_prov" value="${esc(d.dest.prov)}"></div>
   <div><label>Ciudad</label><input id="et_ciu" value="${esc(d.dest.ciudad)}"></div>
   <div><label>N.º de guía / seguimiento</label><input id="et_guia" value="${esc(d.guia)}"></div>
   <div style="grid-column:1/-1"><label>Dirección de entrega</label><input id="et_dir" value="${esc(d.dest.dir)}" maxlength="200"></div>
+  <div style="grid-column:1/-1"><label>Referencia</label><input id="et_ref" value="${esc(d.dest.ref)}" maxlength="200"></div>
   <div><label>Bultos (una etiqueta por bulto)</label><input id="et_bul" type="number" min="1" max="99" value="${d.nb}"></div>
   <div><label>Peso total (kg)</label><input id="et_peso" type="number" min="0" step="0.1" value="${d.peso||''}"></div>
   <div style="grid-column:1/-1"><label>Contenido</label><input id="et_cont" value="${esc(env.cont||'')}" placeholder="${esc(d.cont.slice(0,90))}" maxlength="300"></div>
@@ -2333,9 +2379,9 @@ function etqTipoCambio(){const t=etqV('et_tipo'),p=$('et_pais');if(!p)return;if(
 function etqImprimirUno(id){
  const p=TD.peds.find(x=>x.id===id);if(!p)return;
  const tipo=etqV('et_tipo')==='internacional'?'internacional':'nacional',pais=etqV('et_pais');
- if(!etqV('et_dir')&&!etqV('et_ciu'))return alert('Escriba la dirección de entrega o la ciudad del destinatario.');
+ if(!etqV('et_dir')&&!etqV('et_ciu')&&!etqV('et_suc'))return alert('Escriba la dirección de entrega, la ciudad o la sucursal donde retira.');
  if(tipo==='internacional'&&!pais)return alert('En un envío internacional indique el país de destino.');
- const env={tipo,agencia:etqV('et_ag'),pais,prov:etqV('et_prov'),ciudad:etqV('et_ciu'),dir:etqV('et_dir'),guia:etqV('et_guia'),bultos:Math.min(99,Math.max(1,Math.round(+etqV('et_bul'))||1)),peso:Math.max(0,+etqV('et_peso')||0),cont:etqV('et_cont'),obs:etqV('et_obs')},tam=etqV('et_tam');
+ const env={tipo,agencia:etqV('et_ag'),pais,prov:etqV('et_prov'),ciudad:etqV('et_ciu'),dir:etqV('et_dir'),rec:etqV('et_rec'),rtel:etqV('et_rtel'),rced:etqV('et_rced'),suc:etqV('et_suc'),ref:etqV('et_ref'),guia:etqV('et_guia'),bultos:Math.min(99,Math.max(1,Math.round(+etqV('et_bul'))||1)),peso:Math.max(0,+etqV('et_peso')||0),cont:etqV('et_cont'),obs:etqV('et_obs')},tam=etqV('et_tam');
  etqGuardar(p,env,false);etqRecordarAgencia(env.agencia);etqCfgSet({tipo});cerrar();
  if(etqGenerar([p],null,tam))etqGuardar(p,null,true);if(vista==='tienda')tdRender()
 }
@@ -2366,7 +2412,7 @@ function etqAbrirLote(){
 function etqImprimirLote(){
  const L=etqSeleccion();if(!L.length)return;
  const def={tipo:etqV('et_tipo')==='internacional'?'internacional':'nacional',agencia:etqV('et_ag'),pais:etqV('et_pais')},tam=etqV('et_tam');
- const sinDestino=L.filter(p=>{const d=etqDatos(p,def);return !d.dest.dir&&!d.dest.ciudad});
+ const sinDestino=L.filter(p=>{const d=etqDatos(p,def);return !d.dest.dir&&!d.dest.ciudad&&!d.dest.suc});
  if(sinDestino.length&&!confirm(sinDestino.length+' pedido(s) no tienen dirección ni ciudad de entrega y saldrán sin destino. ¿Imprimir de todos modos?'))return;
  etqCfgSet({tipo:def.tipo});etqRecordarAgencia(def.agencia);cerrar();
  if(etqGenerar(L,def,tam))L.forEach(p=>etqGuardar(p,null,true));if(vista==='tienda')tdRender()
@@ -2796,11 +2842,11 @@ function shopAcc(quiet){const c=SH.cli,L=shopOrdMine(),n=L.length,tot=L.reduce((
  ${n?L.map(p=>{const e=shopEst(p.estado),num=String(p.id||'').slice(-6).toUpperCase(),q=(p.items||[]).reduce((s,i)=>s+(+i.q||0),0);return `<details class="kord"><summary><div><b>Pedido N° ${num}</b><small>${fd(p.ts)} · ${q} diseño(s)</small></div><div style="text-align:right"><b>${p.total>0?$$(p.total):'Consultar'}</b><span class="kst2" style="background:${e[1]}22;color:${e[1]}">${e[0]}</span></div></summary><div class="kordb">${(p.items||[]).map(i=>`<div class="kodl"><span>${i.q} × ${esc(i.n)}</span><span>${i.p>0?$$(i.q*i.p):'—'}</span></div>`).join('')}${p.nota?`<small style="display:block;margin:6px 0;color:var(--tx2)">Nota: ${esc(p.nota)}</small>`:''}<div class="kodb"><button class="sbtn" data-h-click="h36" data-a-click="${_ha(p.id)}">👁 Ver</button><button class="sbtn g" data-h-click="h35" data-a-click="${_ha(p.id)}">📄 Descargar</button></div></div></details>`}).join(''):'<div class="kempty" style="padding:26px 10px"><span class="e">🧾</span>Todavía no ha hecho pedidos.</div>'}
  <div class="kact2"><button class="sbtn g" data-h-click="h31">Cerrar</button></div>`,'acc');
  if(!quiet)shopOrdSync()}
-async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}{const r=shopAntiBot();if(r!=='ok'){const em=$('sh_m2');if(em)em.textContent=shopAntiBotMsg(r);return}}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){window._tjw&&_tjw(e)}try{shopMusPrime()}catch(e){window._tjw&&_tjw(e)}const c=SH.cli,id=uid();
+async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}{const er=shopEnvErr();if(er){const em=$('sh_m2');if(em)em.textContent=er;return}}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}{const r=shopAntiBot();if(r!=='ok'){const em=$('sh_m2');if(em)em.textContent=shopAntiBotMsg(r);return}}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){window._tjw&&_tjw(e)}try{shopMusPrime()}catch(e){window._tjw&&_tjw(e)}const c=SH.cli,id=uid();
  const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa||'',dir:c.dir||''},items:L.map(l=>({id:l.id,n:l.n,p:l.p,q:l.q})),total:L.reduce((s,l)=>s+l.q*l.p,0),nota:(($('sh_nt')||{}).value||SH.pendNote||'').trim().slice(0,500),ref:SH.ref,ts:Date.now(),estado:'nuevo'};
- {const fl=shopFleSel();if(fl)p.envio={agencia:fl.n,fid:fl.id};
+ {const fl=shopFleSel();let ed=null;if(fl){ed=shopEnvDatos(fl);p.envio=sanEnv(ed)}
   try{await fbDb.collection('tienda_pedidos').doc(id).set(p)}catch(e){let ok=false;
-   if(fl){/* respaldo: si las reglas no admiten el campo envío, el transportista viaja en la nota */delete p.envio;p.nota=((p.nota?p.nota+'\n':'')+'🚚 Envío por: '+fl.n).slice(0,500);try{await fbDb.collection('tienda_pedidos').doc(id).set(p);ok=true}catch(e2){window._tjw&&_tjw(e2)}}
+   if(fl){/* respaldo: si las reglas no admiten el campo envío, el transportista viaja en la nota */delete p.envio;p.nota=((p.nota?p.nota+'\n':'')+fleNotaTxt(fl,ed)).slice(0,1200);try{await fbDb.collection('tienda_pedidos').doc(id).set(p);ok=true}catch(e2){window._tjw&&_tjw(e2)}}
    if(!ok){b.disabled=false;b.textContent='Enviar pedido';$('sh_m2').textContent='No se pudo enviar. Intente de nuevo.';return}}}
  SH.last=p;SH.pendNote='';shopOrdSave(p);try{shopConfetti()}catch(e){window._tjw&&_tjw(e)}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica();if(document.documentElement.classList.contains('panama'))shopPatrio(1)}SH.cart={};try{localStorage.removeItem('tj_shop_cart')}catch(e){window._tjw&&_tjw(e)}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
  shopM('<div style="text-align:center;padding:10px 0"><div style="font-size:54px">✅</div><h2 style="margin:6px 0">¡Pedido enviado!</h2><p style="color:var(--tx2);margin:0 0 16px">Gracias, '+esc((c.name||'').split(' ')[0])+'. Nos pondremos en contacto con usted muy pronto para confirmar su pedido.</p>'+(document.documentElement.classList.contains('xmas')?'<div class="kxg">🎄 ¡Le deseamos una <b>feliz Navidad</b> y un <b>próspero Año Nuevo</b>! 🎁</div>':(document.documentElement.classList.contains('summer')?'<div class="kxg ksm">☀️ ¡Que disfrute un <b>verano increíble</b>! 🌴</div>':(document.documentElement.classList.contains('panama')?'<div class="kxg kpa2"><span class="kfl"></span> ¡<b>Viva Panamá</b>! Que disfrute un <b>feliz mes patrio</b></div>':'')))+'<button class="sbtn" data-h-click="h34" style="margin-bottom:8px">👁 Ver comprobante</button><button class="sbtn g" data-h-click="h33" style="margin-bottom:8px">📄 Descargar PDF</button><button class="sbtn g" data-h-click="h32" style="margin-bottom:8px">🧾 Mis pedidos</button><button class="sbtn g" data-h-click="h31">Seguir viendo el catálogo</button></div>','ok');}
@@ -3341,6 +3387,8 @@ __H.h349=function(event,a){fleEliminar(a[0])};
 __H.h350=function(event,a){fleSubirFoto(this)};
 __H.h351=function(event,a){fleAgregar()};
 __H.h352=function(event,a){shopFleCambio(this.value)};
+__H.h353=function(event,a){shopEvSet(this.id,this.value)};
+__H.h354=function(event,a){shopEvYo(this.checked)};
 __H.h110=function(event,a){tdSendCli()};
 __H.h111=function(event,a){tdWaLink()};
 __H.h112=function(event,a){tdCopy()};
