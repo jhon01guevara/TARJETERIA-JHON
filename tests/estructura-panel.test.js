@@ -166,3 +166,23 @@ test('El mapa general de clientes es solo para administración y se ve en Inicio
   for(const h of ['h332','h333','h334'])assert.match(app,new RegExp('__H\\.'+h+'='));
 });
 
+test('Las redes sociales se configuran en Configuración y se muestran en la tienda pública',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/\['redesCard',redesCard\]/);
+  assert.match(app,/function redUrl\(red,txt\)/);
+  assert.match(app,/function redesGuardar\(\)/);
+  assert.match(app,/collection\('tienda_items'\)\.doc\('__cfg'\)\.set\(\{__cfg:true,redes:out/);
+  assert.match(app,/SH\.redes=cd\.redes/);
+  assert.match(app,/id="k_redes"/);
+  assert.match(app,/shopHdrScroll\(\);shopRedes\(\)/);
+  assert.match(app,/__H\.h335=/);
+});
+
+test('Los enlaces de redes solo aceptan https en TikTok, Instagram o Facebook',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/tiktok:\/\^\(\?:\[a-z0-9-\]\+\\\.\)\*tiktok\\\.com\$\/i/);
+  assert.match(app,/u\.username\|\|u\.password\|\|!RED_HOST\[red\]\.test\(u\.hostname\)/);
+  assert.match(app,/u\.protocol='https:'/);
+  assert.match(app,/rel="noopener noreferrer"/);
+});
+
