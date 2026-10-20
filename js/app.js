@@ -2676,8 +2676,9 @@ async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('s
  const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};$('sh_b').disabled=true;m('Registrando…');
  try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
  SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){window._tjw&&_tjw(x)}shopRender()}
-function shopCatalog(){const o=$('shop');if(!o)return;
- o.innerHTML=`<div class="kwrap"><header class="khd"><div class="kh-top"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div><button class="kmenu-btn" id="k_menu_b" data-h-click="h83" aria-label="Abrir menú" aria-expanded="false">${kico(KI.menu,22)}</button></div><div class="kh-search"><label class="ksr">${kico(KI.search,20)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" data-h-click="h81" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><button class="kfilter-btn" data-h-click="h80" aria-label="Abrir filtros">${kico(KI.filter,21)}</button><nav class="kh-links">${shopDNavHtml()}</nav></div><nav class="kmobile-menu" id="k_mmenu" hidden>${shopMobileNavHtml()}</nav></header><nav class="kdnav" id="k_dnav">${shopDNavHtml()}</nav><section class="khero" id="khero" aria-label="Diseños destacados"></section><section class="kcats" id="k_cats" hidden></section><section class="kdest" id="k_dest" hidden></section>
+function shopCatalog(){const o=$("shop");if(!o)return;
+ const rCount=shopLines().reduce((s,l)=>s+l.q,0);
+ o.innerHTML=`<nav class="krail" id="k_rail" aria-label="Navegación principal"><div class="krail-top"><div class="krail-logo" data-h-click="call" data-a-click="${_ha('shopDNavGo','home')}" title="Inicio"><span class="krail-dot"></span></div><button class="krail-item ${!SH.favOnly?'on':''}" data-h-click="call" data-a-click="${_ha('shopDNavGo','home')}" title="Inicio" aria-label="Inicio">${kico(KI.home,24)}</button><button class="krail-item" data-h-click="call" data-a-click="${_ha('shopDNavGo','cats')}" title="Categorías" aria-label="Categorías">${kico(KI.grid,24)}</button><button class="krail-item" data-h-click="call" data-a-click="${_ha('shopDNavGo','dest')}" title="Destacados" aria-label="Destacados">${kico(KI.star,24)}</button><button class="krail-item ${SH.favOnly?'on':''}" data-h-click="call" data-a-click="${_ha('shopTab','fav')}" title="Favoritos" aria-label="Favoritos">${kico(SH.favOnly?KI.heart:KI.heartO,24)}</button><button class="krail-item krail-cart" data-h-click="call" data-a-click="${_ha('shopCart')}" title="Carrito" aria-label="Carrito">${kico(KI.cart,24)}${rCount?`<i class="kbdg">${rCount}</i>`:""}</button></div><div class="krail-bottom"><button class="krail-avatar" data-h-click="call" data-a-click="${_ha('shopAcc')}" title="Mi cuenta" aria-label="Mi cuenta">${SH.cli?esc((SH.cli.name||'?').trim().charAt(0).toUpperCase()):kico(KI.user,18)}</button></div></nav><div class="kwrap"><header class="khd"><div class="kh-top"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div><button class="kmenu-btn" id="k_menu_b" data-h-click="h83" aria-label="Abrir menú" aria-expanded="false">${kico(KI.menu,22)}</button></div><div class="kh-search"><label class="ksr">${kico(KI.search,20)}<input id="sh_q" type="search" placeholder="¿Qué estás buscando hoy?" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" data-h-click="h81" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button><button type="button" class="ksr-btn-go" data-h-click="call" data-a-click="${_ha('shopSearchSubmit')}" aria-label="Buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></label><button class="kfilter-btn" data-h-click="h80" aria-label="Abrir filtros">${kico(KI.filter,21)}</button><nav class="kh-links">${shopDNavHtml()}</nav></div><nav class="kmobile-menu" id="k_mmenu" hidden>${shopMobileNavHtml()}</nav></header><nav class="kdnav" id="k_dnav">${shopDNavHtml()}</nav><section class="khero" id="khero" aria-label="Diseños destacados"></section><section class="kcats" id="k_cats" hidden></section><section class="kdest" id="k_dest" hidden></section>
 <div class="kmain"><aside class="kside" id="k_side"></aside><div class="kcol"><div class="kstk"><div class="kchips" id="sh_ch"></div></div>
 <div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g" aria-label="Resultados"></div><div id="k_more"></div></div></div></div><section class="kredes" id="k_redes" hidden></section><nav class="knav" id="k_nav"></nav><div id="k_fab"></div><a class="kwa" id="k_wa" target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9.2 8.6c.3 2.4 2.7 5 5.5 5.6l1.1-1.2-1.7-.9-.8.6c-.9-.4-1.8-1.3-2.2-2.2l.6-.8-.9-1.7z"/></svg></a>`;
  shopFilters();shopNav();shopHdrScroll();shopRedes()}
@@ -2718,8 +2719,36 @@ function shopHeroList(){const mode=SH.heroMode||'mix',all=SH.items.filter(i=>i&&
 const PROMO_IMG={"quince": ["banners/quince.jpg", "banners/quince-m.jpg"], "quince2": ["banners/quince2.jpg", "banners/quince2-m.jpg"], "baby": ["banners/baby.jpg", "banners/baby-m.jpg"], "baby2": ["banners/baby2.jpg", "banners/baby2-m.jpg"], "grad": ["banners/grad.jpg", "banners/grad-m.jpg"], "grad2": ["banners/grad2.jpg", "banners/grad2-m.jpg"], "boda": ["banners/boda.jpg", "banners/boda-m.jpg"], "boda2": ["banners/boda2.jpg", "banners/boda2-m.jpg"], "cumple": ["banners/cumple.jpg", "banners/cumple-m.jpg"], "cumple2": ["banners/cumple2.jpg", "banners/cumple2-m.jpg"], "amor": ["banners/amor.jpg", "banners/amor-m.jpg"], "amor2": ["banners/amor2.jpg", "banners/amor2-m.jpg"], "felic": ["banners/felic.jpg", "banners/felic-m.jpg"], "felic2": ["banners/felic2.jpg", "banners/felic2-m.jpg"]};
 const PROMO=[['quince2','quince','Tarjetas para Quinceañeras'],['quince','quince','Tarjetas para Quinceañeras'],['baby2','baby','Tarjetas para Baby Shower'],['baby','baby','Tarjetas para Baby Shower'],['grad2','grad','Tarjetas para Graduación'],['grad','grad','Tarjetas para Graduación'],['boda2','boda','Tarjetas para Bodas'],['boda','boda','Tarjetas para Bodas'],['cumple2','cumple','Tarjetas para Cumpleaños'],['cumple','cumple','Tarjetas para Cumpleaños'],['amor2','amor','Tarjetas para Amor'],['amor','amor','Tarjetas para Amor'],['felic2','felic','Tarjetas para Felicitaciones'],['felic','felic','Tarjetas para Felicitaciones']].map(([key,tema,name])=>({id:'promo-'+key,key,tema,name,promo:true}));
 function promoSlide(i){return `<article class="khero-slide khero-promo" data-h-click="h78" data-a-click="${_ha(i.tema)}"><picture><source media="(max-width:700px)" srcset="${PROMO_IMG[i.key][1]}"><img src="${PROMO_IMG[i.key][0]}" alt="${esc(i.name)}" loading="lazy"></picture></article>`}
-function shopHero(){const e=$('khero');if(!e)return;if(SH.heroT){clearInterval(SH.heroT);SH.heroT=0}const L=[...PROMO];if(!L.length){e.hidden=true;return}e.hidden=false;SH.heroL=L;const old=L.findIndex(i=>i.id===SH.heroId);SH.heroI=old>=0?old:0;SH.heroId=L[SH.heroI].id;
- e.innerHTML=`<div class="khero-brand">${shopLogo()}<span>Tarjetería Jhon</span></div><div class="khero-track">${L.map(i=>i.promo?promoSlide(i):`<article class="khero-slide" data-h-click="h29" data-a-click="${_ha(i.id)}"><img src="${i.img}" alt="${esc(i.name)}"><div class="khero-copy"><small>${esc(i.cat||'Diseño destacado')}</small><b>${esc(i.name)}</b><span>${+i.price>0?tdMoney(i.price):'Ver detalles del diseño'}</span></div></article>`).join('')}</div>${L.length>1?`<button class="khero-control prev" data-h-click="h77" aria-label="Diseño anterior">‹</button><button class="khero-control next" data-h-click="h76" aria-label="Siguiente diseño">›</button><div class="khero-dots">${L.map((i,n)=>`<button class="${n===SH.heroI?'on':''}" data-h-click="h75" data-a-click="${_ha(n)}" aria-label="Mostrar diseño ${n+1}" aria-current="${n===SH.heroI?'true':'false'}"></button>`).join('')}</div>`:''}`;shopHeroGo(SH.heroI);if(L.length>1)SH.heroT=setInterval(()=>shopHeroGo(SH.heroI+1),5600)}
+function shopHero(){
+ const e=$("khero");if(!e)return;if(SH.heroT){clearInterval(SH.heroT);SH.heroT=0}
+ const all=(typeof shopHeroList==="function"?shopHeroList():SH.items).filter(i=>i&&i.img&&!noDisp(i));
+ const pool=all.length>=4?all:all.concat(SH.items.filter(i=>i&&i.img&&!noDisp(i)));
+ const fl=pool.slice(0,4);
+ const flHtml=fl.map((i,idx)=>`
+   <article class="kfloat-card kfloat-${idx}" data-h-click="h29" data-a-click="${_ha(i.id)}" title="${esc(i.name)}">
+     <div class="kfloat-img"><img src="${i.img}" alt="${esc(i.name)}" loading="lazy"></div>
+     <div class="kfloat-body"><b class="kfloat-title">${esc(i.name)}</b>
+       <div class="kfloat-meta"><span class="kfloat-stars">★★★★★</span><span class="kfloat-price">${+i.price>0?tdMoney(i.price):"Consultar"}</span></div>
+     </div>
+   </article>`).join("");
+ e.hidden=false;
+ e.innerHTML=`<div class="khero-bg-wordmark" aria-hidden="true">shop<span class="khero-dot">.</span></div>
+<div class="khero-wordmark-wrap">
+  <h1 class="khero-title">Tarjetería Jhon</h1>
+  <p class="khero-wordmark-sub">Cada momento merece una tarjeta especial · Tarjetas para toda ocasión</p>
+</div>
+<div class="khero-constellation">${flHtml}</div>
+<div class="khero-search-wrap">
+  <div class="ksr ksr-hero">
+    ${kico(KI.search,20)}
+    <input id="sh_q_hero" type="search" placeholder="¿Qué estás buscando hoy?" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off">
+    <button type="button" class="k_x" data-h-click="h81" ${SH.q?"":"hidden"} aria-label="Borrar">✕</button>
+    <button type="button" class="ksr-btn-go" data-h-click="call" data-a-click="${_ha('shopSearchSubmit')}" aria-label="Buscar">
+      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </button>
+  </div>
+</div>`;
+}
 function shopHeroGo(n){const e=$('khero'),L=SH.heroL||[];if(!e||!L.length)return;SH.heroI=(n+L.length)%L.length;SH.heroId=L[SH.heroI].id;const tr=e.querySelector('.khero-track');if(tr)tr.style.transform=`translateX(${-100*SH.heroI}%)`;e.querySelectorAll('.khero-dots button').forEach((b,i)=>{const on=i===SH.heroI;b.classList.toggle('on',on);b.setAttribute('aria-current',on?'true':'false')})}
 const catKey=c=>{const n=shopN(c),t=TEMAS.find(x=>x.re.test(n));return t?t.id:'c:'+n};
 const ik=i=>i._k||(i._k=new Set([...temaOf(i),...(i.cat?[catKey(i.cat)]:[])]));
@@ -2733,10 +2762,11 @@ function shopSide(){const e=$('k_side');if(!e)return;const av=[['all','Todos',SH
  e.innerHTML=`<div class="kfilter-section"><h3>Filtros <button class="kfilter-clear" data-h-click="h62">Limpiar</button></h3><div class="kprice-fields"><label>Precio desde<input type="number" min="0" inputmode="decimal" placeholder="$ 0" value="${esc(SH.minPrice)}" data-h-input="h74"></label><label>Precio hasta<input type="number" min="0" inputmode="decimal" placeholder="Sin límite" value="${esc(SH.maxPrice)}" data-h-input="h73"></label></div><div class="kavail">${av.map(([v,l,n])=>`<button class="${SH.avail===v?'on':''}" data-h-click="h72" data-a-click="${_ha(v)}"><span>${l}</span><span>${n}</span></button>`).join('')}</div></div><div class="kfilter-section"><h3>Por ocasión</h3>${SH.opts.length?`<label class="ksd ${SH.sel.length?'':'on'}"><input type="checkbox" ${SH.sel.length?'':'checked'} data-h-change="h71"><span>✨ Todos</span><i>${SH.items.length}</i></label>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<label class="ksd ${on?'on':''}"><input type="checkbox" ${on?'checked':''} data-h-change="h70" data-a-change="${_ha(k)}"><span>${o.e} ${esc(o.n)}</span><i>${o.c}</i></label>`}).join(''):''}</div>`}
 function shopSel(k){if(k<0)SH.sel=[];else{const id=SH.opts[k].id,p=SH.sel.indexOf(id);if(p<0)SH.sel.push(id);else SH.sel.splice(p,1)}shopChips();shopSide();shopGrid(1)}
 function shopTemaId(t){SH.sel=[t];SH.favOnly=false;SH.q='';if($('sh_q'))$('sh_q').value='';shopFilters();shopNav();const s=$('shop');if(s)s.scrollTo({top:0,behavior:'smooth'})}
-function shopQ(v){SH.q=v;const x=$('k_x');if(x)x.hidden=!v;clearTimeout(SH.qt);SH.qt=setTimeout(()=>shopGrid(1),130)}
+function shopSearchSubmit(){const q=(($("sh_q_hero")&&$("sh_q_hero").value)||($("sh_q")&&$("sh_q").value)||"").trim();shopQ(q);const g=$("sh_g");if(g)g.scrollIntoView({behavior:"smooth",block:"start"})}
+function shopQ(v){SH.q=v;const x=$("k_x");if(x)x.hidden=!v;const q1=$("sh_q"),q2=$("sh_q_hero");if(q1&&q1.value!==v)q1.value=v;if(q2&&q2.value!==v)q2.value=v;clearTimeout(SH.qt);SH.qt=setTimeout(()=>shopGrid(1),130)}
 function shopPrice(k,v){SH[k]=String(v||'').replace(',','.');shopGrid(1)}
 function shopAvail(v){SH.avail=v;shopSide();shopGrid(1)}
-function shopClear(){SH.q='';SH.sel=[];SH.minPrice='';SH.maxPrice='';SH.avail='all';const q=$('sh_q');if(q)q.value='';const x=$('k_x');if(x)x.hidden=true;shopFilters()}
+function shopClear(){SH.q="";SH.sel=[];SH.minPrice="";SH.maxPrice="";SH.avail="all";const q=$("sh_q");if(q)q.value="";const q2=$("sh_q_hero");if(q2)q2.value="";const x=$("k_x");if(x)x.hidden=true;shopFilters()}
 function shopPriceMatch(i){const lo=+SH.minPrice||0,hi=+SH.maxPrice||0,p=+i.price||0;if(!(lo||hi))return true;if(!p)return false;return(!lo||p>=lo)&&(!hi||p<=hi)}
 function shopAvailMatch(i){return SH.avail==='all'||(SH.avail==='in'&&!noDisp(i))||(SH.avail==='low'&&i.stock==='low')||(SH.avail==='out'&&noDisp(i))}
 const shopPop=i=>{const b=bdgList(i);return(b.includes('best')?100:0)+(b.includes('model')?25:0)+(b.includes('new')?10:0)+(SH.fav[i.id]?2:0)};
@@ -2771,9 +2801,21 @@ function shopFav(id){if(SH.fav[id])delete SH.fav[id];else SH.fav[id]=1;try{local
  if(SH.favOnly&&!SH.fav[id]&&$('shopm').style.display!=='flex')shopGrid(1);if($('shopm').dataset.k==='det'&&$('shopm').dataset.id===id)shopDet(id)}
 function shopTab(k){const s=$('shop');if(k==='cart')return shopCart();if(k==='acc')return shopAcc();SH.favOnly=k==='fav';shopNav();shopGrid(1);if(s)s.scrollTo({top:0,behavior:'smooth'})}
 const shopLines=()=>Object.keys(SH.cart).map(id=>{const i=SH.items.find(x=>x.id===id);return i&&!noDisp(i)?{id,n:i.name,p:+i.price||0,q:SH.cart[id],img:i.img}:null}).filter(Boolean);
-function shopNav(){const n=shopLines().reduce((s,l)=>s+l.q,0),e=$('k_nav'),h=$('k_ha');
- if(e)e.innerHTML=[['home','Inicio',KI.home,0,!SH.favOnly],['fav','Favoritos',SH.favOnly?KI.heart:KI.heartO,0,SH.favOnly],['cart','Carrito',KI.cart,n,0],['acc','Mi cuenta',KI.user,0,0]].map(([k,l,d,b,on])=>`<button class="${on?'on':''}" data-h-click="h61" data-a-click="${_ha(k)}"><span class="kpill">${kico(d)}${b?`<i class="kbdg">${b}</i>`:''}</span><small>${l}</small></button>`).join('');
- if(h)h.innerHTML=`<button class="kha ${SH.favOnly?'on':''}" data-h-click="h61" data-a-click="${_ha(SH.favOnly?'home':'fav')}">${kico(SH.favOnly?KI.heart:KI.heartO,20)}<span>Favoritos</span></button><button class="kha" data-h-click="h60">${kico(KI.user,20)}<span>Mi cuenta</span></button><button class="kha pri" data-h-click="h30">${kico(KI.cart,20)}<span>Carrito</span>${n?`<i class="kbdg">${n}</i>`:''}</button>`}
+function shopNav(){const n=shopLines().reduce((s,l)=>s+l.q,0),e=$("k_nav"),h=$("k_ha"),r=$("k_rail");
+ if(e)e.innerHTML=[["home","Inicio",KI.home,0,!SH.favOnly],["fav","Favoritos",SH.favOnly?KI.heart:KI.heartO,0,SH.favOnly],["cart","Carrito",KI.cart,n,0],["acc","Mi cuenta",KI.user,0,0]].map(([k,l,d,b,on])=>`<button class="${on?'on':''}" data-h-click="h61" data-a-click="${_ha(k)}"><span class="kpill">${kico(d)}${b?`<i class="kbdg">${b}</i>`:""}</span><small>${l}</small></button>`).join("");
+ if(h)h.innerHTML=`<button class="kha ${SH.favOnly?'on':''}" data-h-click="h61" data-a-click="${_ha(SH.favOnly?'home':'fav')}">${kico(SH.favOnly?KI.heart:KI.heartO,20)}<span>Favoritos</span></button><button class="kha" data-h-click="h60">${kico(KI.user,20)}<span>Mi cuenta</span></button><button class="kha pri" data-h-click="h30">${kico(KI.cart,20)}<span>Carrito</span>${n?`<i class="kbdg">${n}</i>`:""}</button>`;
+ if(r){
+   const rc=r.querySelector(".krail-cart");
+   if(rc){
+     const b=rc.querySelector(".kbdg");if(b)b.remove();
+     if(n){const x=document.createElement("i");x.className="kbdg";x.textContent=n;rc.appendChild(x)}
+   }
+   r.querySelectorAll(".krail-item").forEach(b=>{
+     if(b.title==="Favoritos")b.classList.toggle("on",!!SH.favOnly);
+     if(b.title==="Inicio")b.classList.toggle("on",!SH.favOnly);
+   });
+ }
+}
 const shopCb=shopNav;
 const shopQtys=[6,12,24,36],docL=n=>n===6?'½ docena':n%12===0?(n/12)+(n===12?' docena':' docenas'):'';
 function shopPick(id,from){const i=SH.items.find(x=>x.id===id);if(!i)return;if(noDisp(i)){shopToast('Producto '+(i.stock==='out'?'agotado':'descontinuado'));return}SH.pq=SH.cart[id]||12;SH.pf=from||'';SH.pi=id;
