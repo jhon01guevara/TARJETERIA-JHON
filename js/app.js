@@ -1907,7 +1907,7 @@ function tdAviso(t){try{agSound()}catch(e){window._tjw&&_tjw(e)}if(DB.cfg.vozCha
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbDb.collection(c):fbDb.collection(c).where('ref','==',me);let f1=true,f2=true;
- fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'clasico';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'clasico';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -2009,7 +2009,7 @@ async function shopPurge(){try{if(sessionStorage.getItem('tj_purged'))return;let
 function shopInit(){shopPurge();SH.openTs=Date.now();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){window._tjw&&_tjw(e)}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'clasico';SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');try{shopXmas();shopSummer();shopPanama()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'clasico';SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');try{shopXmas();shopSummer();shopPanama()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -2071,12 +2071,12 @@ function shopHdrScroll(){const o=$('shop');if(!o||SH._hs)return;SH._hs=1;let las
   if(y<80){if(h)h.classList.remove('kh-hide');if(f)f.classList.remove('kh-hide')}})},{passive:true});
  o.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.kbrand'))o.scrollTo({top:0,behavior:'smooth'})})}
 
-function shopDNavHtml(){const email='tarjeteriajhon@gmail.com';return [['Inicio',"shopDNavGo('home')"],['Categorías',"shopDNavGo('cats')"],['Novedades',"shopDNavGo('dest')"],['Más vendidos',"shopDNavGo('dest')"],['Contacto',"shopDNavGo('contact')"]].map(([l,fn])=>`<button data-h-click="call" data-a-click="${_ha(..._hcall(fn))}">${l}</button>`).join('')}
-function shopMobileNavHtml(){return [[KI.home,'Inicio',"shopMobileGo('home')"],[KI.grid,'Categorías',"shopMobileGo('cats')"],[KI.star,'Destacados',"shopMobileGo('dest')"],[KI.heartO,'Favoritos',"shopMobileGo('fav')"],[KI.user,'Mi cuenta',"shopMobileGo('acc')"],[KI.cart,'Carrito',"shopMobileGo('cart')"],[KI.filter,'Filtros',"shopMobileGo('filters')"],[KI.search,'Contacto',"shopMobileGo('contact')"]].map(([i,l,fn])=>`<button data-h-click="call" data-a-click="${_ha(..._hcall(fn))}">${kico(i,18)}<span>${l}</span></button>`).join('')}
+function shopDNavHtml(){const email='tarjeteriajhon@gmail.com';return [['Inicio',"shopDNavGo('home')"],['Categorías',"shopDNavGo('cats')"],['Novedades',"shopDNavGo('dest')"],['Más vendidos',"shopDNavGo('dest')"],['Contacto',"shopDNavGo('contact')"]].map(([l,fn])=>`<button data-h-click="call" data-a-click="${_ha(..._hcall(fn))}">${l}</button>`).join('')+'<span class="kredh"></span>'}
+function shopMobileNavHtml(){return [[KI.home,'Inicio',"shopMobileGo('home')"],[KI.grid,'Categorías',"shopMobileGo('cats')"],[KI.star,'Destacados',"shopMobileGo('dest')"],[KI.heartO,'Favoritos',"shopMobileGo('fav')"],[KI.user,'Mi cuenta',"shopMobileGo('acc')"],[KI.cart,'Carrito',"shopMobileGo('cart')"],[KI.filter,'Filtros',"shopMobileGo('filters')"],[KI.search,'Contacto',"shopMobileGo('contact')"]].map(([i,l,fn])=>`<button data-h-click="call" data-a-click="${_ha(..._hcall(fn))}">${kico(i,18)}<span>${l}</span></button>`).join('')+'<div class="kredh"></div>'}
 function shopMenu(force){const m=$('k_mmenu'),b=$('k_menu_b');if(!m)return;const open=force===undefined?m.hidden:!!force;m.hidden=!open;if(b){b.setAttribute('aria-expanded',open?'true':'false');b.setAttribute('aria-label',open?'Cerrar menú':'Abrir menú')}}
 function shopMobileGo(k){shopMenu(false);if(k==='fav'||k==='acc'||k==='cart')return shopTab(k);if(k==='filters')return shopFilterSheet();shopDNavGo(k)}
 function shopDNavGo(k){if(k==='home'){shopClear();$('shop').scrollTo({top:0,behavior:'smooth'});return}
- if(k==='contact'){location.href='mailto:tarjeteriajhon@gmail.com';return}
+ if(k==='contact'){shopContacto();return}
  const id=k==='cats'?'k_cats':'k_dest',e=$(id);if(e&&!e.hidden)e.scrollIntoView({behavior:'smooth',block:'start'})}
 function shopBanner(){const e=$('k_banner');if(!e)return;const L=SH.items.filter(i=>i&&i.img&&!noDisp(i));if(!L.length){e.hidden=true;e.innerHTML='';return}
  if(e._k===L.length)return;e._k=L.length;e.hidden=false;const bg=L[Math.floor(Math.random()*L.length)].img;
@@ -2727,13 +2727,15 @@ function cliMapSync(centrar){
  if(centrar)_cuMap.setView([l.lat,l.lng],Math.max(_cuMap.getZoom(),17))
 }
 
-/* ===== Redes sociales de la tienda virtual (TikTok, Instagram, Facebook) ===== */
+/* ===== Redes sociales y contacto de la tienda virtual ===== */
 const RED_DEF=[['tiktok','TikTok'],['instagram','Instagram'],['facebook','Facebook']];
 const RED_HOST={tiktok:/^(?:[a-z0-9-]+\.)*tiktok\.com$/i,instagram:/^(?:[a-z0-9-]+\.)*instagram\.com$/i,facebook:/^(?:[a-z0-9-]+\.)*(?:facebook\.com|fb\.com)$/i};
 const RED_SVG={
  tiktok:'<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.1 4.2 5 4.5"/>',
  instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>',
  facebook:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'};
+const CONT_DEF=[['tel','Teléfono','+507 6074-1150'],['wa','WhatsApp (con código de país)','50760741150'],['email','Correo','ventas@ejemplo.com'],['dir','Dirección','Calle principal, Panamá Oeste'],['horario','Horario','Lunes a sábado, 9:00 a.m. a 6:00 p.m.']];
+let RS_DRAFT={},RS_MSG=null;
 // Acepta @usuario, usuario o un link de la red; devuelve un link https seguro o '' si no es válido.
 function redUrl(red,txt){
  let t=String(txt==null?'':txt).trim();if(!t||t.length>300||!RED_HOST[red])return'';
@@ -2750,43 +2752,75 @@ function redUrl(red,txt){
  t=t.replace(/^@/,'');if(!/^[A-Za-z0-9._-]{1,60}$/.test(t))return'';
  return red==='tiktok'?'https://www.tiktok.com/@'+t:red==='instagram'?'https://www.instagram.com/'+t+'/':'https://www.facebook.com/'+t
 }
-(function(){if(document.getElementById('redCss'))return;const st=document.createElement('style');st.id='redCss';
- st.textContent='.kredes{max-width:1100px;margin:28px auto 96px;padding:0 16px;text-align:center}.kredes h3{margin:0 0 12px}.kred-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.kred{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}.kred:hover{filter:brightness(1.08)}.kred svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.kred-tiktok{background:#111}.kred-instagram{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)}.kred-facebook{background:#1877f2}';
- document.head.appendChild(st)})();
-// Tienda pública: botones al final de la página (los datos se vuelven a validar al leerlos).
-function shopRedes(){
- const e=$('k_redes');if(!e)return;
- const r=(typeof SH!=='undefined'&&SH.redes)||{},L=RED_DEF.map(([k,n])=>[k,n,redUrl(k,r[k])]).filter(x=>x[2]);
- if(!L.length){e.hidden=true;e.innerHTML='';return}
- e.hidden=false;
- e.innerHTML=`<h3>Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>`<a class="kred kred-${k}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${n}"><svg viewBox="0 0 24 24" aria-hidden="true">${RED_SVG[k]}</svg><span>${n}</span></a>`).join('')}</div>`
+// Datos de contacto: lo que no sea válido queda vacío (se vuelve a limpiar al leerlo en la tienda pública).
+function contLimpio(c){
+ c=c&&typeof c==='object'?c:{};
+ const tx=(v,m)=>String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,m),o={};
+ const tel=tx(c.tel,25);o.tel=/^[+\d][\d\s().-]{5,24}$/.test(tel)?tel:'';
+ let w=String(c.wa==null?'':c.wa).replace(/\D/g,'');if(w.length===8)w='507'+w;o.wa=/^\d{10,15}$/.test(w)?w:'';
+ const em=tx(c.email,120);o.email=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)?em:'';
+ o.dir=tx(c.dir,200);o.horario=tx(c.horario,150);
+ return o
 }
-// Configuración (administrador)
+(function(){if(document.getElementById('redCss'))return;const st=document.createElement('style');st.id='redCss';
+ st.textContent='.kredes{max-width:1100px;margin:28px auto 96px;padding:0 16px;text-align:center}.kredes h3{margin:0 0 12px}.kred-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.kred{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}.kred:hover{filter:brightness(1.08)}.kred svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.kred-tiktok{background:#111}.kred-instagram{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)}.kred-facebook{background:#1877f2}.kredh{display:inline-flex;gap:8px;align-items:center;margin-left:auto}.kredh:empty{display:none}.kredh .kred{width:34px;height:34px;padding:0;justify-content:center;box-shadow:none}.kmobile-menu .kredh{grid-column:1/-1;justify-content:center;margin:4px 0 8px}.kcont{margin:8px 0 14px}.kcr{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(127,127,127,.25)}.kcr>span{font-size:20px;line-height:1.3}.kcr small{opacity:.7}.kcr a{color:inherit;font-weight:600;word-break:break-word}';
+ document.head.appendChild(st)})();
+const redesLista=r=>{r=r&&typeof r==='object'?r:{};return RED_DEF.map(([k,n])=>[k,n,redUrl(k,r[k])]).filter(x=>x[2])};
+const redLink=(k,n,u,mini)=>`<a class="kred kred-${k}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" aria-hidden="true">${RED_SVG[k]}</svg>${mini?'':`<span>${n}</span>`}</a>`;
+// Tienda pública: iconos junto al menú y botones al final de la página.
+function shopRedes(){
+ const L=redesLista(typeof SH!=='undefined'?SH.redes:null);
+ document.querySelectorAll('.kredh').forEach(e=>{e.innerHTML=L.map(([k,n,u])=>redLink(k,n,u,1)).join('')});
+ const e=$('k_redes');if(!e)return;
+ if(!L.length){e.hidden=true;e.innerHTML='';return}
+ e.hidden=false;e.innerHTML=`<h3>Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>redLink(k,n,u)).join('')}</div>`
+}
+// Botón "Contacto" de la tienda: muestra los datos que configuró el administrador.
+function shopContacto(){
+ const c=contLimpio(typeof SH!=='undefined'?SH.contacto:null),L=redesLista(typeof SH!=='undefined'?SH.redes:null),f=[];
+ if(c.wa)f.push(['💬','WhatsApp',`<a href="https://wa.me/${c.wa}" target="_blank" rel="noopener noreferrer">+${c.wa}</a>`]);
+ if(c.tel)f.push(['📞','Teléfono',`<a href="tel:${esc(c.tel.replace(/[^\d+]/g,''))}">${esc(c.tel)}</a>`]);
+ if(c.email)f.push(['✉️','Correo',`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`]);
+ if(c.dir)f.push(['📍','Dirección',`<a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(c.dir)}" target="_blank" rel="noopener noreferrer">${esc(c.dir)}</a>`]);
+ if(c.horario)f.push(['🕒','Horario',esc(c.horario)]);
+ if(!f.length)f.push(['✉️','Correo','<a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a>']);
+ shopM(`<h2 style="margin:6px 0">Contacto</h2><div class="kcont">${f.map(([i,l,h])=>`<div class="kcr"><span>${i}</span><div><small>${l}</small><br>${h}</div></div>`).join('')}</div>${L.length?`<h3 style="margin:6px 0 10px">Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>redLink(k,n,u)).join('')}</div>`:''}<div class="kact2" style="margin-top:14px"><button class="sbtn g" data-h-click="h31">Cerrar</button></div>`,'contact')
+}
+// Configuración (administrador). Lo escrito sin guardar y el aviso sobreviven a los redibujados de la pantalla.
 function redesCard(){
- const r=(typeof TD!=='undefined'&&TD.redes)||{},ph={tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'};
- return `<h3 style="margin:0">📣 Redes sociales de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Aparecen como botones al final de la tienda virtual. Escriba el @usuario o pegue el link del perfil. Deje vacía la que no use.</p>
- <div class="g">${RED_DEF.map(([k,n])=>`<div><label>${n}</label><input id="rs_${k}" value="${esc(redUrl(k,r[k]))}" placeholder="${ph[k]}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
- <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h335">Guardar redes</button><span id="rs_est" style="font-size:13px"></span></div>`
+ const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph={tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'};
+ const val=(id,saved)=>id in RS_DRAFT?RS_DRAFT[id]:saved;
+ return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. Deje vacío lo que no use.</p>
+ <div class="g">${RED_DEF.map(([k,n])=>`<div><label>${n}</label><input id="rs_${k}" value="${esc(val('rs_'+k,redUrl(k,r[k])))}" placeholder="${ph[k]}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
+ <div class="g" style="margin-top:10px">${CONT_DEF.map(([k,n,p])=>`<div><label>${n}</label><input id="ct_${k}" value="${esc(val('ct_'+k,ct[k]))}" placeholder="${esc(p)}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
+ <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h335">Guardar redes y contacto</button><span id="rs_est" style="font-size:13px;color:${RS_MSG?RS_MSG.ok?'#1e7a43':'#b3261e':'inherit'}">${RS_MSG?esc(RS_MSG.t):''}</span></div>`
 }
 function redesFill(){
- if(typeof TD==='undefined')return;const r=TD.redes||{};
- RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i&&!i.dataset.d&&document.activeElement!==i)i.value=redUrl(k,r[k])})
+ if(typeof TD==='undefined')return;const r=TD.redes||{},ct=contLimpio(TD.contacto);
+ RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=redUrl(k,r[k])});
+ CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=ct[k]})
 }
 async function redesGuardar(){
- if(!esAdmin())return alert('Solo el administrador puede cambiar las redes sociales.');
+ if(!esAdmin())return alert('Solo el administrador puede cambiar las redes sociales y el contacto.');
  if(!fbDb)return alert('Sin conexión con Firebase. Intente de nuevo en un momento.');
- const out={},est=$('rs_est');
+ const est=$('rs_est'),msg=(ok,t)=>{RS_MSG={ok,t};if(est){est.style.color=ok?'#1e7a43':'#b3261e';est.textContent=t}},redes={},raw={};
  for(const [k,n] of RED_DEF){
   const i=$('rs_'+k),t=i?i.value.trim():'',u=redUrl(k,t);
-  if(t&&!u){if(est){est.style.color='#b3261e';est.textContent='✖ '+n+': no es válido. Escriba el @usuario o el link de su perfil de '+n+'.'}if(i)i.focus();return}
-  out[k]=u
+  if(t&&!u){msg(false,'✖ '+n+': no es válido. Escriba el @usuario o el link de su perfil de '+n+'.');if(i)i.focus();return}
+  redes[k]=u
  }
- if(est){est.style.color='';est.textContent='Guardando…'}
+ CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);raw[k]=i?i.value:''});
+ const ct=contLimpio(raw);
+ for(const [k,n] of CONT_DEF){
+  if(String(raw[k]).trim()&&!ct[k]){msg(false,'✖ '+n.replace(/ \(.*\)/,'')+': el dato no es válido.');const i=$('ct_'+k);if(i)i.focus();return}
+ }
+ msg(true,'Guardando…');
  try{
-  await fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,redes:out,ts:Date.now()},{merge:true});
-  TD.redes=out;RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i){i.value=out[k];delete i.dataset.d}});
-  if(est){est.style.color='#1e7a43';est.textContent='✔ Guardado. Ya se ven en la tienda virtual.'}
- }catch(e){window._tjw&&_tjw(e);if(est){est.style.color='#b3261e';est.textContent='✖ No se pudo guardar. Revise su conexión o permisos.'}}
+  await fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,redes,contacto:ct,ts:Date.now()},{merge:true});
+  TD.redes=redes;TD.contacto=ct;RS_DRAFT={};
+  RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i)i.value=redes[k]});CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i)i.value=ct[k]});
+  msg(true,'✔ Guardado. Ya se ve en la tienda virtual.')
+ }catch(e){window._tjw&&_tjw(e);msg(false,'✖ No se pudo guardar. Revise su conexión o permisos.')}
 }
 function homeCard(html){const w=document.createElement('div');w.innerHTML=(typeof html==='function'?html():html)||'';return w.firstElementChild}
 R.home=function(){
@@ -3119,7 +3153,7 @@ __H.h332=function(event,a){MC.q=($('mcQ')||{}).value||'';MC.f=($('mcF')||{}).val
 __H.h333=function(event,a){mcIr(a[0])};
 __H.h334=function(event,a){ir('mapa')};
 __H.h335=function(event,a){redesGuardar()};
-__H.h336=function(event,a){this.dataset.d='1'};
+__H.h336=function(event,a){RS_DRAFT[this.id]=this.value;RS_MSG=null;const e=$('rs_est');if(e)e.textContent=''};
 __H.h307=function(event,a){delP(a[0])};
 __H.h308=function(event,a){editP(a[0])};
 __H.h309=function(event,a){addP()};
