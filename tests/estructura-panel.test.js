@@ -324,3 +324,11 @@ test('Al elegir transportista el cliente llena los datos de quien recibe y llega
   assert.equal(d2.agencia,'Uno Express Panamá');assert.equal(d2.dest.name,'Ana Pérez');assert.equal(d2.dest.suc,'Boquete');assert.equal(d2.dest.dir,'Calle 1');
   const d3=etqDatos(base,{});assert.equal(d3.dest.name,'Cliente Tienda');assert.equal(d3.agencia,'');
 });
+
+test('Ningún manejador __H se define dos veces (un duplicado pisaría al anterior)',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const nombres=app.match(/__H\.[A-Za-z0-9_]+=/g)||[];
+  const vistos=new Set(),dup=new Set();
+  nombres.forEach(n=>{if(vistos.has(n))dup.add(n);vistos.add(n)});
+  assert.deepEqual([...dup],[]);
+});
