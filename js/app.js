@@ -559,7 +559,149 @@ function shopPoliticas(tabSel){
    </div>
  </div>`;
  
- shopM(html, "politicas");
+ if(document.getElementById("shopm"))shopM(html, "politicas"); else if(document.getElementById("md")){ document.getElementById("mb").innerHTML=html; document.getElementById("md").classList.add("on"); }
+}
+
+
+function poliVerEvidencia(id){
+ const p=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]).find(x=>x.id===id);
+ if(!p)return alert('Pedido no encontrado');
+ const l=p.lead||{};
+ const t=l.terminos||{};
+ const hasOk=t.ok||(p.nota&&p.nota.includes('Aceptó Términos'));
+ const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
+ const fechaIso=t.fecha||new Date(p.ts).toISOString();
+ const ua=t.ua||(navigator.userAgent||'No registrado');
+ const ver=t.ver||'1.0 - Etapa Preparatoria (Ley 81 de 2019 de Panamá)';
+ 
+ const html=`<div style="max-width:580px;margin-inline:auto;text-align:left">
+   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-bottom:1px solid var(--linea);padding-bottom:10px">
+     <div style="font-size:32px">🛡️</div>
+     <div style="flex:1">
+       <h3 style="margin:0;font-size:17px">Evidencia de Consentimiento y Términos</h3>
+       <small style="color:var(--gris)">Auditoría legal según Ley 81 de 2019 (Protección de Datos - Panamá)</small>
+     </div>
+     <span style="padding:4px 9px;border-radius:12px;background:#dcfce7;color:#15803d;font-weight:700;font-size:12px">✔ Aceptado</span>
+   </div>
+   
+   <div style="background:var(--sf);border:1px solid var(--linea);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:12.5px;line-height:1.5">
+     <div style="display:grid;grid-template-columns:140px 1fr;gap:6px 10px;margin-bottom:6px">
+       <b style="color:var(--gris)">Cliente:</b> <span><b>${esc(l.name||'Sin nombre')}</b></span>
+       <b style="color:var(--gris)">Teléfono / WhatsApp:</b> <span>${esc(l.tel||'—')}</span>
+       <b style="color:var(--gris)">Correo electrónico:</b> <span>${esc(l.email||'—')}</span>
+       ${l.empresa?`<b style="color:var(--gris)">Empresa:</b> <span>${esc(l.empresa)}</span>`:''}
+       ${l.dir?`<b style="color:var(--gris)">Dirección:</b> <span>${esc(l.dir)}</span>`:''}
+       <b style="color:var(--gris)">ID Pedido / Transacción:</b> <span style="font-family:monospace;font-size:11px">${esc(p.id)}</span>
+       <b style="color:var(--gris)">Fecha de aceptación:</b> <span><b>${esc(fechaAcep)}</b></span>
+       <b style="color:var(--gris)">Marca de tiempo UTC:</b> <span style="font-family:monospace;font-size:11px">${esc(fechaIso)}</span>
+       <b style="color:var(--gris)">Versión de políticas:</b> <span>${esc(ver)}</span>
+     </div>
+     <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--linea)">
+       <b style="color:var(--gris);display:block;margin-bottom:2px">Dispositivo / Agente técnico:</b>
+       <div style="font-family:monospace;font-size:10.5px;color:var(--txt);word-break:break-all;background:rgba(0,0,0,0.03);padding:6px 8px;border-radius:6px">${esc(ua)}</div>
+     </div>
+     ${p.nota?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--linea)"><b style="color:var(--gris);display:block;margin-bottom:2px">Constancia en nota:</b><span style="font-size:11.5px;color:var(--txt)">${esc(p.nota)}</span></div>`:''}
+   </div>
+   
+   <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-bottom:14px;color:#166534;font-size:11.5px;line-height:1.45">
+     <b>⚖️ Declaración de Consentimiento Expreso:</b><br>
+     El cliente marcó formalmente la casilla de verificación obligatoria en la tienda web antes de enviar su pedido, declarando haber leído y aceptado los Términos de Uso y la Política de Privacidad de <b>Distribuidora Jhon / Tarjetería Jhon</b>, reconociendo la etapa preparatoria informativa conforme a la <b>Ley 81 de 2019</b>.
+   </div>
+   
+   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+     <div style="display:flex;gap:6px;flex-wrap:wrap">
+       <button class="btn s" data-h-click="call" data-a-click="${_ha('poliImprimirEvidencia',p.id)}">🖨️ Imprimir constancia</button>
+       <button class="btn s" data-h-click="call" data-a-click="${_ha('poliCopiarEvidencia',p.id)}">📋 Copiar datos</button>
+     </div>
+     <button class="btn p" data-h-click="${document.getElementById('shopm')?'h31':'hs4'}">Cerrar</button>
+   </div>
+ </div>`;
+ 
+ if(document.getElementById('shopm'))shopM(html, "evidencia");
+ else if(document.getElementById('md')){ document.getElementById('mb').innerHTML=html; document.getElementById('md').classList.add('on'); }
+}
+
+function poliImprimirEvidencia(id){
+ const p=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]).find(x=>x.id===id);if(!p)return;
+ const l=p.lead||{},t=l.terminos||{};
+ const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
+ const w=window.open('','_blank');if(!w)return alert('Permita ventanas emergentes para imprimir.');
+ w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Constancia Legal - ${esc(l.name||'Cliente')}</title><style>body{font-family:system-ui,sans-serif;padding:32px;color:#1e293b;max-width:700px;margin:auto;font-size:14px;line-height:1.6}h1{font-size:20px;margin-bottom:4px;color:#0f172a}table{width:100%;border-collapse:collapse;margin:18px 0}td,th{padding:8px 12px;border:1px solid #cbd5e1;text-align:left}.box{background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:8px;margin:16px 0}@media print{button{display:none}}</style></head><body><h1>🛡️ CONSTANCIA DE CONSENTIMIENTO Y AUDITORÍA LEGAL</h1><p style="color:#64748b;margin:0 0 16px">Distribuidora Jhon / Tarjetería Jhon · Marco legal: Ley 81 de 2019 de la República de Panamá</p><div class="box"><b>Estado:</b> Consentimiento libre, previo, expreso e informado registrado en sistema.</div><table><tr><th>Identificador del Pedido</th><td>${esc(p.id)}</td></tr><tr><th>Nombre del Cliente</th><td>${esc(l.name||'—')}</td></tr><tr><th>Teléfono</th><td>${esc(l.tel||'—')}</td></tr><tr><th>Correo electrónico</th><td>${esc(l.email||'—')}</td></tr><tr><th>Empresa</th><td>${esc(l.empresa||'—')}</td></tr><tr><th>Dirección</th><td>${esc(l.dir||'—')}</td></tr><tr><th>Fecha y Hora de Aceptación</th><td><b>${esc(fechaAcep)}</b></td></tr><tr><th>Versión de Políticas</th><td>${esc(t.ver||'1.0 - Etapa preparatoria (Ley 81 Panamá)')}</td></tr><tr><th>Firma Técnica / Dispositivo</th><td style="font-family:monospace;font-size:11px">${esc(t.ua||'—')}</td></tr><tr><th>Registro en pedido</th><td>${esc(p.nota||'—')}</td></tr></table><div class="box" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534"><b>Certificación:</b> El cliente aceptó formalmente mediante casilla de verificación los Términos de Uso y la Política de Privacidad vigentes al momento de la orden.</div><br><button onclick="window.print()" style="padding:8px 16px;cursor:pointer">🖨️ Imprimir</button></body></html>`);
+ w.document.close();
+}
+
+function poliCopiarEvidencia(id){
+ const p=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]).find(x=>x.id===id);if(!p)return;
+ const l=p.lead||{},t=l.terminos||{};
+ const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
+ const str=`EVIDENCIA DE ACEPTACIÓN DE TÉRMINOS Y PRIVACIDAD (LEY 81 PANAMÁ)\nCliente: ${l.name||''}\nTeléfono: ${l.tel||''}\nCorreo: ${l.email||''}\nPedido ID: ${p.id}\nFecha y hora: ${fechaAcep}\nVersión: ${t.ver||'1.0'}\nAgente técnico: ${t.ua||''}\nNota: ${p.nota||''}`;
+ try{navigator.clipboard.writeText(str);alert('Copiado al portapapeles ✔')}catch(e){prompt('Copie la evidencia:',str)}
+}
+
+function poliVerRegistroAuditoria(){
+ const peds=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]);
+ const conEvidencia=peds.filter(p=>(p.lead&&p.lead.terminos&&p.lead.terminos.ok)||(p.nota&&p.nota.includes('Aceptó Términos')));
+ 
+ const rows=conEvidencia.map(p=>{
+   const l=p.lead||{},t=l.terminos||{};
+   const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
+   return `<tr style="border-bottom:1px solid var(--linea)">
+     <td style="padding:8px"><b>${esc(l.name||'Cliente')}</b><br><small style="color:var(--gris)">${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}</small></td>
+     <td style="padding:8px;font-size:12px;white-space:nowrap">${esc(fechaAcep)}</td>
+     <td style="padding:8px;font-size:11px;color:var(--gris)">${esc(t.ver||'1.0 Ley 81')}</td>
+     <td style="padding:8px;text-align:right">
+       <button class="btn s p" data-h-click="call" data-a-click="${_ha('poliVerEvidencia',p.id)}" style="font-size:11px;padding:3px 8px">👁️ Ver evidencia</button>
+     </td>
+   </tr>`;
+ }).join('');
+ 
+ const html=`<div style="max-width:680px;margin-inline:auto;text-align:left">
+   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--linea);padding-bottom:10px;flex-wrap:wrap;gap:8px">
+     <div>
+       <h3 style="margin:0;font-size:17px">📋 Registro General de Aceptaciones (Ley 81)</h3>
+       <small style="color:var(--gris)">Total: <b>${conEvidencia.length}</b> aceptaciones registradas con evidencia legal</small>
+     </div>
+     <button class="btn s" data-h-click="call" data-a-click="${_ha('poliExportarCSV')}" style="font-size:11.5px">📥 Exportar CSV</button>
+   </div>
+   
+   <div style="max-height:55vh;overflow-y:auto">
+     <table style="width:100%;border-collapse:collapse;font-size:12.5px">
+       <thead>
+         <tr style="border-bottom:2px solid var(--linea);color:var(--gris);font-size:11.5px">
+           <th style="padding:6px 8px;text-align:left">Cliente</th>
+           <th style="padding:6px 8px;text-align:left">Fecha de aceptación</th>
+           <th style="padding:6px 8px;text-align:left">Versión</th>
+           <th style="padding:6px 8px;text-align:right">Acción</th>
+         </tr>
+       </thead>
+       <tbody>
+         ${rows || '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gris)">No hay pedidos registrados con consentimiento aún.</td></tr>'}
+       </tbody>
+     </table>
+   </div>
+   
+   <div style="display:flex;justify-content:flex-end;margin-top:14px;padding-top:10px;border-top:1px solid var(--linea)">
+     <button class="btn p" data-h-click="${document.getElementById('shopm')?'h31':'hs4'}">Cerrar</button>
+   </div>
+ </div>`;
+ 
+ if(document.getElementById('shopm'))shopM(html, "auditoria");
+ else if(document.getElementById('md')){ document.getElementById('mb').innerHTML=html; document.getElementById('md').classList.add('on'); }
+}
+
+function poliExportarCSV(){
+ const peds=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]);
+ const conEvidencia=peds.filter(p=>(p.lead&&p.lead.terminos&&p.lead.terminos.ok)||(p.nota&&p.nota.includes('Aceptó Términos')));
+ if(!conEvidencia.length)return alert('No hay registros de evidencias para exportar.');
+ let csv='ID Pedido,Cliente,Telefono,Correo,Empresa,Direccion,Fecha Aceptacion,Version Ley,Dispositivo (User Agent),Nota\n';
+ conEvidencia.forEach(p=>{
+   const l=p.lead||{},t=l.terminos||{};
+   const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
+   const clean=s=>'"'+String(s||'').replace(/"/g,'""')+'"';
+   csv+=[clean(p.id),clean(l.name),clean(l.tel),clean(l.email),clean(l.empresa),clean(l.dir),clean(fechaAcep),clean(t.ver||'1.0 Ley 81'),clean(t.ua),clean(p.nota)].join(',')+'\n';
+ });
+ const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='evidencias_terminos_ley81_'+hoy()+'.csv';a.click();URL.revokeObjectURL(url);
 }
 
 function poliCopiar(){
@@ -584,6 +726,20 @@ function poliAdmCard(){
    <div style="display:flex;gap:8px;flex-wrap:wrap">
      <button class="btn p" data-h-click="call" data-a-click="${_ha('shopPoliticas')}">👁️ Ver políticas completas</button>
      <button class="btn s" data-h-click="call" data-a-click="${_ha('poliCopiar')}">📋 Copiar texto legal</button>
+   </div>
+ </div>
+ <div style="background:var(--sf);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:14px">
+   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+     <div>
+       <b style="font-size:13.5px">🛡️ Registro y Evidencias de Aceptación (Auditoría Ley 81)</b><br>
+       <small style="color:var(--gris)">Cada pedido registra la marca de tiempo, versión legal aceptada y firma técnica del cliente.</small>
+     </div>
+     <span style="padding:3px 10px;border-radius:12px;background:#dcfce7;color:#15803d;font-weight:700;font-size:12px">✔ ${(typeof TD!=='undefined'&&TD.peds?TD.peds:[]).filter(p=>(p.lead&&p.lead.terminos&&p.lead.terminos.ok)||(p.nota&&p.nota.includes('Aceptó Términos'))).length} evidencias registradas</span>
+   </div>
+   <p style="font-size:12px;color:var(--gris);margin:0 0 10px">El cliente debe marcar obligatoriamente la casilla antes de enviar el pedido. La administración conserva constancia digital inalterable de cada consentimiento.</p>
+   <div style="display:flex;gap:8px;flex-wrap:wrap">
+     <button class="btn s p" data-h-click="call" data-a-click="${_ha('poliVerRegistroAuditoria')}">📋 Ver tabla general de evidencias</button>
+     <button class="btn s" data-h-click="call" data-a-click="${_ha('poliExportarCSV')}">📥 Exportar reporte CSV</button>
    </div>
  </div>
  <div style="border:1px solid var(--linea);border-radius:10px;padding:12px;font-size:12px">
@@ -2822,7 +2978,7 @@ function tdRender(){if(vista!=='tienda'||!SES)return;const adm=esAdmin(),me=chat
  const cls=DB.cli.filter(c=>waNum(c.t));
  const pubCard=adm?`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0 0 4px">📦 Productos en la tienda <small style="color:var(--gris);font-weight:500">(${pub.size} publicados · ${TD.cat.length} en este catálogo)</small></h3><button class="btn s" id="tdMinB" data-h-click="h120">${tdMinV()?'▸ Maximizar':'▾ Minimizar'}</button></div><div id="tdBody" style="${tdMinV()?'display:none':''}"><p style="font-size:12.5px;color:var(--gris)">Marque los productos de su Catálogo (con foto) que quiere mostrar a los clientes. Nombre, categoría, precio y descripción salen del Catálogo. Para cambiar un precio, edítelo en el Catálogo y vuelva a publicar.</p>${tdTabla(pub)}<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><select id="tdTema" style="width:auto">${TEMAS.map(t=>`<option value="${t.id}">${t.e} ${t.n}</option>`).join("")}</select><button class="btn" data-h-click="h119">+ Asignar tema a marcados</button><button class="btn" data-h-click="h118">− Quitar tema</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><select id="tdBd" style="width:auto">${Object.keys(TDBD).map(k=>`<option value="${k}">${TDBD[k]}</option>`).join("")}</select><button class="btn" data-h-click="h117">🏷 Poner etiqueta a marcados</button><button class="btn" data-h-click="h116">Quitar etiqueta</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><select id="tdStk" style="width:auto">${Object.keys(TDSTK).map(k=>`<option value="${k}">${TDSTK[k]}</option>`).join("")}</select><button class="btn" data-h-click="h115">📦 Aplicar existencia a marcados</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><button class="btn p" data-h-click="h114">⬆ Publicar / actualizar marcados</button><button class="btn d" data-h-click="h113">🗑 Quitar marcados de la tienda</button><span id="tdSt" style="font-size:12.5px;color:var(--gris)"></span></div></div></div>`:'';
  $('v').innerHTML=`<div class="card"><h3 style="margin:0 0 4px">🛍 Catálogo virtual</h3><p style="font-size:12.5px;color:var(--gris)">Comparta su enlace. El cliente se registra, ve productos, categorías y precios, arma su carrito y le envía el pedido. ${adm?'':'Los registros y pedidos quedan a su nombre.'}</p>${file}<label>Su enlace</label><input id="td_link" readonly value="${esc(link)}" data-h-focus="h56"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h112">📋 Copiar enlace</button><button class="btn" data-h-click="h85">👁 Ver como cliente</button><button class="btn p" data-h-click="h100">📖 Ver catálogo directo</button><button class="btn" data-h-click="h111">💬 Enviar por WhatsApp</button></div><div style="margin-top:14px"><label>Enviar el enlace a un cliente registrado</label><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="td_cli" style="flex:1;min-width:200px">${cls.map(c=>`<option value="${c.id}">${esc(c.n)} — ${esc(c.t)}</option>`).join('')||'<option value="">(sin clientes con teléfono)</option>'}</select><button class="btn p" data-h-click="h110">💬 Enviar</button></div></div></div>
-<div class="card"><h3 style="margin:0 0 6px">🛒 Pedidos de la tienda (${TD.peds.length})</h3>${etqBarra()}${TD.peds.length?TD.peds.map(p=>{const l=p.lead||{},w=tdWa(l.tel,'Hola '+l.name+', recibimos su pedido de la tienda virtual. ');return `<div class="tdp ${p.estado==='nuevo'?'nw':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><label style="display:inline-flex;align-items:center;margin-right:6px"><input type="checkbox" class="etqcb" ${ETQ_SEL.has(p.id)?'checked':''} data-h-change="h339" data-a-change="${_ha(p.id)}" title="Seleccionar para imprimir etiqueta"></label><b>${esc(l.name||'Cliente')}</b> · ${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}<br><small style="color:var(--gris)">${new Date(p.ts).toLocaleString('es-PA')} · Vendedor: ${esc(vdName(p.ref||'admin'))} · ${p.estado==='nuevo'?'<b style="color:var(--az)">NUEVO</b>':'Atendido'}${etqImpresa(p)?' · 🏷 etiqueta lista':''}</small></div><b style="font-size:17px">${$$(p.total)}</b></div><ul>${(p.items||[]).map(i=>`<li>${i.q} × ${esc(i.n)} — ${$$(i.p)}</li>`).join('')}</ul>${fleLinea(p)}${p.nota?`<small>📝 ${esc(p.nota)}</small><br>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn p s" data-h-click="h87" data-a-click="${_ha(p.id)}">🧾 Crear factura</button>${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<button class="btn s" data-h-click="h337" data-a-click="${_ha(p.id)}">🏷️ Etiqueta</button><button class="btn s" data-h-click="h109" data-a-click="${_ha(p.id)}">👁 Ver PDF</button><button class="btn s" data-h-click="h108" data-a-click="${_ha(p.id)}">⬇ Descargar</button><button class="btn s" data-h-click="h86" data-a-click="${_ha(p.id)}">${p.estado==='nuevo'?'✔ Marcar atendido':'↩ Reabrir'}</button><button class="btn s d" data-h-click="h107" data-a-click="${_ha(p.id)}">🗑 Eliminar</button></div></div>`}).join(''):'<div class="vacio">Aún no hay pedidos.</div>'}</div>
+<div class="card"><h3 style="margin:0 0 6px">🛒 Pedidos de la tienda (${TD.peds.length})</h3>${etqBarra()}${TD.peds.length?TD.peds.map(p=>{const l=p.lead||{},w=tdWa(l.tel,'Hola '+l.name+', recibimos su pedido de la tienda virtual. ');return `<div class="tdp ${p.estado==='nuevo'?'nw':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><label style="display:inline-flex;align-items:center;margin-right:6px"><input type="checkbox" class="etqcb" ${ETQ_SEL.has(p.id)?'checked':''} data-h-change="h339" data-a-change="${_ha(p.id)}" title="Seleccionar para imprimir etiqueta"></label><b>${esc(l.name||'Cliente')}</b> · ${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}${((l.terminos&&l.terminos.ok)||(p.nota&&p.nota.includes('Aceptó Términos')))?`<button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('poliVerEvidencia',p.id)}" style="display:inline-flex;align-items:center;gap:3px;font-size:11px;padding:2px 8px;border-radius:10px;background:#dcfce7;color:#15803d;font-weight:700;border:1px solid #86efac;cursor:pointer;margin-left:6px" title="Ver constancia y evidencia legal Ley 81">🛡️ Términos y Privacidad (Ley 81) Aceptados ${(l.terminos&&l.terminos.fmt)?'· '+esc(l.terminos.fmt):''} 🔍</button>`:""}<br><small style="color:var(--gris)">${new Date(p.ts).toLocaleString('es-PA')} · Vendedor: ${esc(vdName(p.ref||'admin'))} · ${p.estado==='nuevo'?'<b style="color:var(--az)">NUEVO</b>':'Atendido'}${etqImpresa(p)?' · 🏷 etiqueta lista':''}</small></div><b style="font-size:17px">${$$(p.total)}</b></div><ul>${(p.items||[]).map(i=>`<li>${i.q} × ${esc(i.n)} — ${$$(i.p)}</li>`).join('')}</ul>${fleLinea(p)}${p.nota?`<small>📝 ${esc(p.nota)}</small><br>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn p s" data-h-click="h87" data-a-click="${_ha(p.id)}">🧾 Crear factura</button>${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<button class="btn s" data-h-click="h337" data-a-click="${_ha(p.id)}">🏷️ Etiqueta</button><button class="btn s" data-h-click="h109" data-a-click="${_ha(p.id)}">👁 Ver PDF</button><button class="btn s" data-h-click="h108" data-a-click="${_ha(p.id)}">⬇ Descargar</button><button class="btn s" data-h-click="h86" data-a-click="${_ha(p.id)}">${p.estado==='nuevo'?'✔ Marcar atendido':'↩ Reabrir'}</button><button class="btn s d" data-h-click="h107" data-a-click="${_ha(p.id)}">🗑 Eliminar</button></div></div>`}).join(''):'<div class="vacio">Aún no hay pedidos.</div>'}</div>
 <div class="card"><h3 style="margin:0 0 6px">👥 Clientes registrados en la tienda (${TD.leads.length})</h3><p style="font-size:12.5px;color:var(--gris)">${adm?'Cada registro se agrega automáticamente a su lista de Clientes.':'Los clientes que se registraron con su enlace.'}</p>${TD.leads.length?`<div class="tw"><table><tr><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Correo</th><th>Vendedor</th><th></th></tr>${TD.leads.map(l=>{const w=tdWa(l.tel,'Hola '+l.name+', gracias por registrarse en nuestro catálogo virtual. ');return `<tr><td>${new Date(l.ts).toLocaleDateString('es-PA')}</td><td><b>${esc(l.name)}</b>${l.empresa?'<br><small>'+esc(l.empresa)+'</small>':''}</td><td>${esc(l.tel||'')}</td><td>${esc(l.email||'')}</td><td>${esc(vdName(l.ref||'admin'))}</td><td class="r">${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''} ${adm?`<button class="btn s d" data-h-click="h106" data-a-click="${_ha(l.id)}">🗑 Eliminar</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="vacio">Aún no hay registros.</div>'}</div>
 ${pubCard}`;try{tdAplicarFiltro()}catch(e){window._tjw&&_tjw(e)}}
 let TDF='todos';const TDG_CLOSED=new Set();
@@ -2882,7 +3038,11 @@ function tdDel(id){const o=tdRows().find(x=>x.id===id)||{},pub=TD.items.some(x=>
 async function tdDelDo(id,full){cerrar();try{if(TD.items.some(x=>x.id===id))await fbDb.collection('tienda_items').doc(id).delete();if(full){await tx('readwrite',s=>s.delete(id));if(typeof CL!=='undefined')CL=CL.filter(f=>f.id!=id);TD.cat=TD.cat.filter(x=>x.id!==id);eliminarArchivoNube(id)}}catch(e){alert('No se pudo eliminar.')}tdRender()}
 const tdAgo=t=>{const m=Math.max(1,Math.round((Date.now()-t)/60000));return m<60?m+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d'};
 function tdHomeHTML(){if(!SES||!puede('tienda'))return'';const nu=TD.peds.filter(p=>p.estado==='nuevo'),sem=Date.now()-6048e5,ln=TD.leads.filter(l=>l.ts>sem),tot=nu.reduce((a,p)=>a+(+p.total||0),0);
- const pl=nu.slice(0,5).map(p=>{const l=p.lead||{},n=(p.items||[]).reduce((a,i)=>a+(+i.q||0),0),w=tdWa(l.tel,'Hola '+(l.name||'')+', recibimos su pedido de la tienda virtual. En breve le confirmamos.');return `<div class="tdr"><div><b>${esc(l.name||'Cliente')}</b><small>${n} artículo(s) · hace ${tdAgo(p.ts)}</small></div><b>${+p.total>0?$$(+p.total):'Consultar'}</b>${w?`<a class="btn s" href="${w}" target="_blank" rel="noopener" title="WhatsApp">💬</a>`:''}<button class="btn s p" data-h-click="h87" data-a-click="${_ha(p.id)}" title="Crear factura">🧾</button><button class="btn s" data-h-click="h86" data-a-click="${_ha(p.id)}" title="Marcar atendido">✔</button></div>`}).join('');
+ const pl=nu.slice(0,5).map(p=>{
+  const l=p.lead||{},n=(p.items||[]).reduce((a,i)=>a+(+i.q||0),0),w=tdWa(l.tel,'Hola '+(l.name||'')+', recibimos su pedido de la tienda virtual. En breve le confirmamos.');
+  const tOk=(l.terminos&&l.terminos.ok)||(p.nota&&p.nota.includes('Aceptó Términos'));
+  const tBadge=tOk?`<button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('poliVerEvidencia',p.id)}" style="display:inline-flex;align-items:center;gap:3px;font-size:10.5px;padding:1px 6px;border-radius:10px;background:#dcfce7;color:#15803d;font-weight:700;border:1px solid #86efac;cursor:pointer;margin-left:4px" title="Ver evidencia legal Ley 81">🛡️ Ley 81</button>`:'';
+  return `<div class="tdr"><div><b>${esc(l.name||'Cliente')}</b>${tBadge}<small>${n} artículo(s) · hace ${tdAgo(p.ts)}</small></div><b>${+p.total>0?$$(+p.total):'Consultar'}</b>${w?`<a class="btn s" href="${w}" target="_blank" rel="noopener" title="WhatsApp">💬</a>`:''}<button class="btn s p" data-h-click="h87" data-a-click="${_ha(p.id)}" title="Crear factura">🧾</button><button class="btn s" data-h-click="h86" data-a-click="${_ha(p.id)}" title="Marcar atendido">✔</button></div>`}).join('');
  const ll=TD.leads.slice(0,5).map(l=>`<div class="tdr"><div><b>${esc(l.name||'')}</b><small>${esc(l.tel||'')}${l.empresa?' · '+esc(l.empresa):''} · hace ${tdAgo(l.ts)}</small></div></div>`).join('');
  return `<div class="card" id="tdHome"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0">🛍 Tienda virtual</h3><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn s p" data-h-click="h85">🛍 Abrir tienda virtual</button><button class="btn s" data-h-click="h84">Ver todo →</button></div></div><div class="tdk"><div class="${nu.length?'hot':''}"><b>${nu.length}</b><small>Pedidos nuevos</small></div><div><b>${tot>0?$$(tot):'—'}</b><small>Por atender</small></div><div><b>${ln.length}</b><small>Clientes nuevos (7 días)</small></div><div><b>${TD.leads.length}</b><small>Clientes registrados</small></div></div><div class="tdhg"><div><h4>Pedidos nuevos</h4>${pl||'<small style="color:var(--gris)">No hay pedidos pendientes 🎉</small>'}</div><div><h4>Últimos clientes registrados</h4>${ll||'<small style="color:var(--gris)">Aún no hay registros.</small>'}</div></div></div>`}
 function tdHomeRefresh(){const e=$('tdHome');if(!e||vista!=='home')return;const w=document.createElement('div');w.innerHTML=tdHomeHTML();if(w.firstElementChild)e.replaceWith(w.firstElementChild)}
@@ -3083,9 +3243,18 @@ addEventListener('keydown',e=>{if(e.key!=='Escape')return;const z=$('kzoom');if(
 function shopDet(id){const i=SH.items.find(x=>x.id===id);if(!i)return;const tg=[...ik(i)].map(k=>SH.opts.find(o=>o.id===k)).filter(Boolean).map(o=>`<button data-k="${esc(o.id)}" data-h-click="h51">${o.e} ${esc(o.n)}</button>`).join('');
  shopM(`<div class="kdet"><div class="kdi"><img src="${i.img}" alt="${esc(i.name)}" data-h-click="h50" data-a-click="${_ha(id)}"><button class="kfav ${SH.fav[id]?'on':''}" data-f="${id}" data-h-click="h49" data-a-click="${_ha(id)}" aria-label="Favorito">${kico(SH.fav[id]?KI.heart:KI.heartO,22)}</button><span class="kzh">Toca para ampliar</span></div><div class="kdx">${i.cat?`<div class="kcat">${esc(i.cat)}</div>`:''}<h2>${esc(i.name)}</h2><div class="kdp">${tdMoney(i.price)}</div>${bdgTags(i,1)}${stkTag(i,1)}<button class="kshare" data-h-click="h48" data-a-click="${_ha(i.id)}">↗ Compartir</button>${tg?`<div class="ktg">${tg}</div>`:''}${i.desc?`<p class="kds">${esc(i.desc).replace(/\n/g,'<br>')}</p>`:''}<div class="kact2">${noDisp(i)?`<div class="kstn">${stkMsg(i)}</div>`:SH.cart[id]?`<div class="kst lg"><button data-h-click="h45" data-a-click="${_ha(id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h47" data-a-click="${_ha(id)}">${SH.cart[id]} en el carrito · cambiar</button><button data-h-click="h43" data-a-click="${_ha(id)}" aria-label="Agregar uno">+</button></div><button class="sbtn" data-h-click="h40">Ver carrito</button>`:`<button class="sbtn" data-h-click="h47" data-a-click="${_ha(id)}">Elegir cantidad y agregar</button>`}<button class="sbtn g" data-h-click="h31">Seguir viendo</button></div></div></div>`,'det',id,1)}
 function shopCart(){const L=shopLines();if(!L.length)return shopM('<h2 style="margin:6px 0 12px">Su carrito está vacío</h2><button class="sbtn g" data-h-click="h31">Seguir viendo</button>','cart');
- const poliAviso=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:12px;color:#92400e;line-height:1.4"><div style="font-weight:700;display:flex;align-items:center;gap:5px;margin-bottom:2px"><span>⚠️</span><span>Etapa Preparatoria Informativa</span></div>Distribuidora Jhon prepara su catálogo en línea. No se solicitan pagos ni claves bancarias por este medio. Al consultar aceptas nuestras <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas')}" style="color:#b45309;font-weight:700;text-decoration:underline">Políticas y Privacidad (Ley 81)</a>.</div>`;
+ const poliConsent=`<div id="sh_poli_box" style="background:var(--sf);border:1px solid var(--linea);border-radius:10px;padding:12px;margin:12px 0;font-size:12px;line-height:1.45;transition:border-color .2s,background .2s">
+  <div style="display:flex;align-items:center;gap:6px;font-weight:700;color:var(--txt);margin-bottom:6px">
+    <span style="font-size:14px">🛡️</span><span>Protección y Políticas de la Tienda (Ley 81 de Panamá)</span>
+  </div>
+  <p style="margin:0 0 8px;font-size:11.5px;color:var(--gris)">Distribuidora Jhon prepara su tienda en línea. No se solicitan pagos ni claves bancarias por este medio.</p>
+  <label class="pchk" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
+    <input type="checkbox" id="sh_chk_poli" style="width:18px;height:18px;margin-top:1px;accent-color:var(--p);cursor:pointer;flex-shrink:0" data-h-change="call" data-a-change="${_ha('poliChkLimpiar')}">
+    <span style="color:var(--txt)">He leído y acepto los <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas','2')}" style="color:var(--p);font-weight:700;text-decoration:underline">Términos de Uso</a> y la <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas','3')}" style="color:var(--p);font-weight:700;text-decoration:underline">Política de Privacidad</a>. Entiendo y acepto que la tienda está en <b>etapa preparatoria informativa</b>.</span>
+  </label>
+</div>`;
  const t=L.reduce((s,l)=>s+l.q*l.p,0),nt=($('sh_nt')||{}).value||'';
- shopM(`<h2 style="margin:6px 0">🛒 Su pedido</h2>${poliAviso}${L.map(l=>`<div class="kln"><img src="${l.img}" alt=""><div><b>${esc(l.n)}</b><small>${tdMoney(l.p)} c/u</small><button class="kdel" data-h-click="h46" data-a-click="${_ha(l.id)}">${kico(KTRASH,15)} Quitar</button></div><div class="kst"><button data-h-click="h45" data-a-click="${_ha(l.id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h44" data-a-click="${_ha(l.id)}" aria-label="Cambiar cantidad">${l.q}</button><button data-h-click="h43" data-a-click="${_ha(l.id)}" aria-label="Agregar uno">+</button></div></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:19px;font-weight:800;margin:14px 0 4px"><span>Total</span><span>${t>0?$$(t):'Consultar'}</span></div><small style="color:var(--tx2)">Precios sin ITBMS. Le confirmaremos disponibilidad y forma de pago.</small>${shopFleHTML()}<textarea id="sh_nt" rows="2" placeholder="Notas para el pedido (opcional)">${esc(nt)}</textarea>${shopHP()}<div class="serr" id="sh_m2" style="margin:6px 0"></div><div class="kact2"><button class="sbtn" id="sh_sb" data-h-click="h42">Enviar pedido</button><button class="sbtn g" data-h-click="h31">Seguir viendo</button></div>`,'cart')}
+ shopM(`<h2 style="margin:6px 0">🛒 Su pedido</h2>${L.map(l=>`<div class="kln"><img src="${l.img}" alt=""><div><b>${esc(l.n)}</b><small>${tdMoney(l.p)} c/u</small><button class="kdel" data-h-click="h46" data-a-click="${_ha(l.id)}">${kico(KTRASH,15)} Quitar</button></div><div class="kst"><button data-h-click="h45" data-a-click="${_ha(l.id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h44" data-a-click="${_ha(l.id)}" aria-label="Cambiar cantidad">${l.q}</button><button data-h-click="h43" data-a-click="${_ha(l.id)}" aria-label="Agregar uno">+</button></div></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:19px;font-weight:800;margin:14px 0 4px"><span>Total</span><span>${t>0?$$(t):'Consultar'}</span></div><small style="color:var(--tx2)">Precios sin ITBMS. Le confirmaremos disponibilidad y forma de pago.</small>${shopFleHTML()}<textarea id="sh_nt" rows="2" placeholder="Notas para el pedido (opcional)">${esc(nt)}</textarea>${shopHP()}${poliConsent}<div class="serr" id="sh_m2" style="margin:6px 0"></div><div class="kact2"><button class="sbtn" id="sh_sb" data-h-click="h42">Enviar pedido</button><button class="sbtn g" data-h-click="h31">Seguir viendo</button></div>`,'cart')}
 function shopVoz(txt){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{ss.cancel();const u=new SpeechSynthesisUtterance(txt),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-MX';u.rate=.96;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){window._tjw&&_tjw(e)}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,900)}}
 function shopPdfPrint(p){const l=p.lead||{},w=window.open('','_blank');if(!w)return alert('Permita las ventanas emergentes para descargar el comprobante.');
@@ -3131,8 +3300,14 @@ function tdLeadDel(id){if(!esAdmin()||!fbDb)return;const l=TD.leads.find(x=>x.id
  if(!confirm('¿Eliminar el registro de '+(l.name||'este cliente')+'?\nEsto no borra al cliente de su lista de Clientes si ya se importó, solo el registro de la tienda.\nEsta acción no se puede deshacer.'))return;
  fbDb.collection('tienda_leads').doc(id).delete().catch(()=>alert('No se pudo eliminar el registro. Revise su conexión o sus permisos.'))}
 
-function shopAskReg(){shopM(`<div style="text-align:center;padding:6px 0 2px"><h2 style="margin:6px 0 4px">Último paso</h2><p style="color:var(--tx2);margin:0 0 16px;font-size:14.5px;line-height:1.45">Complete sus datos para enviar su pedido. Solo se lo pediremos esta vez.</p></div><label class="kf"><span>Nombre completo *</span><input id="sh_n" autocomplete="name"></label><label class="kf"><span>Teléfono / WhatsApp *</span><input id="sh_t" type="tel" autocomplete="tel" inputmode="tel"></label><label class="kf"><span>Correo electrónico *</span><input id="sh_e" type="email" autocomplete="email" inputmode="email"></label><label class="kf"><span>Empresa (opcional)</span><input id="sh_c" autocomplete="organization"></label><label class="kf"><span>Dirección o ciudad (opcional)</span><input id="sh_d" autocomplete="street-address"></label>${shopHP()}<div class="serr" id="sh_m"></div><div class="kact2"><button class="sbtn" id="sh_b" data-h-click="h41">Registrarme y enviar pedido</button><button class="sbtn g" data-h-click="h40">Volver al pedido</button></div><p style="font-size:11.5px;margin:6px 0 0;text-align:center;color:var(--tx2)">Sus datos se usan solo para atender su pedido.</p>`,'reg');setTimeout(()=>{const i=$('sh_n');if(i)i.focus()},350)}
+function shopAskReg(){shopM(`<div style="text-align:center;padding:6px 0 2px"><h2 style="margin:6px 0 4px">Último paso</h2><p style="color:var(--tx2);margin:0 0 16px;font-size:14.5px;line-height:1.45">Complete sus datos para enviar su pedido. Solo se lo pediremos esta vez.</p></div><label class="kf"><span>Nombre completo *</span><input id="sh_n" autocomplete="name"></label><label class="kf"><span>Teléfono / WhatsApp *</span><input id="sh_t" type="tel" autocomplete="tel" inputmode="tel"></label><label class="kf"><span>Correo electrónico *</span><input id="sh_e" type="email" autocomplete="email" inputmode="email"></label><label class="kf"><span>Empresa (opcional)</span><input id="sh_c" autocomplete="organization"></label><label class="kf"><span>Dirección o ciudad (opcional)</span><input id="sh_d" autocomplete="street-address"></label>${shopHP()}<div id="sh_reg_poli_box" style="background:var(--sf);border:1px solid var(--linea);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:11.5px;line-height:1.4;text-align:left">  <label class="pchk" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">    <input type="checkbox" id="sh_chk_poli_reg" style="width:17px;height:17px;margin-top:1px;accent-color:var(--p);cursor:pointer;flex-shrink:0" data-h-change="call" data-a-change="${_ha('poliChkLimpiar')}">    <span style="color:var(--txt)">Acepto los <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas','2')}" style="color:var(--p);font-weight:700;text-decoration:underline">Términos</a> y la <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas','3')}" style="color:var(--p);font-weight:700;text-decoration:underline">Política de Privacidad (Ley 81)</a> en etapa preparatoria.</span>  </label></div><div class="serr" id="sh_m"></div><div class="kact2"><button class="sbtn" id="sh_b" data-h-click="h41">Registrarme y enviar pedido</button><button class="sbtn g" data-h-click="h40">Volver al pedido</button></div><p style="font-size:11.5px;margin:6px 0 0;text-align:center;color:var(--tx2)">Sus datos se usan solo para atender su pedido.</p>`,'reg');setTimeout(()=>{const i=$('sh_n');if(i)i.focus()},350)}
 async function shopRegSend(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('sh_t'),e=g('sh_e'),m=s=>{$('sh_m').textContent=s};
+ const chkReg=$('sh_chk_poli_reg')||$('sh_chk_poli');
+ if(chkReg&&!chkReg.checked){
+   m('Debe aceptar los Términos y la Política de Privacidad para registrarse.');
+   const box=$('sh_reg_poli_box')||$('sh_poli_box');if(box){box.style.borderColor='#ef4444';box.style.background='#fef2f2'}
+   chkReg.focus();return
+ }
  if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');{const r=shopAntiBot();if(r!=='ok')return m(shopAntiBotMsg(r))}
  const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};
  if(!emailjsListo())return shopRegFinish(l);
@@ -3224,8 +3399,27 @@ function shopAcc(quiet){const c=SH.cli,L=shopOrdMine(),n=L.length,tot=L.reduce((
  ${n?L.map(p=>{const e=shopEst(p.estado),num=String(p.id||'').slice(-6).toUpperCase(),q=(p.items||[]).reduce((s,i)=>s+(+i.q||0),0);return `<details class="kord"><summary><div><b>Pedido N° ${num}</b><small>${fd(p.ts)} · ${q} diseño(s)</small></div><div style="text-align:right"><b>${p.total>0?$$(p.total):'Consultar'}</b><span class="kst2" style="background:${e[1]}22;color:${e[1]}">${e[0]}</span></div></summary><div class="kordb">${(p.items||[]).map(i=>`<div class="kodl"><span>${i.q} × ${esc(i.n)}</span><span>${i.p>0?$$(i.q*i.p):'—'}</span></div>`).join('')}${p.nota?`<small style="display:block;margin:6px 0;color:var(--tx2)">Nota: ${esc(p.nota)}</small>`:''}<div class="kodb"><button class="sbtn" data-h-click="h36" data-a-click="${_ha(p.id)}">👁 Ver</button><button class="sbtn g" data-h-click="h35" data-a-click="${_ha(p.id)}">📄 Descargar</button></div></div></details>`}).join(''):'<div class="kempty" style="padding:26px 10px"><span class="e">🧾</span>Todavía no ha hecho pedidos.</div>'}
  <div class="kact2"><button class="sbtn g" data-h-click="h31">Cerrar</button></div>`,'acc');
  if(!quiet)shopOrdSync()}
-async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}{const er=shopEnvErr();if(er){const em=$('sh_m2');if(em)em.textContent=er;return}}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}{const r=shopAntiBot();if(r!=='ok'){const em=$('sh_m2');if(em)em.textContent=shopAntiBotMsg(r);return}}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){window._tjw&&_tjw(e)}try{shopMusPrime()}catch(e){window._tjw&&_tjw(e)}const c=SH.cli,id=uid();
- const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa||'',dir:c.dir||''},items:L.map(l=>({id:l.id,n:l.n,p:l.p,q:l.q})),total:L.reduce((s,l)=>s+l.q*l.p,0),nota:(($('sh_nt')||{}).value||SH.pendNote||'').trim().slice(0,500),ref:SH.ref,ts:Date.now(),estado:'nuevo'};
+async function poliChkLimpiar(){
+ const b=$('sh_poli_box'),br=$('sh_reg_poli_box'),m1=$('sh_m'),m2=$('sh_m2');
+ if(b){b.style.borderColor='var(--linea)';b.style.background='var(--sf)'}
+ if(br){br.style.borderColor='var(--linea)';br.style.background='var(--sf)'}
+ if(m1&&m1.textContent.includes('Términos'))m1.textContent='';
+ if(m2&&m2.textContent.includes('Términos'))m2.textContent='';
+}
+async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}
+ const chk=$('sh_chk_poli');
+ if(chk&&!chk.checked){
+   const em=$('sh_m2');if(em)em.textContent='Debe marcar la casilla aceptando los Términos y la Política de Privacidad para continuar.';
+   const box=$('sh_poli_box');if(box){box.style.borderColor='#ef4444';box.style.background='#fef2f2'}
+   chk.focus();return
+ }
+ {const er=shopEnvErr();if(er){const em=$('sh_m2');if(em)em.textContent=er;return}}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}{const r=shopAntiBot();if(r!=='ok'){const em=$('sh_m2');if(em)em.textContent=shopAntiBotMsg(r);return}}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){window._tjw&&_tjw(e)}try{shopMusPrime()}catch(e){window._tjw&&_tjw(e)}const c=SH.cli,id=uid();
+const dNow=new Date(),dFmt=fdate(hoy())+' '+dNow.toLocaleTimeString('es-PA',{hour:'2-digit',minute:'2-digit'});
+const auditTerminos={ok:true,fecha:dNow.toISOString(),fmt:dFmt,ver:'1.0 - Ley 81 Panamá',ua:(navigator.userAgent||'').slice(0,120)};
+const notaBase=(($('sh_nt')||{}).value||SH.pendNote||'').trim();
+const notaConEvidencia=(notaBase?notaBase+' · ':'')+'[🛡️ Aceptó Términos y Privacidad Ley 81: '+dFmt+']';
+const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa||'',dir:c.dir||'',terminos:auditTerminos},items:L.map(l=>({id:l.id,n:l.n,p:l.p,q:l.q})),total:L.reduce((s,l)=>s+l.q*l.p,0),nota:notaConEvidencia.slice(0,500),ref:SH.ref,ts:Date.now(),estado:'nuevo'};
+if(c){c.terminos=auditTerminos;try{localStorage.setItem('tj_cli_term_'+c.id,JSON.stringify(auditTerminos))}catch(e){}}
  {const fl=shopFleSel();let ed=null;if(fl){ed=shopEnvDatos(fl);p.envio=sanEnv(ed)}
   try{await fbDb.collection('tienda_pedidos').doc(id).set(p)}catch(e){let ok=false;
    if(fl){/* respaldo: si las reglas no admiten el campo envío, el transportista viaja en la nota */delete p.envio;p.nota=((p.nota?p.nota+'\n':'')+fleNotaTxt(fl,ed)).slice(0,1200);try{await fbDb.collection('tienda_pedidos').doc(id).set(p);ok=true}catch(e2){window._tjw&&_tjw(e2)}}
