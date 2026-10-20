@@ -530,14 +530,85 @@ const fdate=d=>d.split('-').reverse().join('/');const ymd=d=>d.getFullYear()+'-'
 const act=()=>DB.fac.filter(f=>!f.anulada);
 const R={
 home(){editEmails=false;const h=hoy(),m=h.slice(0,7),a=act(),sum=l=>l.reduce((s,f)=>s+f.total,0);
- const cnt={};a.forEach(f=>(f.items||[]).forEach(i=>cnt[i.d]=(cnt[i.d]||0)+i.q));const top=Object.entries(cnt).sort((x,y)=>y[1]-x[1])[0];
- $('v').innerHTML=`<div class="kp"><div class="card"><small>Ventas de hoy</small><b>${$$(sum(a.filter(f=>f.fecha==h)))}</b></div><div class="card"><small>Ventas del mes</small><b>${$$(sum(a.filter(f=>f.fecha.startsWith(m))))}</b></div><div class="card"><small>Facturas emitidas</small><b>${a.length}</b></div><div class="card"><small>Más vendida</small><b style="font-size:16px">${top?esc(top[0])+' ('+top[1]+')':'—'}</b></div></div>
- <div class="cgv"><div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px"><h3 style="margin:0">Ventas</h3><div class="pt" id="ptVentas">${[['dia','Día'],['semana','Semana'],['mes','Mes'],['anio','Año']].map(([p,l])=>`<button class="${p==perVentasSel?'on':''}" data-h-click="h325" data-a-click="${_ha(p)}">${l}</button>`).join('')}</div></div><canvas id="chVentas"></canvas><div class="nota" id="chWarn" style="display:none;margin-top:10px">No se pudieron cargar los gráficos. Se necesita conexión a internet la primera vez que abre el panel (usan la librería Chart.js). Conéctese e intente de nuevo, o recargue la página. Si el problema sigue, puede que un bloqueador de anuncios esté impidiendo la conexión a cdnjs.cloudflare.com.</div></div></div>
- <div class="cg"><div class="card" style="height:280px;display:flex;flex-direction:column"><h3>Productos más vendidos</h3><canvas id="chProd" style="flex:1;min-height:0"></canvas></div><div class="card" style="height:280px;display:flex;flex-direction:column"><h3>Mejores clientes</h3><canvas id="chCli" style="flex:1;min-height:0"></canvas></div></div>
- <div class="card"><h3>Acciones rápidas</h3><button class="btn p" data-h-click="h324">🧾 Nueva factura</button> <button class="btn" data-h-click="h323">🎴 Productos</button> <button class="btn" data-h-click="h322">👥 Clientes</button> <button class="btn" data-h-click="h321">✉ Enviar reporte</button> <button class="btn s" data-h-click="h320">${DB.fac.some(f=>f.demo)?'🗑 Quitar datos de ejemplo':'🧪 Cargar datos de ejemplo'}</button></div>
- <div class="card"><h3>Últimas facturas</h3>${tabFac(DB.fac.slice(-5).reverse())}</div>
- <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0;cursor:pointer" data-h-click="h319">Correos predeterminados <span id="caretEmail">${cardState.email?'▾':'▸'}</span></h3><button class="btn s" id="btnToggleEmail" data-h-click="h319">${cardState.email?'Minimizar':'Maximizar'}</button></div><div id="bodyEmail" style="display:${cardState.email?'':'none'}"><div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn s" id="btnEditE" data-h-click="h286">✏️ Editar</button><button class="btn s" id="btnDoneE" style="display:none" data-h-click="h285">✔ Listo</button></div><p style="font-size:12.5px;color:var(--gris);margin-top:-6px">Se sugieren al enviar reportes o facturas por correo.</p><div class="g" style="margin-bottom:10px"><div><label>Nombre</label><input id="e_n" placeholder="Ej. Contabilidad" disabled></div><div><label>Correo</label><input id="e_m" type="email" placeholder="correo@ejemplo.com" disabled></div></div><button class="btn s" id="btnAddE" data-h-click="h284" disabled>+ Agregar correo</button><div id="elist" style="margin-top:12px"></div></div></div>
-<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><h3 style="margin:0;cursor:pointer" data-h-click="h318">Datos de la empresa (aparecen en la factura) <span id="caretCfg">${cardState.cfg?'▾':'▸'}</span></h3><button class="btn s" id="btnToggleCfg" data-h-click="h318">${cardState.cfg?'Minimizar':'Maximizar'}</button></div><div id="bodyCfg" style="display:${cardState.cfg?'':'none'}"><div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn s" id="btnEditCfg" data-h-click="h289">✏️ Editar</button></div><div class="g"><div><label>Nombre</label><input id="c1" value="${esc(DB.cfg.nombre)}" disabled></div><div><label>Teléfono</label><input id="c3" value="${esc(DB.cfg.tel)}" disabled></div><div><label>Correo</label><input id="c6" value="${esc(DB.cfg.email)}" disabled></div><div><label>Ubicación</label><input id="c4" value="${esc(DB.cfg.dir)}" disabled></div><div><label>Banco</label><input id="c7" value="${esc(DB.cfg.banco)}" disabled></div><div><label>Tipo de cuenta</label><input id="c8" value="${esc(DB.cfg.tcuenta)}" disabled></div><div><label>N.º de cuenta</label><input id="c9" value="${esc(DB.cfg.cuenta)}" disabled></div><div><label>Yappy</label><input id="c10" value="${esc(DB.cfg.yappy)}" disabled></div><div><label>ITBMS %</label><input id="c5" type="number" value="${DB.cfg.itbms}" disabled></div><div><label>Próximo n.º de factura</label><input id="c11" type="number" value="${DB.cfg.sig}" disabled></div></div><br><button class="btn p" id="btnSaveCfg" style="display:none" data-h-click="h288">💾 Guardar datos</button> <button class="btn s" id="btnCancelCfg" style="display:none" data-h-click="h317">Cancelar</button></div></div>`;dibujarGraficos()},
+ const ventasHoy=sum(a.filter(f=>f.fecha==h)),ventasMes=sum(a.filter(f=>f.fecha.startsWith(m)));
+ const cantHoy=a.filter(f=>f.fecha==h).length,cantMes=a.filter(f=>f.fecha.startsWith(m)).length;
+ const totalFac=a.length,ticketProm=totalFac?(sum(a)/totalFac):0;
+ const cnt={};a.forEach(f=>(f.items||[]).forEach(i=>cnt[i.d]=(cnt[i.d]||0)+i.q));
+ const top=Object.entries(cnt).sort((x,y)=>y[1]-x[1])[0];
+ const peds=(typeof TD!=='undefined'&&TD.peds)||[],pedNuevos=peds.filter(p=>p.estado==='nuevo'||p.estado==='pendiente'||!p.estado).length;
+ 
+ const hero=`<div class="dash-hero" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;background:var(--sf);border:1px solid var(--linea);border-radius:14px;padding:16px 20px;margin-bottom:18px">
+   <div>
+     <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+       <span style="font-size:20px">⚡</span>
+       <h2 style="margin:0;font-size:19px;font-weight:700;letter-spacing:-.02em">Panel de Control Ejecutivo</h2>
+       <span style="display:inline-flex;align-items:center;gap:5px;font-size:11.5px;padding:3px 8px;border-radius:12px;background:rgba(16,185,129,.12);color:#10b981;font-weight:600">● En línea</span>
+     </div>
+     <p style="margin:0;font-size:12.5px;color:var(--gris)">Resumen financiero y operativo en tiempo real · <b>${h}</b></p>
+   </div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap">
+     <button class="btn p" data-h-click="h324" style="display:inline-flex;align-items:center;gap:6px"><span>🧾</span><span>Nueva factura</span></button>
+     <button class="btn" data-h-click="h323" style="display:inline-flex;align-items:center;gap:6px"><span>🎴</span><span>Catálogo</span></button>
+   </div>
+ </div>`;
+ 
+ const kpis=`<div class="kp" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;margin-bottom:18px">
+   <div class="card kpi-card" style="margin:0;border-left:4px solid #10b981;position:relative">
+     <div style="display:flex;justify-content:space-between;align-items:center">
+       <small style="color:var(--gris);font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Ventas del mes</small>
+       <span style="width:28px;height:28px;border-radius:6px;background:rgba(16,185,129,.15);color:#10b981;display:flex;align-items:center;justify-content:center;font-size:14px">📈</span>
+     </div>
+     <b style="display:block;font-size:26px;margin:8px 0 2px;letter-spacing:-.02em;color:var(--txt)">${$$(ventasMes)}</b>
+     <small style="color:var(--gris);font-size:11.5px"><span style="color:#10b981;font-weight:600">${cantMes} facturas</span> este mes</small>
+   </div>
+   <div class="card kpi-card" style="margin:0;border-left:4px solid var(--az);position:relative">
+     <div style="display:flex;justify-content:space-between;align-items:center">
+       <small style="color:var(--gris);font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Ventas de hoy</small>
+       <span style="width:28px;height:28px;border-radius:6px;background:rgba(224,69,123,.15);color:var(--az);display:flex;align-items:center;justify-content:center;font-size:14px">📅</span>
+     </div>
+     <b style="display:block;font-size:26px;margin:8px 0 2px;letter-spacing:-.02em;color:var(--txt)">${$$(ventasHoy)}</b>
+     <small style="color:var(--gris);font-size:11.5px"><span style="color:var(--az);font-weight:600">${cantHoy} ventas</span> registradas hoy</small>
+   </div>
+   <div class="card kpi-card" style="margin:0;border-left:4px solid #6366f1;position:relative">
+     <div style="display:flex;justify-content:space-between;align-items:center">
+       <small style="color:var(--gris);font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Facturas emitidas</small>
+       <span style="width:28px;height:28px;border-radius:6px;background:rgba(99,102,241,.15);color:#6366f1;display:flex;align-items:center;justify-content:center;font-size:14px">🧾</span>
+     </div>
+     <b style="display:block;font-size:26px;margin:8px 0 2px;letter-spacing:-.02em;color:var(--txt)">${totalFac}</b>
+     <small style="color:var(--gris);font-size:11.5px">Promedio: <b style="color:#6366f1">${$$(ticketProm)}</b> / fac.</small>
+   </div>
+   <div class="card kpi-card" style="margin:0;border-left:4px solid #8b5cf6;position:relative">
+     <div style="display:flex;justify-content:space-between;align-items:center">
+       <small style="color:var(--gris);font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Tienda Online</small>
+       <span style="width:28px;height:28px;border-radius:6px;background:rgba(139,92,246,.15);color:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:14px">🛍️</span>
+     </div>
+     <b style="display:block;font-size:26px;margin:8px 0 2px;letter-spacing:-.02em;color:var(--txt)">${peds.length}</b>
+     <small style="color:var(--gris);font-size:11.5px"><span style="color:#8b5cf6;font-weight:600">${pedNuevos} pedidos</span> por atender</small>
+   </div>
+   <div class="card kpi-card" style="margin:0;border-left:4px solid #f59e0b;position:relative">
+     <div style="display:flex;justify-content:space-between;align-items:center">
+       <small style="color:var(--gris);font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.04em">Producto estrella</small>
+       <span style="width:28px;height:28px;border-radius:6px;background:rgba(245,158,11,.15);color:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:14px">⭐</span>
+     </div>
+     <b style="display:block;font-size:17px;margin:12px 0 2px;letter-spacing:-.01em;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${top?esc(top[0]):''}">${top?esc(top[0]):'—'}</b>
+     <small style="color:var(--gris);font-size:11.5px"><span style="color:#f59e0b;font-weight:600">${top?top[1]+' unid.':'0 unid.'}</span> vendidas</small>
+   </div>
+ </div>`;
+ 
+ const chartMain=`<div class="cgv"><div class="card" style="margin:0"><div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px"><div><h3 style="margin:0;font-size:16px;font-weight:700">📊 Evolución de Ventas</h3><small style="color:var(--gris);font-size:12px">Histórico de facturación acumulada por periodo</small></div><div class="pt" id="ptVentas">${[['dia','Día'],['semana','Semana'],['mes','Mes'],['anio','Año']].map(([p,l])=>`<button class="${p==perVentasSel?'on':''}" data-h-click="h325" data-a-click="${_ha(p)}">${l}</button>`).join('')}</div></div><div style="position:relative;height:280px"><canvas id="chVentas"></canvas></div><div class="nota" id="chWarn" style="display:none;margin-top:10px">No se pudieron cargar los gráficos. Verifique su conexión para cargar Chart.js.</div></div></div>`;
+ 
+ const chartSub=`<div class="cg" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px;margin-bottom:18px"><div class="card" style="margin:0;display:flex;flex-direction:column;height:300px"><h3 style="margin:0 0 2px;font-size:15px">🔥 Top 5 Productos Más Vendidos</h3><small style="color:var(--gris);font-size:12px;margin-bottom:8px">Unidades despachadas</small><div style="flex:1;min-height:0;position:relative"><canvas id="chProd"></canvas></div></div><div class="card" style="margin:0;display:flex;flex-direction:column;height:300px"><h3 style="margin:0 0 2px;font-size:15px">⭐ Mejores Clientes</h3><small style="color:var(--gris);font-size:12px;margin-bottom:8px">Total acumulado facturado</small><div style="flex:1;min-height:0;position:relative"><canvas id="chCli"></canvas></div></div></div>`;
+ 
+ const chartDonut=`<div class="card" style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div><h3 style="margin:0;font-size:15px">🥧 Distribución de Ventas por Ocasión / Categoría</h3><small style="color:var(--gris);font-size:12px">Participación por tipo de tarjeta en el catálogo</small></div></div><div style="height:220px;position:relative"><canvas id="chCat"></canvas></div></div>`;
+ 
+ const quick=`<div class="card" style="margin-bottom:18px"><h3 style="margin:0 0 10px;font-size:15px">⚡ Acciones Rápidas</h3><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn p" data-h-click="h324">🧾 Nueva factura</button> <button class="btn" data-h-click="h323">🎴 Productos</button> <button class="btn" data-h-click="h322">👥 Clientes</button> <button class="btn" data-h-click="h321">✉ Enviar reporte</button> <button class="btn s" data-h-click="h320">${DB.fac.some(f=>f.demo)?'🗑 Quitar datos de ejemplo':'🧪 Cargar datos de ejemplo'}</button></div></div>`;
+ 
+ const facs=`<div class="card" style="margin-bottom:18px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><h3 style="margin:0;font-size:15px">🧾 Últimas facturas emitidas</h3><button class="btn s" data-h-click="h324">+ Emitir nueva</button></div>${tabFac(DB.fac.slice(-6).reverse())}</div>`;
+ 
+ const legacyCards=`<div class="card" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0;font-size:14px;cursor:pointer" data-h-click="h319">✉️ Correos predeterminados <span id="caretEmail">${cardState.email?'▾':'▸'}</span></h3><button class="btn s" id="btnToggleEmail" data-h-click="h319">${cardState.email?'Minimizar':'Maximizar'}</button></div><div id="bodyEmail" style="display:${cardState.email?'':'none'};margin-top:10px"><div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn s" id="btnEditE" data-h-click="h286">✏️ Editar</button><button class="btn s" id="btnDoneE" style="display:none" data-h-click="h285">✔ Listo</button></div><p style="font-size:12.5px;color:var(--gris);margin-top:-6px">Se sugieren al enviar reportes o facturas por correo.</p><div class="g" style="margin-bottom:10px"><div><label>Nombre</label><input id="e_n" placeholder="Ej. Contabilidad" disabled></div><div><label>Correo</label><input id="e_m" type="email" placeholder="correo@ejemplo.com" disabled></div></div><button class="btn s" id="btnAddE" data-h-click="h284" disabled>+ Agregar correo</button><div id="elist" style="margin-top:12px"></div></div></div><div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h3 style="margin:0;font-size:14px;cursor:pointer" data-h-click="h318">🏢 Datos de la empresa <span id="caretCfg">${cardState.cfg?'▾':'▸'}</span></h3><button class="btn s" id="btnToggleCfg" data-h-click="h318">${cardState.cfg?'Minimizar':'Maximizar'}</button></div><div id="bodyCfg" style="display:${cardState.cfg?'':'none'};margin-top:10px"><div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn s" id="btnEditCfg" data-h-click="h289">✏️ Editar</button></div><div class="g"><div><label>Nombre</label><input id="c1" value="${esc(DB.cfg.nombre)}" disabled></div><div><label>Teléfono</label><input id="c3" value="${esc(DB.cfg.tel)}" disabled></div><div><label>Correo</label><input id="c6" value="${esc(DB.cfg.email)}" disabled></div><div><label>Ubicación</label><input id="c4" value="${esc(DB.cfg.dir)}" disabled></div><div><label>Banco</label><input id="c7" value="${esc(DB.cfg.banco)}" disabled></div><div><label>Tipo de cuenta</label><input id="c8" value="${esc(DB.cfg.tcuenta)}" disabled></div><div><label>N.º de cuenta</label><input id="c9" value="${esc(DB.cfg.cuenta)}" disabled></div><div><label>Yappy</label><input id="c10" value="${esc(DB.cfg.yappy)}" disabled></div><div><label>ITBMS %</label><input id="c5" type="number" value="${DB.cfg.itbms}" disabled></div><div><label>Próximo n.º de factura</label><input id="c11" type="number" value="${DB.cfg.sig}" disabled></div></div><br><button class="btn p" id="btnSaveCfg" style="display:none" data-h-click="h288">💾 Guardar datos</button> <button class="btn s" id="btnCancelCfg" style="display:none" data-h-click="h317">Cancelar</button></div></div>`;
+ 
+ $('v').innerHTML = `<div id="homeWaSlot"></div>` + hero + kpis + chartMain + chartSub + chartDonut + `<div id="homeMapSlot"></div><div id="homeOps"></div>` + quick + facs + legacyCards;
+ dibujarGraficos()},
 nueva(){const opts=DB.prod.map(p=>`<option value="${p.id}">${esc(p.n)} — ${$$(p.p)}</option>`).join('');
  $('v').innerHTML=`<div class="card"><h3>Factura n.º ${DB.cfg.sig}</h3><div class="g"><div><label>Fecha</label><input id="f_fecha" type="date" value="${hoy()}" data-h-change="h316"></div>
  <div><label>Cliente registrado</label><select id="f_cs" data-h-change="h315"><option value="">— Consumidor final —</option>${DB.cli.map(c=>`<option value="${c.id}">${esc(c.n)}</option>`).join('')}</select></div>
@@ -580,7 +651,7 @@ config(){editEmails=false;
  const c4=wrapCardInner('cfg_notif','🔔 Notificaciones de la agenda',`<p style="font-size:12.5px;color:var(--gris);margin-top:-6px">Aviso con sonido para los eventos que tengan "Avisar". Funciona mientras el panel esté abierto en el navegador.</p><div class="g"><div><label>Sonido</label><select data-h-change="h283"><option value="1" ${DB.cfg.snd?'selected':''}>Activado</option><option value="0" ${DB.cfg.snd?'':'selected'}>Silenciado</option></select></div><div><label>Tono</label><select data-h-change="h282">${[['campana','🔔 Campana'],['suave','🎵 Suave'],['alerta','🚨 Alerta'],['digital','📟 Digital']].map(([k,l])=>`<option value="${k}" ${DB.cfg.tono==k?'selected':''}>${l}</option>`).join('')}</select></div><div><label>Volumen: <span id="volv">${DB.cfg.vol}%</span></label><input type="range" min="10" max="100" value="${DB.cfg.vol}" data-h-input="h281" data-h-change="h280"></div></div><br><button class="btn p" data-h-click="h279">▶ Probar sonido</button> <button class="btn" data-h-click="h278">🔔 Probar notificación</button> <button class="btn" data-h-click="h277">🖥 Avisos del sistema</button> <small id="permSt" style="color:var(--gris)">${window.Notification&&Notification.permission==='granted'&&DB.cfg.nsys?'✔ Activados':''}</small>`);
  const c5=wrapCardInner('cfg_nav','🧭 Orden de los botones del menú',`<p style="font-size:12.5px;color:var(--gris);margin-top:-6px">Toque "Ordenar botones" y mueva cada botón con sus flechas, o arrástrelo con el dedo o el mouse. Al terminar toque "Listo".</p><button class="btn p" id="navEdBtn2" data-h-click="h276">${navEd?'✔ Listo':'↕ Ordenar botones'}</button> <button class="btn" data-h-click="h275">↺ Restablecer orden</button>`);
  const c6=wrapCardInner('cfg_respaldo','💾 Respaldo y descarga',`<p style="font-size:12.5px;color:var(--gris);margin-top:-6px"><span class="cloudSt">☁ Conectando…</span><br>Sus datos se sincronizan automáticamente. Puede además descargar un respaldo como copia adicional.</p><button class="btn p" data-h-click="h274">⬇ Descargar respaldo</button> <button class="btn s" data-h-click="h273">⬆ Restaurar respaldo</button>`);
- const tb=`<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap"><small style="color:var(--gris);font-size:12px">Todas las secciones aparecen minimizadas por defecto. Toque cualquier sección para ver sus opciones.</small><div style="display:flex;gap:6px"><button class="btn s" data-h-click="call" data-a-click="${_ha('cfgExpandAll')}">▾ Expandir todo</button><button class="btn s" data-h-click="call" data-a-click="${_ha('cfgCollapseAll')}">▸ Minimizar todo</button></div></div>`;
+ const tb=`<div id="cfgTb" style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap"><small style="color:var(--gris);font-size:12px">Todas las secciones aparecen minimizadas por defecto. Toque cualquier sección para ver sus opciones.</small><div style="display:flex;gap:6px"><button class="btn s" data-h-click="call" data-a-click="${_ha('cfgExpandAll')}">▾ Expandir todo</button><button class="btn s" data-h-click="call" data-a-click="${_ha('cfgCollapseAll')}">▸ Minimizar todo</button></div></div>`;
  $('v').innerHTML=tb+`<div class="card">${c1}</div><div class="card">${c2}</div><div class="card">${c3}</div><div class="card">${c4}</div><div class="card">${c5}</div><div class="card">${c6}</div>`;
  renderE()},
 agenda(){const t=hoy(),pend=l=>l.filter(o=>!agDn(o)).length,q0=AG.q,c0=AG.c;AG.q='';AG.c='';const hoyN=pend(agOcc(t,t)),sem=pend(agOcc(t,addD(t,6))),late=pend(agOcc(addD(t,-60),addD(t,-1))),tot=DB.agenda.length;AG.q=q0;AG.c=c0;
@@ -1070,9 +1141,23 @@ function dibujarGraficos(){
  if(window._chV)window._chV.destroy();
  if(window._chP)window._chP.destroy();
  if(window._chC)window._chC.destroy();
- window._chV=new Chart(c1,{type:'line',data:{labels:etq,datasets:[{label:'Ventas ($)',data:datos,borderColor:az,backgroundColor:az+'26',fill:true,tension:.3,pointRadius:3,pointBackgroundColor:az}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' $'+c.parsed.y.toFixed(2)}}},scales:{x:{ticks:{color:gris,font:{size:11}},grid:{display:false}},y:{ticks:{color:gris,font:{size:11},callback:v=>'$'+v},grid:{color:linea},beginAtZero:true}}}});
- window._chP=new Chart(c2,{type:'bar',data:{labels:top5.length?top5.map(x=>x[0]):['Sin datos'],datasets:[{label:'Unidades',data:top5.length?top5.map(x=>x[1]):[0],backgroundColor:az,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' '+c.parsed.x+' unid.'}}},scales:{x:{ticks:{color:gris,font:{size:11}},grid:{color:linea},beginAtZero:true,precision:0},y:{ticks:{color:txt,font:{size:11.5}},grid:{display:false}}}}});
- window._chC=new Chart(c3,{type:'bar',data:{labels:topCli.length?topCli.map(x=>x[0]):['Sin datos'],datasets:[{label:'Total ($)',data:topCli.length?topCli.map(x=>x[1]):[0],backgroundColor:amb,borderRadius:4}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>' $'+c.parsed.x.toFixed(2)}}},scales:{x:{ticks:{color:gris,font:{size:11},callback:v=>'$'+v},grid:{color:linea},beginAtZero:true},y:{ticks:{color:txt,font:{size:11.5}},grid:{display:false}}}}})
+ if(window._chCat)window._chCat.destroy();
+ 
+ let grad=az+'26';
+ try{const ctx1=c1.getContext('2d');const g=ctx1.createLinearGradient(0,0,0,260);g.addColorStop(0,az+'40');g.addColorStop(0.8,az+'08');g.addColorStop(1,az+'00');grad=g}catch(e){}
+ window._chV=new Chart(c1,{type:'line',data:{labels:etq,datasets:[{label:'Ventas ($)',data:datos,borderColor:az,backgroundColor:grad,fill:true,tension:.38,borderWidth:2.8,pointRadius:datos.length>18?0:3.5,pointHoverRadius:6,pointBackgroundColor:'#fff',pointBorderColor:az,pointBorderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e293b',padding:10,cornerRadius:8,callbacks:{label:function(c){return ' Facturado: $'+(+c.parsed.y).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}}}},scales:{x:{ticks:{color:gris,font:{size:11}},grid:{display:false}},y:{ticks:{color:gris,font:{size:11},callback:function(v){return '$'+v}},grid:{color:linea+'55'},beginAtZero:true}}}});
+ window._chP=new Chart(c2,{type:'bar',data:{labels:top5.length?top5.map(x=>x[0].length>22?x[0].slice(0,22)+'…':x[0]):['Sin datos'],datasets:[{label:'Unidades',data:top5.length?top5.map(x=>x[1]):[0],backgroundColor:az,borderRadius:6,maxBarThickness:22}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e293b',padding:10,cornerRadius:8,callbacks:{label:function(c){return ' '+c.parsed.x+' unid. vendidas'}}}},scales:{x:{ticks:{color:gris,font:{size:11}},grid:{color:linea+'55'},beginAtZero:true,precision:0},y:{ticks:{color:txt,font:{size:11.5,weight:'600'}},grid:{display:false}}}}});
+ window._chC=new Chart(c3,{type:'bar',data:{labels:topCli.length?topCli.map(x=>x[0].length>22?x[0].slice(0,22)+'…':x[0]):['Sin datos'],datasets:[{label:'Total ($)',data:topCli.length?topCli.map(x=>x[1]):[0],backgroundColor:amb,borderRadius:6,maxBarThickness:22}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e293b',padding:10,cornerRadius:8,callbacks:{label:function(c){return ' Total: $'+(+c.parsed.x).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}}}},scales:{x:{ticks:{color:gris,font:{size:11},callback:function(v){return '$'+v}},grid:{color:linea+'55'},beginAtZero:true},y:{ticks:{color:txt,font:{size:11.5,weight:'600'}},grid:{display:false}}}}});
+ 
+ const c4=$('chCat');
+ if(c4){
+  const catM={};
+  a.forEach(f=>{(f.items||[]).forEach(it=>{const c=it.c||it.cat||(DB.prod.find(p=>p.id===it.id)||{}).cat||'Tarjetas';catM[c]=(catM[c]||0)+(it.total||(it.p*it.q)||0)})});
+  const cEnt=Object.entries(catM).sort((x,y)=>y[1]-x[1]).slice(0,6);
+  const cLab=cEnt.length?cEnt.map(x=>x[0]):['General'],cVal=cEnt.length?cEnt.map(x=>+x[1].toFixed(2)):[1];
+  const cPal=['#E0457B','#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'];
+  window._chCat=new Chart(c4,{type:'doughnut',data:{labels:cLab,datasets:[{data:cVal,backgroundColor:cPal.slice(0,cLab.length),borderWidth:2,borderColor:'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'right',labels:{color:txt,font:{size:11.5},boxWidth:12,padding:12}},tooltip:{backgroundColor:'#1e293b',padding:10,cornerRadius:8,callbacks:{label:function(c){return ' $'+(+c.parsed).toFixed(2)}}}}}});
+ }
  }catch(e){console.error('Error al dibujar gráficos:',e);if(w){w.style.display='block';w.textContent='No se pudieron generar los gráficos: '+((e&&e.message)||e)}}
 }
 const idb=()=>new Promise((a,b)=>{const r=indexedDB.open('tj_cat',1);r.onupgradeneeded=()=>r.result.createObjectStore('f',{keyPath:'id'});r.onsuccess=()=>a(r.result);r.onerror=()=>b(r.error)});
@@ -2143,7 +2228,7 @@ const _nvi=nav;nav=function(){_nvi.apply(this,arguments);try{navIcons()}catch(e)
 // ===================== TIENDA VIRTUAL =====================
 const SHOP=/[?&]tienda(=|&|$)/.test(location.search);
 const TD={items:[],leads:[],peds:[],cat:[]},SH={items:[],cart:{},cli:null,ref:'admin',cat:'',q:'',err:0};
-const PALETAS=[['shop','🟣 Shop Mist (Original)','#5433eb','#f2f4f5'],['lino','🌾 Lino Cálido & Ámbar','#8a5a12','#f7f4ed'],['rosa','💌 Rosa Blush (Amor)','#c8183c','#faf1f4'],['esmeralda','💍 Eucalipto & Esmeralda','#0e3c30','#f0f5f2'],['violeta','🎈 Lavanda & Púrpura','#6b32b8','#f4f0fa'],['oceano','🌊 Hielo Nórdico & Océano','#0e6b78','#eef4f7'],['borgona','🎓 Marino & Oro Real','#121e42','#f0f2f7'],['clasico','⚫ Clásico Blanco Puro','#1D1D1F','#ffffff'],['carbon','🪨 Carbón & Piedra','#30363D','#f0f1f3'],['dark','🌙 Dark Obsidian Pro','#7c66ff','#0c0c0e']];
+const PALETAS=[['clasico','⚫ Clásico (blanco y negro)','#1D1D1F'],['rosa','💌 Rosa (Amor)','#C8183C'],['esmeralda','💍 Esmeralda (Boda)','#0E3C30'],['dorado','🎉 Dorado (Cumpleaños)','#8A5A12'],['oceano','🎊 Petróleo (Felicitaciones)','#0E6B78'],['violeta','🎈 Violeta (Fiesta)','#6B32B8'],['borgona','🎓 Marino y oro (Graduación)','#121E42'],['carbon','🪨 Carbón','#30363D']];
 const tdBase=()=>location.href.split(/[?#]/)[0];
 const BUILD=(Date.parse(document.lastModified)||0).toString(36);const tdLink=()=>((typeof esAdmin==='function'&&!esAdmin()&&TD.base)||tdBase())+'?tienda=1&v='+encodeURIComponent(chatMe()||'admin')+'&r='+(TD.rev||BUILD);
 const tdMoney=n=>+n>0?$$(+n):'Consultar';
@@ -2551,7 +2636,7 @@ function etqImprimirLote(){
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbDb.collection(c):fbDb.collection(c).where('ref','==',me);let f1=true,f2=true;
- fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=cd.wordmark||'shop';TD.heroTitle=cd.heroTitle||'Tarjetería Jhon';TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'clasico';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -2588,36 +2673,7 @@ function tdBadgeSet(id){const b=[...document.querySelectorAll('.tdbdk[data-id="'
 function tdBadgeBulk(on){const k=$('tdBd').value,ids=[...document.querySelectorAll('.tdck:checked')].map(x=>x.value);if(!ids.length)return alert('Marque los productos primero.');
  ids.forEach(id=>{const c=document.querySelector('.tdbdk[data-id="'+id+'"][value="'+k+'"]');if(c){c.checked=!!on;tdBadgeSet(id)}})}
 const PAFLAG="<svg viewBox='0 0 60 40' width='20' height='13' style='vertical-align:-2px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.15)'><rect width='60' height='40' fill='#fff'/><rect x='30' width='30' height='20' fill='#D21034'/><rect y='20' width='30' height='20' fill='#005293'/><polygon points='15.00,3.00 16.65,7.73 21.66,7.84 17.66,10.87 19.11,15.66 15.00,12.80 10.89,15.66 12.34,10.87 8.34,7.84 13.35,7.73' fill='#005293'/><polygon points='45.00,23.00 46.65,27.73 51.66,27.84 47.66,30.87 49.11,35.66 45.00,32.80 40.89,35.66 42.34,30.87 38.34,27.84 43.35,27.73' fill='#D21034'/><rect x='.5' y='.5' width='59' height='39' fill='none' stroke='#cfd6df'/></svg>";
-function shopBrandSave(){
- if(!esAdmin()||!fbDb)return alert("Se requieren permisos de administrador y conexión a internet.");
- const wm=(($("sh_cfg_wm")&&$("sh_cfg_wm").value.trim())||"shop").slice(0,30);
- const title=(($("sh_cfg_title")&&$("sh_cfg_title").value.trim())||"Tarjetería Jhon").slice(0,60);
- const sub=(($("sh_cfg_sub")&&$("sh_cfg_sub").value.trim())||"Cada momento merece una tarjeta especial · Tarjetas para toda ocasión").slice(0,160);
- fbDb.collection("tienda_items").doc("__cfg").set({__cfg:true,wordmark:wm,heroTitle:title,heroSub:sub,ts:Date.now()},{merge:true})
-  .then(()=>{TD.wordmark=wm;TD.heroTitle=title;TD.heroSub=sub;alert("✔ Logo y textos de portada guardados. Ya se ven en la tienda virtual.");R.config()})
-  .catch(e=>alert("No se pudo guardar: "+((e&&e.message)||e)));
-}
-function xmasCard(){
- const t=TD.tema||'',hm=TD.heroMode||'mix',pal=TD.paleta||'shop';
- const bt=(k,l)=>`<button class="btn ${t===k?'p':''}" data-h-click="h103" data-a-click="${_ha(k)}">${l}</button>`;
- const hb=(k,l)=>`<button class="btn ${hm===k?'p':''}" data-h-click="h102" data-a-click="${_ha(k)}">${l}</button>`;
- const pb=([k,l,acc,bg])=>`<button class="btn ${pal===k?'p':''}" style="display:inline-flex;align-items:center;gap:8px" data-h-click="h101" data-a-click="${_ha(k)}"><span style="display:inline-flex;align-items:center;border-radius:10px;padding:2px;background:${bg};box-shadow:0 0 0 1px rgba(0,0,0,.15)"><span style="width:12px;height:12px;border-radius:50%;background:${acc}"></span></span><span>${l}</span></button>`;
- return `<h3 style="margin:0">🎨 Temática de temporada</h3><p style="font-size:12.5px;color:var(--gris)">Viste la tienda virtual con una temática especial (Navidad, Verano o Mes patrio). Se activa para todos los clientes al instante y tiene prioridad sobre la paleta.</p><p style="margin:8px 0">${t==='madres'?'🌸 <b>Día de las Madres</b> activado.':t==='padres'?'👔 <b>Día del Padre</b> activado.':t==='trabajador'?'🛠️ <b>Día del Trabajador</b> activado.':t==='galaxia'?'🌌 <b>Galaxia Cósmica</b> activada.':t==='amor'?'💖 <b>Día del Amor y la Amistad</b> activado.':t==='navidad'?'🎄 <b>Navidad</b> activada.':t==='verano'?'☀️ <b>Verano</b> activado.':t==='panama'?PAFLAG+' <b>Mes patrio de Panamá</b> activado.':'⛔ <b>Sin temática</b> (diseño normal).'}</p><div style="display:flex;gap:8px;flex-wrap:wrap">${bt('','⛔ Ninguna')}${bt('madres','🌸 Día de las Madres')}${bt('padres','👔 Día del Padre')}${bt('trabajador','🛠️ Día del Trabajador')}${bt('galaxia','🌌 Galaxia')}${bt('amor','💖 Día del Amor')}${bt('navidad','🎄 Navidad')}${bt('verano','☀️ Verano')}${bt('panama',PAFLAG+' Mes patrio')}<button class="btn" data-h-click="h100">👁 Ver cómo queda</button></div>
- <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
- <h3 style="margin:0">🎨 Paletas PRO: Fondo de página y colores coordinados</h3><p style="font-size:12.5px;color:var(--gris)">Elija una combinación profesional completa: cambia el color de fondo de la página, tarjetas, bordes y botones acento. El círculo exterior muestra el color de fondo y el interior el color acento.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${PALETAS.map(pb).join('')}</div>
- <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
- <h3 style="margin:0">🏷️ Logo y textos de la portada</h3><p style="font-size:12.5px;color:var(--gris)">Personalice la palabra grande de fondo (watermark) que aparece detrás de las tarjetas flotantes (por defecto "shop", o coloque su nombre o marca), así como el título y eslogan de la portada.</p>
- <div class="g" style="margin-top:10px">
-  <div><label>Texto de fondo (Watermark)</label><input id="sh_cfg_wm" value="${esc(TD.wordmark||'shop')}" placeholder="shop" maxlength="30"></div>
-  <div><label>Título de la portada</label><input id="sh_cfg_title" value="${esc(TD.heroTitle||'Tarjetería Jhon')}" placeholder="Tarjetería Jhon" maxlength="60"></div>
-  <div style="grid-column:1/-1"><label>Subtítulo / eslogan</label><input id="sh_cfg_sub" value="${esc(TD.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión')}" placeholder="Cada momento merece una tarjeta especial…" maxlength="150"></div>
- </div>
- <div style="margin-top:10px"><button class="btn p s" data-h-click="call" data-a-click="${_ha('shopBrandSave')}">💾 Guardar logo y textos de portada</button></div>
- <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
- <h3 style="margin:0">🎠 Carrusel de portada</h3><p style="font-size:12.5px;color:var(--gris)">Elija cómo se eligen los diseños para las tarjetas flotantes de la portada. Con 📌 Personalizado puede seleccionar qué tarjetas mostrar con la etiqueta <b>“🎠 Carrusel principal”</b>.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${hb('random','🎲 Aleatorio')}${hb('mix','🔀 Mixto (seleccionados + aleatorios)')}${hb('manual','📌 Personalizado (solo seleccionados)')}</div>
- <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
- <h3 style="margin:0">🔗 Enlaces de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Si los clientes ven una versión vieja al abrir el enlace de un vendedor, toque este botón para forzar la actualización.</p><button class="btn" data-h-click="h99">🔄 Actualizar enlaces de vendedores</button> <small style="color:var(--gris)">Versión: ${esc(String(TD.rev||BUILD))}</small>`
-}
+function xmasCard(){const t=TD.tema||'',hm=TD.heroMode||'mix',pal=TD.paleta||'clasico',bt=(k,l)=>`<button class="btn ${t===k?'p':''}" data-h-click="h103" data-a-click="${_ha(k)}">${l}</button>`,hb=(k,l)=>`<button class="btn ${hm===k?'p':''}" data-h-click="h102" data-a-click="${_ha(k)}">${l}</button>`,pb=([k,l,c])=>`<button class="btn ${pal===k?'p':''}" style="display:inline-flex;align-items:center;gap:7px" data-h-click="h101" data-a-click="${_ha(k)}"><span style="width:14px;height:14px;border-radius:50%;background:${c};box-shadow:0 0 0 1px rgba(0,0,0,.15) inset;flex:0 0 auto"></span>${l}</button>`;return `<h3 style="margin:0">🎨 Temática de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Viste la tienda virtual con una temática especial. Se activa para todos los clientes al instante y solo puede haber una a la vez.</p><p style="margin:8px 0">${t==='madres'?'🌸 <b>Día de las Madres</b> activado.':t==='padres'?'👔 <b>Día del Padre</b> activado.':t==='trabajador'?'🛠️ <b>Día del Trabajador</b> activado.':t==='galaxia'?'🌌 <b>Galaxia Cósmica</b> activada.':t==='amor'?'💖 <b>Día del Amor y la Amistad</b> activado.':t==='navidad'?'🎄 <b>Navidad</b> activada.':t==='verano'?'☀️ <b>Verano</b> activado.':t==='panama'?PAFLAG+' <b>Mes patrio de Panamá</b> activado.':'⛔ <b>Sin temática</b> (diseño normal).'}</p><div style="display:flex;gap:8px;flex-wrap:wrap">${bt('','⛔ Ninguna')}${bt('madres','🌸 Día de las Madres')}${bt('padres','👔 Día del Padre')}${bt('trabajador','🛠️ Día del Trabajador')}${bt('galaxia','🌌 Galaxia')}${bt('amor','💖 Día del Amor')}${bt('navidad','🎄 Navidad')}${bt('verano','☀️ Verano')}${bt('panama',PAFLAG+' Mes patrio')}<button class="btn" data-h-click="h100">👁 Ver cómo queda</button></div><hr style="border:0;border-top:1px solid var(--linea);margin:16px 0"><h3 style="margin:0">🎨 Paleta de colores de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Elija la paleta de colores profesional que verán sus clientes en la tienda virtual (botones, etiquetas y acentos). Cada opción toma como base los colores reales de sus propias tarjetas del carrusel (Amor, Boda, Cumpleaños, Felicitaciones, Graduación), para que la tienda se sienta parte de la misma colección. Se aplica al instante en todos los dispositivos. Si hay una temática especial activa (arriba), esta tiene prioridad mientras dure.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${PALETAS.map(pb).join('')}</div><hr style="border:0;border-top:1px solid var(--linea);margin:16px 0"><h3 style="margin:0">🎠 Carrusel de portada</h3><p style="font-size:12.5px;color:var(--gris)">Elija cómo se arman los diseños del carrusel principal de la tienda. Para elegir modelos a mano, abra <b>Tienda virtual</b>, marque los productos y actíveles la etiqueta <b>“🎠 Carrusel principal”</b>.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${hb('random','🎲 Aleatorio')}${hb('mix','🔀 Mixto (seleccionados + aleatorios)')}${hb('manual','📌 Personalizado (solo seleccionados)')}</div><p style="font-size:12px;color:var(--gris);margin:8px 0 0">${hm==='manual'?'Solo se muestran los productos marcados con 🎠. Si aún no marcó ninguno, se completa con una selección al azar para que la portada no quede vacía.':hm==='random'?'La portada muestra 6 productos distintos al azar en cada visita, sin importar las etiquetas.':'Los productos marcados con 🎠 aparecen primero; el resto del carrusel se completa al azar.'}</p><hr style="border:0;border-top:1px solid var(--linea);margin:16px 0"><h3 style="margin:0">🔗 Enlaces de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Si los clientes ven una versión vieja de la tienda al abrir el enlace de un vendedor, toque este botón. Los enlaces de todos los vendedores cambian al instante y fuerzan a cargar la versión nueva.</p><button class="btn" data-h-click="h99">🔄 Actualizar enlaces de vendedores</button> <small style="color:var(--gris)">Versión: ${esc(String(TD.rev||BUILD))}</small>`}
 function linksRefresh(){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,rev:Date.now()},{merge:true}).then(()=>{alert('Listo. Los vendedores ya comparten enlaces nuevos. Si un vendedor ya tiene abierto el panel, que lo recargue una vez.');R.config()}).catch(()=>alert('No se pudo actualizar. Revise su conexión o permisos.'))}
 function temaSet(t){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,tema:t,navidad:t==='navidad',ts:Date.now()},{merge:true}).then(()=>{TD.tema=t;TD.xmas=t==='navidad';R.config()}).catch(()=>alert('No se pudo guardar. Revise su conexión o permisos.'))}
 function heroModeSet(m){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,heroMode:m,ts:Date.now()},{merge:true}).then(()=>{TD.heroMode=m;R.config()}).catch(()=>alert('No se pudo guardar la configuración del carrusel. Revise su conexión o permisos.'))}
@@ -2682,7 +2738,7 @@ async function shopPurge(){try{if(sessionStorage.getItem('tj_purged'))return;let
 function shopInit(){shopPurge();SH.openTs=Date.now();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){window._tjw&&_tjw(e)}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=cd.wordmark||'shop';SH.heroTitle=cd.heroTitle||'Tarjetería Jhon';SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'clasico';SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -2733,9 +2789,8 @@ async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('s
  const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};$('sh_b').disabled=true;m('Registrando…');
  try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
  SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){window._tjw&&_tjw(x)}shopRender()}
-function shopCatalog(){const o=$("shop");if(!o)return;
- const rCount=shopLines().reduce((s,l)=>s+l.q,0);
- o.innerHTML=`<nav class="krail" id="k_rail" aria-label="Navegación principal"><div class="krail-top"><div class="krail-logo" data-h-click="call" data-a-click="${_ha('shopDNavGo','home')}" title="Inicio"><span class="krail-dot"></span></div><button class="krail-item ${!SH.favOnly?'on':''}" data-h-click="call" data-a-click="${_ha('shopDNavGo','home')}" title="Inicio" aria-label="Inicio">${kico(KI.home,24)}</button><button class="krail-item" data-h-click="call" data-a-click="${_ha('shopDNavGo','cats')}" title="Categorías" aria-label="Categorías">${kico(KI.grid,24)}</button><button class="krail-item" data-h-click="call" data-a-click="${_ha('shopDNavGo','dest')}" title="Destacados" aria-label="Destacados">${kico(KI.star,24)}</button><button class="krail-item ${SH.favOnly?'on':''}" data-h-click="call" data-a-click="${_ha('shopTab','fav')}" title="Favoritos" aria-label="Favoritos">${kico(SH.favOnly?KI.heart:KI.heartO,24)}</button><button class="krail-item krail-cart" data-h-click="call" data-a-click="${_ha('shopCart')}" title="Carrito" aria-label="Carrito">${kico(KI.cart,24)}${rCount?`<i class="kbdg">${rCount}</i>`:""}</button></div><div class="krail-bottom"><button class="krail-avatar" data-h-click="call" data-a-click="${_ha('shopAcc')}" title="Mi cuenta" aria-label="Mi cuenta">${SH.cli?esc((SH.cli.name||'?').trim().charAt(0).toUpperCase()):kico(KI.user,18)}</button></div></nav><div class="kwrap"><header class="khd"><div class="kh-top"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div><button class="kmenu-btn" id="k_menu_b" data-h-click="h83" aria-label="Abrir menú" aria-expanded="false">${kico(KI.menu,22)}</button></div><div class="kh-search"><label class="ksr">${kico(KI.search,20)}<input id="sh_q" type="search" placeholder="¿Qué estás buscando hoy?" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" data-h-click="h81" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button><button type="button" class="ksr-btn-go" data-h-click="call" data-a-click="${_ha('shopSearchSubmit')}" aria-label="Buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></label><button class="kfilter-btn" data-h-click="h80" aria-label="Abrir filtros">${kico(KI.filter,21)}</button><nav class="kh-links">${shopDNavHtml()}</nav></div><nav class="kmobile-menu" id="k_mmenu" hidden>${shopMobileNavHtml()}</nav></header><nav class="kdnav" id="k_dnav">${shopDNavHtml()}</nav><section class="khero" id="khero" aria-label="Diseños destacados"></section><section class="kpromo-carousel" id="k_promo" aria-label="Banners promocionales" hidden></section><section class="kcats" id="k_cats" hidden></section><section class="kdest" id="k_dest" hidden></section>
+function shopCatalog(){const o=$('shop');if(!o)return;
+ o.innerHTML=`<div class="kwrap"><header class="khd"><div class="kh-top"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div><button class="kmenu-btn" id="k_menu_b" data-h-click="h83" aria-label="Abrir menú" aria-expanded="false">${kico(KI.menu,22)}</button></div><div class="kh-search"><label class="ksr">${kico(KI.search,20)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" data-h-click="h81" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><button class="kfilter-btn" data-h-click="h80" aria-label="Abrir filtros">${kico(KI.filter,21)}</button><nav class="kh-links">${shopDNavHtml()}</nav></div><nav class="kmobile-menu" id="k_mmenu" hidden>${shopMobileNavHtml()}</nav></header><nav class="kdnav" id="k_dnav">${shopDNavHtml()}</nav><section class="khero" id="khero" aria-label="Diseños destacados"></section><section class="kcats" id="k_cats" hidden></section><section class="kdest" id="k_dest" hidden></section>
 <div class="kmain"><aside class="kside" id="k_side"></aside><div class="kcol"><div class="kstk"><div class="kchips" id="sh_ch"></div></div>
 <div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g" aria-label="Resultados"></div><div id="k_more"></div></div></div></div><section class="kredes" id="k_redes" hidden></section><nav class="knav" id="k_nav"></nav><div id="k_fab"></div><a class="kwa" id="k_wa" target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9.2 8.6c.3 2.4 2.7 5 5.5 5.6l1.1-1.2-1.7-.9-.8.6c-.9-.4-1.8-1.3-2.2-2.2l.6-.8-.9-1.7z"/></svg></a>`;
  shopFilters();shopNav();shopHdrScroll();shopRedes()}
@@ -2755,20 +2810,6 @@ function shopDNavGo(k){if(k==='home'){shopClear();$('shop').scrollTo({top:0,beha
 function shopBanner(){const e=$('k_banner');if(!e)return;const L=SH.items.filter(i=>i&&i.img&&!noDisp(i));if(!L.length){e.hidden=true;e.innerHTML='';return}
  if(e._k===L.length)return;e._k=L.length;e.hidden=false;const bg=L[Math.floor(Math.random()*L.length)].img;
  e.innerHTML=`<div class="kban-bg"><img src="${bg}" alt="" loading="lazy"></div><div class="kban-copy"><h1>Cada momento merece una tarjeta especial</h1><p>Diseños únicos para todas las ocasiones</p><button class="sbtn" data-h-click="h79">Descubre nuestra colección</button></div>`}
-function shopPromo(){
- const e=$("k_promo");if(!e)return;
- const L=[...PROMO];if(!L.length){e.hidden=true;e.innerHTML="";return}
- e.hidden=false;
- if(SH.promoT){clearInterval(SH.promoT);SH.promoT=0}
- SH.promoL=L;SH.promoI=SH.promoI||0;
- e.innerHTML=`<div class="kpromo-track">${L.map(i=>promoSlide(i)).join("")}</div>
- ${L.length>1?`<button class="khero-control prev" data-h-click="call" data-a-click="${_ha("shopPromoGo",-1)}" aria-label="Banner anterior">‹</button><button class="khero-control next" data-h-click="call" data-a-click="${_ha("shopPromoGo",1)}" aria-label="Siguiente banner">›</button><div class="khero-dots">${L.map((i,n)=>`<button class="${n===SH.promoI?'on':''}" data-h-click="call" data-a-click="${_ha("shopPromoSet",n)}" aria-label="Banner ${n+1}"></button>`).join("")}</div>`:""}`;
- shopPromoUpdate();
- if(L.length>1)SH.promoT=setInterval(()=>shopPromoGo(1),5200);
-}
-function shopPromoGo(dir){const L=SH.promoL||[];if(!L.length)return;SH.promoI=(SH.promoI+dir+L.length)%L.length;shopPromoUpdate()}
-function shopPromoSet(idx){const L=SH.promoL||[];if(!L.length)return;SH.promoI=idx;shopPromoUpdate()}
-function shopPromoUpdate(){const e=$("k_promo");if(!e)return;const tr=e.querySelector(".kpromo-track");if(tr)tr.style.transform=`translateX(${-100*SH.promoI}%)`;e.querySelectorAll(".khero-dots button").forEach((b,i)=>b.classList.toggle("on",i===SH.promoI))}
 function shopCats(){const e=$('k_cats');if(!e)return;const L=(SH.opts||[]).filter(o=>TEMAS.some(t=>t.id===o.id)&&o.id!=='otros').slice(0,10);
  if(!L.length){e.hidden=true;e.innerHTML='';return}e.hidden=false;
  e.innerHTML=`<h3>Explora por ocasión</h3><div class="kcat-row">${L.map(o=>{const on=SH.sel.length===1&&SH.sel[0]===o.id;return `<button class="kcat-pill ${on?'on':''}" data-h-click="h78" data-a-click="${_ha(o.id)}"><span class="kcat-ic">${o.e}</span><small>${esc(o.n)}</small></button>`}).join('')}</div>`}
@@ -2790,57 +2831,25 @@ function shopHeroList(){const mode=SH.heroMode||'mix',all=SH.items.filter(i=>i&&
 const PROMO_IMG={"quince": ["banners/quince.jpg", "banners/quince-m.jpg"], "quince2": ["banners/quince2.jpg", "banners/quince2-m.jpg"], "baby": ["banners/baby.jpg", "banners/baby-m.jpg"], "baby2": ["banners/baby2.jpg", "banners/baby2-m.jpg"], "grad": ["banners/grad.jpg", "banners/grad-m.jpg"], "grad2": ["banners/grad2.jpg", "banners/grad2-m.jpg"], "boda": ["banners/boda.jpg", "banners/boda-m.jpg"], "boda2": ["banners/boda2.jpg", "banners/boda2-m.jpg"], "cumple": ["banners/cumple.jpg", "banners/cumple-m.jpg"], "cumple2": ["banners/cumple2.jpg", "banners/cumple2-m.jpg"], "amor": ["banners/amor.jpg", "banners/amor-m.jpg"], "amor2": ["banners/amor2.jpg", "banners/amor2-m.jpg"], "felic": ["banners/felic.jpg", "banners/felic-m.jpg"], "felic2": ["banners/felic2.jpg", "banners/felic2-m.jpg"]};
 const PROMO=[['quince2','quince','Tarjetas para Quinceañeras'],['quince','quince','Tarjetas para Quinceañeras'],['baby2','baby','Tarjetas para Baby Shower'],['baby','baby','Tarjetas para Baby Shower'],['grad2','grad','Tarjetas para Graduación'],['grad','grad','Tarjetas para Graduación'],['boda2','boda','Tarjetas para Bodas'],['boda','boda','Tarjetas para Bodas'],['cumple2','cumple','Tarjetas para Cumpleaños'],['cumple','cumple','Tarjetas para Cumpleaños'],['amor2','amor','Tarjetas para Amor'],['amor','amor','Tarjetas para Amor'],['felic2','felic','Tarjetas para Felicitaciones'],['felic','felic','Tarjetas para Felicitaciones']].map(([key,tema,name])=>({id:'promo-'+key,key,tema,name,promo:true}));
 function promoSlide(i){return `<article class="khero-slide khero-promo" data-h-click="h78" data-a-click="${_ha(i.tema)}"><picture><source media="(max-width:700px)" srcset="${PROMO_IMG[i.key][1]}"><img src="${PROMO_IMG[i.key][0]}" alt="${esc(i.name)}" loading="lazy"></picture></article>`}
-function shopHero(){
- const e=$("khero");if(!e)return;if(SH.heroT){clearInterval(SH.heroT);SH.heroT=0}
- const all=(typeof shopHeroList==="function"?shopHeroList():SH.items).filter(i=>i&&i.img&&!noDisp(i));
- const pool=all.length>=4?all:all.concat(SH.items.filter(i=>i&&i.img&&!noDisp(i)));
- const fl=pool.slice(0,4);
- const flHtml=fl.map((i,idx)=>`
-   <article class="kfloat-card kfloat-${idx}" data-h-click="h29" data-a-click="${_ha(i.id)}" title="${esc(i.name)}">
-     <div class="kfloat-img"><img src="${i.img}" alt="${esc(i.name)}" loading="lazy"></div>
-     <div class="kfloat-body"><b class="kfloat-title">${esc(i.name)}</b>
-       <div class="kfloat-meta"><span class="kfloat-stars">★★★★★</span><span class="kfloat-price">${+i.price>0?tdMoney(i.price):"Consultar"}</span></div>
-     </div>
-   </article>`).join("");
- e.hidden=false;
- const wmText=esc(SH.wordmark||'shop');
-const titleText=esc(SH.heroTitle||'Tarjetería Jhon');
-const subText=esc(SH.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión');
-e.innerHTML=`<div class="khero-bg-wordmark" aria-hidden="true">${wmText}<span class="khero-dot">.</span></div>
-<div class="khero-wordmark-wrap">
-  <h1 class="khero-title">${titleText}</h1>
-  <p class="khero-wordmark-sub">${subText}</p>
-</div>
-<div class="khero-constellation">${flHtml}</div>
-<div class="khero-search-wrap">
-  <div class="ksr ksr-hero">
-    ${kico(KI.search,20)}
-    <input id="sh_q_hero" type="search" placeholder="¿Qué estás buscando hoy?" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off">
-    <button type="button" class="k_x" data-h-click="h81" ${SH.q?"":"hidden"} aria-label="Borrar">✕</button>
-    <button type="button" class="ksr-btn-go" data-h-click="call" data-a-click="${_ha('shopSearchSubmit')}" aria-label="Buscar">
-      <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-    </button>
-  </div>
-</div>`;
-}
+function shopHero(){const e=$('khero');if(!e)return;if(SH.heroT){clearInterval(SH.heroT);SH.heroT=0}const L=[...PROMO];if(!L.length){e.hidden=true;return}e.hidden=false;SH.heroL=L;const old=L.findIndex(i=>i.id===SH.heroId);SH.heroI=old>=0?old:0;SH.heroId=L[SH.heroI].id;
+ e.innerHTML=`<div class="khero-brand">${shopLogo()}<span>Tarjetería Jhon</span></div><div class="khero-track">${L.map(i=>i.promo?promoSlide(i):`<article class="khero-slide" data-h-click="h29" data-a-click="${_ha(i.id)}"><img src="${i.img}" alt="${esc(i.name)}"><div class="khero-copy"><small>${esc(i.cat||'Diseño destacado')}</small><b>${esc(i.name)}</b><span>${+i.price>0?tdMoney(i.price):'Ver detalles del diseño'}</span></div></article>`).join('')}</div>${L.length>1?`<button class="khero-control prev" data-h-click="h77" aria-label="Diseño anterior">‹</button><button class="khero-control next" data-h-click="h76" aria-label="Siguiente diseño">›</button><div class="khero-dots">${L.map((i,n)=>`<button class="${n===SH.heroI?'on':''}" data-h-click="h75" data-a-click="${_ha(n)}" aria-label="Mostrar diseño ${n+1}" aria-current="${n===SH.heroI?'true':'false'}"></button>`).join('')}</div>`:''}`;shopHeroGo(SH.heroI);if(L.length>1)SH.heroT=setInterval(()=>shopHeroGo(SH.heroI+1),5600)}
 function shopHeroGo(n){const e=$('khero'),L=SH.heroL||[];if(!e||!L.length)return;SH.heroI=(n+L.length)%L.length;SH.heroId=L[SH.heroI].id;const tr=e.querySelector('.khero-track');if(tr)tr.style.transform=`translateX(${-100*SH.heroI}%)`;e.querySelectorAll('.khero-dots button').forEach((b,i)=>{const on=i===SH.heroI;b.classList.toggle('on',on);b.setAttribute('aria-current',on?'true':'false')})}
 const catKey=c=>{const n=shopN(c),t=TEMAS.find(x=>x.re.test(n));return t?t.id:'c:'+n};
 const ik=i=>i._k||(i._k=new Set([...temaOf(i),...(i.cat?[catKey(i.cat)]:[])]));
 function shopOpts(){const c=new Map(),nm={};SH.items.forEach(i=>ik(i).forEach(k=>{c.set(k,(c.get(k)||0)+1);if(k.startsWith('c:')&&!nm[k])nm[k]=i.cat}));
  const meta=k=>k.startsWith('c:')?{id:k,n:nm[k],e:'🏷️'}:temaMeta(k),ids=[...c.keys()],t=TEMAS.map(x=>x.id).filter(k=>c.has(k)),o=ids.filter(k=>!TEMAS.some(x=>x.id===k)).sort((a,b)=>String(meta(a).n).localeCompare(String(meta(b).n)));
  SH.opts=[...t,...o].map(k=>({...meta(k),c:c.get(k)}));SH.sel=SH.sel.filter(k=>c.has(k))}
-function shopFilters(){shopOpts();shopChips();shopSide();shopGrid(1);shopHero();shopPromo();shopCats()}
+function shopFilters(){shopOpts();shopChips();shopSide();shopGrid(1);shopHero();shopCats()}
 function shopChips(){const e=$('sh_ch');if(!e)return;
  e.innerHTML=SH.opts.length?`<button class="kchip ${SH.sel.length?'':'on'}" data-h-click="h71">Todos</button>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<button class="kchip ${on?'on':''}" data-h-click="h70" data-a-click="${_ha(k)}" aria-pressed="${on}">${on?'✓':o.e} ${esc(o.n)}</button>`}).join(''):''}
 function shopSide(){const e=$('k_side');if(!e)return;const av=[['all','Todos',SH.items.length],['in','Disponibles',SH.items.filter(i=>!noDisp(i)).length],['low','Pocas existencias',SH.items.filter(i=>i.stock==='low').length],['out','No disponibles',SH.items.filter(noDisp).length]];
  e.innerHTML=`<div class="kfilter-section"><h3>Filtros <button class="kfilter-clear" data-h-click="h62">Limpiar</button></h3><div class="kprice-fields"><label>Precio desde<input type="number" min="0" inputmode="decimal" placeholder="$ 0" value="${esc(SH.minPrice)}" data-h-input="h74"></label><label>Precio hasta<input type="number" min="0" inputmode="decimal" placeholder="Sin límite" value="${esc(SH.maxPrice)}" data-h-input="h73"></label></div><div class="kavail">${av.map(([v,l,n])=>`<button class="${SH.avail===v?'on':''}" data-h-click="h72" data-a-click="${_ha(v)}"><span>${l}</span><span>${n}</span></button>`).join('')}</div></div><div class="kfilter-section"><h3>Por ocasión</h3>${SH.opts.length?`<label class="ksd ${SH.sel.length?'':'on'}"><input type="checkbox" ${SH.sel.length?'':'checked'} data-h-change="h71"><span>✨ Todos</span><i>${SH.items.length}</i></label>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<label class="ksd ${on?'on':''}"><input type="checkbox" ${on?'checked':''} data-h-change="h70" data-a-change="${_ha(k)}"><span>${o.e} ${esc(o.n)}</span><i>${o.c}</i></label>`}).join(''):''}</div>`}
 function shopSel(k){if(k<0)SH.sel=[];else{const id=SH.opts[k].id,p=SH.sel.indexOf(id);if(p<0)SH.sel.push(id);else SH.sel.splice(p,1)}shopChips();shopSide();shopGrid(1)}
 function shopTemaId(t){SH.sel=[t];SH.favOnly=false;SH.q='';if($('sh_q'))$('sh_q').value='';shopFilters();shopNav();const s=$('shop');if(s)s.scrollTo({top:0,behavior:'smooth'})}
-function shopSearchSubmit(){const q=(($("sh_q_hero")&&$("sh_q_hero").value)||($("sh_q")&&$("sh_q").value)||"").trim();shopQ(q);const g=$("sh_g");if(g)g.scrollIntoView({behavior:"smooth",block:"start"})}
-function shopQ(v){SH.q=v;const x=$("k_x");if(x)x.hidden=!v;const q1=$("sh_q"),q2=$("sh_q_hero");if(q1&&q1.value!==v)q1.value=v;if(q2&&q2.value!==v)q2.value=v;clearTimeout(SH.qt);SH.qt=setTimeout(()=>shopGrid(1),130)}
+function shopQ(v){SH.q=v;const x=$('k_x');if(x)x.hidden=!v;clearTimeout(SH.qt);SH.qt=setTimeout(()=>shopGrid(1),130)}
 function shopPrice(k,v){SH[k]=String(v||'').replace(',','.');shopGrid(1)}
 function shopAvail(v){SH.avail=v;shopSide();shopGrid(1)}
-function shopClear(){SH.q="";SH.sel=[];SH.minPrice="";SH.maxPrice="";SH.avail="all";const q=$("sh_q");if(q)q.value="";const q2=$("sh_q_hero");if(q2)q2.value="";const x=$("k_x");if(x)x.hidden=true;shopFilters()}
+function shopClear(){SH.q='';SH.sel=[];SH.minPrice='';SH.maxPrice='';SH.avail='all';const q=$('sh_q');if(q)q.value='';const x=$('k_x');if(x)x.hidden=true;shopFilters()}
 function shopPriceMatch(i){const lo=+SH.minPrice||0,hi=+SH.maxPrice||0,p=+i.price||0;if(!(lo||hi))return true;if(!p)return false;return(!lo||p>=lo)&&(!hi||p<=hi)}
 function shopAvailMatch(i){return SH.avail==='all'||(SH.avail==='in'&&!noDisp(i))||(SH.avail==='low'&&i.stock==='low')||(SH.avail==='out'&&noDisp(i))}
 const shopPop=i=>{const b=bdgList(i);return(b.includes('best')?100:0)+(b.includes('model')?25:0)+(b.includes('new')?10:0)+(SH.fav[i.id]?2:0)};
@@ -2875,21 +2884,9 @@ function shopFav(id){if(SH.fav[id])delete SH.fav[id];else SH.fav[id]=1;try{local
  if(SH.favOnly&&!SH.fav[id]&&$('shopm').style.display!=='flex')shopGrid(1);if($('shopm').dataset.k==='det'&&$('shopm').dataset.id===id)shopDet(id)}
 function shopTab(k){const s=$('shop');if(k==='cart')return shopCart();if(k==='acc')return shopAcc();SH.favOnly=k==='fav';shopNav();shopGrid(1);if(s)s.scrollTo({top:0,behavior:'smooth'})}
 const shopLines=()=>Object.keys(SH.cart).map(id=>{const i=SH.items.find(x=>x.id===id);return i&&!noDisp(i)?{id,n:i.name,p:+i.price||0,q:SH.cart[id],img:i.img}:null}).filter(Boolean);
-function shopNav(){const n=shopLines().reduce((s,l)=>s+l.q,0),e=$("k_nav"),h=$("k_ha"),r=$("k_rail");
- if(e)e.innerHTML=[["home","Inicio",KI.home,0,!SH.favOnly],["fav","Favoritos",SH.favOnly?KI.heart:KI.heartO,0,SH.favOnly],["cart","Carrito",KI.cart,n,0],["acc","Mi cuenta",KI.user,0,0]].map(([k,l,d,b,on])=>`<button class="${on?'on':''}" data-h-click="h61" data-a-click="${_ha(k)}"><span class="kpill">${kico(d)}${b?`<i class="kbdg">${b}</i>`:""}</span><small>${l}</small></button>`).join("");
- if(h)h.innerHTML=`<button class="kha ${SH.favOnly?'on':''}" data-h-click="h61" data-a-click="${_ha(SH.favOnly?'home':'fav')}">${kico(SH.favOnly?KI.heart:KI.heartO,20)}<span>Favoritos</span></button><button class="kha" data-h-click="h60">${kico(KI.user,20)}<span>Mi cuenta</span></button><button class="kha pri" data-h-click="h30">${kico(KI.cart,20)}<span>Carrito</span>${n?`<i class="kbdg">${n}</i>`:""}</button>`;
- if(r){
-   const rc=r.querySelector(".krail-cart");
-   if(rc){
-     const b=rc.querySelector(".kbdg");if(b)b.remove();
-     if(n){const x=document.createElement("i");x.className="kbdg";x.textContent=n;rc.appendChild(x)}
-   }
-   r.querySelectorAll(".krail-item").forEach(b=>{
-     if(b.title==="Favoritos")b.classList.toggle("on",!!SH.favOnly);
-     if(b.title==="Inicio")b.classList.toggle("on",!SH.favOnly);
-   });
- }
-}
+function shopNav(){const n=shopLines().reduce((s,l)=>s+l.q,0),e=$('k_nav'),h=$('k_ha');
+ if(e)e.innerHTML=[['home','Inicio',KI.home,0,!SH.favOnly],['fav','Favoritos',SH.favOnly?KI.heart:KI.heartO,0,SH.favOnly],['cart','Carrito',KI.cart,n,0],['acc','Mi cuenta',KI.user,0,0]].map(([k,l,d,b,on])=>`<button class="${on?'on':''}" data-h-click="h61" data-a-click="${_ha(k)}"><span class="kpill">${kico(d)}${b?`<i class="kbdg">${b}</i>`:''}</span><small>${l}</small></button>`).join('');
+ if(h)h.innerHTML=`<button class="kha ${SH.favOnly?'on':''}" data-h-click="h61" data-a-click="${_ha(SH.favOnly?'home':'fav')}">${kico(SH.favOnly?KI.heart:KI.heartO,20)}<span>Favoritos</span></button><button class="kha" data-h-click="h60">${kico(KI.user,20)}<span>Mi cuenta</span></button><button class="kha pri" data-h-click="h30">${kico(KI.cart,20)}<span>Carrito</span>${n?`<i class="kbdg">${n}</i>`:''}</button>`}
 const shopCb=shopNav;
 const shopQtys=[6,12,24,36],docL=n=>n===6?'½ docena':n%12===0?(n/12)+(n===12?' docena':' docenas'):'';
 function shopPick(id,from){const i=SH.items.find(x=>x.id===id);if(!i)return;if(noDisp(i)){shopToast('Producto '+(i.stock==='out'?'agotado':'descontinuado'));return}SH.pq=SH.cart[id]||12;SH.pf=from||'';SH.pi=id;
@@ -3162,7 +3159,8 @@ function shopAmor(){const on=document.documentElement.classList.contains('amor')
  if(!c&&!matchMedia('(prefers-reduced-motion:reduce)').matches){c=document.createElement('canvas');c.id='k_hearts';document.body.appendChild(c);const ctx=c.getContext('2d');let W=0,H=0;const rs=()=>{W=c.width=innerWidth;H=c.height=innerHeight};rs();addEventListener('resize',rs);
   const Ht=Array.from({length:32},()=>({x:Math.random(),y:Math.random(),r:3+Math.random()*6,v:.3+Math.random()*.8,a:Math.random()*6,c:Math.random()<.5?'#e11d48':'#fb7185'}));
   (function f(){if(!$('k_hearts'))return;ctx.clearRect(0,0,W,H);Ht.forEach(p=>{p.y-=p.v/H*2.2;p.a+=.02;p.x+=Math.sin(p.a)*.0006;if(p.y<-.02){p.y=1.02;p.x=Math.random()}ctx.save();ctx.translate(p.x*W,p.y*H);ctx.rotate(Math.sin(p.a)*.2);ctx.fillStyle=p.c;ctx.globalAlpha=.5;ctx.font=(p.r*2.2)+'px sans-serif';ctx.fillText('❤️',0,0);ctx.restore()});requestAnimationFrame(f)})()}}
-function shopEnh(){const sh=$('shop');if(!sh)return;try{shopDest();shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}
+function shopEnh(){
+const sh=$('shop');if(!sh)return;try{shopDest();shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}
  if(!$('k_top')){const b=document.createElement('button');b.id='k_top';b.setAttribute('aria-label','Subir al inicio');b.textContent='↑';b.onclick=()=>[sh,document.scrollingElement].forEach(el=>el&&el.scrollTo&&el.scrollTo({top:0,behavior:'smooth'}));sh.appendChild(b)}
  if(SH.deep&&SH.items&&SH.items.find(x=>x.id===SH.deep)){const d=SH.deep;SH.deep=null;setTimeout(()=>{try{shopDet(d)}catch(e){window._tjw&&_tjw(e)}},300)}}
 const _sf0=shopFab;shopFab=function(){_sf0();const e=$('k_fab'),n=shopLines().reduce((a,l)=>a+l.q,0);if(n!==SH._fn){const had=SH._fn!==undefined;SH._fn=n;const b=e&&e.firstElementChild;if(b&&had){b.classList.remove('bump');void b.offsetWidth;b.classList.add('bump')}}};
@@ -3388,21 +3386,27 @@ R.config=function(){
   ['bkCard',bkCard],['sesCard',sesCard],['tplCard',tplCard],['recCard',recCard],
   ['vozCard',vozCard],['cintCard',cintCard],['llamCard',llamCard]
  ];
- cards.slice().reverse().forEach(([id,html])=>{
+ const tb=$('cfgTb');
+cards.slice().reverse().forEach(([id,html])=>{
   const c=document.createElement('div');
   c.className='card';
   c.id=id;
   const raw=html();
-  // Extract first h3 as title if present
-  const mH3=/^<h3[^>]*>([sS]*?)<\/h3>/i.exec(raw.trim());
-  if(mH3){
-    const title=mH3[1];
-    const body=raw.trim().slice(mH3[0].length);
-    c.innerHTML=wrapCardInner(id,title,body);
+  const i1=raw.indexOf('<h3'),i2=raw.indexOf('</h3>');
+  if(i1>=0&&i2>i1){
+    const afterH3=raw.indexOf('>',i1);
+    if(afterH3>=0&&afterH3<i2){
+      const title=raw.slice(afterH3+1,i2);
+      const body=(raw.slice(0,i1)+raw.slice(i2+5)).trim();
+      c.innerHTML=wrapCardInner(id,title,body);
+    }else{
+      c.innerHTML=raw;
+    }
   }else{
     c.innerHTML=raw;
   }
-  v.insertBefore(c,v.firstChild);
+  if(tb&&tb.nextSibling)v.insertBefore(c,tb.nextSibling);
+  else v.insertBefore(c,v.firstChild);
 });
  lbgFill($('lbgPrev'),lbgMeta());waListen();return r
 };
@@ -3514,13 +3518,21 @@ R.home=function(){
  }
  const r=_homeBase.apply(this,arguments);if(!v)return r;
  if(esAdmin()){
-  const vd=homeCard(vdAdmHTML());if(vd)v.insertBefore(vd,v.firstChild);
+  const vd=homeCard(vdAdmHTML());if(vd){const op=$('homeOps')||v;op.appendChild(vd)}
  }
- const t=tienda();if(t)v.insertBefore(t,v.children[1]||null);
+ const t=tienda();if(t){const op=$('homeOps')||v;op.insertBefore(t,op.firstChild)}
  if(!esAdmin())return r;
- try{const mc=homeCard(mcHomeHTML());if(mc){const kp=v.querySelector('.kp');if(kp)kp.insertAdjacentElement('afterend',mc);else v.appendChild(mc);mcPintar('mcHomeMap')}}catch(e){window._tjw&&_tjw(e)}
- const inv=homeCard(investHomeHTML());if(inv)v.appendChild(inv);
- waListen();if(WA.list.length){const wa=homeCard(waHomeHTML());if(wa)v.insertBefore(wa,v.firstChild)}
+ try{
+  const mc=homeCard(mcHomeHTML());
+  if(mc){
+    const slot=$('homeMapSlot');
+    if(slot)slot.appendChild(mc);
+    else{const kp=v.querySelector('.kp');if(kp)kp.insertAdjacentElement('afterend',mc);else v.appendChild(mc)}
+    mcPintar('mcHomeMap');
+  }
+ }catch(e){window._tjw&&_tjw(e)}
+ const inv=homeCard(investHomeHTML());if(inv){const op=$('homeOps')||v;op.appendChild(inv)}
+ waListen();if(WA.list.length){const wa=homeCard(waHomeHTML());if(wa){const wb=$('homeWaSlot')||v;wb.insertBefore(wa,wb.firstChild)}}
  return r
 };
 
