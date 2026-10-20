@@ -251,3 +251,51 @@ test('Las etiquetas generan el código de barras Code 128 correcto y el número 
   assert.equal(etqPDF([e(1),e(2),e(3)],ETQ_TAM.e100x150).paginas,3);
   assert.equal(etqPDF([e(1),e(2),e(3),e(4),e(5)],ETQ_TAM.a4x4).paginas,2);
 });
+
+test('El directorio de transportistas trae las 13 empresas y se ofrece desde Configuración',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const a=app.indexOf('/*FLE-INI*/'),b=app.indexOf('/*FLE-FIN*/');
+  assert.ok(a>0&&b>a);
+  const ctx={};vm.createContext(ctx);
+  vm.runInContext(app.slice(a,b)+';this.api={FLE_DEF,fleSanCfg,fleBuscar,fleAll}',ctx);
+  const {FLE_DEF,fleSanCfg,fleBuscar,fleAll}=ctx.api;
+  assert.equal(FLE_DEF.length,13);
+  assert.equal(new Set(FLE_DEF.map(c=>c.id)).size,13);
+  assert.equal(FLE_DEF.filter(c=>c.t==='n').length,6);
+  assert.equal(FLE_DEF.filter(c=>c.t==='i').length,7);
+  assert.equal(FLE_DEF.find(c=>c.id==='uno').suc.length,19);
+  assert.equal(FLE_DEF.find(c=>c.id==='ferguson').wa,'6330-3495');
+  const C=fleSanCfg({on:['uno','nope','uno'],extra:[{id:'xabc123',n:'Mi flete',t:'i',web:'javascript:alert(1)'},{id:'../x',n:'mala'}],img:{uno:'data:image/jpeg;base64,AAAA',ups:'data:text/html;base64,AAAA'}});
+  assert.deepEqual(C.on,['uno']);assert.equal(C.extra.length,1);assert.equal(C.extra[0].web,'');
+  assert.deepEqual(Object.keys(C.img),['uno']);
+  assert.equal(fleBuscar('dhl express',C).id,'dhlexpress');
+  assert.equal(fleBuscar('Mi Flete',C).id,'xabc123');
+  assert.equal(fleBuscar('desconocida',C),null);
+  assert.match(app,/\['fleCard',fleAdmCard\]/);
+  for(const h of ['h345','h346','h347','h348','h349','h350','h351','h352'])assert.match(app,new RegExp('__H\\.'+h+'='));
+  assert.match(app,/TD\.fletes=fleSanCfg\(cd\.fletes\)/);
+  assert.match(app,/SH\.fletes=fleSanCfg\(cd\.fletes\)/);
+});
+
+test('El cliente elige transportista al pedir y la etiqueta lo recibe con sus datos',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/\$\{shopFleHTML\(\)\}<textarea id="sh_nt"/);
+  assert.match(app,/p\.envio=\{agencia:fl\.n,fid:fl\.id\}/);
+  assert.match(app,/Envío por: /);
+  assert.match(app,/\['agencia',80\],\['fid',30\]/);
+  assert.match(app,/\$\{fleLinea\(p\)\}\$\{p\.nota\?/);
+  const a=app.indexOf('/*ETQ-INI*/'),b=app.indexOf('/*ETQ-FIN*/');
+  const mk=(imgOk)=>{const calls=[];class Doc{constructor(){this.paginas=1;this.fs=10}
+    setFont(){}setFontSize(p){this.fs=p}setTextColor(){}setDrawColor(){}setFillColor(){}setLineWidth(){}
+    getTextWidth(t){return String(t).length*this.fs*.18}
+    splitTextToSize(t,w){return [String(t)]}
+    text(t){calls.push(String(t))}rect(){}line(){}addPage(){this.paginas++}output(){return {paginas:this.paginas}}}
+    if(imgOk)Doc.prototype.addImage=function(){calls.push('IMG')};
+    const ctx={window:{jspdf:{jsPDF:Doc}}};vm.createContext(ctx);vm.runInContext(app.slice(a,b)+';this.api={ETQ_TAM,etqPDF}',ctx);return{api:ctx.api,calls}};
+  const e={tipo:'nacional',agencia:'Uno Express Panamá',guia:'',bulto:[1,1],peso:0,codigo:'TJ-1',fecha:'20/10/2026',rem:{nombre:'Tarjetería Jhon',tel:'1',dir:'d'},dest:{name:'Ana',empresa:'',tel:'1',email:'',dir:'Calle 1',ciudad:'Panamá',prov:'Panamá',pais:'Panamá'},obs:'',cont:'1 x Tarjeta',ag:{tel:'6781-4532',wa:'6676-3445',dir:'Premier Plaza'},logo:'data:image/png;base64,AAAA'};
+  let m=mk(true);m.api.etqPDF([e],m.api.ETQ_TAM.e100x150);
+  assert.ok(m.calls.some(t=>/AGENCIA: Tel\. 6781-4532/.test(t)&&/WhatsApp 6676-3445/.test(t)));
+  assert.ok(m.calls.includes('Premier Plaza'));assert.ok(m.calls.includes('IMG'));
+  m=mk(false);assert.equal(m.api.etqPDF([e],m.api.ETQ_TAM.e100x150).paginas,1);
+  assert.ok(m.calls.some(t=>/AGENCIA: Tel\./.test(t)));
+});
