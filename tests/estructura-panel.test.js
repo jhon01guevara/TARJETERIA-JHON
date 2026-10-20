@@ -2,6 +2,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const vm=require('node:vm');
 
 test('Configuración usa un solo renderizador de tarjetas adicionales',()=>{
   const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
@@ -223,3 +224,30 @@ test('Destacados de la semana avanza solo cada 5 segundos y se adapta al móvil'
   assert.match(app,/flex:0 0 min\(44vw,200px\)/);
 });
 
+
+test('Las etiquetas de envío de los pedidos de la tienda están integradas',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  for(const h of ['h337','h338','h339','h340','h341','h342','h343'])assert.match(app,new RegExp('__H\\.'+h+'='));
+  assert.match(app,/\$\{etqBarra\(\)\}\$\{TD\.peds\.length\?TD\.peds\.map/);
+  assert.match(app,/envio:sanEnv\(d\.envio\)/);
+  assert.match(app,/if\(esAdmin\(\)&&fbDb\)fbDb\.collection\('tienda_pedidos'\)\.doc\(p\.id\)\.update\(/);
+  assert.match(app,/<option value="internacional"/);
+});
+
+test('Las etiquetas generan el código de barras Code 128 correcto y el número de páginas esperado',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const a=app.indexOf('/*ETQ-INI*/'),b=app.indexOf('/*ETQ-FIN*/');
+  assert.ok(a>0&&b>a);
+  class Doc{constructor(){this.paginas=1;this.fs=10}
+    setFont(){}setFontSize(p){this.fs=p}setTextColor(){}setDrawColor(){}setFillColor(){}setLineWidth(){}
+    getTextWidth(t){return String(t).length*this.fs*.18}
+    splitTextToSize(t,w){const o=[];let c='';for(const x of String(t).split(' ')){const n=c?c+' '+x:x;if(this.getTextWidth(n)<=w||!c)c=n;else{o.push(c);c=x}}if(c)o.push(c);return o}
+    text(){}rect(){}line(){}addPage(){this.paginas++}output(){return {paginas:this.paginas}}}
+  const ctx={window:{jspdf:{jsPDF:Doc}}};vm.createContext(ctx);
+  vm.runInContext(app.slice(a,b)+';this.api={ETQ_TAM,etqPDF,code128B}',ctx);
+  const {ETQ_TAM,etqPDF,code128B}=ctx.api;
+  assert.equal(code128B('A'),'211214'+'111323'+'131123'+'2331112');
+  const e=(n)=>({tipo:'nacional',agencia:'X',guia:'',bulto:[1,1],peso:0,codigo:'TJ-'+n,fecha:'20/10/2026',rem:{nombre:'Tarjetería Jhon',tel:'1',dir:'d'},dest:{name:'Ana',empresa:'',tel:'1',email:'',dir:'Calle 1',ciudad:'Panamá',prov:'Panamá',pais:'Panamá'},obs:'',cont:'1 x Tarjeta'});
+  assert.equal(etqPDF([e(1),e(2),e(3)],ETQ_TAM.e100x150).paginas,3);
+  assert.equal(etqPDF([e(1),e(2),e(3),e(4),e(5)],ETQ_TAM.a4x4).paginas,2);
+});
