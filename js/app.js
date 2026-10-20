@@ -2021,6 +2021,163 @@ const tdMoney=n=>+n>0?$$(+n):'Consultar';
 // ---------- Panel interno (admin y vendedores) ----------
 let _tdOn=false;
 function tdAviso(t){try{agSound()}catch(e){window._tjw&&_tjw(e)}if(DB.cfg.vozChat!==0)setTimeout(()=>vozDama('Atención. '+t),600)}
+/*FLE-INI*/
+/* ===== Directorio de transportistas de carga =====
+   Lista predeterminada (tomada del directorio de fletes de Panamá). Los datos vienen de directorios públicos:
+   confirmar con la empresa antes de enviar mercancía. El administrador elige en Configuración cuáles se ofrecen
+   en la tienda; el cliente escoge uno al pedir y sus datos salen en la etiqueta de envío. */
+const fleT=(v,n)=>String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,n);
+const FLE_DEF=[
+ {id:'chavales',n:'Fletes Chavales (FLECHA)',t:'n',ini:'FC',col:'#c2410c',d:'Transporte de mercancía y fletes por carretera',tel:[],wa:'',web:'chavale.com',nota:'No se verificó un número vigente. Hay referencias a David y otras localidades; algunos registros muestran cambio de razón social en 2025. Pida lista de agencias, destinos, horarios y tarifas.'},
+ {id:'ferguson',n:'Transportes Ferguson',t:'n',ini:'TF',col:'#1d4ed8',d:'Carga liviana, encomiendas y distribución nacional',tel:['225-1291','261-1482'],wa:'6330-3495',ig:'@transporte.ferguson',
+  suc:[['Pueblo Nuevo / Vía Fernández de Córdoba','225-1291 / 261-1482'],['Calle 50, Bella Vista','270-1616'],['Río Abajo / Juan Díaz','233-4597'],['Calidonia / Justo Arosemena','225-1291'],['La Chorrera','253-6591'],['Vista Alegre, Arraiján','344-4847'],['Colón','446-2287 / 6330-6035'],['24 de Diciembre','380-7536']],
+  nota:'Datos de directorios públicos: confirme dirección, horario y vigencia antes de visitar.'},
+ {id:'uno',n:'Uno Express Panamá',t:'n',ini:'UE',col:'#be123c',d:'Encomiendas de sucursal a sucursal en todo el país',tel:['6781-4532','6675-4152','6781-3007','6676-3445'],wa:'6676-3445',web:'unoexpresspanama.com',ig:'@unoexpresspanama',
+  suc:[['24 de Diciembre','6982-4866'],['Aguadulce','6980-6580'],['Albrook','6949-1460'],['Almirante','6781-4520'],['Boquete','6781-4619'],['Vía Brasil','6781-4532'],['San Francisco','6675-4152'],['Vista Hermosa','6781-9588'],['Río Abajo','6670-6874'],['Juan Díaz','6781-4476'],['Los Andes','6983-1202'],['Puerto Armuelles','6781-4623'],['Frontera','6781-4630'],['Changuinola','6781-4622'],['Santiago','6781-4604'],['Las Tablas','6781-4642'],['Gorgona','6781-4280'],['El Valle de Antón','6948-1051'],['Pedasí','6781-4615']],
+  nota:'Se menciona una red de unas 45 sucursales; revise el directorio oficial para direcciones y horarios.'},
+ {id:'cargasnac',n:'Cargas Nacionales',t:'n',ini:'CN',col:'#15803d',d:'Encomiendas y distribución de mercancía',tel:['393-3660','6028-8753'],wa:'6042-0478',nota:'Cobertura reportada: Ciudad de Panamá, Chiriquí, Santiago y Arraiján. Confirme rutas y oficinas actuales.'},
+ {id:'ancon',n:'Ancón Express',t:'n',ini:'AE',col:'#7c3aed',d:'Courier, casillero y transporte aéreo y marítimo desde Miami',tel:['386-1545'],wa:'6617-6911',web:'anconexpress.com',dir:'Premier Plaza, Brisas del Golf, sótano, local 9A',hor:'Lunes a sábado, 9:00 a. m. a 6:00 p. m.'},
+ {id:'graygorilla',n:'Gray Gorilla',t:'n',ini:'GG',col:'#475569',d:'Fletes, mudanzas y transporte con camiones',tel:['6280-0099'],wa:'',nota:'WhatsApp por confirmar. Carga voluminosa y traslados al interior; no se verificó red nacional de sucursales.'},
+ {id:'dhlexpress',n:'DHL Express Panamá',t:'i',ini:'DHL',col:'#d4a017',d:'Documentos, paquetes urgentes y envíos internacionales',tel:['271-3400'],wa:'',ig:'@dhl_global',dir:'Edificio DHL, avenida Centenario, Costa del Este',nota:'Seguimiento disponible desde su página oficial.'},
+ {id:'dhlgf',n:'DHL Global Forwarding',t:'i',ini:'DGF',col:'#b45309',d:'Carga aérea y marítima, importaciones, exportaciones y logística comercial',tel:['290-8901'],wa:'',dir:'Edificio DHL Global Forwarding, Parque Industrial y Corporativo Sur, vía Tocumen',nota:'Para mercancía pesada o contenedores, cotizar aquí.'},
+ {id:'fedex',n:'FedEx Panamá',t:'i',ini:'FX',col:'#5b21b6',d:'Paquetería y carga internacional',tel:['+507 271-3838'],wa:'',nota:'Confirmar vigencia del teléfono. Oficinas reportadas en Ciudad de Panamá, David y Colón; consulte dirección y horario en su buscador oficial.'},
+ {id:'ups',n:'UPS Panamá',t:'i',ini:'UPS',col:'#78350f',d:'Paquetería internacional, envíos empresariales y mensajería',tel:['+507 6936-6402'],wa:'',dir:'OPI, calle 2.ª, Llano Bonito, frente al Tabernáculo de la Fe, galera de Industrias Fernández, Juan Díaz',nota:'Confirmar vigencia del teléfono.'},
+ {id:'dsv',n:'DSV Panamá',t:'i',ini:'DSV',col:'#0f172a',d:'Carga aérea, marítima y terrestre, aduanas y logística empresarial',tel:['+507 280-1111'],wa:'',dir:'Ciudad de Panamá; centro de distribución en Cocosolito, Colón',nota:'Confirmar vigencia del teléfono.'},
+ {id:'kn',n:'Kuehne+Nagel Panamá',t:'i',ini:'KN',col:'#0369a1',d:'Carga marítima, aérea, terrestre y logística contractual',tel:[],wa:'',mail:'info.panamacity@kuehne-nagel.com',dir:'Dream Plaza, piso 11, avenida Centenario, Costa del Este',nota:'Otra referencia en Colón por confirmar. Cotizar por formulario oficial o correo.'},
+ {id:'copacargo',n:'Copa Airlines Cargo',t:'i',ini:'CC',col:'#0e7490',d:'Transporte aéreo de mercancías entre destinos de su red',tel:['+507 217-2672'],wa:'',nota:'Es el centro de atención de Copa Airlines: pida transferencia al departamento de carga.'}
+];
+const FLE_WEB=/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(\/[^\s"'<>]*)?$/i;
+function fleSanExtra(x){
+ if(!x||typeof x!=='object')return null;const id=String(x.id||''),n=fleT(x.n,80);
+ if(!/^x[a-z0-9]{3,16}$/.test(id)||!n)return null;
+ let web=fleT(x.web,100).replace(/^https?:\/\//i,'').replace(/\/$/,'');if(!FLE_WEB.test(web))web='';
+ const tel=(Array.isArray(x.tel)?x.tel:[x.tel]).map(v=>fleT(v,30)).filter(Boolean).slice(0,4);
+ return{id,n,t:x.t==='i'?'i':'n',ini:'',col:'#5b6573',d:fleT(x.d,160),tel,wa:fleT(x.wa,30),web,dir:fleT(x.dir,200),hor:fleT(x.hor,100),nota:fleT(x.nota,300),extra:1}
+}
+/* Limpia lo que viene de la nube: solo ids conocidos, fotos pequeñas en base64 y empresas propias bien formadas. */
+function fleSanCfg(r){
+ r=r&&typeof r==='object'?r:{};
+ const extra=(Array.isArray(r.extra)?r.extra:[]).slice(0,30).map(fleSanExtra).filter(Boolean),ids=new Set(FLE_DEF.map(x=>x.id).concat(extra.map(x=>x.id)));
+ const on=(Array.isArray(r.on)?r.on:[]).filter((i,k,a)=>ids.has(i)&&a.indexOf(i)===k),img={};
+ if(r.img&&typeof r.img==='object')Object.keys(r.img).forEach(k=>{const v=r.img[k];if(ids.has(k)&&typeof v==='string'&&v.length<40000&&/^data:image\/(png|jpeg);base64,[A-Za-z0-9+\/=]+$/.test(v))img[k]=v});
+ return{on,extra,img}
+}
+const fleAll=C=>FLE_DEF.concat((C&&C.extra)||[]);
+const fleNorm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
+function fleBuscar(nombre,C){
+ const q=fleNorm(nombre);if(!q)return null;const L=fleAll(C);
+ return L.find(c=>fleNorm(c.n)===q)||(q.length>=3?L.find(c=>fleNorm(c.n).startsWith(q)):null)||null
+}
+const fleTelTxt=c=>(c.tel||[]).join(' · ');
+const fleWaNum=w=>{const d=String(w||'').replace(/\D/g,'');return d.length===8?'507'+d:d};
+const _fleMono={};
+function fleMono(ini,col){
+ const k=ini+'|'+col;if(_fleMono[k]!==undefined)return _fleMono[k];
+ try{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
+  g.fillStyle=col;g.fillRect(0,0,128,128);g.fillStyle='rgba(255,255,255,.14)';g.beginPath();g.arc(112,16,64,0,7);g.fill();
+  g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.font='700 '+(ini.length>2?42:56)+'px Arial,Helvetica,sans-serif';g.fillText(ini,64,68);
+  return _fleMono[k]=c.toDataURL('image/png')}catch(e){return _fleMono[k]=''}
+}
+const fleIni=c=>c.ini||fleT(c.n,60).split(/\s+/).filter(w=>/[A-Za-zÁÉÍÓÚÑ]/.test(w)).slice(0,2).map(w=>w[0].toUpperCase()).join('')||'?';
+const fleLogo=(c,C)=>(C&&C.img&&C.img[c.id])||fleMono(fleIni(c),c.col||'#5b6573');
+/*FLE-FIN*/
+
+/*FLE-UI-INI*/
+const fleCfgTD=()=>fleSanCfg(typeof TD!=='undefined'?TD.fletes:null);
+const fleCfgSH=()=>fleSanCfg(typeof SH!=='undefined'?SH.fletes:null);
+let FLE_MSG=null,FLE_FOTO=null;
+function fleFicha(c,C){
+ const l=[];
+ if(c.d)l.push(esc(c.d));
+ if(c.tel&&c.tel.length)l.push('📞 '+esc(fleTelTxt(c)));
+ if(c.wa)l.push('💬 WhatsApp '+esc(c.wa));
+ if(c.mail)l.push('✉️ '+esc(c.mail));
+ if(c.dir)l.push('📍 '+esc(c.dir));
+ if(c.hor)l.push('🕒 '+esc(c.hor));
+ if(c.web)l.push('🌐 <a href="https://'+esc(c.web)+'" target="_blank" rel="noopener noreferrer">'+esc(c.web)+'</a>');
+ if(c.ig)l.push('📷 Instagram '+esc(c.ig));
+ if(c.suc&&c.suc.length)l.push('<details><summary>Sucursales reportadas ('+c.suc.length+')</summary>'+c.suc.map(s=>esc(s[0])+': '+esc(s[1])).join('<br>')+'</details>');
+ if(c.nota)l.push('<i>'+esc(c.nota)+'</i>');
+ return l.map(x=>'<div style="font-size:12.5px;line-height:1.5;margin-top:2px">'+x+'</div>').join('')
+}
+function fleFila(c,C,on){
+ const lg=fleLogo(c,C);
+ return `<div style="display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-top:1px solid rgba(128,128,128,.25)"><img src="${lg}" alt="" width="48" height="48" style="width:48px;height:48px;border-radius:10px;object-fit:cover;flex:none;background:#ddd">
+  <div style="flex:1;min-width:0"><b>${esc(c.n)}</b> <small style="color:var(--gris)">${c.t==='i'?'Internacional':'Nacional'}${c.extra?' · propia':''}</small>
+  <details><summary style="font-size:12.5px;cursor:pointer;color:var(--gris)">Ver datos</summary>${fleFicha(c,C)}</details></div>
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex:none">
+   <label style="display:inline-flex;gap:5px;align-items:center;font-size:13px"><input type="checkbox" ${on?'checked':''} data-h-change="h345" data-a-change="${_ha(c.id)}"> En la tienda</label>
+   <span style="display:flex;gap:6px"><button class="btn s" data-h-click="h346" data-a-click="${_ha(c.id)}" title="Subir foto o logo">📷</button>${C.img[c.id]?`<button class="btn s" data-h-click="h347" data-a-click="${_ha(c.id)}" title="Quitar foto">↺</button>`:''}${c.extra?`<button class="btn s d" data-h-click="h349" data-a-click="${_ha(c.id)}" title="Eliminar">🗑</button>`:''}</span>
+  </div></div>`
+}
+function fleAdmCard(){
+ const C=fleCfgTD(),all=fleAll(C),on=new Set(C.on),g=t=>all.filter(c=>c.t===t).map(c=>fleFila(c,C,on.has(c.id))).join('');
+ return `<h3 style="margin:0">🚚 Transportistas de carga</h3><p style="font-size:12.5px;color:var(--gris)">Lista predeterminada de empresas de fletes y encomiendas. Marque <b>En la tienda</b> las que quiera ofrecer: el cliente elegirá una al hacer su pedido y, cuando el pedido llegue, la etiqueta de envío ya trae el nombre, teléfono, WhatsApp y dirección de esa empresa. Con 📷 puede poner la foto o logo real de cada una. Los datos vienen de directorios públicos: confirme con la empresa antes de enviar.</p>
+ <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0"><button class="btn s" data-h-click="h348" data-a-click="${_ha('todos')}">☑ Todas en la tienda</button><button class="btn s" data-h-click="h348" data-a-click="${_ha('ninguno')}">☐ Ninguna</button><span style="font-size:13px"><b>${C.on.length}</b> de ${all.length} se ofrecen en la tienda</span></div>
+ <h4 style="margin:12px 0 0">Nacionales</h4>${g('n')}<h4 style="margin:14px 0 0">Internacionales</h4>${g('i')}
+ <input type="file" id="fle_file" accept="image/*" hidden data-h-change="h350">
+ <h4 style="margin:16px 0 6px">➕ Añadir otra empresa</h4>
+ <div class="g"><div><label>Nombre</label><input id="fl_n" maxlength="80" autocomplete="off"></div><div><label>Tipo</label><select id="fl_t"><option value="n">Nacional</option><option value="i">Internacional</option></select></div><div><label>Teléfono</label><input id="fl_tel" maxlength="30" autocomplete="off"></div><div><label>WhatsApp</label><input id="fl_wa" maxlength="30" autocomplete="off"></div><div style="grid-column:1/-1"><label>Dirección</label><input id="fl_dir" maxlength="200" autocomplete="off"></div><div><label>Página web</label><input id="fl_web" maxlength="100" placeholder="empresa.com" autocomplete="off"></div></div>
+ <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h351">Añadir a la lista</button><span id="fle_est" style="font-size:13px;color:${FLE_MSG?FLE_MSG.ok?'#1e7a43':'#b3261e':'inherit'}">${FLE_MSG?esc(FLE_MSG.t):''}</span></div>`
+}
+function fleRefrescar(forzar){const c=$('fleCard');if(!c)return;if(!forzar&&document.activeElement&&c.contains(document.activeElement)&&document.activeElement.tagName!=='BODY')return;c.innerHTML=fleAdmCard()}
+function fleMsg(ok,t){FLE_MSG={ok,t};const e=$('fle_est');if(e){e.style.color=ok?'#1e7a43':'#b3261e';e.textContent=t}}
+async function fleGuardar(C){
+ if(!esAdmin())return alert('Solo el administrador puede cambiar los transportistas.'),false;
+ if(!fbDb)return alert('Sin conexión con Firebase. Intente de nuevo en un momento.'),false;
+ C=fleSanCfg(C);const ref=fbDb.collection('tienda_items').doc('__cfg');fleMsg(true,'Guardando…');
+ try{try{await ref.update({fletes:C,ts:Date.now()})}catch(e){await ref.set({__cfg:true,fletes:C,ts:Date.now()},{merge:true})}
+  TD.fletes=C;fleMsg(true,'✔ Guardado. Ya se ve en la tienda virtual.');fleRefrescar(true);return true
+ }catch(e){window._tjw&&_tjw(e);fleMsg(false,'✖ No se pudo guardar. Revise su conexión o permisos.');return false}
+}
+function fleToggle(id,on){const C=fleCfgTD(),s=new Set(C.on);if(on)s.add(id);else s.delete(id);C.on=[...s];fleGuardar(C)}
+function fleTodos(m){const C=fleCfgTD();C.on=m==='todos'?fleAll(C).map(c=>c.id):[];fleGuardar(C)}
+function fleElegirFoto(id){FLE_FOTO=id;const f=$('fle_file');if(f){f.value='';f.click()}}
+function fleQuitarFoto(id){const C=fleCfgTD();delete C.img[id];fleGuardar(C)}
+function fleSubirFoto(inp){
+ const f=inp&&inp.files&&inp.files[0],id=FLE_FOTO;if(!f||!id)return;
+ if(!/^image\//.test(f.type))return alert('Elija un archivo de imagen.');
+ const u=URL.createObjectURL(f),im=new Image();
+ im.onload=()=>{try{const s=Math.min(im.width,im.height),c=document.createElement('canvas');c.width=c.height=160;const g=c.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,160,160);
+   g.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,160,160);const url=c.toDataURL('image/jpeg',.78);
+   if(url.length>38000)return alert('La imagen es demasiado pesada. Use una más sencilla.');
+   const C=fleCfgTD();C.img[id]=url;fleGuardar(C)}catch(e){window._tjw&&_tjw(e);alert('No se pudo procesar la imagen.')}finally{URL.revokeObjectURL(u)}};
+ im.onerror=()=>{URL.revokeObjectURL(u);alert('No se pudo leer la imagen.')};im.src=u
+}
+function fleEliminar(id){
+ const C=fleCfgTD(),c=C.extra.find(x=>x.id===id);if(!c||!confirm('¿Eliminar "'+c.n+'" de la lista?'))return;
+ C.extra=C.extra.filter(x=>x.id!==id);C.on=C.on.filter(x=>x!==id);delete C.img[id];fleGuardar(C)
+}
+function fleAgregar(){
+ const v=id=>{const e=$(id);return e?e.value.trim():''},C=fleCfgTD();
+ if(!v('fl_n'))return fleMsg(false,'✖ Escriba el nombre de la empresa.');
+ if(C.extra.length>=30)return fleMsg(false,'✖ Ya llegó al máximo de 30 empresas propias.');
+ const x=fleSanExtra({id:'x'+Date.now().toString(36).slice(-8)+Math.random().toString(36).slice(2,5),n:v('fl_n'),t:v('fl_t'),tel:[v('fl_tel')],wa:v('fl_wa'),dir:v('fl_dir'),web:v('fl_web')});
+ if(!x)return fleMsg(false,'✖ Revise los datos de la empresa.');
+ if(v('fl_web')&&!x.web)return fleMsg(false,'✖ La página web no es válida (ej. empresa.com).');
+ if(fleBuscar(x.n,C)&&fleNorm(fleBuscar(x.n,C).n)===fleNorm(x.n))return fleMsg(false,'✖ Esa empresa ya está en la lista.');
+ C.extra.push(x);C.on.push(x.id);fleGuardar(C)
+}
+/* ----- Tienda pública: selector en el carrito ----- */
+function fleShopLista(){const C=fleCfgSH();return{C,L:fleAll(C).filter(c=>C.on.includes(c.id))}}
+function shopFlePrev(id){
+ const {C,L}=fleShopLista(),c=L.find(x=>x.id===id);if(!c)return'';
+ return `<div style="display:flex;gap:10px;align-items:center;margin-top:8px;padding:8px;border-radius:12px;background:rgba(128,128,128,.1)"><img src="${fleLogo(c,C)}" alt="" width="44" height="44" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex:none"><div style="min-width:0;font-size:12.5px;line-height:1.45"><b style="font-size:13.5px">${esc(c.n)}</b><br>${esc(c.d||'')}${c.tel&&c.tel.length?'<br>📞 '+esc(fleTelTxt(c)):''}${c.wa?'<br>💬 '+esc(c.wa):''}${c.dir?'<br>📍 '+esc(c.dir):''}</div></div>`
+}
+function shopFleHTML(){
+ const {C,L}=fleShopLista();if(!L.length)return'';
+ const sel=(($('sh_fl')||{}).value)||SH.fle||'',op=t=>L.filter(c=>c.t===t).map(c=>`<option value="${esc(c.id)}" ${c.id===sel?'selected':''}>${esc(c.n)}</option>`).join(''),n=op('n'),i=op('i');
+ return `<div id="k_fle"><label for="sh_fl" style="display:block;font-weight:700;font-size:14px;margin:14px 0 4px">🚚 Transportista para su envío</label><select id="sh_fl" data-h-change="h352" style="width:100%"><option value="">Que la tienda lo coordine</option>${n?'<optgroup label="Nacionales">'+n+'</optgroup>':''}${i?'<optgroup label="Internacionales">'+i+'</optgroup>':''}</select><div id="sh_fle_p">${shopFlePrev(sel)}</div></div>`
+}
+function shopFleSel(){const {L}=fleShopLista(),id=(($('sh_fl')||{}).value)||SH.fle||'';return L.find(c=>c.id===id)||null}
+function shopFleCambio(v){SH.fle=v;const p=$('sh_fle_p');if(p)p.innerHTML=shopFlePrev(v)}
+/* ----- Panel: transportista elegido por el cliente en cada pedido ----- */
+function fleLinea(p){
+ const d=etqDatos(p,{});if(!d.agencia)return'';
+ return `<small>🚚 Envío: <b>${esc(d.agencia)}</b>${d.ag&&d.ag.tel?' · '+esc(d.ag.tel):''}${d.ag&&d.ag.wa?' · WA '+esc(d.ag.wa):''}</small><br>`
+}
+/*FLE-UI-FIN*/
+
 /*ETQ-INI*/
 /* ===== Etiquetas de envío =====
    Etiquetas para agencias de carga (nacional e internacional) de los pedidos de la tienda virtual.
@@ -2067,6 +2224,13 @@ function etqFlow(d,W,H,e,s,ox,oy,dib){
  celdas.forEach((c,i)=>{const cx=X+(i%2)*(cw+2*s),cy=oy+y+Math.floor(i/2)*(ch+1.6*s);
   if(dib){d.setDrawColor(0);d.setLineWidth(.35*s);d.rect(cx,cy,cw,ch);font(5.8,0,100);d.text(c[0],cx+1.4*s,cy+2.6*s);font(10,1);const v=cortar(c[1],10,1,1,cw-2.8*s)[0]||'';d.text(v,cx+1.4*s,cy+7.4*s)}});
  y+=2*ch+1.6*s+2.2*s;
+ // Datos de la agencia elegida (teléfono, WhatsApp, dirección) y su logo
+ if(e.ag){const y0=y,tl=!!(e.logo&&typeof d.addImage==='function'),aw=iw-(tl?11*s:0);
+  const lin=(t,fs,b,max,col)=>{if(!etqTxt(t))return;const L=cortar(t,fs,b,max,aw),lh=fs*s*pt*LH;if(dib){font(fs,b,col);L.forEach((ln,i)=>d.text(ln,X,oy+y+lh*i+fs*s*pt*.86))}y+=lh*L.length+.5*s};
+  lin('AGENCIA: '+[e.ag.tel&&('Tel. '+e.ag.tel),e.ag.wa&&('WhatsApp '+e.ag.wa)].filter(Boolean).join('  ·  '),8,1,2);
+  lin(e.ag.dir,7.5,0,2,70);
+  if(tl){if(dib){try{d.addImage(e.logo,/^data:image\/jpeg/.test(e.logo)?'JPEG':'PNG',X+iw-9.6*s,oy+y0,9.6*s,9.6*s)}catch(x){}}y=Math.max(y,y0+10*s)}
+  y+=1.4*s}
  // Remitente, contenido y observaciones
  bloque('REMITE: '+[e.rem.nombre,e.rem.tel,e.rem.dir].filter(Boolean).join(' · '),7.5,0,2,1.4,70);
  if(e.obs)bloque('⚠ '.replace(/[^\u0000-ÿ]/g,'')+'OBS.: '+e.obs,8.5,1,2,1.4);
@@ -2099,7 +2263,7 @@ const etqCfgSet=o=>{try{localStorage.setItem('tj_etq_cfg',JSON.stringify(Object.
 const etqLocal=()=>{try{return JSON.parse(localStorage.getItem('tj_etq_env')||'{}')||{}}catch(e){return{}}};
 function sanEnv(v){if(!v||typeof v!=='object')return null;const o={};
  if(v.tipo)o.tipo=v.tipo==='internacional'?'internacional':'nacional';
- [['agencia',80],['pais',60],['prov',80],['ciudad',80],['dir',200],['guia',60],['cont',300],['obs',200]].forEach(([k,n])=>{if(v[k]!=null&&String(v[k])!=='')o[k]=sTxt(v[k],n)});
+ [['agencia',80],['fid',30],['pais',60],['prov',80],['ciudad',80],['dir',200],['guia',60],['cont',300],['obs',200]].forEach(([k,n])=>{if(v[k]!=null&&String(v[k])!=='')o[k]=sTxt(v[k],n)});
  if(v.bultos!=null)o.bultos=Math.min(99,Math.max(1,Math.round(sNum(v.bultos))||1));
  if(sNum(v.peso)>0)o.peso=sNum(v.peso);
  if(sNum(v.etq)>0)o.etq=sNum(v.etq);
@@ -2116,9 +2280,15 @@ function etqGuardar(p,env,marcar){
 /* Datos de una etiqueta: lo guardado del pedido, completado con los valores comunes (def) del lote. */
 function etqDatos(p,def){
  const l=p.lead||{},env=etqEnvio(p),c=(typeof DB!=='undefined'&&DB.cfg)||{};def=def||{};
- const tipo=env.tipo||def.tipo||'nacional',pais=env.pais||def.pais||(tipo==='nacional'?'Panamá':'');
+ // Agencia: lo escrito en el pedido > la que eligió el cliente en la tienda > la nota > la última usada
+ const FC=fleSanCfg(typeof TD!=='undefined'?TD.fletes:null);let car=null,nm=env.agencia||'',porFid=false;
+ if(!nm){car=fleAll(FC).find(x=>x.id===env.fid)||null;if(car){nm=car.n;porFid=true}else{const m=/🚚 Envío por: (.+)/.exec(p.nota||'');if(m)nm=m[1].trim().slice(0,80)}}
+ if(!nm)nm=def.agencia||'';
+ if(!car&&nm)car=fleBuscar(nm,FC);
+ const tipo=env.tipo||(porFid?(car.t==='i'?'internacional':'nacional'):def.tipo)||'nacional',pais=env.pais||def.pais||(tipo==='nacional'?'Panamá':'');
  const cont=env.cont||(p.items||[]).map(i=>i.q+' x '+i.n).join(', ');
- return{tipo,agencia:env.agencia||def.agencia||'',guia:env.guia||'',peso:+env.peso||0,obs:env.obs||'',cont,
+ return{tipo,agencia:nm,guia:env.guia||'',peso:+env.peso||0,obs:env.obs||'',cont,
+  ag:car?{tel:(car.tel&&car.tel[0])||'',wa:car.wa||'',dir:car.dir||''}:null,logo:car?fleLogo(car,FC):'',
   codigo:'TJ-'+etqNum(p),fecha:new Date().toLocaleDateString('es-PA'),
   rem:{nombre:c.nombre||'Tarjetería Jhon',tel:c.tel||'',dir:c.dir||''},
   dest:{name:l.name||'',empresa:l.empresa||'',tel:l.tel||'',email:l.email||'',dir:env.dir||l.dir||'',ciudad:env.ciudad||'',prov:env.prov||'',pais},
@@ -2135,7 +2305,7 @@ function etqGenerar(pedidos,def,tamId){
 }
 const etqOpcTam=sel=>Object.keys(ETQ_TAM).map(k=>`<option value="${k}" ${k===sel?'selected':''}>${esc(ETQ_TAM[k].n)}</option>`).join('');
 const etqAgencias=()=>{const a=etqCfg().agencias;return Array.isArray(a)?a:[]};
-const etqAgOpts=()=>etqAgencias().map(a=>`<option value="${esc(a)}">`).join('');
+const etqAgOpts=()=>{const n=fleAll(fleSanCfg(typeof TD!=='undefined'?TD.fletes:null)).map(c=>c.n),L=n.concat(etqAgencias().filter(a=>!n.some(x=>x.toLowerCase()===a.toLowerCase())));return L.map(a=>`<option value="${esc(a)}">`).join('')};
 function etqRecordarAgencia(a){a=String(a||'').trim().slice(0,80);if(!a)return;const L=etqAgencias().filter(x=>x.toLowerCase()!==a.toLowerCase());L.unshift(a);etqCfgSet({agencias:L.slice(0,12),agencia:a})}
 const etqV=id=>{const e=$(id);return e?e.value.trim():''};
 function etqAbrir(id){
@@ -2206,7 +2376,7 @@ function etqImprimirLote(){
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbDb.collection(c):fbDb.collection(c).where('ref','==',me);let f1=true,f2=true;
- fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'clasico';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'clasico';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -2226,7 +2396,7 @@ function tdRender(){if(vista!=='tienda'||!SES)return;const adm=esAdmin(),me=chat
  const cls=DB.cli.filter(c=>waNum(c.t));
  const pubCard=adm?`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0 0 4px">📦 Productos en la tienda <small style="color:var(--gris);font-weight:500">(${pub.size} publicados · ${TD.cat.length} en este catálogo)</small></h3><button class="btn s" id="tdMinB" data-h-click="h120">${tdMinV()?'▸ Maximizar':'▾ Minimizar'}</button></div><div id="tdBody" style="${tdMinV()?'display:none':''}"><p style="font-size:12.5px;color:var(--gris)">Marque los productos de su Catálogo (con foto) que quiere mostrar a los clientes. Nombre, categoría, precio y descripción salen del Catálogo. Para cambiar un precio, edítelo en el Catálogo y vuelva a publicar.</p>${tdTabla(pub)}<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><select id="tdTema" style="width:auto">${TEMAS.map(t=>`<option value="${t.id}">${t.e} ${t.n}</option>`).join("")}</select><button class="btn" data-h-click="h119">+ Asignar tema a marcados</button><button class="btn" data-h-click="h118">− Quitar tema</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><select id="tdBd" style="width:auto">${Object.keys(TDBD).map(k=>`<option value="${k}">${TDBD[k]}</option>`).join("")}</select><button class="btn" data-h-click="h117">🏷 Poner etiqueta a marcados</button><button class="btn" data-h-click="h116">Quitar etiqueta</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><select id="tdStk" style="width:auto">${Object.keys(TDSTK).map(k=>`<option value="${k}">${TDSTK[k]}</option>`).join("")}</select><button class="btn" data-h-click="h115">📦 Aplicar existencia a marcados</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><button class="btn p" data-h-click="h114">⬆ Publicar / actualizar marcados</button><button class="btn d" data-h-click="h113">🗑 Quitar marcados de la tienda</button><span id="tdSt" style="font-size:12.5px;color:var(--gris)"></span></div></div></div>`:'';
  $('v').innerHTML=`<div class="card"><h3 style="margin:0 0 4px">🛍 Catálogo virtual</h3><p style="font-size:12.5px;color:var(--gris)">Comparta su enlace. El cliente se registra, ve productos, categorías y precios, arma su carrito y le envía el pedido. ${adm?'':'Los registros y pedidos quedan a su nombre.'}</p>${file}<label>Su enlace</label><input id="td_link" readonly value="${esc(link)}" data-h-focus="h56"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h112">📋 Copiar enlace</button><button class="btn" data-h-click="h85">👁 Ver como cliente</button><button class="btn p" data-h-click="h100">📖 Ver catálogo directo</button><button class="btn" data-h-click="h111">💬 Enviar por WhatsApp</button></div><div style="margin-top:14px"><label>Enviar el enlace a un cliente registrado</label><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="td_cli" style="flex:1;min-width:200px">${cls.map(c=>`<option value="${c.id}">${esc(c.n)} — ${esc(c.t)}</option>`).join('')||'<option value="">(sin clientes con teléfono)</option>'}</select><button class="btn p" data-h-click="h110">💬 Enviar</button></div></div></div>
-<div class="card"><h3 style="margin:0 0 6px">🛒 Pedidos de la tienda (${TD.peds.length})</h3>${etqBarra()}${TD.peds.length?TD.peds.map(p=>{const l=p.lead||{},w=tdWa(l.tel,'Hola '+l.name+', recibimos su pedido de la tienda virtual. ');return `<div class="tdp ${p.estado==='nuevo'?'nw':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><label style="display:inline-flex;align-items:center;margin-right:6px"><input type="checkbox" class="etqcb" ${ETQ_SEL.has(p.id)?'checked':''} data-h-change="h339" data-a-change="${_ha(p.id)}" title="Seleccionar para imprimir etiqueta"></label><b>${esc(l.name||'Cliente')}</b> · ${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}<br><small style="color:var(--gris)">${new Date(p.ts).toLocaleString('es-PA')} · Vendedor: ${esc(vdName(p.ref||'admin'))} · ${p.estado==='nuevo'?'<b style="color:var(--az)">NUEVO</b>':'Atendido'}${etqImpresa(p)?' · 🏷 etiqueta lista':''}</small></div><b style="font-size:17px">${$$(p.total)}</b></div><ul>${(p.items||[]).map(i=>`<li>${i.q} × ${esc(i.n)} — ${$$(i.p)}</li>`).join('')}</ul>${p.nota?`<small>📝 ${esc(p.nota)}</small><br>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn p s" data-h-click="h87" data-a-click="${_ha(p.id)}">🧾 Crear factura</button>${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<button class="btn s" data-h-click="h337" data-a-click="${_ha(p.id)}">🏷️ Etiqueta</button><button class="btn s" data-h-click="h109" data-a-click="${_ha(p.id)}">👁 Ver PDF</button><button class="btn s" data-h-click="h108" data-a-click="${_ha(p.id)}">⬇ Descargar</button><button class="btn s" data-h-click="h86" data-a-click="${_ha(p.id)}">${p.estado==='nuevo'?'✔ Marcar atendido':'↩ Reabrir'}</button><button class="btn s d" data-h-click="h107" data-a-click="${_ha(p.id)}">🗑 Eliminar</button></div></div>`}).join(''):'<div class="vacio">Aún no hay pedidos.</div>'}</div>
+<div class="card"><h3 style="margin:0 0 6px">🛒 Pedidos de la tienda (${TD.peds.length})</h3>${etqBarra()}${TD.peds.length?TD.peds.map(p=>{const l=p.lead||{},w=tdWa(l.tel,'Hola '+l.name+', recibimos su pedido de la tienda virtual. ');return `<div class="tdp ${p.estado==='nuevo'?'nw':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><label style="display:inline-flex;align-items:center;margin-right:6px"><input type="checkbox" class="etqcb" ${ETQ_SEL.has(p.id)?'checked':''} data-h-change="h339" data-a-change="${_ha(p.id)}" title="Seleccionar para imprimir etiqueta"></label><b>${esc(l.name||'Cliente')}</b> · ${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}<br><small style="color:var(--gris)">${new Date(p.ts).toLocaleString('es-PA')} · Vendedor: ${esc(vdName(p.ref||'admin'))} · ${p.estado==='nuevo'?'<b style="color:var(--az)">NUEVO</b>':'Atendido'}${etqImpresa(p)?' · 🏷 etiqueta lista':''}</small></div><b style="font-size:17px">${$$(p.total)}</b></div><ul>${(p.items||[]).map(i=>`<li>${i.q} × ${esc(i.n)} — ${$$(i.p)}</li>`).join('')}</ul>${fleLinea(p)}${p.nota?`<small>📝 ${esc(p.nota)}</small><br>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn p s" data-h-click="h87" data-a-click="${_ha(p.id)}">🧾 Crear factura</button>${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<button class="btn s" data-h-click="h337" data-a-click="${_ha(p.id)}">🏷️ Etiqueta</button><button class="btn s" data-h-click="h109" data-a-click="${_ha(p.id)}">👁 Ver PDF</button><button class="btn s" data-h-click="h108" data-a-click="${_ha(p.id)}">⬇ Descargar</button><button class="btn s" data-h-click="h86" data-a-click="${_ha(p.id)}">${p.estado==='nuevo'?'✔ Marcar atendido':'↩ Reabrir'}</button><button class="btn s d" data-h-click="h107" data-a-click="${_ha(p.id)}">🗑 Eliminar</button></div></div>`}).join(''):'<div class="vacio">Aún no hay pedidos.</div>'}</div>
 <div class="card"><h3 style="margin:0 0 6px">👥 Clientes registrados en la tienda (${TD.leads.length})</h3><p style="font-size:12.5px;color:var(--gris)">${adm?'Cada registro se agrega automáticamente a su lista de Clientes.':'Los clientes que se registraron con su enlace.'}</p>${TD.leads.length?`<div class="tw"><table><tr><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Correo</th><th>Vendedor</th><th></th></tr>${TD.leads.map(l=>{const w=tdWa(l.tel,'Hola '+l.name+', gracias por registrarse en nuestro catálogo virtual. ');return `<tr><td>${new Date(l.ts).toLocaleDateString('es-PA')}</td><td><b>${esc(l.name)}</b>${l.empresa?'<br><small>'+esc(l.empresa)+'</small>':''}</td><td>${esc(l.tel||'')}</td><td>${esc(l.email||'')}</td><td>${esc(vdName(l.ref||'admin'))}</td><td class="r">${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''} ${adm?`<button class="btn s d" data-h-click="h106" data-a-click="${_ha(l.id)}">🗑 Eliminar</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="vacio">Aún no hay registros.</div>'}</div>
 ${pubCard}`;try{tdAplicarFiltro()}catch(e){window._tjw&&_tjw(e)}}
 let TDF='todos';const TDG_CLOSED=new Set();
@@ -2308,7 +2478,7 @@ async function shopPurge(){try{if(sessionStorage.getItem('tj_purged'))return;let
 function shopInit(){shopPurge();SH.openTs=Date.now();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){window._tjw&&_tjw(e)}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'clasico';SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');try{shopXmas();shopSummer();shopPanama()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'clasico';SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');try{shopXmas();shopSummer();shopPanama()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -2487,7 +2657,7 @@ function shopDet(id){const i=SH.items.find(x=>x.id===id);if(!i)return;const tg=[
  shopM(`<div class="kdet"><div class="kdi"><img src="${i.img}" alt="${esc(i.name)}" data-h-click="h50" data-a-click="${_ha(id)}"><button class="kfav ${SH.fav[id]?'on':''}" data-f="${id}" data-h-click="h49" data-a-click="${_ha(id)}" aria-label="Favorito">${kico(SH.fav[id]?KI.heart:KI.heartO,22)}</button><span class="kzh">Toca para ampliar</span></div><div class="kdx">${i.cat?`<div class="kcat">${esc(i.cat)}</div>`:''}<h2>${esc(i.name)}</h2><div class="kdp">${tdMoney(i.price)}</div>${bdgTags(i,1)}${stkTag(i,1)}<button class="kshare" data-h-click="h48" data-a-click="${_ha(i.id)}">↗ Compartir</button>${tg?`<div class="ktg">${tg}</div>`:''}${i.desc?`<p class="kds">${esc(i.desc).replace(/\n/g,'<br>')}</p>`:''}<div class="kact2">${noDisp(i)?`<div class="kstn">${stkMsg(i)}</div>`:SH.cart[id]?`<div class="kst lg"><button data-h-click="h45" data-a-click="${_ha(id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h47" data-a-click="${_ha(id)}">${SH.cart[id]} en el carrito · cambiar</button><button data-h-click="h43" data-a-click="${_ha(id)}" aria-label="Agregar uno">+</button></div><button class="sbtn" data-h-click="h40">Ver carrito</button>`:`<button class="sbtn" data-h-click="h47" data-a-click="${_ha(id)}">Elegir cantidad y agregar</button>`}<button class="sbtn g" data-h-click="h31">Seguir viendo</button></div></div></div>`,'det',id,1)}
 function shopCart(){const L=shopLines();if(!L.length)return shopM('<h2 style="margin:6px 0 12px">Su carrito está vacío</h2><button class="sbtn g" data-h-click="h31">Seguir viendo</button>','cart');
  const t=L.reduce((s,l)=>s+l.q*l.p,0),nt=($('sh_nt')||{}).value||'';
- shopM(`<h2 style="margin:6px 0">🛒 Su pedido</h2>${L.map(l=>`<div class="kln"><img src="${l.img}" alt=""><div><b>${esc(l.n)}</b><small>${tdMoney(l.p)} c/u</small><button class="kdel" data-h-click="h46" data-a-click="${_ha(l.id)}">${kico(KTRASH,15)} Quitar</button></div><div class="kst"><button data-h-click="h45" data-a-click="${_ha(l.id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h44" data-a-click="${_ha(l.id)}" aria-label="Cambiar cantidad">${l.q}</button><button data-h-click="h43" data-a-click="${_ha(l.id)}" aria-label="Agregar uno">+</button></div></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:19px;font-weight:800;margin:14px 0 4px"><span>Total</span><span>${t>0?$$(t):'Consultar'}</span></div><small style="color:var(--tx2)">Precios sin ITBMS. Le confirmaremos disponibilidad y forma de pago.</small><textarea id="sh_nt" rows="2" placeholder="Notas para el pedido (opcional)">${esc(nt)}</textarea>${shopHP()}<div class="serr" id="sh_m2" style="margin:6px 0"></div><div class="kact2"><button class="sbtn" id="sh_sb" data-h-click="h42">Enviar pedido</button><button class="sbtn g" data-h-click="h31">Seguir viendo</button></div>`,'cart')}
+ shopM(`<h2 style="margin:6px 0">🛒 Su pedido</h2>${L.map(l=>`<div class="kln"><img src="${l.img}" alt=""><div><b>${esc(l.n)}</b><small>${tdMoney(l.p)} c/u</small><button class="kdel" data-h-click="h46" data-a-click="${_ha(l.id)}">${kico(KTRASH,15)} Quitar</button></div><div class="kst"><button data-h-click="h45" data-a-click="${_ha(l.id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h44" data-a-click="${_ha(l.id)}" aria-label="Cambiar cantidad">${l.q}</button><button data-h-click="h43" data-a-click="${_ha(l.id)}" aria-label="Agregar uno">+</button></div></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:19px;font-weight:800;margin:14px 0 4px"><span>Total</span><span>${t>0?$$(t):'Consultar'}</span></div><small style="color:var(--tx2)">Precios sin ITBMS. Le confirmaremos disponibilidad y forma de pago.</small>${shopFleHTML()}<textarea id="sh_nt" rows="2" placeholder="Notas para el pedido (opcional)">${esc(nt)}</textarea>${shopHP()}<div class="serr" id="sh_m2" style="margin:6px 0"></div><div class="kact2"><button class="sbtn" id="sh_sb" data-h-click="h42">Enviar pedido</button><button class="sbtn g" data-h-click="h31">Seguir viendo</button></div>`,'cart')}
 function shopVoz(txt){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{ss.cancel();const u=new SpeechSynthesisUtterance(txt),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-MX';u.rate=.96;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){window._tjw&&_tjw(e)}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,900)}}
 function shopPdfPrint(p){const l=p.lead||{},w=window.open('','_blank');if(!w)return alert('Permita las ventanas emergentes para descargar el comprobante.');
@@ -2628,7 +2798,10 @@ function shopAcc(quiet){const c=SH.cli,L=shopOrdMine(),n=L.length,tot=L.reduce((
  if(!quiet)shopOrdSync()}
 async function shopSend(){const L=shopLines();if(!L.length)return;if(SH.guest){shopToast('Vista previa: los pedidos están desactivados');return}if(!SH.cli){SH.pendNote=(($('sh_nt')||{}).value||'');return shopAskReg()}{const r=shopAntiBot();if(r!=='ok'){const em=$('sh_m2');if(em)em.textContent=shopAntiBotMsg(r);return}}const b=$('sh_sb');b.disabled=true;b.textContent='Enviando…';try{window.speechSynthesis&&speechSynthesis.speak(new SpeechSynthesisUtterance(''))}catch(e){window._tjw&&_tjw(e)}try{shopMusPrime()}catch(e){window._tjw&&_tjw(e)}const c=SH.cli,id=uid();
  const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa||'',dir:c.dir||''},items:L.map(l=>({id:l.id,n:l.n,p:l.p,q:l.q})),total:L.reduce((s,l)=>s+l.q*l.p,0),nota:(($('sh_nt')||{}).value||SH.pendNote||'').trim().slice(0,500),ref:SH.ref,ts:Date.now(),estado:'nuevo'};
- try{await fbDb.collection('tienda_pedidos').doc(id).set(p)}catch(e){b.disabled=false;b.textContent='Enviar pedido';$('sh_m2').textContent='No se pudo enviar. Intente de nuevo.';return}
+ {const fl=shopFleSel();if(fl)p.envio={agencia:fl.n,fid:fl.id};
+  try{await fbDb.collection('tienda_pedidos').doc(id).set(p)}catch(e){let ok=false;
+   if(fl){/* respaldo: si las reglas no admiten el campo envío, el transportista viaja en la nota */delete p.envio;p.nota=((p.nota?p.nota+'\n':'')+'🚚 Envío por: '+fl.n).slice(0,500);try{await fbDb.collection('tienda_pedidos').doc(id).set(p);ok=true}catch(e2){window._tjw&&_tjw(e2)}}
+   if(!ok){b.disabled=false;b.textContent='Enviar pedido';$('sh_m2').textContent='No se pudo enviar. Intente de nuevo.';return}}}
  SH.last=p;SH.pendNote='';shopOrdSave(p);try{shopConfetti()}catch(e){window._tjw&&_tjw(e)}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica();if(document.documentElement.classList.contains('panama'))shopPatrio(1)}SH.cart={};try{localStorage.removeItem('tj_shop_cart')}catch(e){window._tjw&&_tjw(e)}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
  shopM('<div style="text-align:center;padding:10px 0"><div style="font-size:54px">✅</div><h2 style="margin:6px 0">¡Pedido enviado!</h2><p style="color:var(--tx2);margin:0 0 16px">Gracias, '+esc((c.name||'').split(' ')[0])+'. Nos pondremos en contacto con usted muy pronto para confirmar su pedido.</p>'+(document.documentElement.classList.contains('xmas')?'<div class="kxg">🎄 ¡Le deseamos una <b>feliz Navidad</b> y un <b>próspero Año Nuevo</b>! 🎁</div>':(document.documentElement.classList.contains('summer')?'<div class="kxg ksm">☀️ ¡Que disfrute un <b>verano increíble</b>! 🌴</div>':(document.documentElement.classList.contains('panama')?'<div class="kxg kpa2"><span class="kfl"></span> ¡<b>Viva Panamá</b>! Que disfrute un <b>feliz mes patrio</b></div>':'')))+'<button class="sbtn" data-h-click="h34" style="margin-bottom:8px">👁 Ver comprobante</button><button class="sbtn g" data-h-click="h33" style="margin-bottom:8px">📄 Descargar PDF</button><button class="sbtn g" data-h-click="h32" style="margin-bottom:8px">🧾 Mis pedidos</button><button class="sbtn g" data-h-click="h31">Seguir viendo el catálogo</button></div>','ok');}
 function shopFab(){const e=$('k_fab');if(!e)return;const L=shopLines(),n=L.reduce((a,l)=>a+l.q,0),t=L.reduce((a,l)=>a+l.q*l.p,0);e.innerHTML=n?`<button class="kfab" data-h-click="h30">${kico(KI.cart,22)}<span>Ver pedido · ${n}${t>0?' · '+$$(t):''}</span></button>`:''}
@@ -2919,7 +3092,7 @@ function waRefreshHome(){if(vista!=='home')return;const e=$('waHome');if(!WA.lis
 R.config=function(){
  const r=_configBase.apply(this,arguments);if(!esAdmin())return r;const v=$('v');if(!v)return r;
  const cards=[
-  ['waCard',waCard],['investCard',investCard],['lbgCard',lbgCard],['xmasCard',xmasCard],['redesCard',redesCard],
+  ['waCard',waCard],['investCard',investCard],['lbgCard',lbgCard],['xmasCard',xmasCard],['redesCard',redesCard],['fleCard',fleAdmCard],
   ['bkCard',bkCard],['sesCard',sesCard],['tplCard',tplCard],['recCard',recCard],
   ['vozCard',vozCard],['cintCard',cintCard],['llamCard',llamCard]
  ];
@@ -3160,6 +3333,14 @@ __H.h340=function(event,a){etqSelModo(a[0])};
 __H.h341=function(event,a){etqAbrirLote()};
 __H.h342=function(event,a){etqImprimirLote()};
 __H.h343=function(event,a){etqTipoCambio()};
+__H.h345=function(event,a){fleToggle(a[0],this.checked)};
+__H.h346=function(event,a){fleElegirFoto(a[0])};
+__H.h347=function(event,a){fleQuitarFoto(a[0])};
+__H.h348=function(event,a){fleTodos(a[0])};
+__H.h349=function(event,a){fleEliminar(a[0])};
+__H.h350=function(event,a){fleSubirFoto(this)};
+__H.h351=function(event,a){fleAgregar()};
+__H.h352=function(event,a){shopFleCambio(this.value)};
 __H.h110=function(event,a){tdSendCli()};
 __H.h111=function(event,a){tdWaLink()};
 __H.h112=function(event,a){tdCopy()};
