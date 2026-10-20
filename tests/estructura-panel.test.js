@@ -171,7 +171,7 @@ test('Las redes sociales se configuran en Configuración y se muestran en la tie
   assert.match(app,/\['redesCard',redesCard\]/);
   assert.match(app,/function redUrl\(red,txt\)/);
   assert.match(app,/function redesGuardar\(\)/);
-  assert.match(app,/collection\('tienda_items'\)\.doc\('__cfg'\)\.set\(\{__cfg:true,redes:out/);
+  assert.match(app,/collection\('tienda_items'\)\.doc\('__cfg'\)\.set\(\{__cfg:true,redes,contacto:ct/);
   assert.match(app,/SH\.redes=cd\.redes/);
   assert.match(app,/id="k_redes"/);
   assert.match(app,/shopHdrScroll\(\);shopRedes\(\)/);
@@ -184,5 +184,24 @@ test('Los enlaces de redes solo aceptan https en TikTok, Instagram o Facebook',(
   assert.match(app,/u\.username\|\|u\.password\|\|!RED_HOST\[red\]\.test\(u\.hostname\)/);
   assert.match(app,/u\.protocol='https:'/);
   assert.match(app,/rel="noopener noreferrer"/);
+});
+
+test('El botón Contacto de la tienda muestra los datos configurados y las redes salen junto al menú',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/function contLimpio\(c\)/);
+  assert.match(app,/function shopContacto\(\)/);
+  assert.match(app,/if\(k==='contact'\)\{shopContacto\(\);return\}/);
+  assert.doesNotMatch(app,/if\(k==='contact'\)\{location\.href=/);
+  assert.match(app,/SH\.contacto=cd\.contacto/);
+  assert.match(app,/TD\.contacto=cd\.contacto/);
+  assert.match(app,/set\(\{__cfg:true,redes,contacto:ct/);
+  assert.match(app,/class=\\?"kredh\\?"/);
+});
+
+test('Lo escrito y el aviso de Redes y contacto sobreviven a los redibujados de la pantalla',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/let RS_DRAFT=\{\},RS_MSG=null;/);
+  assert.match(app,/__H\.h336=function\(event,a\)\{RS_DRAFT\[this\.id\]=this\.value/);
+  assert.match(app,/id in RS_DRAFT\?RS_DRAFT\[id\]:saved/);
 });
 
