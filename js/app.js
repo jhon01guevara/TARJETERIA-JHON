@@ -1364,8 +1364,109 @@ async function precargarCatalogoDeFabrica(){
  }catch(e){window._tjw&&_tjw(e)}
 }
 if(!/[?&]tienda(=|&|$)/.test(location.search))precargarCatalogoDeFabrica();
+
+/* ===== TJ LIVE: centro de preparación para TikTok LIVE =====
+   Esta capa NO afirma emitir ni leer eventos de TikTok. Hasta verificar acceso oficial,
+   los datos LIVE reales permanecen desconectados y no se muestran métricas inventadas. */
+const TJLIVE_KEY='tj_tiktok_live_draft_v1';
+function tjLiveLoad(){
+ try{return Object.assign({title:'',topic:'',promo:'',discount:'',productId:'',script:'',platform:'TikTok LIVE',updatedAt:0},JSON.parse(localStorage.getItem(TJLIVE_KEY)||'{}'))}
+ catch(e){return {title:'',topic:'',promo:'',discount:'',productId:'',script:'',platform:'TikTok LIVE',updatedAt:0}}
+}
+function tjLiveSaveDraft(){
+ const d={title:($('tjl_title')||{}).value||'',topic:($('tjl_topic')||{}).value||'',
+  promo:($('tjl_promo')||{}).value||'',discount:($('tjl_discount')||{}).value||'',
+  productId:($('tjl_product')||{}).value||'',script:($('tjl_script')||{}).value||'',
+  platform:'TikTok LIVE',updatedAt:Date.now()};
+ try{localStorage.setItem(TJLIVE_KEY,JSON.stringify(d));const e=$('tjl_status');if(e)e.textContent='Borrador guardado en este dispositivo · '+new Date(d.updatedAt).toLocaleString('es-PA');return true}
+ catch(e){const x=$('tjl_status');if(x)x.textContent='No se pudo guardar en este navegador. Copia el guion antes de salir.';return false}
+}
+function tjLiveProductOptions(selected){
+ const ps=Array.isArray(DB.prod)?DB.prod:[];
+ return '<option value="">Sin producto seleccionado</option>'+ps.map((p,i)=>{
+  const id=String(p.id||('p'+i)),name=String(p.n||p.nombre||'Producto'),price=Number(p.p||p.precio||0);
+  return '<option value="'+esc(id)+'" '+(id===selected?'selected':'')+'>'+esc(name)+' · '+esc($$(price))+'</option>'
+ }).join('');
+}
+function tjLiveScript(){
+ const d={title:($('tjl_title')||{}).value||'',topic:($('tjl_topic')||{}).value||'',
+  promo:($('tjl_promo')||{}).value||'',discount:($('tjl_discount')||{}).value||'',
+  productId:($('tjl_product')||{}).value||''};
+ const p=(DB.prod||[]).find((x,i)=>String(x.id||('p'+i))===d.productId);
+ const product=p?String(p.n||p.nombre||'Producto'):'nuestros productos';
+ const price=p?$$(Number(p.p||p.precio||0)):'precio disponible en el catálogo';
+ const script=[
+  '¡Hola! Bienvenidos al LIVE de Tarjetería Jhon.',
+  d.topic?'Hoy vamos a mostrar: '+d.topic+'.':'Hoy les mostraremos nuestros productos y cómo hacer sus pedidos.',
+  'Producto destacado: '+product+'. Precio de referencia: '+price+'.',
+  d.promo?'Promoción: '+d.promo+(d.discount?' · '+d.discount:'')+'.':'Pregunten en el chat por las promociones vigentes.',
+  'Para comprar, comenta o escríbenos por los canales oficiales del negocio. Confirmaremos disponibilidad, precio final y factura antes de cerrar el pedido.',
+  '¡Gracias por acompañarnos y compartir la transmisión!'
+ ].join('\n\n');
+ const e=$('tjl_script');if(e)e.value=script;
+ tjLiveSaveDraft();
+}
+function tjLiveOpen(url){window.open(url,'_blank','noopener,noreferrer')}
+R.tiktoklive=function(){
+ const d=tjLiveLoad(),v=$('v');if(!v)return;
+ v.innerHTML=`
+ <div class="card">
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
+   <div><div class="bd">CENTRO DE TRANSMISIONES</div><h3 style="font-size:22px;margin:12px 0 6px">TikTok LIVE · Tarjetería Jhon</h3>
+   <p style="color:var(--gris);margin:0;max-width:680px">Prepara tus ventas, promociones y guion desde el panel. La emisión y los datos en tiempo real se activarán únicamente cuando se confirme el acceso compatible de tu cuenta.</p></div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn p" data-h-click="h353">Abrir TikTok</button>
+    <button class="btn" data-h-click="h354">Abrir LIVE Studio</button>
+   </div>
+  </div>
+ </div>
+ <div class="kp">
+  <div class="card"><small>Estado de emisión</small><b style="font-size:20px">No conectado</b><p style="font-size:12px;color:var(--gris)">Requiere verificar acceso a LIVE</p></div>
+  <div class="card"><small>Chat en tiempo real</small><b style="font-size:20px">Pendiente</b><p style="font-size:12px;color:var(--gris)">Sin conexión autorizada</p></div>
+  <div class="card"><small>Regalos y seguidores</small><b style="font-size:20px">Pendiente</b><p style="font-size:12px;color:var(--gris)">No se inventan métricas</p></div>
+  <div class="card"><small>Ventas atribuidas al LIVE</small><b style="font-size:20px">Por configurar</b><p style="font-size:12px;color:var(--gris)">Se vincularán con facturas reales</p></div>
+ </div>
+ <div class="card">
+  <h3>Preparar una transmisión</h3>
+  <div class="g">
+   <div><label for="tjl_title">Título del LIVE</label><input id="tjl_title" maxlength="90" value="${esc(d.title)}" placeholder="Ej. Ofertas de tarjetas y detalles"></div>
+   <div><label for="tjl_topic">Contenido preparado</label><input id="tjl_topic" maxlength="180" value="${esc(d.topic)}" placeholder="Qué vas a mostrar o explicar"></div>
+   <div><label for="tjl_product">Producto destacado del catálogo</label><select id="tjl_product">${tjLiveProductOptions(d.productId)}</select></div>
+   <div><label for="tjl_promo">Nombre/código de promoción</label><input id="tjl_promo" maxlength="80" value="${esc(d.promo)}" placeholder="Ej. LIVEJHON"></div>
+   <div><label for="tjl_discount">Condiciones de la promoción</label><input id="tjl_discount" maxlength="120" value="${esc(d.discount)}" placeholder="Descuento, vigencia o condiciones"></div>
+  </div>
+  <div style="margin-top:14px"><label for="tjl_script">Guion de la transmisión</label><textarea id="tjl_script" rows="9" maxlength="6000" placeholder="Prepara aquí tu presentación, demostración, oferta y llamada a la acción">${esc(d.script)}</textarea></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
+   <button class="btn p" data-h-click="h350">Guardar borrador</button>
+   <button class="btn" data-h-click="h351">Generar guion inicial</button>
+   <button class="btn" data-h-click="h352">Copiar guion</button>
+   <button class="btn" data-h-click="h355">Ir a facturación</button>
+  </div>
+  <p id="tjl_status" role="status" style="font-size:12px;color:var(--gris);margin-bottom:0">${d.updatedAt?'Borrador local · '+new Date(d.updatedAt).toLocaleString('es-PA'):'El borrador se guarda en este navegador, no se sincroniza todavía con otros dispositivos.'}</p>
+ </div>
+ <div class="card">
+  <h3>Panel de datos en tiempo real</h3>
+  <p style="color:var(--gris)">Esta sección queda preparada para integrar comentarios, nuevos seguidores, regalos y estadísticas reales cuando se confirme una API, integración o herramienta autorizada por TikTok. No introduzcas contraseñas, cookies ni claves de sesión en este panel.</p>
+  <div class="g">
+   <div><label>Comentarios</label><div class="bd">Sin fuente de datos</div></div>
+   <div><label>Nuevos seguidores</label><div class="bd">Sin fuente de datos</div></div>
+   <div><label>Regalos recibidos</label><div class="bd">Sin fuente de datos</div></div>
+   <div><label>Visualizaciones / likes</label><div class="bd">Sin fuente de datos</div></div>
+  </div>
+ </div>
+ <div class="card">
+  <h3>Antes de habilitar la emisión</h3>
+  <ol style="line-height:1.8;color:var(--gris)">
+   <li>Confirmar que la cuenta puede iniciar LIVE y usar LIVE Studio en computadora.</li>
+   <li>Comprobar qué integraciones y permisos oficiales están disponibles para esa cuenta y región.</li>
+   <li>Si se necesita backend, guardar tokens solo en servidor y validar autorización en Firebase; nunca incluir secretos en el JavaScript del navegador.</li>
+   <li>Probar en entorno controlado antes de vincular eventos con clientes, pedidos y facturas.</li>
+  </ol>
+ </div>`;
+};
+
 // ===== Usuarios, PIN y permisos por panel =====
-V.push(['vend','🧑‍💼','Vendedores']);V.push(['mapa','🗺️','Mapa de clientes']);V.push(['gal','📷','Galería']);V.push(['chat','💬','Chat']);V.push(['tienda','🛍','Tienda virtual']);
+V.push(['vend','🧑‍💼','Vendedores']);V.push(['mapa','🗺️','Mapa de clientes']);V.push(['gal','📷','Galería']);V.push(['chat','💬','Chat']);V.push(['tienda','🛍','Tienda virtual']);V.push(['tiktoklive','📡','TikTok LIVE']);
 const PANELES=V.filter(v=>v[0]!=='config'&&v[0]!=='vend'&&v[0]!=='mapa'),SK='tj_sess';
 let SES=null,_authMode='',_fail=0,_lock=0;
 const usuarios=()=>DB.cfg.users||(DB.cfg.users=[]);
@@ -3622,3 +3723,18 @@ __H.hs1=function(event,a){respaldo()};
 __H.hs2=function(event,a){navEdit()};
 __H.hs3=function(event,a){tema(this.value)};
 __H.hs4=function(event,a){if(event.target===this)cerrar()};
+
+
+/* Handlers del módulo TJ LIVE */
+__H.h350=function(){tjLiveSaveDraft()};
+__H.h351=function(){tjLiveScript()};
+__H.h352=function(){
+ const t=($('tjl_script')||{}).value||'';
+ if(!t){const e=$('tjl_status');if(e)e.textContent='Genera o escribe un guion antes de copiarlo.';return}
+ if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>{const e=$('tjl_status');if(e)e.textContent='Guion copiado.'}).catch(()=>{const e=$('tjl_status');if(e)e.textContent='No se pudo copiar automáticamente; selecciona el texto y cópialo manualmente.'});
+ else {const e=$('tjl_script');if(e){e.focus();e.select()}const x=$('tjl_status');if(x)x.textContent='Selecciona el guion y cópialo manualmente.'}
+};
+__H.h353=function(){tjLiveOpen('https://www.tiktok.com/')};
+__H.h354=function(){tjLiveOpen('https://www.tiktok.com/studio/download')};
+__H.h355=function(){ir('nueva')};
+
