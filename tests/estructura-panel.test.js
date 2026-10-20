@@ -205,3 +205,21 @@ test('Lo escrito y el aviso de Redes y contacto sobreviven a los redibujados de 
   assert.match(app,/id in RS_DRAFT\?RS_DRAFT\[id\]:saved/);
 });
 
+test('La tienda muestra un botón flotante de WhatsApp con el número configurado',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/id="k_wa"/);
+  assert.match(app,/\.kwa\{position:fixed/);
+  assert.match(app,/w\.href='https:\/\/wa\.me\/'\+num\+'\?text='/);
+  assert.match(app,/num=contLimpio\(typeof SH!=='undefined'\?SH\.contacto:null\)\.wa/);
+});
+
+test('Destacados de la semana avanza solo cada 5 segundos y se adapta al móvil',()=>{
+  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  assert.match(app,/SH\._dt=setInterval\(shopDestTick,5000\)/);
+  assert.match(app,/\.join\(''\)\}<\/div>`;shopDestAuto\(\)\}/);
+  assert.match(app,/prefers-reduced-motion:reduce\)'\)\.matches\)return/);
+  assert.match(app,/SH\._dh=Date\.now\(\)\+8000/);
+  assert.match(app,/scroll-snap-type:x mandatory/);
+  assert.match(app,/flex:0 0 min\(44vw,200px\)/);
+});
+
