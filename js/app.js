@@ -1415,8 +1415,8 @@ R.tiktoklive=function(){
    <div><div class="bd">CENTRO DE TRANSMISIONES</div><h3 style="font-size:22px;margin:12px 0 6px">TikTok LIVE · Tarjetería Jhon</h3>
    <p style="color:var(--gris);margin:0;max-width:680px">Prepara tus ventas, promociones y guion desde el panel. La emisión y los datos en tiempo real se activarán únicamente cuando se confirme el acceso compatible de tu cuenta.</p></div>
    <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <button class="btn p" data-h-click="h353">Abrir TikTok</button>
-    <button class="btn" data-h-click="h354">Abrir LIVE Studio</button>
+    <button class="btn p" data-h-click="h363">Abrir TikTok</button>
+    <button class="btn" data-h-click="h364">Abrir LIVE Studio</button>
    </div>
   </div>
  </div>
@@ -1437,9 +1437,9 @@ R.tiktoklive=function(){
   </div>
   <div style="margin-top:14px"><label for="tjl_script">Guion de la transmisión</label><textarea id="tjl_script" rows="9" maxlength="6000" placeholder="Prepara aquí tu presentación, demostración, oferta y llamada a la acción">${esc(d.script)}</textarea></div>
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px">
-   <button class="btn p" data-h-click="h350">Guardar borrador</button>
-   <button class="btn" data-h-click="h351">Generar guion inicial</button>
-   <button class="btn" data-h-click="h352">Copiar guion</button>
+   <button class="btn p" data-h-click="h360">Guardar borrador</button>
+   <button class="btn" data-h-click="h361">Generar guion inicial</button>
+   <button class="btn" data-h-click="h362">Copiar guion</button>
    <button class="btn" data-h-click="h355">Ir a facturación</button>
   </div>
   <p id="tjl_status" role="status" style="font-size:12px;color:var(--gris);margin-bottom:0">${d.updatedAt?'Borrador local · '+new Date(d.updatedAt).toLocaleString('es-PA'):'El borrador se guarda en este navegador, no se sincroniza todavía con otros dispositivos.'}</p>
@@ -3726,15 +3726,15 @@ __H.hs4=function(event,a){if(event.target===this)cerrar()};
 
 
 /* Handlers del módulo TJ LIVE */
-__H.h350=function(){tjLiveSaveDraft()};
-__H.h351=function(){tjLiveScript()};
-__H.h352=function(){
+__H.h360=function(){tjLiveSaveDraft()};
+__H.h361=function(){tjLiveScript()};
+__H.h362=function(){
  const t=($('tjl_script')||{}).value||'';
  if(!t){const e=$('tjl_status');if(e)e.textContent='Genera o escribe un guion antes de copiarlo.';return}
  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(t).then(()=>{const e=$('tjl_status');if(e)e.textContent='Guion copiado.'}).catch(()=>{const e=$('tjl_status');if(e)e.textContent='No se pudo copiar automáticamente; selecciona el texto y cópialo manualmente.'});
  else {const e=$('tjl_script');if(e){e.focus();e.select()}const x=$('tjl_status');if(x)x.textContent='Selecciona el guion y cópialo manualmente.'}
 };
-__H.h353=function(){tjLiveOpen('https://www.tiktok.com/')};
-__H.h354=function(){tjLiveOpen('https://www.tiktok.com/studio/download')};
+__H.h363=function(){tjLiveOpen('https://www.tiktok.com/')};
+__H.h364=function(){tjLiveOpen('https://www.tiktok.com/studio/download')};
 __H.h355=function(){ir('nueva')};
 
