@@ -1907,7 +1907,7 @@ function tdAviso(t){try{agSound()}catch(e){window._tjw&&_tjw(e)}if(DB.cfg.vozCha
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbDb.collection(c):fbDb.collection(c).where('ref','==',me);let f1=true,f2=true;
- fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'clasico';try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'clasico';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -2009,7 +2009,7 @@ async function shopPurge(){try{if(sessionStorage.getItem('tj_purged'))return;let
 function shopInit(){shopPurge();SH.openTs=Date.now();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){window._tjw&&_tjw(e)}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'clasico';H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');try{shopXmas();shopSummer();shopPanama()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'clasico';SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');try{shopXmas();shopSummer();shopPanama()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -2063,8 +2063,8 @@ async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('s
 function shopCatalog(){const o=$('shop');if(!o)return;
  o.innerHTML=`<div class="kwrap"><header class="khd"><div class="kh-top"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div><button class="kmenu-btn" id="k_menu_b" data-h-click="h83" aria-label="Abrir menú" aria-expanded="false">${kico(KI.menu,22)}</button></div><div class="kh-search"><label class="ksr">${kico(KI.search,20)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" data-h-click="h81" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><button class="kfilter-btn" data-h-click="h80" aria-label="Abrir filtros">${kico(KI.filter,21)}</button><nav class="kh-links">${shopDNavHtml()}</nav></div><nav class="kmobile-menu" id="k_mmenu" hidden>${shopMobileNavHtml()}</nav></header><nav class="kdnav" id="k_dnav">${shopDNavHtml()}</nav><section class="khero" id="khero" aria-label="Diseños destacados"></section><section class="kcats" id="k_cats" hidden></section><section class="kdest" id="k_dest" hidden></section>
 <div class="kmain"><aside class="kside" id="k_side"></aside><div class="kcol"><div class="kstk"><div class="kchips" id="sh_ch"></div></div>
-<div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g" aria-label="Resultados"></div><div id="k_more"></div></div></div></div><nav class="knav" id="k_nav"></nav><div id="k_fab"></div>`;
- shopFilters();shopNav();shopHdrScroll()}
+<div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g" aria-label="Resultados"></div><div id="k_more"></div></div></div></div><section class="kredes" id="k_redes" hidden></section><nav class="knav" id="k_nav"></nav><div id="k_fab"></div>`;
+ shopFilters();shopNav();shopHdrScroll();shopRedes()}
 function shopHdrScroll(){const o=$('shop');if(!o||SH._hs)return;SH._hs=1;let last=0,tk=false;
  o.addEventListener('scroll',()=>{if(tk)return;tk=true;requestAnimationFrame(()=>{tk=false;if(innerWidth>820)return;const y=o.scrollTop,d=y-last,h=o.querySelector('.khd'),f=$('k_fab'),q=$('sh_q');
   if(Math.abs(d)>8){const hide=d>0&&y>140&&!(q&&document.activeElement===q);if(h)h.classList.toggle('kh-hide',hide);if(f)f.classList.toggle('kh-hide',hide);last=y}
@@ -2620,7 +2620,7 @@ function waRefreshHome(){if(vista!=='home')return;const e=$('waHome');if(!WA.lis
 R.config=function(){
  const r=_configBase.apply(this,arguments);if(!esAdmin())return r;const v=$('v');if(!v)return r;
  const cards=[
-  ['waCard',waCard],['investCard',investCard],['lbgCard',lbgCard],['xmasCard',xmasCard],
+  ['waCard',waCard],['investCard',investCard],['lbgCard',lbgCard],['xmasCard',xmasCard],['redesCard',redesCard],
   ['bkCard',bkCard],['sesCard',sesCard],['tplCard',tplCard],['recCard',recCard],
   ['vozCard',vozCard],['cintCard',cintCard],['llamCard',llamCard]
  ];
@@ -2725,6 +2725,68 @@ function cliMapSync(centrar){
   _cuMk.on('dragend',()=>{const p=_cuMk.getLatLng(),i=$('cu_link');if(!i)return;i.value=p.lat.toFixed(6)+', '+p.lng.toFixed(6);delete i.dataset.acc;cliLocEstado()})
  }else _cuMk.setLatLng([l.lat,l.lng]);
  if(centrar)_cuMap.setView([l.lat,l.lng],Math.max(_cuMap.getZoom(),17))
+}
+
+/* ===== Redes sociales de la tienda virtual (TikTok, Instagram, Facebook) ===== */
+const RED_DEF=[['tiktok','TikTok'],['instagram','Instagram'],['facebook','Facebook']];
+const RED_HOST={tiktok:/^(?:[a-z0-9-]+\.)*tiktok\.com$/i,instagram:/^(?:[a-z0-9-]+\.)*instagram\.com$/i,facebook:/^(?:[a-z0-9-]+\.)*(?:facebook\.com|fb\.com)$/i};
+const RED_SVG={
+ tiktok:'<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.1 4.2 5 4.5"/>',
+ instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>',
+ facebook:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'};
+// Acepta @usuario, usuario o un link de la red; devuelve un link https seguro o '' si no es válido.
+function redUrl(red,txt){
+ let t=String(txt==null?'':txt).trim();if(!t||t.length>300||!RED_HOST[red])return'';
+ if(/^[a-z][a-z0-9+.-]*:/i.test(t)){if(!/^https?:\/\//i.test(t))return''}
+ else if(/^(?:[a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#]|$)/i.test(t))t='https://'+t;
+ if(/^https?:\/\//i.test(t)){
+  let u;try{u=new URL(t)}catch(e){return''}
+  if(u.username||u.password||!RED_HOST[red].test(u.hostname))return'';
+  u.protocol='https:';u.hash='';
+  const id=u.searchParams.get('id');
+  u.search=(/\/profile\.php$/i.test(u.pathname)&&/^\d{5,25}$/.test(id||''))?'?id='+id:'';
+  return u.href
+ }
+ t=t.replace(/^@/,'');if(!/^[A-Za-z0-9._-]{1,60}$/.test(t))return'';
+ return red==='tiktok'?'https://www.tiktok.com/@'+t:red==='instagram'?'https://www.instagram.com/'+t+'/':'https://www.facebook.com/'+t
+}
+(function(){if(document.getElementById('redCss'))return;const st=document.createElement('style');st.id='redCss';
+ st.textContent='.kredes{max-width:1100px;margin:28px auto 96px;padding:0 16px;text-align:center}.kredes h3{margin:0 0 12px}.kred-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.kred{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}.kred:hover{filter:brightness(1.08)}.kred svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.kred-tiktok{background:#111}.kred-instagram{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)}.kred-facebook{background:#1877f2}';
+ document.head.appendChild(st)})();
+// Tienda pública: botones al final de la página (los datos se vuelven a validar al leerlos).
+function shopRedes(){
+ const e=$('k_redes');if(!e)return;
+ const r=(typeof SH!=='undefined'&&SH.redes)||{},L=RED_DEF.map(([k,n])=>[k,n,redUrl(k,r[k])]).filter(x=>x[2]);
+ if(!L.length){e.hidden=true;e.innerHTML='';return}
+ e.hidden=false;
+ e.innerHTML=`<h3>Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>`<a class="kred kred-${k}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${n}"><svg viewBox="0 0 24 24" aria-hidden="true">${RED_SVG[k]}</svg><span>${n}</span></a>`).join('')}</div>`
+}
+// Configuración (administrador)
+function redesCard(){
+ const r=(typeof TD!=='undefined'&&TD.redes)||{},ph={tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'};
+ return `<h3 style="margin:0">📣 Redes sociales de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Aparecen como botones al final de la tienda virtual. Escriba el @usuario o pegue el link del perfil. Deje vacía la que no use.</p>
+ <div class="g">${RED_DEF.map(([k,n])=>`<div><label>${n}</label><input id="rs_${k}" value="${esc(redUrl(k,r[k]))}" placeholder="${ph[k]}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
+ <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h335">Guardar redes</button><span id="rs_est" style="font-size:13px"></span></div>`
+}
+function redesFill(){
+ if(typeof TD==='undefined')return;const r=TD.redes||{};
+ RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i&&!i.dataset.d&&document.activeElement!==i)i.value=redUrl(k,r[k])})
+}
+async function redesGuardar(){
+ if(!esAdmin())return alert('Solo el administrador puede cambiar las redes sociales.');
+ if(!fbDb)return alert('Sin conexión con Firebase. Intente de nuevo en un momento.');
+ const out={},est=$('rs_est');
+ for(const [k,n] of RED_DEF){
+  const i=$('rs_'+k),t=i?i.value.trim():'',u=redUrl(k,t);
+  if(t&&!u){if(est){est.style.color='#b3261e';est.textContent='✖ '+n+': no es válido. Escriba el @usuario o el link de su perfil de '+n+'.'}if(i)i.focus();return}
+  out[k]=u
+ }
+ if(est){est.style.color='';est.textContent='Guardando…'}
+ try{
+  await fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,redes:out,ts:Date.now()},{merge:true});
+  TD.redes=out;RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i){i.value=out[k];delete i.dataset.d}});
+  if(est){est.style.color='#1e7a43';est.textContent='✔ Guardado. Ya se ven en la tienda virtual.'}
+ }catch(e){window._tjw&&_tjw(e);if(est){est.style.color='#b3261e';est.textContent='✖ No se pudo guardar. Revise su conexión o permisos.'}}
 }
 function homeCard(html){const w=document.createElement('div');w.innerHTML=(typeof html==='function'?html():html)||'';return w.firstElementChild}
 R.home=function(){
@@ -3056,6 +3118,8 @@ __H.h331=function(event,a){cliLocAbrir()};
 __H.h332=function(event,a){MC.q=($('mcQ')||{}).value||'';MC.f=($('mcF')||{}).value||'todos';mcCapa('mcMap',true)};
 __H.h333=function(event,a){mcIr(a[0])};
 __H.h334=function(event,a){ir('mapa')};
+__H.h335=function(event,a){redesGuardar()};
+__H.h336=function(event,a){this.dataset.d='1'};
 __H.h307=function(event,a){delP(a[0])};
 __H.h308=function(event,a){editP(a[0])};
 __H.h309=function(event,a){addP()};
