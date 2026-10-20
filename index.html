@@ -1269,9 +1269,11 @@ html.shopmode,html.shopmode body{background:#f2f4f5}
 #shop,#shopm,#ksnack{--p:#5433eb;--pc:#f2f4f5;--onpc:#000;--bg:#f2f4f5;--sf:#fff;--sf2:#f2f4f5;--tx:#000;--tx2:#787574;--ol:#ebebeb;
  --sh:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1);--shs:0 2px 8px rgba(0,0,0,.06);--shl:0 4px 24px rgba(0,0,0,.12);--shv:0 4px 24px rgba(69,36,219,.34);
  font-family:Inter,system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;letter-spacing:-.025em}
-@media(prefers-color-scheme:dark){#shop,#shopm,#ksnack{--p:#7c66ff;--pc:#26262a;--onpc:#fff;--bg:#0c0c0e;--sf:#18181b;--sf2:#232327;--tx:#fff;--tx2:#a8a5a3;--ol:#2e2e33;
- --sh:0 4px 6px -1px rgba(0,0,0,.5),0 2px 4px -2px rgba(0,0,0,.5);--shs:0 2px 8px rgba(0,0,0,.4);--shl:0 4px 24px rgba(0,0,0,.5);--shv:0 4px 24px rgba(124,102,255,.35)}
- html.shopmode,html.shopmode body{background:#0c0c0e}}
+/* Oscuro: solo cuando el interruptor de tema de la tienda lo activa (data-kt=dark), NO por el modo del sistema.
+   Antes usaba prefers-color-scheme y dejaba texto blanco sobre tarjetas blancas en equipos con Windows oscuro. */
+html[data-kt=dark] #shop,html[data-kt=dark] #shopm,html[data-kt=dark] #ksnack{--p:#7c66ff;--pc:#26262a;--onpc:#fff;--bg:#0c0c0e;--sf:#18181b;--sf2:#232327;--tx:#fff;--tx2:#a8a5a3;--ol:#2e2e33;
+ --sh:0 4px 6px -1px rgba(0,0,0,.5),0 2px 4px -2px rgba(0,0,0,.5);--shs:0 2px 8px rgba(0,0,0,.4);--shl:0 4px 24px rgba(0,0,0,.5);--shv:0 4px 24px rgba(124,102,255,.35);color-scheme:dark}
+html[data-kt=dark].shopmode,html[data-kt=dark].shopmode body{background:#0c0c0e}
 #shop .kht b,#shop .kdest h3,#shop .kcats h3,#shopm h2{font-weight:600;letter-spacing:-.045em}
 /* Cabecera blanca y limpia */
 #shop .khd{background:var(--sf);box-shadow:var(--shs);border-radius:0 0 28px 28px}
@@ -1349,6 +1351,18 @@ html.shopmode,html.shopmode body{background:#f2f4f5}
 /* Datos del envío (transportistas) en el mismo estilo */
 #k_fle select{border:1px solid var(--ol);border-radius:9999px;background:var(--sf);padding:13px 16px;font-family:inherit}
 #sh_fle_p>div,#sh_env{border-radius:22px}
+
+/* Claro: iguala la paleta Shop sobre las capas anteriores (blanco puro / Apple) que tienen mayor especificidad */
+html.shopmode:not([data-kt=dark]),html.shopmode:not([data-kt=dark]) body{background:#f2f4f5}
+html.shopmode:not([data-kt=dark]) :is(#shop,#shopm,#ksnack){--bg:#f2f4f5;--sf:#fff;--sf2:#f2f4f5;--tx:#000;--tx2:#787574;--ol:#ebebeb;--sh:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1);color-scheme:light}
+html.shopmode:not([data-kt=dark]) #shop .kc,html.shopmode:not([data-kt=dark]) #shop .kdc{border:0;background:var(--sf)}
+html.shopmode:not([data-kt=dark]) #shop .ksr{background:var(--sf);box-shadow:none}
+html.shopmode:not([data-kt=dark]) #shop .ksr:focus-within{box-shadow:0 0 0 3px color-mix(in srgb,var(--p) 18%,transparent)}
+html.shopmode:not([data-kt=dark]) #shop .kchip{background:var(--sf);border-color:var(--ol)}
+html.shopmode:not([data-kt=dark]) #shop .kchip.on{background:var(--tx);border-color:var(--tx)}
+html.shopmode:not([data-kt=dark]) #shop .knav{background:var(--sf);box-shadow:var(--shl)}
+html.shopmode:not([data-kt=dark]) #shop .kreg-w{background:var(--bg)}
+html.shopmode:not([data-kt=dark]) #shop .kimg{background:var(--sf2)}
 </style>
 </head><body>
 <div class="aurora" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
