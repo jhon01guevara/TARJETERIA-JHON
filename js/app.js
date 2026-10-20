@@ -28,7 +28,7 @@ const _appC={};function appHtml(n){if(!_appC[n])_appC[n]=fetch('apps/'+n+'.html'
 let DB={prod:[],cli:[],fac:[],ubi:[],agenda:[],cfg:{sig:1058,itbms:0,nombre:'Tarjetería Jhon',ruc:'',tel:'(507) 6074-1150',email:'Tarjeteriajhon@gmail.com',dir:'Panama Oeste',banco:'Banco General',tcuenta:'Ahorro',cuenta:'',yappy:'',dests:[],tema:'claro',snd:1,tono:'campana',vol:70,nsys:0}};
 let cardState={cfg:false,email:false};
 try{cardState=Object.assign(cardState,JSON.parse(localStorage.getItem('tj_cards')||'{}'))}catch(e){window._tjw&&_tjw(e)}
-const ALL_CFG_CARDS = ['cfg_apariencia','cfg_empresa','cfg_emails','cfg_notif','cfg_nav','cfg_respaldo','waCard','investCard','lbgCard','xmasCard','redesCard','fleCard','bkCard','sesCard','tplCard','recCard','vozCard','cintCard','llamCard'];
+const ALL_CFG_CARDS = ['poliCard','cfg_apariencia','cfg_empresa','cfg_emails','cfg_notif','cfg_nav','cfg_respaldo','waCard','investCard','lbgCard','xmasCard','redesCard','fleCard','bkCard','sesCard','tplCard','recCard','vozCard','cintCard','llamCard'];
 function toggleCard(key){
  cardState[key]=!cardState[key];
  try{localStorage.setItem('tj_cards',JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}
@@ -411,7 +411,21 @@ function contLimpio(c){
 const redesLista=r=>{r=r&&typeof r==='object'?r:{};return RED_DEF.map(([k,n])=>[k,n,redUrl(k,r[k])]).filter(x=>x[2])};
 const redLink=(k,n,u,mini)=>`<a class="kred kred-${k}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" aria-hidden="true">${RED_SVG[k]}</svg>${mini?'':`<span>${n}</span>`}</a>`;
 // Tienda pública: iconos junto al menú y botones al final de la página.
+function shopFooterRender(){
+ const f=$('k_footer');if(!f)return;
+ f.innerHTML=`<div style="margin-top:36px;padding:26px 16px 80px;border-top:1px solid var(--linea);text-align:center;font-size:12.5px;color:var(--gris);background:var(--sf);border-radius:14px;margin-bottom:14px">
+   <div style="font-weight:700;font-size:14.5px;color:var(--txt);margin-bottom:4px">Distribuidora Jhon · Tarjetería Jhon</div>
+   <p style="margin:4px 0 10px;font-size:12px;color:var(--gris)">Tienda en línea en etapa preparatoria informativa · Panamá</p>
+   <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px">
+     <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPoliticas')}" style="font-size:12px;display:inline-flex;align-items:center;gap:5px"><span>🛡️</span><span>Políticas y Privacidad (Ley 81)</span></button>
+     <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopContacto')}" style="font-size:12px;display:inline-flex;align-items:center;gap:5px"><span>📞</span><span>Contacto oficial</span></button>
+   </div>
+   <small style="display:block;color:var(--gris);font-size:11px">Protección de datos personales conforme a la Ley 81 de 2019 de la República de Panamá.</small>
+ </div>`;
+}
 function shopRedes(){
+try{shopFooterRender()}catch(e){}
+
  const L=redesLista(typeof SH!=='undefined'?SH.redes:null),w=$('k_wa'),num=contLimpio(typeof SH!=='undefined'?SH.contacto:null).wa;
  if(w){if(num){w.href='https://wa.me/'+num+'?text='+encodeURIComponent('Hola, vi su catálogo virtual de Tarjetería Jhon y quisiera más información.');w.hidden=false}else{w.hidden=true;w.removeAttribute('href')}}
  document.querySelectorAll('.kredh').forEach(e=>{e.innerHTML=L.map(([k,n,u])=>redLink(k,n,u,1)).join('')});
@@ -431,7 +445,159 @@ function shopContacto(){
  shopM(`<h2 style="margin:6px 0">Contacto</h2><div class="kcont">${f.map(([i,l,h])=>`<div class="kcr"><span>${i}</span><div><small>${l}</small><br>${h}</div></div>`).join('')}</div>${L.length?`<h3 style="margin:6px 0 10px">Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>redLink(k,n,u)).join('')}</div>`:''}<div class="kact2" style="margin-top:14px"><button class="sbtn g" data-h-click="h31">Cerrar</button></div>`,'contact')
 }
 // Configuración (administrador). Lo escrito sin guardar y el aviso sobreviven a los redibujados de la pantalla.
+/* ===== POLÍTICAS DE PRIVACIDAD, USO Y PROTECCIÓN LEGAL (LEY 81 DE PANAMÁ) ===== */
+const TJ_POLITICAS = {
+ nombre: "Distribuidora Jhon / Tarjetería Jhon",
+ web: "https://jhon01guevara.github.io/TARJETERIA-JHON/index.html?tienda=1",
+ correo: "tarjeteriajhon@gmail.com",
+ tel: "6074-1150",
+ estado: "Etapa preparatoria. La tienda todavía no recibe pedidos ni pagos comerciales.",
+};
+
+function shopPoliticas(tabSel){
+ const t = tabSel || "1";
+ const tabs = [
+   ["1", "⚠️ 1. Aviso Preparatorio"],
+   ["2", "📜 2. Términos de Uso"],
+   ["3", "🔒 3. Privacidad (Ley 81)"],
+   ["4", "🚚 4. Entregas y Retiros"],
+   ["5", "💬 5. Reclamaciones"],
+   ["6", "✅ 6. Lista de Verificación"]
+ ];
+ 
+ let body = "";
+ if(t === "1"){
+   body = `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#92400e;font-size:12.5px;line-height:1.5">
+     <b style="display:block;font-size:13.5px;margin-bottom:4px">⚠️ Estado: Etapa preparatoria informativa</b>
+     Actualmente, <b>Distribuidora Jhon</b> se encuentra preparando su tienda en línea para una posible apertura comercial futura.<br><br>
+     <b>Durante esta etapa:</b>
+     <ul style="margin:6px 0 6px 18px;padding:0">
+       <li>No se reciben pedidos comerciales.</li>
+       <li>No se solicitan ni aceptan pagos por medio de la tienda.</li>
+       <li>Las publicaciones de productos y sus precios son informativas y pueden modificarse antes de la apertura.</li>
+       <li>Los métodos de entrega y pago descritos son opciones previstas, sujetas a confirmación.</li>
+       <li>El envío de un mensaje de consulta no equivale a una compra confirmada.</li>
+     </ul>
+     <b>🛡️ Importante para su seguridad:</b> No envíes dinero ni compartas información bancaria confidencial con motivo de una publicación o prueba de esta tienda. No se solicitarán contraseñas, códigos de verificación, PIN ni claves de banca en línea.
+   </div>`;
+ } else if(t === "2"){
+   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
+     <h3 style="margin:0 0 6px;font-size:14.5px">2. Términos y condiciones de uso</h3>
+     <p><b>2.1. Objeto:</b> Estos términos establecen las reglas preliminares de acceso y uso del sitio web de Distribuidora Jhon, destinado a presentar productos de la categoría de accesorios y ofrecer información sobre una futura tienda en línea.</p>
+     <p><b>2.2. Uso permitido:</b> El usuario se compromete a utilizar el sitio de forma lícita, respetar los derechos de terceros y no intentar alterar, interrumpir o acceder sin autorización a sus sistemas, cuentas, bases de datos o funciones administrativas. Queda prohibido enviar información falsa, realizar pruebas abusivas o suplantar a otras personas.</p>
+     <p><b>2.3. Productos, fotografías y precios:</b> Las fotografías, descripciones, existencias y precios publicados durante la etapa preparatoria son informativos. Pueden existir diferencias de color, presentación o disponibilidad.</p>
+     <p><b>2.4. Pedidos y contratación:</b> La tienda no está recibiendo pedidos comerciales durante esta etapa para evitar que una prueba técnica se interprete como una compra real.</p>
+     <p><b>2.5. Precios y pagos futuros:</b> Los métodos previstos son transferencia bancaria y Yappy, sujetos a habilitación y verificación antes de la apertura. El usuario no debe transferir dinero actualmente.</p>
+     <p><b>2.6. Entregas y retiros futuros:</b> Se prevé ofrecer entrega a domicilio y retiro en un punto acordado. Las zonas disponibles, costos y horarios se publicarán antes de iniciar ventas.</p>
+     <p><b>2.7. Cambios, devoluciones y garantías:</b> Las condiciones definitivas se publicarán antes de iniciar ventas, respetando plenamente la legislación de protección al consumidor de la República de Panamá.</p>
+   </div>`;
+ } else if(t === "3"){
+   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
+     <h3 style="margin:0 0 6px;font-size:14.5px">3. Política preliminar de privacidad y protección de datos</h3>
+     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin-bottom:12px;color:#166534;font-size:12px">
+       ✔ <b>Marco Legal:</b> Esta política se rige bajo la legislación panameña aplicable, incluida la <b>Ley 81 de 2019</b> de Protección de Datos Personales y su reglamentación, el <b>Decreto Ejecutivo 285 de 2021</b>.
+     </div>
+     <p><b>3.1. Finalidad:</b> Esta política explica cómo se prevé tratar la información personal relacionada con el uso de la tienda.</p>
+     <p><b>3.2. Qué información podría recopilarse:</b> Nombre y apellidos, teléfono, correo electrónico, dirección para coordinar entrega, datos de consultas y datos técnicos de navegación estrictamente necesarios. <b>Nunca se solicitarán contraseñas bancarias, PIN ni códigos de autenticación.</b></p>
+     <p><b>3.3. Finalidades previstas:</b> Responder consultas, coordinar pedidos/entregas futuras, confirmar operaciones legítimas, gestionar incidencias y cumplir con obligaciones legales aplicables.</p>
+     <p><b>3.4. Destinatarios:</b> La información personal no se comparte con terceros para fines incompatibles ni se comercializa.</p>
+     <p><b>3.5. Seguridad:</b> Se aplican medidas de restricción de acceso, reglas de seguridad en bases de datos y cifrado SSL/HTTPS en tránsito.</p>
+     <p><b>3.6. Derechos ARCO:</b> Las personas pueden ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición enviando una solicitud formal a <b><a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a></b>.</p>
+   </div>`;
+ } else if(t === "4"){
+   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
+     <h3 style="margin:0 0 6px;font-size:14.5px">4. Política preliminar de entregas y retiros</h3>
+     <p><b>4.1. Modalidades previstas:</b> Entrega a domicilio (sujeta a cobertura) y retiro en punto acordado previamente con el cliente.</p>
+     <p><b>4.2. Cobertura y costos:</b> Las tarifas, zonas y horarios definitivos se anunciarán formalmente antes del inicio comercial.</p>
+     <p><b>4.3. Datos para entrega:</b> Se solicitarán únicamente los datos estrictamente necesarios (dirección y teléfono) para asegurar la llegada del paquete.</p>
+     <p><b>4.4. Incidencias:</b> Se dispondrá de un canal directo para resolver retrasos, entregas fallidas o daños en tránsito.</p>
+   </div>`;
+ } else if(t === "5"){
+   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
+     <h3 style="margin:0 0 6px;font-size:14.5px">5. Atención al cliente y reclamaciones</h3>
+     <div style="background:var(--sf);border:1px solid var(--linea);border-radius:10px;padding:12px;margin-bottom:12px">
+       <b>Canales Oficiales:</b><br>
+       ✉️ Correo: <a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a><br>
+       📞 Teléfono: <a href="tel:60741150">6074-1150</a>
+     </div>
+     <p><b>5.1. Revisión y respuesta:</b> Las consultas y reclamaciones se atienden de forma individual y oportuna.</p>
+     <p><b>5.2. Derechos del consumidor:</b> Estas políticas no pretenden excluir ni reducir los derechos que reconoce la legislación panameña (ACODECO).</p>
+   </div>`;
+ } else if(t === "6"){
+   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
+     <h3 style="margin:0 0 6px;font-size:14.5px">6. Lista de verificación antes de la apertura comercial</h3>
+     <p style="color:var(--gris);font-size:12px">Tareas indispensables antes de activar pedidos y pagos reales:</p>
+     <ul style="margin:6px 0 6px 18px;padding:0">
+       <li>Completar y verificar la identidad legal del titular, RUC, Aviso de Operación y dirección física aplicable.</li>
+       <li>Confirmar la disponibilidad y registro del nombre comercial.</li>
+       <li>Definir productos, existencias, precios y condiciones de venta finales.</li>
+       <li>Validar transferencias bancarias y Yappy con procedimiento seguro de verificación.</li>
+       <li>Definir cobertura, tarifas, horarios y condiciones de entrega y retiro.</li>
+       <li>Publicar la política definitiva de cambios, devoluciones y garantías.</li>
+       <li>Auditar formularios, bases de datos y permisos de acceso técnico.</li>
+       <li>Verificar el procedimiento de atención a solicitudes de privacidad.</li>
+     </ul>
+   </div>`;
+ }
+ 
+ const html = `<div style="max-width:620px;margin-inline:auto">
+   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:10px">
+     <div>
+       <h2 style="margin:0 0 2px;font-size:18px">🛡️ Políticas y Privacidad</h2>
+       <small style="color:var(--gris)">Distribuidora Jhon · Tarjetería Jhon (Ley 81 de Panamá)</small>
+     </div>
+   </div>
+   <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;border-bottom:1px solid var(--linea)">
+     ${tabs.map(([k, l]) => `<button class="btn s ${k === t ? "p" : ""}" style="font-size:11.5px;padding:5px 10px;white-space:nowrap" data-h-click="call" data-a-click="${_ha('shopPoliticas', k)}">${l}</button>`).join("")}
+   </div>
+   <div style="max-height:55vh;overflow-y:auto;padding-right:6px">
+     ${body}
+   </div>
+   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--linea);flex-wrap:wrap;gap:8px">
+     <button class="btn s" data-h-click="call" data-a-click="${_ha('poliCopiar')}" style="font-size:12px">📋 Copiar documento</button>
+     <button class="btn p" data-h-click="h31">Cerrar</button>
+   </div>
+ </div>`;
+ 
+ shopM(html, "politicas");
+}
+
+function poliCopiar(){
+ const txt = `DISTRIBUIDORA JHON\nPolíticas preliminares de uso, privacidad y protección del cliente\nEstado: etapa preparatoria. La tienda todavía no recibe pedidos ni pagos.\nNombre comercial: Distribuidora Jhon / Tarjetería Jhon\nSitio web: https://jhon01guevara.github.io/TARJETERIA-JHON/index.html?tienda=1\nCorreo de contacto: tarjeteriajhon@gmail.com\nTeléfono: 6074-1150\n\n1. Aviso de etapa preparatoria\nNo se reciben pedidos comerciales ni pagos por la tienda. No envíes dinero ni compartas claves.\n\n2. Términos y condiciones de uso\nUso lícito, productos y precios informativos.\n\n3. Política preliminar de privacidad y protección de datos\nProtección conforme a la Ley 81 de 2019 de la República de Panamá y Decreto Ejecutivo 285 de 2021.\n\n4. Entregas y retiros\nModalidades a domicilio y retiro en punto acordado.\n\n5. Atención al cliente y reclamaciones\ntarjeteriajhon@gmail.com · 6074-1150\n\n6. Lista de verificación antes de la apertura\nRUC, Aviso de Operación y formalización comercial.`;
+ navigator.clipboard&&navigator.clipboard.writeText(txt).then(()=>alert("Copiado al portapapeles.")).catch(()=>alert(txt));
+}
+
+function poliAdmCard(){
+ return `<h3 style="margin:0">🛡️ Políticas de uso, privacidad y protección legal</h3>
+ <p style="font-size:12.5px;color:var(--gris);margin-top:2px">Políticas preliminares y marco de protección del cliente y administración bajo la <b>Ley 81 de 2019</b> (Protección de Datos de Panamá).</p>
+ <div style="background:var(--sf);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:14px">
+   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+     <div>
+       <b style="font-size:14px">Distribuidora Jhon / Tarjetería Jhon</b><br>
+       <small style="color:var(--gris)">Estado: Etapa preparatoria informativa activa</small>
+     </div>
+     <span style="padding:4px 10px;border-radius:12px;background:#fef3c7;color:#b45309;font-weight:700;font-size:11.5px">⚠️ Etapa Preparatoria</span>
+   </div>
+   <div style="font-size:12.5px;color:var(--txt);line-height:1.5;margin-bottom:12px">
+     Estas políticas protegen tanto a los clientes como al negocio al declarar formalmente que la tienda web está en fase informativa preliminar, evitando fraudes, suplantaciones o pedidos no autorizados mientras se completa el registro oficial (RUC y Aviso de Operación).
+   </div>
+   <div style="display:flex;gap:8px;flex-wrap:wrap">
+     <button class="btn p" data-h-click="call" data-a-click="${_ha('shopPoliticas')}">👁️ Ver políticas completas</button>
+     <button class="btn s" data-h-click="call" data-a-click="${_ha('poliCopiar')}">📋 Copiar texto legal</button>
+   </div>
+ </div>
+ <div style="border:1px solid var(--linea);border-radius:10px;padding:12px;font-size:12px">
+   <b>✅ Lista de verificación previa a la apertura comercial:</b>
+   <ul style="margin:6px 0 0 16px;padding:0;color:var(--gris)">
+     <li>Completar y verificar identidad del titular, RUC y Aviso de Operación.</li>
+     <li>Confirmar cuentas oficiales de Yappy y Banco.</li>
+     <li>Auditar formularios y reglas de privacidad (Ley 81).</li>
+   </ul>
+ </div>`;
+}
+
 function redesCard(){
+
  const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph={tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'};
  const val=(id,saved)=>id in RS_DRAFT?RS_DRAFT[id]:saved;
  return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. El número de WhatsApp además aparece como botón verde flotante en la tienda (8 dígitos o con código de país). Deje vacío lo que no use.</p>
@@ -2792,7 +2958,7 @@ async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('s
 function shopCatalog(){const o=$('shop');if(!o)return;
  o.innerHTML=`<div class="kwrap"><header class="khd"><div class="kh-top"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div><button class="kmenu-btn" id="k_menu_b" data-h-click="h83" aria-label="Abrir menú" aria-expanded="false">${kico(KI.menu,22)}</button></div><div class="kh-search"><label class="ksr">${kico(KI.search,20)}<input id="sh_q" type="search" placeholder="Buscar diseño o tema…" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" data-h-click="h81" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button></label><button class="kfilter-btn" data-h-click="h80" aria-label="Abrir filtros">${kico(KI.filter,21)}</button><nav class="kh-links">${shopDNavHtml()}</nav></div><nav class="kmobile-menu" id="k_mmenu" hidden>${shopMobileNavHtml()}</nav></header><nav class="kdnav" id="k_dnav">${shopDNavHtml()}</nav><section class="khero" id="khero" aria-label="Diseños destacados"></section><section class="kcats" id="k_cats" hidden></section><section class="kdest" id="k_dest" hidden></section>
 <div class="kmain"><aside class="kside" id="k_side"></aside><div class="kcol"><div class="kstk"><div class="kchips" id="sh_ch"></div></div>
-<div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g" aria-label="Resultados"></div><div id="k_more"></div></div></div></div><section class="kredes" id="k_redes" hidden></section><nav class="knav" id="k_nav"></nav><div id="k_fab"></div><a class="kwa" id="k_wa" target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9.2 8.6c.3 2.4 2.7 5 5.5 5.6l1.1-1.2-1.7-.9-.8.6c-.9-.4-1.8-1.3-2.2-2.2l.6-.8-.9-1.7z"/></svg></a>`;
+<div class="kmeta" id="k_meta"></div><div class="kgrid" id="sh_g" aria-label="Resultados"></div><div id="k_more"></div></div></div></div><section class="kredes" id="k_redes" hidden></section><footer class="kshop-footer" id="k_footer"></footer><nav class="knav" id="k_nav"></nav><div id="k_fab"></div><a class="kwa" id="k_wa" target="_blank" rel="noopener noreferrer" aria-label="Escribir por WhatsApp" title="Escribir por WhatsApp" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/><path d="M9.2 8.6c.3 2.4 2.7 5 5.5 5.6l1.1-1.2-1.7-.9-.8.6c-.9-.4-1.8-1.3-2.2-2.2l.6-.8-.9-1.7z"/></svg></a>`;
  shopFilters();shopNav();shopHdrScroll();shopRedes()}
 function shopHdrScroll(){const o=$('shop');if(!o||SH._hs)return;SH._hs=1;let last=0,tk=false;
  o.addEventListener('scroll',()=>{if(tk)return;tk=true;requestAnimationFrame(()=>{tk=false;if(innerWidth>820)return;const y=o.scrollTop,d=y-last,h=o.querySelector('.khd'),f=$('k_fab'),q=$('sh_q');
@@ -2800,12 +2966,13 @@ function shopHdrScroll(){const o=$('shop');if(!o||SH._hs)return;SH._hs=1;let las
   if(y<80){if(h)h.classList.remove('kh-hide');if(f)f.classList.remove('kh-hide')}})},{passive:true});
  o.addEventListener('click',e=>{if(e.target.closest&&e.target.closest('.kbrand'))o.scrollTo({top:0,behavior:'smooth'})})}
 
-function shopDNavHtml(){const email='tarjeteriajhon@gmail.com';return [['Inicio',"shopDNavGo('home')"],['Categorías',"shopDNavGo('cats')"],['Novedades',"shopDNavGo('dest')"],['Más vendidos',"shopDNavGo('dest')"],['Contacto',"shopDNavGo('contact')"]].map(([l,fn])=>`<button data-h-click="call" data-a-click="${_ha(..._hcall(fn))}">${l}</button>`).join('')+'<span class="kredh"></span>'}
-function shopMobileNavHtml(){return [[KI.home,'Inicio',"shopMobileGo('home')"],[KI.grid,'Categorías',"shopMobileGo('cats')"],[KI.star,'Destacados',"shopMobileGo('dest')"],[KI.heartO,'Favoritos',"shopMobileGo('fav')"],[KI.user,'Mi cuenta',"shopMobileGo('acc')"],[KI.cart,'Carrito',"shopMobileGo('cart')"],[KI.filter,'Filtros',"shopMobileGo('filters')"],[KI.search,'Contacto',"shopMobileGo('contact')"]].map(([i,l,fn])=>`<button data-h-click="call" data-a-click="${_ha(..._hcall(fn))}">${kico(i,18)}<span>${l}</span></button>`).join('')+'<div class="kredh"></div>'}
+function shopDNavHtml(){const email='tarjeteriajhon@gmail.com';return [['Inicio',"shopDNavGo('home')"],['Categorías',"shopDNavGo('cats')"],['Novedades',"shopDNavGo('dest')"],['Más vendidos',"shopDNavGo('dest')"],['Contacto',"shopDNavGo('contact')"],['Políticas',"shopDNavGo('politicas')"]].map(([l,fn])=>`<button data-h-click="call" data-a-click="${_ha(..._hcall(fn))}">${l}</button>`).join('')+'<span class="kredh"></span>'}
+function shopMobileNavHtml(){return [[KI.home,'Inicio',"shopMobileGo('home')"],[KI.grid,'Categorías',"shopMobileGo('cats')"],[KI.star,'Destacados',"shopMobileGo('dest')"],[KI.heartO,'Favoritos',"shopMobileGo('fav')"],[KI.user,'Mi cuenta',"shopMobileGo('acc')"],[KI.cart,'Carrito',"shopMobileGo('cart')"],[KI.filter,'Filtros',"shopMobileGo('filters')"],[KI.search,'Contacto',"shopMobileGo('contact')"],[KI.star,'Políticas',"shopMobileGo('politicas')"]].map(([i,l,fn])=>`<button data-h-click="call" data-a-click="${_ha(..._hcall(fn))}">${kico(i,18)}<span>${l}</span></button>`).join('')+'<div class="kredh"></div>'}
 function shopMenu(force){const m=$('k_mmenu'),b=$('k_menu_b');if(!m)return;const open=force===undefined?m.hidden:!!force;m.hidden=!open;if(b){b.setAttribute('aria-expanded',open?'true':'false');b.setAttribute('aria-label',open?'Cerrar menú':'Abrir menú')}}
 function shopMobileGo(k){shopMenu(false);if(k==='fav'||k==='acc'||k==='cart')return shopTab(k);if(k==='filters')return shopFilterSheet();shopDNavGo(k)}
 function shopDNavGo(k){if(k==='home'){shopClear();$('shop').scrollTo({top:0,behavior:'smooth'});return}
  if(k==='contact'){shopContacto();return}
+ if(k==='politicas'){shopPoliticas();return}
  const id=k==='cats'?'k_cats':'k_dest',e=$(id);if(e&&!e.hidden)e.scrollIntoView({behavior:'smooth',block:'start'})}
 function shopBanner(){const e=$('k_banner');if(!e)return;const L=SH.items.filter(i=>i&&i.img&&!noDisp(i));if(!L.length){e.hidden=true;e.innerHTML='';return}
  if(e._k===L.length)return;e._k=L.length;e.hidden=false;const bg=L[Math.floor(Math.random()*L.length)].img;
@@ -2916,8 +3083,9 @@ addEventListener('keydown',e=>{if(e.key!=='Escape')return;const z=$('kzoom');if(
 function shopDet(id){const i=SH.items.find(x=>x.id===id);if(!i)return;const tg=[...ik(i)].map(k=>SH.opts.find(o=>o.id===k)).filter(Boolean).map(o=>`<button data-k="${esc(o.id)}" data-h-click="h51">${o.e} ${esc(o.n)}</button>`).join('');
  shopM(`<div class="kdet"><div class="kdi"><img src="${i.img}" alt="${esc(i.name)}" data-h-click="h50" data-a-click="${_ha(id)}"><button class="kfav ${SH.fav[id]?'on':''}" data-f="${id}" data-h-click="h49" data-a-click="${_ha(id)}" aria-label="Favorito">${kico(SH.fav[id]?KI.heart:KI.heartO,22)}</button><span class="kzh">Toca para ampliar</span></div><div class="kdx">${i.cat?`<div class="kcat">${esc(i.cat)}</div>`:''}<h2>${esc(i.name)}</h2><div class="kdp">${tdMoney(i.price)}</div>${bdgTags(i,1)}${stkTag(i,1)}<button class="kshare" data-h-click="h48" data-a-click="${_ha(i.id)}">↗ Compartir</button>${tg?`<div class="ktg">${tg}</div>`:''}${i.desc?`<p class="kds">${esc(i.desc).replace(/\n/g,'<br>')}</p>`:''}<div class="kact2">${noDisp(i)?`<div class="kstn">${stkMsg(i)}</div>`:SH.cart[id]?`<div class="kst lg"><button data-h-click="h45" data-a-click="${_ha(id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h47" data-a-click="${_ha(id)}">${SH.cart[id]} en el carrito · cambiar</button><button data-h-click="h43" data-a-click="${_ha(id)}" aria-label="Agregar uno">+</button></div><button class="sbtn" data-h-click="h40">Ver carrito</button>`:`<button class="sbtn" data-h-click="h47" data-a-click="${_ha(id)}">Elegir cantidad y agregar</button>`}<button class="sbtn g" data-h-click="h31">Seguir viendo</button></div></div></div>`,'det',id,1)}
 function shopCart(){const L=shopLines();if(!L.length)return shopM('<h2 style="margin:6px 0 12px">Su carrito está vacío</h2><button class="sbtn g" data-h-click="h31">Seguir viendo</button>','cart');
+ const poliAviso=`<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:10px 12px;margin:10px 0;font-size:12px;color:#92400e;line-height:1.4"><div style="font-weight:700;display:flex;align-items:center;gap:5px;margin-bottom:2px"><span>⚠️</span><span>Etapa Preparatoria Informativa</span></div>Distribuidora Jhon prepara su catálogo en línea. No se solicitan pagos ni claves bancarias por este medio. Al consultar aceptas nuestras <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas')}" style="color:#b45309;font-weight:700;text-decoration:underline">Políticas y Privacidad (Ley 81)</a>.</div>`;
  const t=L.reduce((s,l)=>s+l.q*l.p,0),nt=($('sh_nt')||{}).value||'';
- shopM(`<h2 style="margin:6px 0">🛒 Su pedido</h2>${L.map(l=>`<div class="kln"><img src="${l.img}" alt=""><div><b>${esc(l.n)}</b><small>${tdMoney(l.p)} c/u</small><button class="kdel" data-h-click="h46" data-a-click="${_ha(l.id)}">${kico(KTRASH,15)} Quitar</button></div><div class="kst"><button data-h-click="h45" data-a-click="${_ha(l.id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h44" data-a-click="${_ha(l.id)}" aria-label="Cambiar cantidad">${l.q}</button><button data-h-click="h43" data-a-click="${_ha(l.id)}" aria-label="Agregar uno">+</button></div></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:19px;font-weight:800;margin:14px 0 4px"><span>Total</span><span>${t>0?$$(t):'Consultar'}</span></div><small style="color:var(--tx2)">Precios sin ITBMS. Le confirmaremos disponibilidad y forma de pago.</small>${shopFleHTML()}<textarea id="sh_nt" rows="2" placeholder="Notas para el pedido (opcional)">${esc(nt)}</textarea>${shopHP()}<div class="serr" id="sh_m2" style="margin:6px 0"></div><div class="kact2"><button class="sbtn" id="sh_sb" data-h-click="h42">Enviar pedido</button><button class="sbtn g" data-h-click="h31">Seguir viendo</button></div>`,'cart')}
+ shopM(`<h2 style="margin:6px 0">🛒 Su pedido</h2>${poliAviso}${L.map(l=>`<div class="kln"><img src="${l.img}" alt=""><div><b>${esc(l.n)}</b><small>${tdMoney(l.p)} c/u</small><button class="kdel" data-h-click="h46" data-a-click="${_ha(l.id)}">${kico(KTRASH,15)} Quitar</button></div><div class="kst"><button data-h-click="h45" data-a-click="${_ha(l.id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h44" data-a-click="${_ha(l.id)}" aria-label="Cambiar cantidad">${l.q}</button><button data-h-click="h43" data-a-click="${_ha(l.id)}" aria-label="Agregar uno">+</button></div></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:19px;font-weight:800;margin:14px 0 4px"><span>Total</span><span>${t>0?$$(t):'Consultar'}</span></div><small style="color:var(--tx2)">Precios sin ITBMS. Le confirmaremos disponibilidad y forma de pago.</small>${shopFleHTML()}<textarea id="sh_nt" rows="2" placeholder="Notas para el pedido (opcional)">${esc(nt)}</textarea>${shopHP()}<div class="serr" id="sh_m2" style="margin:6px 0"></div><div class="kact2"><button class="sbtn" id="sh_sb" data-h-click="h42">Enviar pedido</button><button class="sbtn g" data-h-click="h31">Seguir viendo</button></div>`,'cart')}
 function shopVoz(txt){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{ss.cancel();const u=new SpeechSynthesisUtterance(txt),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-MX';u.rate=.96;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){window._tjw&&_tjw(e)}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,900)}}
 function shopPdfPrint(p){const l=p.lead||{},w=window.open('','_blank');if(!w)return alert('Permita las ventanas emergentes para descargar el comprobante.');
@@ -3382,7 +3550,7 @@ function waRefreshHome(){if(vista!=='home')return;const e=$('waHome');if(!WA.lis
 R.config=function(){
  const r=_configBase.apply(this,arguments);if(!esAdmin())return r;const v=$('v');if(!v)return r;
  const cards=[
-  ['waCard',waCard],['investCard',investCard],['lbgCard',lbgCard],['xmasCard',xmasCard],['redesCard',redesCard],['fleCard',fleAdmCard],
+  ['poliCard',poliAdmCard],['waCard',waCard],['investCard',investCard],['lbgCard',lbgCard],['xmasCard',xmasCard],['redesCard',redesCard],['fleCard',fleAdmCard],
   ['bkCard',bkCard],['sesCard',sesCard],['tplCard',tplCard],['recCard',recCard],
   ['vozCard',vozCard],['cintCard',cintCard],['llamCard',llamCard]
  ];
