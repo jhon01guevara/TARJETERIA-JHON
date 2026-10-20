@@ -1552,6 +1552,98 @@ html[data-paleta=dark] :is(#shop,#shopm,#ksnack), html[data-kt=dark] :is(#shop,#
   height: auto;
   display: block;
 }
+
+/* ===== TEMÁTICAS DE TEMPORADA CON FONDO DE PÁGINA COORDINADO ===== */
+
+/* 1. Día de las Madres (Rosa Porcelana Floral & Magenta Vivo) */
+html.madres:not([data-kt=dark]), html.madres:not([data-kt=dark]) body {
+  background: #fff0f5 !important;
+}
+html.madres :is(#shop,#shopm,#ksnack) {
+  --bg: #fff0f5; --sf: #ffffff; --sf2: #fce4ec; --tx: #24121a; --tx2: #7d596a; --ol: #ebd4de;
+  --p: #d81b60; --pt: #ffffff; --pc: #fce4ec; --onpc: #880e4f; --shv: 0 4px 24px rgba(216,27,96,.35);
+}
+#shop .kxb.kmad {
+  background: linear-gradient(100deg, #d81b60, #ec4899 45%, #f472b6);
+  box-shadow: 0 10px 24px -14px rgba(216,27,96,.75);
+}
+#shop .kgd.kmad .kcane {
+  background: repeating-linear-gradient(90deg, #d81b60 0 14px, #fbcfe8 14px 28px, #f43f5e 28px 42px);
+}
+#k_petals {
+  position: fixed; inset: 0; width: 100%; height: 100%; z-index: 3002; pointer-events: none;
+}
+
+/* 2. Día del Padre (Royal Midnight Sapphire & Acero Distinguido) */
+html.padres:not([data-kt=dark]), html.padres:not([data-kt=dark]) body {
+  background: #eef2f7 !important;
+}
+html.padres :is(#shop,#shopm,#ksnack) {
+  --bg: #eef2f7; --sf: #ffffff; --sf2: #e2eaf5; --tx: #0d1a2d; --tx2: #54657d; --ol: #d1dde8;
+  --p: #0f3460; --pt: #ffffff; --pc: #e2eaf5; --onpc: #081d38; --shv: 0 4px 24px rgba(15,52,96,.35);
+}
+#shop .kxb.kpad {
+  background: linear-gradient(100deg, #0f3460, #1e3a8a 45%, #0284c7);
+  box-shadow: 0 10px 24px -14px rgba(15,52,96,.75);
+}
+#shop .kgd.kpad .kcane {
+  background: repeating-linear-gradient(90deg, #0f3460 0 14px, #e2eaf5 14px 28px, #0284c7 28px 42px);
+}
+
+/* 3. Día del Trabajador (Miel Ámbar Cálido & Azul Industrial) */
+html.trabajador:not([data-kt=dark]), html.trabajador:not([data-kt=dark]) body {
+  background: #fdf6ec !important;
+}
+html.trabajador :is(#shop,#shopm,#ksnack) {
+  --bg: #fdf6ec; --sf: #ffffff; --sf2: #fef3c7; --tx: #241a0b; --tx2: #7a6649; --ol: #e8d9c2;
+  --p: #d97706; --pt: #ffffff; --pc: #fef3c7; --onpc: #78350f; --shv: 0 4px 24px rgba(217,119,6,.35);
+}
+#shop .kxb.ktra {
+  background: linear-gradient(100deg, #b45309, #d97706 45%, #1e40af);
+  box-shadow: 0 10px 24px -14px rgba(217,119,6,.75);
+}
+#shop .kgd.ktra .kcane {
+  background: repeating-linear-gradient(90deg, #d97706 0 14px, #fef3c7 14px 28px, #1e40af 28px 42px);
+}
+
+/* 4. Tema de la Galaxia / Cyber Cosmic (Espacio Cósmico & Violeta Neón) */
+html.galaxia, html.galaxia body {
+  background: #080816 !important;
+}
+html.galaxia :is(#shop,#shopm,#ksnack) {
+  --bg: #080816; --sf: #121128; --sf2: #1e1b3c; --tx: #ffffff; --tx2: #a5a1cc; --ol: #2e2a57;
+  --p: #9333ea; --pt: #ffffff; --pc: #2e1065; --onpc: #f3e8ff; --shv: 0 4px 24px rgba(147,51,234,.45);
+  color-scheme: dark;
+}
+#shop .kxb.kgal {
+  background: linear-gradient(100deg, #4c1d95, #7c3aed 45%, #06b6d4);
+  box-shadow: 0 10px 24px -14px rgba(147,51,234,.85);
+}
+#shop .kgd.kgal .kcane {
+  background: repeating-linear-gradient(90deg, #7c3aed 0 14px, #06b6d4 14px 28px, #f43f5e 28px 42px);
+}
+#k_stars {
+  position: fixed; inset: 0; width: 100%; height: 100%; z-index: 3002; pointer-events: none;
+}
+
+/* 5. Día del Amor y la Amistad (Ruby Velvet & Corazones Flotantes) */
+html.amor:not([data-kt=dark]), html.amor:not([data-kt=dark]) body {
+  background: #fff0f3 !important;
+}
+html.amor :is(#shop,#shopm,#ksnack) {
+  --bg: #fff0f3; --sf: #ffffff; --sf2: #ffe4e6; --tx: #261118; --tx2: #7c5866; --ol: #edd3db;
+  --p: #e11d48; --pt: #ffffff; --pc: #ffe4e6; --onpc: #881337; --shv: 0 4px 24px rgba(225,29,72,.35);
+}
+#shop .kxb.kamo {
+  background: linear-gradient(100deg, #be123c, #e11d48 45%, #fb7185);
+  box-shadow: 0 10px 24px -14px rgba(225,29,72,.75);
+}
+#shop .kgd.kamo .kcane {
+  background: repeating-linear-gradient(90deg, #e11d48 0 14px, #ffe4e6 14px 28px, #be123c 28px 42px);
+}
+#k_hearts {
+  position: fixed; inset: 0; width: 100%; height: 100%; z-index: 3002; pointer-events: none;
+}
 </style>
 </head><body>
 <div class="aurora" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
