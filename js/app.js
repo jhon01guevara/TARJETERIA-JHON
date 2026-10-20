@@ -480,7 +480,7 @@ function sanLead(d){if(!d||typeof d!=='object')return null;const id=String(d.id|
  return{id,name:sTxt(d.name,120),tel:sTxt(d.tel,40),email:sTxt(d.email,120),empresa:sTxt(d.empresa,120),dir:sTxt(d.dir,200),ref:sTxt(d.ref||'admin',60),ts:sNum(d.ts),imp:!!d.imp}}
 function sanPed(d){if(!d||typeof d!=='object')return null;const id=String(d.id||'');if(!SAFE_ID.test(id))return null;const l=d.lead||{};
  const items=Array.isArray(d.items)?d.items.slice(0,200).map(i=>({id:sTxt(i&&i.id,80),n:sTxt(i&&i.n,200),p:sNum(i&&i.p),q:Math.max(0,Math.round(sNum(i&&i.q)))})):[];
- return{id,cid:sTxt(d.cid,80),lead:{name:sTxt(l.name,120),tel:sTxt(l.tel,40),email:sTxt(l.email,120),empresa:sTxt(l.empresa,120),dir:sTxt(l.dir,200)},items,total:sNum(d.total),nota:sTxt(d.nota,500),ref:sTxt(d.ref||'admin',60),ts:sNum(d.ts),estado:d.estado==='atendido'?'atendido':'nuevo'}}
+ return{id,cid:sTxt(d.cid,80),lead:{name:sTxt(l.name,120),tel:sTxt(l.tel,40),email:sTxt(l.email,120),empresa:sTxt(l.empresa,120),dir:sTxt(l.dir,200)},items,total:sNum(d.total),nota:sTxt(d.nota,500),ref:sTxt(d.ref||'admin',60),ts:sNum(d.ts),estado:d.estado==='atendido'?'atendido':'nuevo',envio:sanEnv(d.envio)}}
 function sanGal(d){if(!d||typeof d!=='object')return null;const id=String(d.id||'');if(!SAFE_ID.test(id))return null;
  const img=String(d.img||'');if(!/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(img))return null;
  return Object.assign({},d,{id,img,t:sTxt(d.t,160),by:sTxt(d.by,80)})}
@@ -2021,6 +2021,188 @@ const tdMoney=n=>+n>0?$$(+n):'Consultar';
 // ---------- Panel interno (admin y vendedores) ----------
 let _tdOn=false;
 function tdAviso(t){try{agSound()}catch(e){window._tjw&&_tjw(e)}if(DB.cfg.vozChat!==0)setTimeout(()=>vozDama('Atención. '+t),600)}
+/*ETQ-INI*/
+/* ===== Etiquetas de envío =====
+   Etiquetas para agencias de carga (nacional e internacional) de los pedidos de la tienda virtual.
+   Se generan como PDF con el tamaño exacto del rollo (o 4 por hoja A4), con código de barras Code 128. */
+const ETQ_TAM={
+ e100x150:{n:'100 × 150 mm (4×6 pulgadas, envíos)',w:100,h:150},
+ e100x100:{n:'100 × 100 mm',w:100,h:100},
+ e80x120:{n:'80 × 120 mm',w:80,h:120},
+ e62x100:{n:'62 × 100 mm (Brother QL de 62 mm)',w:62,h:100},
+ a6:{n:'A6 (105 × 148 mm)',w:105,h:148},
+ a4x4:{n:'Hoja A4 con 4 etiquetas (impresora común)',hoja:1,w:105,h:148.5}
+};
+const C128='212222 222122 222221 121223 121322 131222 122213 122312 132212 221213 221312 231212 112232 122132 122231 113222 123122 123221 223211 221132 221231 213212 223112 312131 311222 321122 321221 312212 322112 322211 212123 212321 232121 111323 131123 131321 112313 132113 132311 211313 231113 231311 112133 112331 132131 113123 113321 133121 313121 211331 231131 213113 213311 213131 311123 311321 331121 312113 312311 332111 314111 221411 431111 111224 111422 121124 121421 141122 141221 112214 112412 122114 122411 142112 142211 241211 221114 413111 241112 134111 111242 121142 121241 114212 124112 124211 411212 421112 421211 212141 214121 412121 111143 111341 131141 114113 114311 411113 411311 113141 114131 311141 411131 211412 211214 211232'.split(' ');
+function code128B(txt){const s=String(txt).replace(/[^\x20-\x7E]/g,'?'),v=[104];for(const ch of s)v.push(ch.charCodeAt(0)-32);let k=104;for(let i=1;i<v.length;i++)k+=v[i]*i;v.push(k%103);return v.map(x=>C128[x]).join('')+'2331112'}
+const etqTxt=t=>String(t==null?'':t).replace(/[^\u0000-ÿ]/g,'').replace(/\s+/g,' ').trim();
+function etqBarras(d,code,x,y,w,h){
+ const p=code128B(code),mod=p.split('').reduce((a,b)=>a+(+b),0),u=w/mod;let cx=x;d.setFillColor(0);
+ for(let i=0;i<p.length;i++){const a=+p[i]*u;if(i%2===0)d.rect(cx,y,a,h,'F');cx+=a}
+}
+/* Dibuja (o solo mide, si dib es falso) una etiqueta de ancho W y alto H con su esquina en (ox,oy). Devuelve la altura usada. */
+function etqFlow(d,W,H,e,s,ox,oy,dib){
+ const m=4*s,iw=W-2*m,X=ox+m,pt=.3528,LH=1.16,zonaBar=23*s;let y=m;
+ const font=(fs,b,col)=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(fs*s);d.setTextColor(col==null?15:col)};
+ const cortar=(t,fs,b,max,ancho)=>{font(fs,b);let L=d.splitTextToSize(etqTxt(t),ancho||iw);if(L.length>max){L=L.slice(0,max);let u=L[max-1];while(u.length>3&&d.getTextWidth(u+'...')>(ancho||iw))u=u.slice(0,-1);L[max-1]=u+'...'}return L};
+ const bloque=(t,fs,b,max,gap,col,al)=>{if(!etqTxt(t))return;const L=cortar(t,fs,b,max),lh=fs*s*pt*LH;
+  if(dib)L.forEach((ln,i)=>d.text(ln,al==='c'?X+iw/2:al==='r'?X+iw:X,oy+y+lh*i+fs*s*pt*.86,al?{align:al==='c'?'center':'right'}:undefined));
+  y+=lh*L.length+(gap||0)*s};
+ // Encabezado: remitente a la izquierda y tipo de envío a la derecha
+ const tipo=e.tipo==='internacional'?'INTERNACIONAL':'NACIONAL';font(8.5,1,255);const tw=d.getTextWidth(tipo)+4*s,bh=6.4*s;
+ if(dib){d.setFillColor(0);d.rect(X+iw-tw,oy+y,tw,bh,'F');font(8.5,1,255);d.text(tipo,X+iw-tw/2,oy+y+bh*.72,{align:'center'})}
+ font(11,1);if(dib){const nm=cortar(e.rem.nombre||'',11,1,1,iw-tw-3*s)[0]||'';d.text(nm,X,oy+y+bh*.72)}
+ y+=bh+2.2*s;if(dib){d.setDrawColor(0);d.setLineWidth(.5*s);d.line(X,oy+y,X+iw,oy+y)}y+=2.4*s;
+ // Destinatario
+ bloque('DESTINATARIO',6.5,1,1,.6,110);
+ bloque(e.dest.name||'-',17,1,2,.8);
+ bloque(e.dest.empresa,10,0,1,.8);
+ bloque(e.dest.tel?('Tel.: '+e.dest.tel):'',14,1,1,.8);
+ bloque(e.dest.email,8.5,0,1,1.2);
+ bloque(e.dest.dir,11.5,0,4,.8);
+ bloque([e.dest.ciudad,e.dest.prov].filter(Boolean).join(', '),11.5,1,2,.4);
+ bloque((e.dest.pais||'').toUpperCase(),15,1,1,1.6);
+ // Datos del envío en cuadros: agencia, guía, bulto y peso
+ const cw=(iw-2*s)/2,ch=9.6*s,celdas=[['AGENCIA',e.agencia||'-'],['GUÍA',e.guia||'-'],['BULTO',e.bulto[0]+' de '+e.bulto[1]],['PESO',e.peso>0?e.peso+' kg':'-']];
+ celdas.forEach((c,i)=>{const cx=X+(i%2)*(cw+2*s),cy=oy+y+Math.floor(i/2)*(ch+1.6*s);
+  if(dib){d.setDrawColor(0);d.setLineWidth(.35*s);d.rect(cx,cy,cw,ch);font(5.8,0,100);d.text(c[0],cx+1.4*s,cy+2.6*s);font(10,1);const v=cortar(c[1],10,1,1,cw-2.8*s)[0]||'';d.text(v,cx+1.4*s,cy+7.4*s)}});
+ y+=2*ch+1.6*s+2.2*s;
+ // Remitente, contenido y observaciones
+ bloque('REMITE: '+[e.rem.nombre,e.rem.tel,e.rem.dir].filter(Boolean).join(' · '),7.5,0,2,1.4,70);
+ if(e.obs)bloque('⚠ '.replace(/[^\u0000-ÿ]/g,'')+'OBS.: '+e.obs,8.5,1,2,1.4);
+ const libre=H-m-zonaBar-y;
+ if(e.cont){font(8.5,0);const lh=8.5*s*pt*LH,maxL=Math.max(1,Math.min(5,Math.floor((libre-4*s)/lh)));bloque('CONTENIDO: '+e.cont,8.5,0,maxL,0)}
+ // Código de barras al pie
+ const necesario=y+zonaBar+m;
+ if(dib){const by=oy+H-m-zonaBar+1*s;etqBarras(d,e.codigo,X+2*s,by,iw-4*s,12.5*s);font(9,1);d.text(e.codigo,X+iw/2,by+12.5*s+3.6*s,{align:'center'});font(7,0,90);d.text(e.fecha,X+iw,oy+H-m+.4*s,{align:'right'});d.text('Tarjetería Jhon',X,oy+H-m+.4*s)}
+ return necesario
+}
+function etqDibujar(d,x,y,w,h,e){
+ let s=Math.min(1.25,w/100);while(s>.5&&etqFlow(d,w,h,e,s,x,y,false)>h)s-=.04;
+ etqFlow(d,w,h,e,s,x,y,true)
+}
+function etqPDF(lista,tam){
+ const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return null;
+ if(tam.hoja){const d=new J({unit:'mm',format:'a4'});
+  lista.forEach((e,i)=>{if(i>0&&i%4===0)d.addPage();const c=i%4,x=(c%2)*105,y=Math.floor(c/2)*148.5;etqDibujar(d,x,y,105,148.5,e);d.setDrawColor(170);d.setLineWidth(.2);d.rect(x+.5,y+.5,104,147.5)});
+  return d.output('blob')}
+ const d=new J({unit:'mm',format:[tam.w,tam.h],orientation:tam.w>tam.h?'l':'p'});
+ lista.forEach((e,i)=>{if(i>0)d.addPage();etqDibujar(d,0,0,tam.w,tam.h,e)});
+ return d.output('blob')
+}
+/*ETQ-FIN*/
+
+/*ETQ-UI-INI*/
+let ETQ_SEL=new Set();
+const etqCfg=()=>{try{return JSON.parse(localStorage.getItem('tj_etq_cfg')||'{}')||{}}catch(e){return{}}};
+const etqCfgSet=o=>{try{localStorage.setItem('tj_etq_cfg',JSON.stringify(Object.assign(etqCfg(),o)))}catch(e){window._tjw&&_tjw(e)}};
+const etqLocal=()=>{try{return JSON.parse(localStorage.getItem('tj_etq_env')||'{}')||{}}catch(e){return{}}};
+function sanEnv(v){if(!v||typeof v!=='object')return null;const o={};
+ if(v.tipo)o.tipo=v.tipo==='internacional'?'internacional':'nacional';
+ [['agencia',80],['pais',60],['prov',80],['ciudad',80],['dir',200],['guia',60],['cont',300],['obs',200]].forEach(([k,n])=>{if(v[k]!=null&&String(v[k])!=='')o[k]=sTxt(v[k],n)});
+ if(v.bultos!=null)o.bultos=Math.min(99,Math.max(1,Math.round(sNum(v.bultos))||1));
+ if(sNum(v.peso)>0)o.peso=sNum(v.peso);
+ if(sNum(v.etq)>0)o.etq=sNum(v.etq);
+ return o}
+const etqNum=p=>String(p.id||'').slice(-6).toUpperCase();
+const etqEnvio=p=>Object.assign({},etqLocal()[p.id]||{},p.envio||{});
+const etqImpresa=p=>!!(etqEnvio(p).etq);
+function etqGuardar(p,env,marcar){
+ const ts=marcar?Date.now():0,add=Object.assign({},env||{},marcar?{etq:ts}:{});
+ try{const L=etqLocal();L[p.id]=Object.assign({},L[p.id]||{},add);localStorage.setItem('tj_etq_env',JSON.stringify(L))}catch(e){window._tjw&&_tjw(e)}
+ p.envio=Object.assign({},p.envio||{},add);
+ if(esAdmin()&&fbDb)fbDb.collection('tienda_pedidos').doc(p.id).update(env?{envio:sanEnv(p.envio)}:{'envio.etq':ts}).catch(e=>console.warn('No se pudieron guardar los datos de envío en la nube',e))
+}
+/* Datos de una etiqueta: lo guardado del pedido, completado con los valores comunes (def) del lote. */
+function etqDatos(p,def){
+ const l=p.lead||{},env=etqEnvio(p),c=(typeof DB!=='undefined'&&DB.cfg)||{};def=def||{};
+ const tipo=env.tipo||def.tipo||'nacional',pais=env.pais||def.pais||(tipo==='nacional'?'Panamá':'');
+ const cont=env.cont||(p.items||[]).map(i=>i.q+' x '+i.n).join(', ');
+ return{tipo,agencia:env.agencia||def.agencia||'',guia:env.guia||'',peso:+env.peso||0,obs:env.obs||'',cont,
+  codigo:'TJ-'+etqNum(p),fecha:new Date().toLocaleDateString('es-PA'),
+  rem:{nombre:c.nombre||'Tarjetería Jhon',tel:c.tel||'',dir:c.dir||''},
+  dest:{name:l.name||'',empresa:l.empresa||'',tel:l.tel||'',email:l.email||'',dir:env.dir||l.dir||'',ciudad:env.ciudad||'',prov:env.prov||'',pais},
+  nb:Math.min(99,Math.max(1,+env.bultos||1))}
+}
+function etqExpandir(datos){const L=[];datos.forEach(e=>{for(let i=1;i<=e.nb;i++)L.push(Object.assign({},e,{bulto:[i,e.nb]}))});return L}
+function etqGenerar(pedidos,def,tamId){
+ const tam=ETQ_TAM[tamId]||ETQ_TAM.e100x150;
+ if(!(window.jspdf&&window.jspdf.jsPDF))return alert('Para generar las etiquetas se necesita conexión a internet (librería de PDF no disponible).'),false;
+ let blob;try{blob=etqPDF(etqExpandir(pedidos.map(p=>etqDatos(p,def))),tam)}catch(e){window._tjw&&_tjw(e);return alert('No se pudo generar la etiqueta: '+((e&&e.message)||e)),false}
+ if(!blob)return alert('No se pudo generar la etiqueta.'),false;
+ etqCfgSet({tam:tamId});
+ shopPdfVer(blob,pedidos.length===1?'Etiqueta-'+etqNum(pedidos[0])+'.pdf':'Etiquetas-'+pedidos.length+'-pedidos.pdf');return true
+}
+const etqOpcTam=sel=>Object.keys(ETQ_TAM).map(k=>`<option value="${k}" ${k===sel?'selected':''}>${esc(ETQ_TAM[k].n)}</option>`).join('');
+const etqAgencias=()=>{const a=etqCfg().agencias;return Array.isArray(a)?a:[]};
+const etqAgOpts=()=>etqAgencias().map(a=>`<option value="${esc(a)}">`).join('');
+function etqRecordarAgencia(a){a=String(a||'').trim().slice(0,80);if(!a)return;const L=etqAgencias().filter(x=>x.toLowerCase()!==a.toLowerCase());L.unshift(a);etqCfgSet({agencias:L.slice(0,12),agencia:a})}
+const etqV=id=>{const e=$(id);return e?e.value.trim():''};
+function etqAbrir(id){
+ const p=TD.peds.find(x=>x.id===id);if(!p)return;const l=p.lead||{},d=etqDatos(p,{tipo:etqCfg().tipo,agencia:etqCfg().agencia}),env=etqEnvio(p);
+ $('mb').innerHTML=`<h3 style="margin-top:0">🏷️ Etiqueta de envío · Pedido ${esc(etqNum(p))}</h3><p style="font-size:13px;color:var(--gris);margin:0 0 10px">${esc(l.name||'Cliente')}${l.tel?' · '+esc(l.tel):''}</p>
+ <div class="g">
+  <div><label>Tipo de envío</label><select id="et_tipo" data-h-change="h343"><option value="nacional" ${d.tipo==='nacional'?'selected':''}>Nacional</option><option value="internacional" ${d.tipo==='internacional'?'selected':''}>Internacional</option></select></div>
+  <div><label>Agencia de carga</label><input id="et_ag" list="et_agl" value="${esc(d.agencia)}" placeholder="Ej. MRW, DHL, Aeroparcel"><datalist id="et_agl">${etqAgOpts()}</datalist></div>
+  <div><label>País</label><input id="et_pais" value="${esc(d.dest.pais)}"></div>
+  <div><label>Provincia / Estado</label><input id="et_prov" value="${esc(d.dest.prov)}"></div>
+  <div><label>Ciudad</label><input id="et_ciu" value="${esc(d.dest.ciudad)}"></div>
+  <div><label>N.º de guía / seguimiento</label><input id="et_guia" value="${esc(d.guia)}"></div>
+  <div style="grid-column:1/-1"><label>Dirección de entrega</label><input id="et_dir" value="${esc(d.dest.dir)}" maxlength="200"></div>
+  <div><label>Bultos (una etiqueta por bulto)</label><input id="et_bul" type="number" min="1" max="99" value="${d.nb}"></div>
+  <div><label>Peso total (kg)</label><input id="et_peso" type="number" min="0" step="0.1" value="${d.peso||''}"></div>
+  <div style="grid-column:1/-1"><label>Contenido</label><input id="et_cont" value="${esc(env.cont||'')}" placeholder="${esc(d.cont.slice(0,90))}" maxlength="300"></div>
+  <div style="grid-column:1/-1"><label>Observaciones (frágil, no doblar…)</label><input id="et_obs" value="${esc(d.obs)}" maxlength="200"></div>
+  <div style="grid-column:1/-1"><label>Tamaño de etiqueta</label><select id="et_tam">${etqOpcTam(etqCfg().tam||'e100x150')}</select></div>
+ </div>
+ <p style="font-size:12px;color:var(--gris);margin:10px 0 0">Si deja el contenido vacío se usa la lista del pedido. Los datos quedan guardados en este pedido.</p>
+ <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap"><button class="btn s" data-h-click="h12">Cancelar</button><button class="btn p" data-h-click="h338" data-a-click="${_ha(id)}">🏷️ Ver / imprimir etiqueta</button></div>`;
+ $('md').classList.add('on')
+}
+function etqTipoCambio(){const t=etqV('et_tipo'),p=$('et_pais');if(!p)return;if(t==='nacional'&&!p.value.trim())p.value='Panamá';if(t==='internacional'&&/^panam[aá]$/i.test(p.value.trim()))p.value=''}
+function etqImprimirUno(id){
+ const p=TD.peds.find(x=>x.id===id);if(!p)return;
+ const tipo=etqV('et_tipo')==='internacional'?'internacional':'nacional',pais=etqV('et_pais');
+ if(!etqV('et_dir')&&!etqV('et_ciu'))return alert('Escriba la dirección de entrega o la ciudad del destinatario.');
+ if(tipo==='internacional'&&!pais)return alert('En un envío internacional indique el país de destino.');
+ const env={tipo,agencia:etqV('et_ag'),pais,prov:etqV('et_prov'),ciudad:etqV('et_ciu'),dir:etqV('et_dir'),guia:etqV('et_guia'),bultos:Math.min(99,Math.max(1,Math.round(+etqV('et_bul'))||1)),peso:Math.max(0,+etqV('et_peso')||0),cont:etqV('et_cont'),obs:etqV('et_obs')},tam=etqV('et_tam');
+ etqGuardar(p,env,false);etqRecordarAgencia(env.agencia);etqCfgSet({tipo});cerrar();
+ if(etqGenerar([p],null,tam))etqGuardar(p,null,true);if(vista==='tienda')tdRender()
+}
+function etqSeleccion(){return TD.peds.filter(p=>ETQ_SEL.has(p.id))}
+function etqContar(){const e=$('etqN');if(e)e.textContent=etqSeleccion().length}
+function etqToggle(id,on){if(on)ETQ_SEL.add(id);else ETQ_SEL.delete(id);etqContar()}
+function etqSelModo(m){ETQ_SEL=new Set(m==='todos'?TD.peds.map(p=>p.id):m==='pend'?TD.peds.filter(p=>p.estado==='nuevo'&&!etqImpresa(p)).map(p=>p.id):[]);if(vista==='tienda')tdRender()}
+function etqBarra(){
+ if(!TD.peds.length)return'';
+ const nu=TD.peds.filter(p=>p.estado==='nuevo').length,sin=TD.peds.filter(p=>!etqImpresa(p)).length;
+ return `<div class="etqbar" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px"><span style="font-size:13px"><b>${nu}</b> nuevo(s) · <b>${sin}</b> sin etiqueta</span><button class="btn s" data-h-click="h340" data-a-click="${_ha('todos')}">☑ Todos</button><button class="btn s" data-h-click="h340" data-a-click="${_ha('pend')}">☑ Nuevos sin etiqueta</button><button class="btn s" data-h-click="h340" data-a-click="${_ha('ninguno')}">☐ Ninguno</button><button class="btn p s" data-h-click="h341">🏷️ Etiquetas de los seleccionados (<span id="etqN">${etqSeleccion().length}</span>)</button></div>`
+}
+function etqAbrirLote(){
+ const L=etqSeleccion();if(!L.length)return alert('Marque primero los pedidos a los que desea imprimir etiqueta.');
+ const cfg=etqCfg(),aviso=L.map(p=>{const d=etqDatos(p,{tipo:cfg.tipo,agencia:cfg.agencia}),f=[];if(!d.dest.dir&&!d.dest.ciudad)f.push('sin dirección');if(!d.dest.tel)f.push('sin teléfono');return `<li><b>${esc(d.dest.name||'Cliente')}</b> · ${esc(etqNum(p))}${d.nb>1?' · '+d.nb+' bultos':''}${etqImpresa(p)?' · <small>ya tiene etiqueta</small>':''}${f.length?' · <span style="color:#d92d20">⚠ '+f.join(', ')+'</span>':''}</li>`}).join('');
+ $('mb').innerHTML=`<h3 style="margin-top:0">🏷️ Imprimir ${L.length} etiqueta(s)</h3>
+ <ul style="font-size:13px;line-height:1.6;max-height:160px;overflow:auto;padding-left:18px;margin:0 0 10px">${aviso}</ul>
+ <p style="font-size:12.5px;color:var(--gris);margin:0 0 8px">Cada pedido usa sus datos de envío guardados. Lo que esté vacío se completa con estos valores. Para ajustar un pedido (guía, peso, bultos) ábralo con su botón 🏷️ Etiqueta.</p>
+ <div class="g">
+  <div><label>Tipo de envío</label><select id="et_tipo" data-h-change="h343"><option value="nacional" ${cfg.tipo!=='internacional'?'selected':''}>Nacional</option><option value="internacional" ${cfg.tipo==='internacional'?'selected':''}>Internacional</option></select></div>
+  <div><label>Agencia de carga</label><input id="et_ag" list="et_agl" value="${esc(cfg.agencia||'')}" placeholder="Ej. MRW, DHL, Aeroparcel"><datalist id="et_agl">${etqAgOpts()}</datalist></div>
+  <div><label>País (si el pedido no lo trae)</label><input id="et_pais" value="${cfg.tipo==='internacional'?'':'Panamá'}"></div>
+  <div><label>Tamaño de etiqueta</label><select id="et_tam">${etqOpcTam(cfg.tam||'e100x150')}</select></div>
+ </div>
+ <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;flex-wrap:wrap"><button class="btn s" data-h-click="h12">Cancelar</button><button class="btn p" data-h-click="h342">🏷️ Ver / imprimir ${L.length} etiqueta(s)</button></div>`;
+ $('md').classList.add('on')
+}
+function etqImprimirLote(){
+ const L=etqSeleccion();if(!L.length)return;
+ const def={tipo:etqV('et_tipo')==='internacional'?'internacional':'nacional',agencia:etqV('et_ag'),pais:etqV('et_pais')},tam=etqV('et_tam');
+ const sinDestino=L.filter(p=>{const d=etqDatos(p,def);return !d.dest.dir&&!d.dest.ciudad});
+ if(sinDestino.length&&!confirm(sinDestino.length+' pedido(s) no tienen dirección ni ciudad de entrega y saldrán sin destino. ¿Imprimir de todos modos?'))return;
+ etqCfgSet({tipo:def.tipo});etqRecordarAgencia(def.agencia);cerrar();
+ if(etqGenerar(L,def,tam))L.forEach(p=>etqGuardar(p,null,true));if(vista==='tienda')tdRender()
+}
+/*ETQ-UI-FIN*/
+
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbDb.collection(c):fbDb.collection(c).where('ref','==',me);let f1=true,f2=true;
@@ -2044,7 +2226,7 @@ function tdRender(){if(vista!=='tienda'||!SES)return;const adm=esAdmin(),me=chat
  const cls=DB.cli.filter(c=>waNum(c.t));
  const pubCard=adm?`<div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap"><h3 style="margin:0 0 4px">📦 Productos en la tienda <small style="color:var(--gris);font-weight:500">(${pub.size} publicados · ${TD.cat.length} en este catálogo)</small></h3><button class="btn s" id="tdMinB" data-h-click="h120">${tdMinV()?'▸ Maximizar':'▾ Minimizar'}</button></div><div id="tdBody" style="${tdMinV()?'display:none':''}"><p style="font-size:12.5px;color:var(--gris)">Marque los productos de su Catálogo (con foto) que quiere mostrar a los clientes. Nombre, categoría, precio y descripción salen del Catálogo. Para cambiar un precio, edítelo en el Catálogo y vuelva a publicar.</p>${tdTabla(pub)}<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><select id="tdTema" style="width:auto">${TEMAS.map(t=>`<option value="${t.id}">${t.e} ${t.n}</option>`).join("")}</select><button class="btn" data-h-click="h119">+ Asignar tema a marcados</button><button class="btn" data-h-click="h118">− Quitar tema</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:12px"><select id="tdBd" style="width:auto">${Object.keys(TDBD).map(k=>`<option value="${k}">${TDBD[k]}</option>`).join("")}</select><button class="btn" data-h-click="h117">🏷 Poner etiqueta a marcados</button><button class="btn" data-h-click="h116">Quitar etiqueta</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><select id="tdStk" style="width:auto">${Object.keys(TDSTK).map(k=>`<option value="${k}">${TDSTK[k]}</option>`).join("")}</select><button class="btn" data-h-click="h115">📦 Aplicar existencia a marcados</button></div><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px"><button class="btn p" data-h-click="h114">⬆ Publicar / actualizar marcados</button><button class="btn d" data-h-click="h113">🗑 Quitar marcados de la tienda</button><span id="tdSt" style="font-size:12.5px;color:var(--gris)"></span></div></div></div>`:'';
  $('v').innerHTML=`<div class="card"><h3 style="margin:0 0 4px">🛍 Catálogo virtual</h3><p style="font-size:12.5px;color:var(--gris)">Comparta su enlace. El cliente se registra, ve productos, categorías y precios, arma su carrito y le envía el pedido. ${adm?'':'Los registros y pedidos quedan a su nombre.'}</p>${file}<label>Su enlace</label><input id="td_link" readonly value="${esc(link)}" data-h-focus="h56"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h112">📋 Copiar enlace</button><button class="btn" data-h-click="h85">👁 Ver como cliente</button><button class="btn p" data-h-click="h100">📖 Ver catálogo directo</button><button class="btn" data-h-click="h111">💬 Enviar por WhatsApp</button></div><div style="margin-top:14px"><label>Enviar el enlace a un cliente registrado</label><div style="display:flex;gap:8px;flex-wrap:wrap"><select id="td_cli" style="flex:1;min-width:200px">${cls.map(c=>`<option value="${c.id}">${esc(c.n)} — ${esc(c.t)}</option>`).join('')||'<option value="">(sin clientes con teléfono)</option>'}</select><button class="btn p" data-h-click="h110">💬 Enviar</button></div></div></div>
-<div class="card"><h3 style="margin:0 0 6px">🛒 Pedidos de la tienda (${TD.peds.length})</h3>${TD.peds.length?TD.peds.map(p=>{const l=p.lead||{},w=tdWa(l.tel,'Hola '+l.name+', recibimos su pedido de la tienda virtual. ');return `<div class="tdp ${p.estado==='nuevo'?'nw':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><b>${esc(l.name||'Cliente')}</b> · ${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}<br><small style="color:var(--gris)">${new Date(p.ts).toLocaleString('es-PA')} · Vendedor: ${esc(vdName(p.ref||'admin'))} · ${p.estado==='nuevo'?'<b style="color:var(--az)">NUEVO</b>':'Atendido'}</small></div><b style="font-size:17px">${$$(p.total)}</b></div><ul>${(p.items||[]).map(i=>`<li>${i.q} × ${esc(i.n)} — ${$$(i.p)}</li>`).join('')}</ul>${p.nota?`<small>📝 ${esc(p.nota)}</small><br>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn p s" data-h-click="h87" data-a-click="${_ha(p.id)}">🧾 Crear factura</button>${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<button class="btn s" data-h-click="h109" data-a-click="${_ha(p.id)}">👁 Ver PDF</button><button class="btn s" data-h-click="h108" data-a-click="${_ha(p.id)}">⬇ Descargar</button><button class="btn s" data-h-click="h86" data-a-click="${_ha(p.id)}">${p.estado==='nuevo'?'✔ Marcar atendido':'↩ Reabrir'}</button><button class="btn s d" data-h-click="h107" data-a-click="${_ha(p.id)}">🗑 Eliminar</button></div></div>`}).join(''):'<div class="vacio">Aún no hay pedidos.</div>'}</div>
+<div class="card"><h3 style="margin:0 0 6px">🛒 Pedidos de la tienda (${TD.peds.length})</h3>${etqBarra()}${TD.peds.length?TD.peds.map(p=>{const l=p.lead||{},w=tdWa(l.tel,'Hola '+l.name+', recibimos su pedido de la tienda virtual. ');return `<div class="tdp ${p.estado==='nuevo'?'nw':''}"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><div><label style="display:inline-flex;align-items:center;margin-right:6px"><input type="checkbox" class="etqcb" ${ETQ_SEL.has(p.id)?'checked':''} data-h-change="h339" data-a-change="${_ha(p.id)}" title="Seleccionar para imprimir etiqueta"></label><b>${esc(l.name||'Cliente')}</b> · ${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}<br><small style="color:var(--gris)">${new Date(p.ts).toLocaleString('es-PA')} · Vendedor: ${esc(vdName(p.ref||'admin'))} · ${p.estado==='nuevo'?'<b style="color:var(--az)">NUEVO</b>':'Atendido'}${etqImpresa(p)?' · 🏷 etiqueta lista':''}</small></div><b style="font-size:17px">${$$(p.total)}</b></div><ul>${(p.items||[]).map(i=>`<li>${i.q} × ${esc(i.n)} — ${$$(i.p)}</li>`).join('')}</ul>${p.nota?`<small>📝 ${esc(p.nota)}</small><br>`:''}<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px"><button class="btn p s" data-h-click="h87" data-a-click="${_ha(p.id)}">🧾 Crear factura</button>${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''}<button class="btn s" data-h-click="h337" data-a-click="${_ha(p.id)}">🏷️ Etiqueta</button><button class="btn s" data-h-click="h109" data-a-click="${_ha(p.id)}">👁 Ver PDF</button><button class="btn s" data-h-click="h108" data-a-click="${_ha(p.id)}">⬇ Descargar</button><button class="btn s" data-h-click="h86" data-a-click="${_ha(p.id)}">${p.estado==='nuevo'?'✔ Marcar atendido':'↩ Reabrir'}</button><button class="btn s d" data-h-click="h107" data-a-click="${_ha(p.id)}">🗑 Eliminar</button></div></div>`}).join(''):'<div class="vacio">Aún no hay pedidos.</div>'}</div>
 <div class="card"><h3 style="margin:0 0 6px">👥 Clientes registrados en la tienda (${TD.leads.length})</h3><p style="font-size:12.5px;color:var(--gris)">${adm?'Cada registro se agrega automáticamente a su lista de Clientes.':'Los clientes que se registraron con su enlace.'}</p>${TD.leads.length?`<div class="tw"><table><tr><th>Fecha</th><th>Cliente</th><th>Teléfono</th><th>Correo</th><th>Vendedor</th><th></th></tr>${TD.leads.map(l=>{const w=tdWa(l.tel,'Hola '+l.name+', gracias por registrarse en nuestro catálogo virtual. ');return `<tr><td>${new Date(l.ts).toLocaleDateString('es-PA')}</td><td><b>${esc(l.name)}</b>${l.empresa?'<br><small>'+esc(l.empresa)+'</small>':''}</td><td>${esc(l.tel||'')}</td><td>${esc(l.email||'')}</td><td>${esc(vdName(l.ref||'admin'))}</td><td class="r">${w?`<a class="btn wa s" href="${w}" target="_blank" rel="noopener">💬 WhatsApp</a>`:''} ${adm?`<button class="btn s d" data-h-click="h106" data-a-click="${_ha(l.id)}">🗑 Eliminar</button>`:''}</td></tr>`}).join('')}</table></div>`:'<div class="vacio">Aún no hay registros.</div>'}</div>
 ${pubCard}`;try{tdAplicarFiltro()}catch(e){window._tjw&&_tjw(e)}}
 let TDF='todos';const TDG_CLOSED=new Set();
@@ -2971,6 +3153,13 @@ __H.h106=function(event,a){tdLeadDel(a[0])};
 __H.h107=function(event,a){tdPedDel(a[0])};
 __H.h108=function(event,a){shopPdf(TD.peds.find(x=>x.id===a[0]))};
 __H.h109=function(event,a){shopPdf(TD.peds.find(x=>x.id===a[0]),'ver')};
+__H.h337=function(event,a){etqAbrir(a[0])};
+__H.h338=function(event,a){etqImprimirUno(a[0])};
+__H.h339=function(event,a){etqToggle(a[0],this.checked)};
+__H.h340=function(event,a){etqSelModo(a[0])};
+__H.h341=function(event,a){etqAbrirLote()};
+__H.h342=function(event,a){etqImprimirLote()};
+__H.h343=function(event,a){etqTipoCambio()};
 __H.h110=function(event,a){tdSendCli()};
 __H.h111=function(event,a){tdWaLink()};
 __H.h112=function(event,a){tdCopy()};
