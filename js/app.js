@@ -57,6 +57,23 @@ function wrapCardInner(key, title, body){
 }
 function cfgExpandAll(){for(const k of ALL_CFG_CARDS)cardState[k]=true;try{localStorage.setItem('tj_cards',JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}if(vista==='config')R.config()}
 function cfgCollapseAll(){for(const k of ALL_CFG_CARDS)cardState[k]=false;try{localStorage.setItem('tj_cards',JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}if(vista==='config')R.config()}
+/* ===== Personalización y configuración web =====
+   La pantalla Configuración se divide en dos pestañas: "Personalización y configuración
+   web" (todo lo que cambia el aspecto de la web: temas, fondos, imágenes, videos, textos
+   de la tienda pública, redes y transportistas) y "Ajustes generales del panel" (datos,
+   correos, avisos, respaldos, seguridad y herramientas). La pestaña elegida se recuerda
+   en este navegador. */
+const CFG_TAB_KEY='tj_cfg_tab';
+function cfgTabActual(){try{return localStorage.getItem(CFG_TAB_KEY)==='gen'?'gen':'web'}catch(e){return 'web'}}
+function cfgTab(t){
+ try{localStorage.setItem(CFG_TAB_KEY,t)}catch(e){window._tjw&&_tjw(e)}
+ const w=$('cfgWeb'),g=$('cfgGen'),bw=$('cfgTabWeb'),bg=$('cfgTabGen');
+ if(w)w.style.display=t==='web'?'':'none';
+ if(g)g.style.display=t==='gen'?'':'none';
+ if(bw)bw.classList.toggle('p',t==='web');
+ if(bg)bg.classList.toggle('p',t==='gen');
+}
+window.cfgTab=cfgTab;
 function catExpandAll(){document.querySelectorAll('.cg2').forEach(d=>{d.open=true;catCl.add(d.dataset.k)})}
 function catCollapseAll(){document.querySelectorAll('.cg2').forEach(d=>{d.open=false;catCl.delete(d.dataset.k)})}
 try{const s=localStorage.getItem('tj_db');if(s){const o=JSON.parse(s),c=DB.cfg;DB=Object.assign(DB,o);DB.cfg=Object.assign(c,o.cfg||{})}}catch(e){window._tjw&&_tjw(e)}
@@ -975,8 +992,18 @@ config(){editEmails=false;
  const c4=wrapCardInner('cfg_notif','🔔 Notificaciones de la agenda',`<p style="font-size:12.5px;color:var(--gris);margin-top:-6px">Aviso con sonido para los eventos que tengan "Avisar". Funciona mientras el panel esté abierto en el navegador.</p><div class="g"><div><label>Sonido</label><select data-h-change="h283"><option value="1" ${DB.cfg.snd?'selected':''}>Activado</option><option value="0" ${DB.cfg.snd?'':'selected'}>Silenciado</option></select></div><div><label>Tono</label><select data-h-change="h282">${[['campana','🔔 Campana'],['suave','🎵 Suave'],['alerta','🚨 Alerta'],['digital','📟 Digital']].map(([k,l])=>`<option value="${k}" ${DB.cfg.tono==k?'selected':''}>${l}</option>`).join('')}</select></div><div><label>Volumen: <span id="volv">${DB.cfg.vol}%</span></label><input type="range" min="10" max="100" value="${DB.cfg.vol}" data-h-input="h281" data-h-change="h280"></div></div><br><button class="btn p" data-h-click="h279">▶ Probar sonido</button> <button class="btn" data-h-click="h278">🔔 Probar notificación</button> <button class="btn" data-h-click="h277">🖥 Avisos del sistema</button> <small id="permSt" style="color:var(--gris)">${window.Notification&&Notification.permission==='granted'&&DB.cfg.nsys?'✔ Activados':''}</small>`);
  const c5=wrapCardInner('cfg_nav','🧭 Orden de los botones del menú',`<p style="font-size:12.5px;color:var(--gris);margin-top:-6px">Toque "Ordenar botones" y mueva cada botón con sus flechas, o arrástrelo con el dedo o el mouse. Al terminar toque "Listo".</p><button class="btn p" id="navEdBtn2" data-h-click="h276">${navEd?'✔ Listo':'↕ Ordenar botones'}</button> <button class="btn" data-h-click="h275">↺ Restablecer orden</button>`);
  const c6=wrapCardInner('cfg_respaldo','💾 Respaldo y descarga',`<p style="font-size:12.5px;color:var(--gris);margin-top:-6px"><span class="cloudSt">☁ Conectando…</span><br>Sus datos se sincronizan automáticamente. Puede además descargar un respaldo como copia adicional.</p><button class="btn p" data-h-click="h274">⬇ Descargar respaldo</button> <button class="btn s" data-h-click="h273">⬆ Restaurar respaldo</button>`);
- const tb=`<div id="cfgTb" style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap"><small style="color:var(--gris);font-size:12px">Todas las secciones aparecen minimizadas por defecto. Toque cualquier sección para ver sus opciones.</small><div style="display:flex;gap:6px"><button class="btn s" data-h-click="call" data-a-click="${_ha('cfgExpandAll')}">▾ Expandir todo</button><button class="btn s" data-h-click="call" data-a-click="${_ha('cfgCollapseAll')}">▸ Minimizar todo</button></div></div>`;
- $('v').innerHTML=tb+`<div class="card">${c1}</div><div class="card">${c2}</div><div class="card">${c3}</div><div class="card">${c4}</div><div class="card">${c5}</div><div class="card">${c6}</div>`;
+ const adm=typeof esAdmin==='function'&&esAdmin();
+ const tabs=adm?`<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px">
+   <button id="cfgTabWeb" class="btn ${cfgTabActual()==='web'?'p':''}" style="flex:1;min-width:230px" data-h-click="call" data-a-click="${_ha('cfgTab','web')}">🌐 Personalización y configuración web</button>
+   <button id="cfgTabGen" class="btn ${cfgTabActual()==='gen'?'p':''}" style="flex:1;min-width:230px" data-h-click="call" data-a-click="${_ha('cfgTab','gen')}">⚙️ Ajustes generales del panel</button>
+ </div>`:'';
+ const tb=`<div id="cfgTb">${tabs}<div style="display:flex;gap:8px;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap"><small style="color:var(--gris);font-size:12px">${adm?'Dos secciones: todo lo que ve el cliente en la web va en «Personalización y configuración web». ':''}Todas las tarjetas aparecen minimizadas por defecto; toque una para ver sus opciones.</small><div style="display:flex;gap:6px"><button class="btn s" data-h-click="call" data-a-click="${_ha('cfgExpandAll')}">▾ Expandir todo</button><button class="btn s" data-h-click="call" data-a-click="${_ha('cfgCollapseAll')}">▸ Minimizar todo</button></div></div></div>`;
+ const hdrWeb=`<div style="margin:2px 2px 14px"><h2 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-.02em">🌐 Personalización y configuración web</h2><small style="color:var(--gris);font-size:12.5px">Todo el diseño de su web en un solo lugar: temas y colores, fondos, imágenes y videos, textos de la portada, temáticas de temporada, redes sociales y transportistas de la tienda pública.</small></div>`;
+ const hdrGen=`<div style="margin:2px 2px 14px"><h2 style="margin:0;font-size:17px;font-weight:700;letter-spacing:-.02em">⚙️ Ajustes generales del panel</h2><small style="color:var(--gris);font-size:12.5px">Datos de la empresa, correos, notificaciones, respaldos, seguridad y herramientas del negocio.</small></div>`;
+ $('v').innerHTML=tb
+  +`<div id="cfgWeb"${adm?' style="display:none"':''}>${hdrWeb}<div class="card">${c1}</div><div id="cfgWebExtra"></div></div>`
+  +`<div id="cfgGen">${hdrGen}<div class="card">${c2}</div><div class="card">${c3}</div><div class="card">${c4}</div><div class="card">${c5}</div><div class="card">${c6}</div><div id="cfgGenExtra"></div></div>`;
+ if(adm)cfgTab(cfgTabActual());
  renderE()},
 agenda(){const t=hoy(),pend=l=>l.filter(o=>!agDn(o)).length,q0=AG.q,c0=AG.c;AG.q='';AG.c='';const hoyN=pend(agOcc(t,t)),sem=pend(agOcc(t,addD(t,6))),late=pend(agOcc(addD(t,-60),addD(t,-1))),tot=DB.agenda.length;AG.q=q0;AG.c=c0;
  const b=new Date(AG.d+'T12:00'),st=agMonday(AG.d),ttl=AG.v==='mes'?agCap(b.toLocaleDateString('es-PA',{month:'long',year:'numeric'})):AG.v==='sem'?fdate(st).slice(0,5)+' – '+fdate(addD(st,6)).slice(0,5):'Lista de eventos';
@@ -4132,17 +4159,10 @@ function waRefreshHome(){if(vista!=='home')return;const e=$('waHome');if(!WA.lis
    de la fecha de cada parche y volvía frágil cualquier cambio futuro. */
 R.config=function(){
  const r=_configBase.apply(this,arguments);if(!esAdmin())return r;const v=$('v');if(!v)return r;
- const cards=[
-  ['poliCard',poliAdmCard],['waCard',waCard],['investCard',investCard],['lbgCard',lbgCard],['xmasCard',xmasCard],['redesCard',redesCard],['fleCard',fleAdmCard],
-  ['bkCard',bkCard],['sesCard',sesCard],['tplCard',tplCard],['recCard',recCard],
-  ['vozCard',vozCard],['cintCard',cintCard],['llamCard',llamCard]
- ];
- const tb=$('cfgTb');
-cards.slice().reverse().forEach(([id,html])=>{
+ const mkCard=(id,raw)=>{
   const c=document.createElement('div');
   c.className='card';
   c.id=id;
-  const raw=html();
   const i1=raw.indexOf('<h3'),i2=raw.indexOf('</h3>');
   if(i1>=0&&i2>i1){
     const afterH3=raw.indexOf('>',i1);
@@ -4156,9 +4176,21 @@ cards.slice().reverse().forEach(([id,html])=>{
   }else{
     c.innerHTML=raw;
   }
-  if(tb&&tb.nextSibling)v.insertBefore(c,tb.nextSibling);
-  else v.insertBefore(c,v.firstChild);
-});
+  return c;
+ };
+ /* Personalización y configuración web: todo lo que cambia cómo se ve la web
+    (panel de entrada, tienda pública, redes y transporte) junto en la pestaña web. */
+ const webCards=[
+  ['lbgCard',lbgCard],['xmasCard',xmasCard],['redesCard',redesCard],['fleCard',fleAdmCard]
+ ];
+ /* El resto son ajustes internos del negocio: van a la pestaña general. */
+ const genCards=[
+  ['poliCard',poliAdmCard],['waCard',waCard],['investCard',investCard],['bkCard',bkCard],['sesCard',sesCard],['tplCard',tplCard],['recCard',recCard],
+  ['vozCard',vozCard],['cintCard',cintCard],['llamCard',llamCard]
+ ];
+ const wEx=$('cfgWebExtra'),gEx=$('cfgGenExtra');
+ webCards.forEach(([id,fn])=>{if(wEx)wEx.appendChild(mkCard(id,fn()))});
+ genCards.forEach(([id,fn])=>{if(gEx)gEx.appendChild(mkCard(id,fn()))});
  lbgFill($('lbgPrev'),lbgMeta());waListen();return r
 };
 /* Inicio también tenía capas sucesivas. Todas sus tarjetas se agrupan aquí para
