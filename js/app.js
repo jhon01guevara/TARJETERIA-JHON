@@ -1,66 +1,3 @@
-
-function shopCfgBgTypeSet(t){
- TD._curBgType=t;
- const c=$('sh_cfg_bgtype_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-bgtype')===t));
- const sp=$('sh_cfg_sec_photo'),sv=$('sh_cfg_sec_video'),sc=$('sh_cfg_sec_colors'),ss=$('sh_cfg_sec_solid');
- if(sp)sp.style.display=t==='photo'?'block':'none';
- if(sv)sv.style.display=t==='video'?'block':'none';
- if(sc)sc.style.display=t==='colors'?'block':'none';
- if(ss)ss.style.display=t==='solid'?'block':'none';
-}
-function shopCfgColorSet(cId){
- TD._curHeroBgColor=cId;
- const c=$('sh_cfg_color_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-color')===cId));
-}
-function shopPhotoUpload(e){
- const file=e&&e.target&&e.target.files&&e.target.files[0];if(!file)return;
- if(!file.type.startsWith('image/')){alert('Por favor elija un archivo de imagen válido.');return}
- if(file.size>3*1024*1024){alert('La imagen no debe pesar más de 3 MB.');return}
- const reader=new FileReader();
- reader.onload=ev=>{
-   const dataUrl=ev.target.result;
-   const inp=$('sh_cfg_hero_photo');if(inp)inp.value=dataUrl;
-   const prev=$('sh_cfg_photo_prev');if(prev){prev.style.display='block';const img=prev.querySelector('img');if(img)img.src=dataUrl}
- };
- reader.readAsDataURL(file);
-}
-function shopPhotoClear(){
- const inp=$('sh_cfg_hero_photo');if(inp)inp.value='';
- const prev=$('sh_cfg_photo_prev');if(prev)prev.style.display='none';
-}
-function shopVideoUpload(e){
- const file=e&&e.target&&e.target.files&&e.target.files[0];if(!file)return;
- if(file.size>8*1024*1024){alert('Para videos mayores a 8 MB se recomienda usar una URL directa de video para óptima velocidad.');return}
- const reader=new FileReader();
- reader.onload=ev=>{
-   const dataUrl=ev.target.result;
-   const inp=$('sh_cfg_hero_video');if(inp)inp.value=dataUrl;
-   alert('Video cargado correctamente. Recuerde pulsar Guardar.');
- };
- reader.readAsDataURL(file);
-}
-function shopVideoClear(){
- const inp=$('sh_cfg_hero_video');if(inp)inp.value='';
-}
-function shopPresetVideo(u){
- const inp=$('sh_cfg_hero_video');if(inp)inp.value=u;
- alert('Preset de video asignado. Pulse Guardar para aplicar a la tienda.');
-}
-window.shopCfgBgTypeSet=shopCfgBgTypeSet;window.shopCfgColorSet=shopCfgColorSet;
-window.shopPhotoUpload=shopPhotoUpload;window.shopPhotoClear=shopPhotoClear;
-window.shopVideoUpload=shopVideoUpload;window.shopVideoClear=shopVideoClear;
-window.shopPresetVideo=shopPresetVideo;
-
-const TIKTOK_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display:inline-block;vertical-align:-3px"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .61.05.9.15V9.35a6.34 6.34 0 0 0-.9-.07 6.34 6.34 0 0 0-6.34 6.34 6.35 6.35 0 0 0 6.34 6.35 6.34 6.34 0 0 0 6.35-6.35V7.95a8.21 8.21 0 0 0 4.76 1.5v-3.45a4.76 4.76 0 0 1-1-.69z"/></svg>';
-
-function shopThemeGet(){try{return localStorage.getItem('tj_shop_theme')||'auto'}catch(e){return 'auto'}}
-function shopThemeIsDark(m){const cur=m||shopThemeGet();if(cur==='dark')return true;if(cur==='light')return false;const mq=typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;const hr=new Date().getHours();return mq||(hr>=19||hr<6)}
-function shopThemeApply(){const cur=shopThemeGet(),isDark=shopThemeIsDark(cur),H=document.documentElement;if(isDark){H.setAttribute('data-kt','dark');H.setAttribute('data-paleta','dark')}else{H.removeAttribute('data-kt');H.setAttribute('data-paleta',(typeof SH!=='undefined'&&SH.paleta)||'shop')}shopThemeSyncUI()}
-function shopThemeSyncUI(){const cur=shopThemeGet(),icon=cur==='dark'?'🌙':cur==='light'?'☀️':'⚙️',lbl=cur==='dark'?'Oscuro':cur==='light'?'Día':'Auto';document.querySelectorAll('.ktheme-btn').forEach(b=>{b.setAttribute('title','Tema: '+lbl+' (Clic para cambiar Día/Oscuro/Auto)');b.innerHTML='<span class="ktheme-ico">'+icon+'</span><span>'+lbl+'</span>'});document.querySelectorAll('.krail-theme').forEach(b=>{b.setAttribute('title','Tema: '+lbl+' (Clic para cambiar)');b.innerHTML=icon});document.querySelectorAll('.km-theme-seg button').forEach(b=>{b.classList.toggle('on',b.getAttribute('data-theme-val')===cur)})}
-function shopThemeCycle(){const cur=shopThemeGet(),next=cur==='auto'?'light':cur==='light'?'dark':'auto';shopThemeSet(next)}
-function shopThemeSet(mode){try{localStorage.setItem('tj_shop_theme',mode)}catch(e){}shopThemeApply();const msg=mode==='dark'?'🌙 Modo Oscuro activado':mode==='light'?'☀️ Modo Día activado':'⚙️ Modo Automático activado (se adapta a la hora y a tu dispositivo)';if(typeof shopSnack==='function')shopSnack(msg)}
-window.shopThemeGet=shopThemeGet;window.shopThemeApply=shopThemeApply;window.shopThemeCycle=shopThemeCycle;window.shopThemeSet=shopThemeSet;
-
 /* SEG-04 etapa 2: manejadores en línea convertidos a delegación de eventos (sin onclick= en el HTML). */
 var __H={};
 function _ha(){return JSON.stringify([].slice.call(arguments)).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
@@ -2613,6 +2550,106 @@ const _nvi=nav;nav=function(){_nvi.apply(this,arguments);try{navIcons()}catch(e)
 // ===================== TIENDA VIRTUAL =====================
 const SHOP=/[?&]tienda(=|&|$)/.test(location.search);
 const TD={items:[],leads:[],peds:[],cat:[]},SH={items:[],cart:{},cli:null,ref:'admin',cat:'',q:'',err:0};
+
+function shopCfgBgTypeSet(t){
+ TD._curBgType=t;
+ const c=$('sh_cfg_bgtype_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-bgtype')===t));
+ const sp=$('sh_cfg_sec_photo'),sv=$('sh_cfg_sec_video'),sc=$('sh_cfg_sec_colors'),ss=$('sh_cfg_sec_solid');
+ if(sp)sp.style.display=t==='photo'?'block':'none';
+ if(sv)sv.style.display=t==='video'?'block':'none';
+ if(sc)sc.style.display=t==='colors'?'block':'none';
+ if(ss)ss.style.display=t==='solid'?'block':'none';
+}
+window.shopCfgBgTypeSet=shopCfgBgTypeSet;
+
+function shopCfgColorSet(cId){
+ TD._curHeroBgColor=cId;
+ const c=$('sh_cfg_color_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-color')===cId));
+}
+window.shopCfgColorSet=shopCfgColorSet;
+
+function shopCfgMotionSet(m){
+ TD._curMotion=m;
+ const c=$('sh_cfg_motion_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-motion')===m));
+}
+window.shopCfgMotionSet=shopCfgMotionSet;
+
+function shopCfgWmSet(w){
+ TD._curWmStyle=w;
+ const c=$('sh_cfg_wm_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-wm')===w));
+}
+window.shopCfgWmSet=shopCfgWmSet;
+
+function shopPhotoUpload(e){
+ const inpFile=(e&&e.target&&e.target.files)?e.target:$('sh_cfg_photo_file');
+ const file=inpFile&&inpFile.files&&inpFile.files[0];if(!file)return;
+ if(!file.type.startsWith('image/')){alert('Por favor elija un archivo de imagen válido.');return}
+ if(file.size>3.5*1024*1024){alert('La imagen no debe pesar más de 3.5 MB.');return}
+ const reader=new FileReader();
+ reader.onload=ev=>{
+   const dataUrl=ev.target.result;
+   const inp=$('sh_cfg_hero_photo');if(inp)inp.value=dataUrl;
+   const prev=$('sh_cfg_photo_prev');if(prev){prev.style.display='block';const img=prev.querySelector('img');if(img)img.src=dataUrl}
+ };
+ reader.readAsDataURL(file);
+}
+window.shopPhotoUpload=shopPhotoUpload;
+
+function shopPhotoClear(){
+ const inp=$('sh_cfg_hero_photo');if(inp)inp.value='';
+ const prev=$('sh_cfg_photo_prev');if(prev)prev.style.display='none';
+ const inpFile=$('sh_cfg_photo_file');if(inpFile)inpFile.value='';
+}
+window.shopPhotoClear=shopPhotoClear;
+
+function shopVideoUpload(e){
+ const inpFile=(e&&e.target&&e.target.files)?e.target:$('sh_cfg_video_file');
+ const file=inpFile&&inpFile.files&&inpFile.files[0];if(!file)return;
+ if(file.size>8*1024*1024){alert('Aviso: Para videos mayores a 8 MB se recomienda usar una URL directa de video para que la tienda cargue rápido.')}
+ const reader=new FileReader();
+ reader.onload=ev=>{
+   const dataUrl=ev.target.result;
+   const inp=$('sh_cfg_hero_video');if(inp)inp.value=dataUrl;
+   alert('✅ Video de movimiento cargado con éxito. Recuerde pulsar Guardar para aplicarlo a la tienda.');
+ };
+ reader.readAsDataURL(file);
+}
+window.shopVideoUpload=shopVideoUpload;
+
+function shopVideoClear(){
+ const inp=$('sh_cfg_hero_video');if(inp)inp.value='';
+ const inpFile=$('sh_cfg_video_file');if(inpFile)inpFile.value='';
+}
+window.shopVideoClear=shopVideoClear;
+
+function shopPresetVideo(u){
+ const inp=$('sh_cfg_hero_video');if(inp)inp.value=u;
+ alert('✅ Video asignado. Recuerde pulsar Guardar para aplicarlo a la tienda.');
+}
+window.shopPresetVideo=shopPresetVideo;
+
+function shopLogoUpload(e){
+ const inpFile=(e&&e.target&&e.target.files)?e.target:$('sh_cfg_logo_file');
+ const file=inpFile&&inpFile.files&&inpFile.files[0];if(!file)return;
+ if(!file.type.startsWith('image/')){alert('Por favor elija un archivo de imagen válido.');return}
+ if(file.size>2.5*1024*1024){alert('El logo no debe pesar más de 2.5 MB.');return}
+ const reader=new FileReader();
+ reader.onload=ev=>{
+   const dataUrl=ev.target.result;
+   const inp=$('sh_cfg_logo');if(inp)inp.value=dataUrl;
+   const prev=$('sh_cfg_logo_prev');if(prev){prev.style.display='block';const img=prev.querySelector('img');if(img)img.src=dataUrl}
+ };
+ reader.readAsDataURL(file);
+}
+window.shopLogoUpload=shopLogoUpload;
+
+function shopLogoClear(){
+ const inp=$('sh_cfg_logo');if(inp)inp.value='';
+ const prev=$('sh_cfg_logo_prev');if(prev)prev.style.display='none';
+ const inpFile=$('sh_cfg_logo_file');if(inpFile)inpFile.value='';
+}
+window.shopLogoClear=shopLogoClear;
+
 const PALETAS=[['shop','🟣 Shop Mist (Original)','#5433eb','#f2f4f5'],['lino','🌾 Lino Cálido & Ámbar','#8a5a12','#f7f4ed'],['rosa','💌 Rosa Blush (Amor)','#c8183c','#faf1f4'],['esmeralda','💍 Eucalipto & Esmeralda','#0e3c30','#f0f5f2'],['violeta','🎈 Lavanda & Púrpura','#6b32b8','#f4f0fa'],['oceano','🌊 Hielo Nórdico & Océano','#0e6b78','#eef4f7'],['borgona','🎓 Marino & Oro Real','#121e42','#f0f2f7'],['clasico','⚫ Clásico Blanco Puro','#1D1D1F','#ffffff'],['carbon','🪨 Carbón & Piedra','#30363D','#f0f1f3'],['dark','🌙 Dark Obsidian Pro','#7c66ff','#0c0c0e']];
 const tdBase=()=>location.href.split(/[?#]/)[0];
 const BUILD=(Date.parse(document.lastModified)||0).toString(36);const tdLink=()=>((typeof esAdmin==='function'&&!esAdmin()&&TD.base)||tdBase())+'?tienda=1&v='+encodeURIComponent(chatMe()||'admin')+'&r='+(TD.rev||BUILD);
@@ -3063,10 +3100,53 @@ function shopBrandSave(){
  const wm=(($("sh_cfg_wm")&&$("sh_cfg_wm").value.trim())||"shop").slice(0,30);
  const title=(($("sh_cfg_title")&&$("sh_cfg_title").value.trim())||"Tarjetería Jhon").slice(0,60);
  const sub=(($("sh_cfg_sub")&&$("sh_cfg_sub").value.trim())||"Cada momento merece una tarjeta especial · Tarjetas para toda ocasión").slice(0,160);
- fbDb.collection("tienda_items").doc("__cfg").set({__cfg:true,wordmark:wm,heroTitle:title,heroSub:sub,ts:Date.now()},{merge:true})
-  .then(()=>{TD.wordmark=wm;TD.heroTitle=title;TD.heroSub=sub;alert("✔ Logo y textos de portada guardados. Ya se ven en la tienda virtual.");R.config()})
+ const logo=(($("sh_cfg_logo")&&$("sh_cfg_logo").value.trim())||"").slice(0,250000);
+ const motion=TD._curMotion||TD.motionStyle||'float';
+ const wmStyle=TD._curWmStyle||TD.watermarkStyle||'wm_violeta';
+ const wmOp=(($("sh_cfg_wm_op")&&$("sh_cfg_wm_op").value)||'14');
+ const bgType=TD._curBgType||TD.heroBgType||'none';
+ const photo=(($("sh_cfg_hero_photo")&&$("sh_cfg_hero_photo").value.trim())||"").slice(0,250000);
+ const video=(($("sh_cfg_hero_video")&&$("sh_cfg_hero_video").value.trim())||"").slice(0,250000);
+ const bgColor=TD._curHeroBgColor||TD.heroBgColor||'hero-bg-aurora';
+ const bgSolid=(($("sh_cfg_hero_solid")&&$("sh_cfg_hero_solid").value)||'#18181b');
+
+ const dataToSave = {
+   __cfg: true,
+   wordmark: wm,
+   heroTitle: title,
+   heroSub: sub,
+   logoUrl: logo,
+   motionStyle: motion,
+   watermarkStyle: wmStyle,
+   watermarkOpacity: wmOp,
+   heroBgType: bgType,
+   heroPhotoUrl: photo,
+   heroVideoUrl: video,
+   heroBgColor: bgColor,
+   heroBgSolid: bgSolid,
+   ts: Date.now()
+ };
+
+ fbDb.collection("tienda_items").doc("__cfg").set(dataToSave, {merge:true})
+  .then(()=>{
+    TD.wordmark = wm;
+    TD.heroTitle = title;
+    TD.heroSub = sub;
+    TD.logoUrl = logo;
+    TD.motionStyle = motion;
+    TD.watermarkStyle = wmStyle;
+    TD.watermarkOpacity = wmOp;
+    TD.heroBgType = bgType;
+    TD.heroPhotoUrl = photo;
+    TD.heroVideoUrl = video;
+    TD.heroBgColor = bgColor;
+    TD.heroBgSolid = bgSolid;
+    alert("✅ Configuración de portada y colores guardada y sincronizada correctamente. Ya se ve en la tienda virtual.");
+    if(typeof R!=='undefined'&&R.config) R.config();
+  })
   .catch(e=>alert("No se pudo guardar: "+((e&&e.message)||e)));
 }
+window.shopBrandSave=shopBrandSave;
 function xmasCard(){
  const t=TD.tema||'',hm=TD.heroMode||'mix',pal=TD.paleta||'shop';
  const bt=(k,l)=>`<button class="btn ${t===k?'p':''}" data-h-click="h103" data-a-click="${_ha(k)}">${l}</button>`;
@@ -3079,19 +3159,25 @@ function xmasCard(){
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🎨 Paletas PRO: Fondo de página y colores coordinados</h3><p style="font-size:12.5px;color:var(--gris)">Elija una combinación profesional completa: cambia el color de fondo de la página, tarjetas, bordes y botones acento.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${PALETAS.map(pb).join('')}</div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
- <h3 style="margin:0">🏷️ Logo, Portada, Foto/Video de Movimiento y Colores</h3>
- <p style="font-size:12.5px;color:var(--gris)">Personalice el logo, foto de portada, video de movimiento en bucle, colores de fondo animados, palabra gigante (watermark), títulos y efectos de animación.</p>
+ 
+ <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+   <div>
+     <h3 style="margin:0">🏷️ Logo, Portada, Foto/Video de Movimiento y Colores</h3>
+     <p style="font-size:12.5px;color:var(--gris);margin:4px 0 0">Personalice el logo, foto de portada, video de movimiento en bucle, colores de fondo animados, palabra gigante (watermark), títulos y efectos de animación.</p>
+   </div>
+   <button type="button" class="btn p s" onclick="shopBrandSave()" data-h-click="call" data-a-click="${_ha('shopBrandSave')}" style="box-shadow:0 3px 12px rgba(84,51,235,.35)">💾 Guardar cambios de portada</button>
+ </div>
 
- <div class="g" style="margin-top:12px">
+ <div class="g" style="margin-top:14px">
   <div style="grid-column:1/-1">
     <label>Logo de la tienda (URL o subir archivo de imagen)</label>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input id="sh_cfg_logo" value="${esc(TD.logoUrl||'')}" placeholder="https://... o elija un archivo" style="flex:1;min-width:220px">
       <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
         📁 Subir logo
-        <input type="file" id="sh_cfg_logo_file" accept="image/*" style="display:none" data-h-change="call" data-a-change="${_ha('shopLogoUpload')}">
+        <input type="file" id="sh_cfg_logo_file" accept="image/*" style="display:none" onchange="shopLogoUpload(event)" data-h-change="call" data-a-change="${_ha('shopLogoUpload')}">
       </label>
-      <button type="button" class="btn s d" data-h-click="call" data-a-click="${_ha('shopLogoClear')}" title="Quitar logo">Quitar</button>
+      <button type="button" class="btn s d" onclick="shopLogoClear()" data-h-click="call" data-a-click="${_ha('shopLogoClear')}" title="Quitar logo">Quitar</button>
     </div>
     <div id="sh_cfg_logo_prev" style="margin-top:8px;${TD.logoUrl?'':'display:none'}">
       <img src="${esc(TD.logoUrl||'')}" alt="Vista previa logo" style="max-height:48px;border-radius:10px;background:#fff;padding:4px 10px;border:1px solid var(--linea)">
@@ -3101,7 +3187,7 @@ function xmasCard(){
   <div style="grid-column:1/-1">
     <label>Fondo de la portada: ¿Qué desea colocar?</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_bgtype_btns">
-      ${[['none','⚪ Normal (Limpio)'],['photo','📷 Foto / Banner de fondo'],['video','🎥 Video de movimiento (Bucle)'],['colors','🌈 Colores / Gradiente dinámico'],['solid','🎨 Color sólido']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgType===k?'p':''}" data-bgtype="${k}" data-h-click="call" data-a-click="${_ha('shopCfgBgTypeSet',k)}">${lbl}</button>`).join('')}
+      ${[['none','⚪ Normal (Limpio)'],['photo','📷 Foto / Banner de fondo'],['video','🎥 Video de movimiento (Bucle)'],['colors','🌈 Colores / Gradiente dinámico'],['solid','🎨 Color sólido']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgType===k?'p':''}" data-bgtype="${k}" onclick="shopCfgBgTypeSet('${k}')" data-h-click="call" data-a-click="${_ha('shopCfgBgTypeSet',k)}">${lbl}</button>`).join('')}
     </div>
   </div>
 
@@ -3111,9 +3197,9 @@ function xmasCard(){
       <input id="sh_cfg_hero_photo" value="${esc(TD.heroPhotoUrl||'')}" placeholder="https://... o suba una foto panorámica" style="flex:1;min-width:220px">
       <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
         📁 Subir foto
-        <input type="file" id="sh_cfg_photo_file" accept="image/*" style="display:none" data-h-change="call" data-a-change="${_ha('shopPhotoUpload')}">
+        <input type="file" id="sh_cfg_photo_file" accept="image/*" style="display:none" onchange="shopPhotoUpload(event)" data-h-change="call" data-a-change="${_ha('shopPhotoUpload')}">
       </label>
-      <button type="button" class="btn s d" data-h-click="call" data-a-click="${_ha('shopPhotoClear')}">Quitar foto</button>
+      <button type="button" class="btn s d" onclick="shopPhotoClear()" data-h-click="call" data-a-click="${_ha('shopPhotoClear')}">Quitar foto</button>
     </div>
     <div id="sh_cfg_photo_prev" style="margin-top:8px;${TD.heroPhotoUrl?'':'display:none'}">
       <img src="${esc(TD.heroPhotoUrl||'')}" alt="Vista previa foto" style="max-height:90px;border-radius:12px;border:1px solid var(--linea)">
@@ -3126,22 +3212,22 @@ function xmasCard(){
       <input id="sh_cfg_hero_video" value="${esc(TD.heroVideoUrl||'')}" placeholder="https://.../video.mp4 o elija archivo" style="flex:1;min-width:220px">
       <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
         📁 Subir video
-        <input type="file" id="sh_cfg_video_file" accept="video/mp4,video/webm" style="display:none" data-h-change="call" data-a-change="${_ha('shopVideoUpload')}">
+        <input type="file" id="sh_cfg_video_file" accept="video/mp4,video/webm" style="display:none" onchange="shopVideoUpload(event)" data-h-change="call" data-a-change="${_ha('shopVideoUpload')}">
       </label>
-      <button type="button" class="btn s d" data-h-click="call" data-a-click="${_ha('shopVideoClear')}">Quitar video</button>
+      <button type="button" class="btn s d" onclick="shopVideoClear()" data-h-click="call" data-a-click="${_ha('shopVideoClear')}">Quitar video</button>
     </div>
     <small style="display:block;color:var(--gris);margin-top:4px">💡 Presets de video en movimiento:</small>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-purple-lights-and-smoke-40228-large.mp4')}">💜 Humo & Luces Neón</button>
-      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-golden-dust-particles-in-slow-motion-41846-large.mp4')}">✨ Polvo Dorado Flotante</button>
-      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-curves-of-light-32085-large.mp4')}">🌊 Ondas de Luz Cyan</button>
+      <button type="button" class="btn s" onclick="shopPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-abstract-purple-lights-and-smoke-40228-large.mp4')" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-purple-lights-and-smoke-40228-large.mp4')}">💜 Humo & Luces Neón</button>
+      <button type="button" class="btn s" onclick="shopPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-golden-dust-particles-in-slow-motion-41846-large.mp4')" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-golden-dust-particles-in-slow-motion-41846-large.mp4')}">✨ Polvo Dorado Flotante</button>
+      <button type="button" class="btn s" onclick="shopPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-curves-of-light-32085-large.mp4')" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-curves-of-light-32085-large.mp4')}">🌊 Ondas de Luz Cyan</button>
     </div>
   </div>
 
   <div id="sh_cfg_sec_colors" style="grid-column:1/-1;${curBgType==='colors'?'':'display:none'}">
     <label>Gradiente de movimiento / Paleta de color de fondo</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_color_btns">
-      ${[['hero-bg-aurora','🌌 Aurora Boreal'],['hero-bg-sunset','🌅 Atardecer Dorado'],['hero-bg-cosmic','🪐 Nebulosa Cósmica'],['hero-bg-cyber','⚡ Cyber Neón'],['hero-bg-ocean','🌊 Océano Cyan'],['hero-bg-pastel','🌸 Pastel Glamour']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgColor===k?'p':''}" data-color="${k}" data-h-click="call" data-a-click="${_ha('shopCfgColorSet',k)}">${lbl}</button>`).join('')}
+      ${[['hero-bg-aurora','🌌 Aurora Boreal'],['hero-bg-sunset','🌅 Atardecer Dorado'],['hero-bg-cosmic','🪐 Nebulosa Cósmica'],['hero-bg-cyber','⚡ Cyber Neón'],['hero-bg-ocean','🌊 Océano Cyan'],['hero-bg-pastel','🌸 Pastel Glamour']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgColor===k?'p':''}" data-color="${k}" onclick="shopCfgColorSet('${k}')" data-h-click="call" data-a-click="${_ha('shopCfgColorSet',k)}">${lbl}</button>`).join('')}
     </div>
   </div>
 
@@ -3160,14 +3246,14 @@ function xmasCard(){
   <div style="grid-column:1/-1">
     <label>Animación Graphic Motion de las tarjetas de portada</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_motion_btns">
-      ${[['float','✨ Constelación 3D (Flotante)'],['shimmer','💫 Brillo Cósmico (Shimmer)'],['waves','🌊 Ondas Cinéticas'],['neon','⚡ Pulso Neón Cyber'],['clean','💎 Minimal Suave']].map(([k,lbl])=>`<button type="button" class="btn s ${(TD._curMotion||TD.motionStyle||'float')===k?'p':''}" data-motion="${k}" data-h-click="call" data-a-click="${_ha('shopCfgMotionSet',k)}">${lbl}</button>`).join('')}
+      ${[['float','✨ Constelación 3D (Flotante)'],['shimmer','💫 Brillo Cósmico (Shimmer)'],['waves','🌊 Ondas Cinéticas'],['neon','⚡ Pulso Neón Cyber'],['clean','💎 Minimal Suave']].map(([k,lbl])=>`<button type="button" class="btn s ${(TD._curMotion||TD.motionStyle||'float')===k?'p':''}" data-motion="${k}" onclick="shopCfgMotionSet('${k}')" data-h-click="call" data-a-click="${_ha('shopCfgMotionSet',k)}">${lbl}</button>`).join('')}
     </div>
   </div>
 
   <div style="grid-column:1/-1">
     <label>Color y Contraste del Watermark (Combinaciones de alto impacto)</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_wm_btns">
-      ${[['wm_violeta','Violeta Profundo','#6366f1'],['wm_dorado','Dorado Champagne','#f59e0b'],['wm_cian','Cian Neón / Océano','#06b6d4'],['wm_rosa','Rosa Magenta Glam','#ec4899'],['wm_esmeralda','Verde Esmeralda','#10b981'],['wm_plata','Plata Mercurio','#94a3b8'],['wm_coral','Atardecer Coral','#f97316'],['wm_neon','Degradado Aurora','#a855f7'],['wm_blanco','Blanco Escarchado','#ffffff']].map(([k,lbl,col])=>`<button type="button" class="btn s ${(TD._curWmStyle||TD.watermarkStyle||'wm_violeta')===k?'p':''}" data-wm="${k}" style="display:inline-flex;align-items:center;gap:6px" data-h-click="call" data-a-click="${_ha('shopCfgWmSet',k)}"><span style="width:11px;height:11px;border-radius:50%;background:${col};box-shadow:0 0 0 1px rgba(0,0,0,.2)"></span><span>${lbl}</span></button>`).join('')}
+      ${[['wm_violeta','Violeta Profundo','#6366f1'],['wm_dorado','Dorado Champagne','#f59e0b'],['wm_cian','Cian Neón / Océano','#06b6d4'],['wm_rosa','Rosa Magenta Glam','#ec4899'],['wm_esmeralda','Verde Esmeralda','#10b981'],['wm_plata','Plata Mercurio','#94a3b8'],['wm_coral','Atardecer Coral','#f97316'],['wm_neon','Degradado Aurora','#a855f7'],['wm_blanco','Blanco Escarchado','#ffffff']].map(([k,lbl,col])=>`<button type="button" class="btn s ${(TD._curWmStyle||TD.watermarkStyle||'wm_violeta')===k?'p':''}" data-wm="${k}" style="display:inline-flex;align-items:center;gap:6px" onclick="shopCfgWmSet('${k}')" data-h-click="call" data-a-click="${_ha('shopCfgWmSet',k)}"><span style="width:11px;height:11px;border-radius:50%;background:${col};box-shadow:0 0 0 1px rgba(0,0,0,.2)"></span><span>${lbl}</span></button>`).join('')}
     </div>
   </div>
 
@@ -3182,12 +3268,16 @@ function xmasCard(){
   </div>
  </div>
 
- <div style="margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn p s" data-h-click="call" data-a-click="${_ha('shopBrandSave')}">💾 Guardar logo, foto/video y portada</button><a class="btn s" href="index.html?tienda=1" target="_blank" rel="noopener">👁️ Abrir tienda para probar</a></div>
+ <div style="margin-top:16px;padding-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+   <button type="button" class="btn p s" onclick="shopBrandSave()" data-h-click="call" data-a-click="${_ha('shopBrandSave')}" style="box-shadow:0 3px 12px rgba(84,51,235,.35)">💾 Guardar cambios de portada (Sincronizar)</button>
+   <a class="btn s" href="index.html?tienda=1" target="_blank" rel="noopener">👁️ Abrir tienda para probar</a>
+ </div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🎠 Carrusel de portada</h3><p style="font-size:12.5px;color:var(--gris)">Elija cómo se eligen los diseños para las tarjetas flotantes de la portada.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${hb('random','🎲 Aleatorio')}${hb('mix','✨ Mixto (seleccionados + aleatorios)')}${hb('manual','📌 Personalizado (solo seleccionados)')}</div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🔗 Enlaces de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Si los clientes ven una versión vieja al abrir el enlace de un vendedor, toque este botón para forzar la actualización.</p><button class="btn" data-h-click="h99">🔄 Actualizar enlaces de vendedores</button> <small style="color:var(--gris)">Versión: ${esc(String(TD.rev||BUILD))}</small>`
 }
+
 function linksRefresh(){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,rev:Date.now()},{merge:true}).then(()=>{alert('Listo. Los vendedores ya comparten enlaces nuevos. Si un vendedor ya tiene abierto el panel, que lo recargue una vez.');R.config()}).catch(()=>alert('No se pudo actualizar. Revise su conexión o permisos.'))}
 function temaSet(t){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,tema:t,navidad:t==='navidad',ts:Date.now()},{merge:true}).then(()=>{TD.tema=t;TD.xmas=t==='navidad';R.config()}).catch(()=>alert('No se pudo guardar. Revise su conexión o permisos.'))}
 function heroModeSet(m){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,heroMode:m,ts:Date.now()},{merge:true}).then(()=>{TD.heroMode=m;R.config()}).catch(()=>alert('No se pudo guardar la configuración del carrusel. Revise su conexión o permisos.'))}
@@ -4625,7 +4715,7 @@ __H.h325=function(event,a){perVentas(a[0])};
 __H.h326=function(event,a){navMv(event,a[0],1)};
 __H.h327=function(event,a){navMv(event,a[0],-1)};
 __H.h328=function(event,a){navClick(a[0])};
-__H.call=function(event,a){window[a[0]].apply(null,a.slice(1))};
+__H.call=function(event,a){var fn=window[a[0]];if(typeof fn==="function"){return fn.apply(this,a.slice(1))}};
 __H.enviarFacChat=function(event,a){enviarFacAChat(a[0],a[1])};
 __H.hs1=function(event,a){respaldo()};
 __H.hs2=function(event,a){navEdit()};
