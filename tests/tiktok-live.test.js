@@ -11,7 +11,9 @@ test('TikTok LIVE añade un panel sin sustituir los módulos existentes',()=>{
   assert.match(app,/R\.tiktoklive=function\(\)/);
   for(const panel of ["['home'","['nueva'","['fac'","['prod'","['cat'","['cli'","['config'"])
     assert.ok(app.includes(panel),`Debe conservar ${panel}`);
-  assert.match(html,/js\/app\.js\?v=tiktok-live-20261020c/);
+  // Solo exige que app.js se cargue con versión de caché (subir el número en
+  // index.html NO debe romper esta prueba; es un cambio esperado en cada entrega).
+  assert.match(html,/js\/app\.js\?v=tiktok-live-20\d{6}[a-z]/);
 });
 
 test('La preparación LIVE no finge conexión de métricas oficiales',()=>{
