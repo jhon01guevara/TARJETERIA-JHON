@@ -1,4 +1,58 @@
 
+function shopCfgBgTypeSet(t){
+ TD._curBgType=t;
+ const c=$('sh_cfg_bgtype_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-bgtype')===t));
+ const sp=$('sh_cfg_sec_photo'),sv=$('sh_cfg_sec_video'),sc=$('sh_cfg_sec_colors'),ss=$('sh_cfg_sec_solid');
+ if(sp)sp.style.display=t==='photo'?'block':'none';
+ if(sv)sv.style.display=t==='video'?'block':'none';
+ if(sc)sc.style.display=t==='colors'?'block':'none';
+ if(ss)ss.style.display=t==='solid'?'block':'none';
+}
+function shopCfgColorSet(cId){
+ TD._curHeroBgColor=cId;
+ const c=$('sh_cfg_color_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-color')===cId));
+}
+function shopPhotoUpload(e){
+ const file=e&&e.target&&e.target.files&&e.target.files[0];if(!file)return;
+ if(!file.type.startsWith('image/')){alert('Por favor elija un archivo de imagen válido.');return}
+ if(file.size>3*1024*1024){alert('La imagen no debe pesar más de 3 MB.');return}
+ const reader=new FileReader();
+ reader.onload=ev=>{
+   const dataUrl=ev.target.result;
+   const inp=$('sh_cfg_hero_photo');if(inp)inp.value=dataUrl;
+   const prev=$('sh_cfg_photo_prev');if(prev){prev.style.display='block';const img=prev.querySelector('img');if(img)img.src=dataUrl}
+ };
+ reader.readAsDataURL(file);
+}
+function shopPhotoClear(){
+ const inp=$('sh_cfg_hero_photo');if(inp)inp.value='';
+ const prev=$('sh_cfg_photo_prev');if(prev)prev.style.display='none';
+}
+function shopVideoUpload(e){
+ const file=e&&e.target&&e.target.files&&e.target.files[0];if(!file)return;
+ if(file.size>8*1024*1024){alert('Para videos mayores a 8 MB se recomienda usar una URL directa de video para óptima velocidad.');return}
+ const reader=new FileReader();
+ reader.onload=ev=>{
+   const dataUrl=ev.target.result;
+   const inp=$('sh_cfg_hero_video');if(inp)inp.value=dataUrl;
+   alert('Video cargado correctamente. Recuerde pulsar Guardar.');
+ };
+ reader.readAsDataURL(file);
+}
+function shopVideoClear(){
+ const inp=$('sh_cfg_hero_video');if(inp)inp.value='';
+}
+function shopPresetVideo(u){
+ const inp=$('sh_cfg_hero_video');if(inp)inp.value=u;
+ alert('Preset de video asignado. Pulse Guardar para aplicar a la tienda.');
+}
+window.shopCfgBgTypeSet=shopCfgBgTypeSet;window.shopCfgColorSet=shopCfgColorSet;
+window.shopPhotoUpload=shopPhotoUpload;window.shopPhotoClear=shopPhotoClear;
+window.shopVideoUpload=shopVideoUpload;window.shopVideoClear=shopVideoClear;
+window.shopPresetVideo=shopPresetVideo;
+
+const TIKTOK_SVG = '<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="display:inline-block;vertical-align:-3px"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .61.05.9.15V9.35a6.34 6.34 0 0 0-.9-.07 6.34 6.34 0 0 0-6.34 6.34 6.35 6.35 0 0 0 6.34 6.35 6.34 6.34 0 0 0 6.35-6.35V7.95a8.21 8.21 0 0 0 4.76 1.5v-3.45a4.76 4.76 0 0 1-1-.69z"/></svg>';
+
 function shopThemeGet(){try{return localStorage.getItem('tj_shop_theme')||'auto'}catch(e){return 'auto'}}
 function shopThemeIsDark(m){const cur=m||shopThemeGet();if(cur==='dark')return true;if(cur==='light')return false;const mq=typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;const hr=new Date().getHours();return mq||(hr>=19||hr<6)}
 function shopThemeApply(){const cur=shopThemeGet(),isDark=shopThemeIsDark(cur),H=document.documentElement;if(isDark){H.setAttribute('data-kt','dark');H.setAttribute('data-paleta','dark')}else{H.removeAttribute('data-kt');H.setAttribute('data-paleta',(typeof SH!=='undefined'&&SH.paleta)||'shop')}shopThemeSyncUI()}
@@ -841,7 +895,7 @@ let vista='home',items=[],perVentasSel='dia';
 function perVentas(p){perVentasSel=p;R.home()}
 let navEd=false;
 function navOrd(){const o=DB.cfg.navOrder||[];return V.map((v,i)=>[v,i]).sort((a,b)=>{const x=o.indexOf(a[0][0]),y=o.indexOf(b[0][0]);return(x<0?900+a[1]:x)-(y<0?900+b[1]:y)}).map(a=>a[0])}
-function nav(){const mk=(u,d)=>navOrd().map(v=>`<div class="ni ${v[0]==vista?'on':''}" data-k="${v[0]}" data-h-click="h328" data-a-click="${_ha(v[0])}"><span class="ic">${v[1]}</span><span class="lb">${v[2]}</span>${navEd?`<span class="mv"><i data-h-click="h327" data-a-click="${_ha(v[0])}">${u}</i><i data-h-click="h326" data-a-click="${_ha(v[0])}">${d}</i></span>`:''}</div>`).join('');
+function nav(){const mk=(u,d)=>navOrd().map(v=>`<div class="ni ${v[0]==vista?'on':''}" data-k="${v[0]}" data-h-click="h328" data-a-click="${_ha(v[0])}"><span class="ic">${v[0]==='tiktoklive'?TIKTOK_SVG:v[1]}</span><span class="lb">${v[2]}</span>${navEd?`<span class="mv"><i data-h-click="h327" data-a-click="${_ha(v[0])}">${u}</i><i data-h-click="h326" data-a-click="${_ha(v[0])}">${d}</i></span>`:''}</div>`).join('');
  $('nav').innerHTML=mk('▲','▼');const n2=$('nav2');if(n2)n2.innerHTML=mk('◀','▶');document.body.classList.toggle('navEd',navEd);['navEdBtn','navEdBtn2'].forEach(id=>{const x=$(id);if(x)x.textContent=navEd?'✔ Listo':'↕ Ordenar botones'})}
 const navClick=k=>{if(!navEd)ir(k)};
 function navEdit(){navEd=!navEd;nav()}
@@ -1859,7 +1913,7 @@ R.tiktoklive=function(){
    <div><div class="bd">CENTRO DE TRANSMISIONES</div><h3 style="font-size:22px;margin:12px 0 6px">TikTok LIVE · Tarjetería Jhon</h3>
    <p style="color:var(--gris);margin:0;max-width:680px">Prepara tus ventas, promociones y guion desde el panel. La emisión y los datos en tiempo real se activarán únicamente cuando se confirme el acceso compatible de tu cuenta.</p></div>
    <div style="display:flex;gap:8px;flex-wrap:wrap">
-    <button class="btn p" data-h-click="h363">Abrir TikTok</button>
+    <button class="btn p" data-h-click="h363" style="display:inline-flex;align-items:center;gap:8px;background:#000;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.35)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .61.05.9.15V9.35a6.34 6.34 0 0 0-.9-.07 6.34 6.34 0 0 0-6.34 6.34 6.35 6.35 0 0 0 6.34 6.35 6.34 6.34 0 0 0 6.35-6.35V7.95a8.21 8.21 0 0 0 4.76 1.5v-3.45a4.76 4.76 0 0 1-1-.69z"/></svg> Abrir TikTok</button>
     <button class="btn" data-h-click="h364">Abrir LIVE Studio</button>
    </div>
   </div>
@@ -2967,7 +3021,7 @@ function etqImprimirLote(){
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbDb.collection(c):fbDb.collection(c).where('ref','==',me);let f1=true,f2=true;
- fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=cd.wordmark||'shop';TD.heroTitle=cd.heroTitle||'Tarjetería Jhon';TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=cd.wordmark||'shop';TD.heroTitle=cd.heroTitle||'Tarjetería Jhon';TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -3018,20 +3072,119 @@ function xmasCard(){
  const bt=(k,l)=>`<button class="btn ${t===k?'p':''}" data-h-click="h103" data-a-click="${_ha(k)}">${l}</button>`;
  const hb=(k,l)=>`<button class="btn ${hm===k?'p':''}" data-h-click="h102" data-a-click="${_ha(k)}">${l}</button>`;
  const pb=([k,l,acc,bg])=>`<button class="btn ${pal===k?'p':''}" style="display:inline-flex;align-items:center;gap:8px" data-h-click="h101" data-a-click="${_ha(k)}"><span style="display:inline-flex;align-items:center;border-radius:10px;padding:2px;background:${bg};box-shadow:0 0 0 1px rgba(0,0,0,.15)"><span style="width:12px;height:12px;border-radius:50%;background:${acc}"></span></span><span>${l}</span></button>`;
- const tNombres={madres:'🌸 Día de las Madres',padres:'👔 Día del Padre',trabajador:'👷 Día del Trabajador',galaxia:'🌌 Galaxia Cósmica',amor:'💖 Día del Amor',navidad:'🎄 Navidad',verano:'☀️ Verano',panama:PAFLAG+' Mes patrio'};
- return `<h3 style="margin:0">🎨 Temática de temporada</h3><p style="font-size:12.5px;color:var(--gris)">Viste la tienda virtual con una temática especial (fondo inmersivo, decoraciones y ambiente). Se activa para todos los clientes al instante y tiene prioridad sobre la paleta.</p><p style="margin:8px 0">${t?'<b>'+(tNombres[t]||t)+'</b> activada.':'⛔ <b>Sin temática</b> (diseño Shop normal).'}</p><div style="display:flex;gap:8px;flex-wrap:wrap">${bt('','Ninguna')}${bt('madres','🌸 Madres')}${bt('padres','👔 Padres')}${bt('trabajador','👷 Trabajador')}${bt('galaxia','🌌 Galaxia')}${bt('amor','💖 Amor')}${bt('navidad','🎄 Navidad')}${bt('verano','☀️ Verano')}${bt('panama',PAFLAG+' Mes patrio')}<button class="btn" data-h-click="h100">👁 Ver cómo queda</button></div>
+ const tNombres={madres:'🌸 Día de las Madres',padres:'👔 Día del Padre',trabajador:'🛠️ Día del Trabajador',galaxia:'🌌 Galaxia Cósmica',amor:'💖 Día del Amor',navidad:'🎄 Navidad',verano:'☀️ Verano',panama:PAFLAG+' Mes patrio'};
+ const curBgType = TD._curBgType || TD.heroBgType || 'none';
+ const curBgColor = TD._curHeroBgColor || TD.heroBgColor || 'hero-bg-aurora';
+ return `<h3 style="margin:0">🎨 Temática de temporada</h3><p style="font-size:12.5px;color:var(--gris)">Viste la tienda virtual con una temática especial (fondo inmersivo, decoraciones y ambiente). Se activa para todos los clientes al instante y tiene prioridad sobre la paleta.</p><p style="margin:8px 0">${t?'<b>'+(tNombres[t]||t)+'</b> activada.':'🔹 <b>Sin temática</b> (diseño Shop normal).'}</p><div style="display:flex;gap:8px;flex-wrap:wrap">${bt('','Ninguna')}${bt('madres','🌸 Madres')}${bt('padres','👔 Padres')}${bt('trabajador','🛠️ Trabajador')}${bt('galaxia','🌌 Galaxia')}${bt('amor','💖 Amor')}${bt('navidad','🎄 Navidad')}${bt('verano','☀️ Verano')}${bt('panama',PAFLAG+' Mes patrio')}<button class="btn" data-h-click="h100">👁️ Ver cómo queda</button></div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
- <h3 style="margin:0">🎨 Paletas PRO: Fondo de página y colores coordinados</h3><p style="font-size:12.5px;color:var(--gris)">Elija una combinación profesional completa: cambia el color de fondo de la página, tarjetas, bordes y botones acento. El círculo exterior muestra el color de fondo y el interior el color acento.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${PALETAS.map(pb).join('')}</div>
+ <h3 style="margin:0">🎨 Paletas PRO: Fondo de página y colores coordinados</h3><p style="font-size:12.5px;color:var(--gris)">Elija una combinación profesional completa: cambia el color de fondo de la página, tarjetas, bordes y botones acento.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${PALETAS.map(pb).join('')}</div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
- <h3 style="margin:0">🏷️ Logo y textos de la portada</h3><p style="font-size:12.5px;color:var(--gris)">Personalice la palabra grande de fondo (watermark) que aparece detrás de las tarjetas flotantes (por defecto "shop", o coloque su nombre o marca), así como el título y eslogan de la portada.</p>
- <div class="g" style="margin-top:10px">
-  <div><label>Texto de fondo (Watermark)</label><input id="sh_cfg_wm" value="${esc(TD.wordmark||'shop')}" placeholder="shop" maxlength="30"></div>
+ <h3 style="margin:0">🏷️ Logo, Portada, Foto/Video de Movimiento y Colores</h3>
+ <p style="font-size:12.5px;color:var(--gris)">Personalice el logo, foto de portada, video de movimiento en bucle, colores de fondo animados, palabra gigante (watermark), títulos y efectos de animación.</p>
+
+ <div class="g" style="margin-top:12px">
+  <div style="grid-column:1/-1">
+    <label>Logo de la tienda (URL o subir archivo de imagen)</label>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input id="sh_cfg_logo" value="${esc(TD.logoUrl||'')}" placeholder="https://... o elija un archivo" style="flex:1;min-width:220px">
+      <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
+        📁 Subir logo
+        <input type="file" id="sh_cfg_logo_file" accept="image/*" style="display:none" data-h-change="call" data-a-change="${_ha('shopLogoUpload')}">
+      </label>
+      <button type="button" class="btn s d" data-h-click="call" data-a-click="${_ha('shopLogoClear')}" title="Quitar logo">Quitar</button>
+    </div>
+    <div id="sh_cfg_logo_prev" style="margin-top:8px;${TD.logoUrl?'':'display:none'}">
+      <img src="${esc(TD.logoUrl||'')}" alt="Vista previa logo" style="max-height:48px;border-radius:10px;background:#fff;padding:4px 10px;border:1px solid var(--linea)">
+    </div>
+  </div>
+
+  <div style="grid-column:1/-1">
+    <label>Fondo de la portada: ¿Qué desea colocar?</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_bgtype_btns">
+      ${[['none','⚪ Normal (Limpio)'],['photo','📷 Foto / Banner de fondo'],['video','🎥 Video de movimiento (Bucle)'],['colors','🌈 Colores / Gradiente dinámico'],['solid','🎨 Color sólido']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgType===k?'p':''}" data-bgtype="${k}" data-h-click="call" data-a-click="${_ha('shopCfgBgTypeSet',k)}">${lbl}</button>`).join('')}
+    </div>
+  </div>
+
+  <div id="sh_cfg_sec_photo" style="grid-column:1/-1;${curBgType==='photo'?'':'display:none'}">
+    <label>Foto de portada (URL o subir imagen de fondo)</label>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input id="sh_cfg_hero_photo" value="${esc(TD.heroPhotoUrl||'')}" placeholder="https://... o suba una foto panorámica" style="flex:1;min-width:220px">
+      <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
+        📁 Subir foto
+        <input type="file" id="sh_cfg_photo_file" accept="image/*" style="display:none" data-h-change="call" data-a-change="${_ha('shopPhotoUpload')}">
+      </label>
+      <button type="button" class="btn s d" data-h-click="call" data-a-click="${_ha('shopPhotoClear')}">Quitar foto</button>
+    </div>
+    <div id="sh_cfg_photo_prev" style="margin-top:8px;${TD.heroPhotoUrl?'':'display:none'}">
+      <img src="${esc(TD.heroPhotoUrl||'')}" alt="Vista previa foto" style="max-height:90px;border-radius:12px;border:1px solid var(--linea)">
+    </div>
+  </div>
+
+  <div id="sh_cfg_sec_video" style="grid-column:1/-1;${curBgType==='video'?'':'display:none'}">
+    <label>Video de movimiento (URL de video MP4/WebM o subir archivo de video)</label>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input id="sh_cfg_hero_video" value="${esc(TD.heroVideoUrl||'')}" placeholder="https://.../video.mp4 o elija archivo" style="flex:1;min-width:220px">
+      <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
+        📁 Subir video
+        <input type="file" id="sh_cfg_video_file" accept="video/mp4,video/webm" style="display:none" data-h-change="call" data-a-change="${_ha('shopVideoUpload')}">
+      </label>
+      <button type="button" class="btn s d" data-h-click="call" data-a-click="${_ha('shopVideoClear')}">Quitar video</button>
+    </div>
+    <small style="display:block;color:var(--gris);margin-top:4px">💡 Presets de video en movimiento:</small>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-purple-lights-and-smoke-40228-large.mp4')}">💜 Humo & Luces Neón</button>
+      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-golden-dust-particles-in-slow-motion-41846-large.mp4')}">✨ Polvo Dorado Flotante</button>
+      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-curves-of-light-32085-large.mp4')}">🌊 Ondas de Luz Cyan</button>
+    </div>
+  </div>
+
+  <div id="sh_cfg_sec_colors" style="grid-column:1/-1;${curBgType==='colors'?'':'display:none'}">
+    <label>Gradiente de movimiento / Paleta de color de fondo</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_color_btns">
+      ${[['hero-bg-aurora','🌌 Aurora Boreal'],['hero-bg-sunset','🌅 Atardecer Dorado'],['hero-bg-cosmic','🪐 Nebulosa Cósmica'],['hero-bg-cyber','⚡ Cyber Neón'],['hero-bg-ocean','🌊 Océano Cyan'],['hero-bg-pastel','🌸 Pastel Glamour']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgColor===k?'p':''}" data-color="${k}" data-h-click="call" data-a-click="${_ha('shopCfgColorSet',k)}">${lbl}</button>`).join('')}
+    </div>
+  </div>
+
+  <div id="sh_cfg_sec_solid" style="grid-column:1/-1;${curBgType==='solid'?'':'display:none'}">
+    <label>Color sólido personalizado para la portada</label>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="color" id="sh_cfg_hero_solid" value="${TD.heroBgSolid||'#18181b'}" style="width:50px;height:40px;padding:2px;cursor:pointer;border-radius:10px">
+      <span style="font-size:13px;color:var(--gris)">Haga clic para elegir el color con el selector.</span>
+    </div>
+  </div>
+
+  <div><label>Texto de fondo gigante (Watermark)</label><input id="sh_cfg_wm" value="${esc(TD.wordmark||'shop')}" placeholder="shop" maxlength="30"></div>
   <div><label>Título de la portada</label><input id="sh_cfg_title" value="${esc(TD.heroTitle||'Tarjetería Jhon')}" placeholder="Tarjetería Jhon" maxlength="60"></div>
-  <div style="grid-column:1/-1"><label>Subtítulo / eslogan</label><input id="sh_cfg_sub" value="${esc(TD.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión')}" placeholder="Cada momento merece una tarjeta especial…" maxlength="150"></div>
+  <div style="grid-column:1/-1"><label>Subtítulo / eslogan</label><input id="sh_cfg_sub" value="${esc(TD.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión')}" placeholder="Cada momento merece una tarjeta especial..." maxlength="160"></div>
+
+  <div style="grid-column:1/-1">
+    <label>Animación Graphic Motion de las tarjetas de portada</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_motion_btns">
+      ${[['float','✨ Constelación 3D (Flotante)'],['shimmer','💫 Brillo Cósmico (Shimmer)'],['waves','🌊 Ondas Cinéticas'],['neon','⚡ Pulso Neón Cyber'],['clean','💎 Minimal Suave']].map(([k,lbl])=>`<button type="button" class="btn s ${(TD._curMotion||TD.motionStyle||'float')===k?'p':''}" data-motion="${k}" data-h-click="call" data-a-click="${_ha('shopCfgMotionSet',k)}">${lbl}</button>`).join('')}
+    </div>
+  </div>
+
+  <div style="grid-column:1/-1">
+    <label>Color y Contraste del Watermark (Combinaciones de alto impacto)</label>
+    <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_wm_btns">
+      ${[['wm_violeta','Violeta Profundo','#6366f1'],['wm_dorado','Dorado Champagne','#f59e0b'],['wm_cian','Cian Neón / Océano','#06b6d4'],['wm_rosa','Rosa Magenta Glam','#ec4899'],['wm_esmeralda','Verde Esmeralda','#10b981'],['wm_plata','Plata Mercurio','#94a3b8'],['wm_coral','Atardecer Coral','#f97316'],['wm_neon','Degradado Aurora','#a855f7'],['wm_blanco','Blanco Escarchado','#ffffff']].map(([k,lbl,col])=>`<button type="button" class="btn s ${(TD._curWmStyle||TD.watermarkStyle||'wm_violeta')===k?'p':''}" data-wm="${k}" style="display:inline-flex;align-items:center;gap:6px" data-h-click="call" data-a-click="${_ha('shopCfgWmSet',k)}"><span style="width:11px;height:11px;border-radius:50%;background:${col};box-shadow:0 0 0 1px rgba(0,0,0,.2)"></span><span>${lbl}</span></button>`).join('')}
+    </div>
+  </div>
+
+  <div>
+    <label>Opacidad del Watermark</label>
+    <select id="sh_cfg_wm_op">
+      <option value="8" ${(TD.watermarkOpacity||'14')==='8'?'selected':''}>8% - Muy sutil</option>
+      <option value="14" ${(TD.watermarkOpacity||'14')==='14'?'selected':''}>14% - Equilibrado PRO (Recomendado)</option>
+      <option value="20" ${(TD.watermarkOpacity||'14')==='20'?'selected':''}>20% - Destacado</option>
+      <option value="28" ${(TD.watermarkOpacity||'14')==='28'?'selected':''}>28% - Máximo Contraste</option>
+    </select>
+  </div>
  </div>
- <div style="margin-top:10px"><button class="btn p s" data-h-click="call" data-a-click="${_ha('shopBrandSave')}">💾 Guardar logo y textos de portada</button></div>
+
+ <div style="margin-top:14px;display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button class="btn p s" data-h-click="call" data-a-click="${_ha('shopBrandSave')}">💾 Guardar logo, foto/video y portada</button><a class="btn s" href="index.html?tienda=1" target="_blank" rel="noopener">👁️ Abrir tienda para probar</a></div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
- <h3 style="margin:0">🎠 Carrusel de portada</h3><p style="font-size:12.5px;color:var(--gris)">Elija cómo se eligen los diseños para las tarjetas flotantes de la portada. Con 📌 Personalizado puede seleccionar qué tarjetas mostrar con la etiqueta <b>“🎠 Carrusel principal”</b>.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${hb('random','🎲 Aleatorio')}${hb('mix','🔀 Mixto (seleccionados + aleatorios)')}${hb('manual','📌 Personalizado (solo seleccionados)')}</div>
+ <h3 style="margin:0">🎠 Carrusel de portada</h3><p style="font-size:12.5px;color:var(--gris)">Elija cómo se eligen los diseños para las tarjetas flotantes de la portada.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${hb('random','🎲 Aleatorio')}${hb('mix','✨ Mixto (seleccionados + aleatorios)')}${hb('manual','📌 Personalizado (solo seleccionados)')}</div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🔗 Enlaces de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Si los clientes ven una versión vieja al abrir el enlace de un vendedor, toque este botón para forzar la actualización.</p><button class="btn" data-h-click="h99">🔄 Actualizar enlaces de vendedores</button> <small style="color:var(--gris)">Versión: ${esc(String(TD.rev||BUILD))}</small>`
 }
@@ -3107,7 +3260,7 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
      SH.paleta=cCfg.paleta||'shop';SH.wordmark=cCfg.wordmark||'shop';
      SH.heroTitle=cCfg.heroTitle||'Tarjetería Jhon';
      SH.heroSub=cCfg.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';
-     SH.logoUrl=cCfg.logoUrl||'';SH.motionStyle=cCfg.motionStyle||'float';SH.watermarkStyle=cCfg.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cCfg.watermarkOpacity||'14';
+     SH.logoUrl=cCfg.logoUrl||'';SH.motionStyle=cCfg.motionStyle||'float';SH.watermarkStyle=cCfg.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cCfg.watermarkOpacity||'14';SH.heroBgType=cCfg.heroBgType||'none';SH.heroPhotoUrl=cCfg.heroPhotoUrl||'';SH.heroVideoUrl=cCfg.heroVideoUrl||'';SH.heroBgColor=cCfg.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cCfg.heroBgSolid||'#18181b';
      document.documentElement.setAttribute('data-paleta',SH.paleta);
    }else{
      SH.paleta='shop';document.documentElement.setAttribute('data-paleta','shop');
@@ -3119,7 +3272,7 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
  }catch(e){window._tjw&&_tjw(e)}
  try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){window._tjw&&_tjw(e)}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=cd.wordmark||'shop';SH.heroTitle=cd.heroTitle||'Tarjetería Jhon';SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;try{localStorage.setItem('tj_cached_items',JSON.stringify(SH.items.slice(0,180)));if(cf&&cf.data())localStorage.setItem('tj_cached_cfg',JSON.stringify(cf.data()))}catch(e){window._tjw&&_tjw(e)}{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=cd.wordmark||'shop';SH.heroTitle=cd.heroTitle||'Tarjetería Jhon';SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;try{localStorage.setItem('tj_cached_items',JSON.stringify(SH.items.slice(0,180)));if(cf&&cf.data())localStorage.setItem('tj_cached_cfg',JSON.stringify(cf.data()))}catch(e){window._tjw&&_tjw(e)}{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -3246,11 +3399,23 @@ function shopHero(){
  const mStyle=SH.motionStyle||'float';
  const wStyle=SH.watermarkStyle||'wm_violeta';
  const wOp=(+SH.watermarkOpacity||14)/100;
- e.className=`khero motion-${mStyle} ${wStyle}`;
+ const bgType=SH.heroBgType||'none';
+ const bgClass=bgType==='colors'?(SH.heroBgColor||'hero-bg-aurora'):'';
+ e.className=`khero motion-${mStyle} ${wStyle} ${bgClass}`;
  e.style.setProperty('--wm-op',String(wOp));
+ if(bgType==='solid'&&SH.heroBgSolid){e.style.background=SH.heroBgSolid}
+ else if(bgType!=='solid'){e.style.background=''}
  e.hidden=false;
+
+ let bgMediaHtml='';
+ if(bgType==='video'&&SH.heroVideoUrl){
+   bgMediaHtml=`<div class="khero-bg-video-wrap"><video class="khero-bg-video" autoplay muted loop playsinline src="${esc(SH.heroVideoUrl)}"></video><div class="khero-bg-overlay"></div></div>`;
+ } else if(bgType==='photo'&&SH.heroPhotoUrl){
+   bgMediaHtml=`<div class="khero-bg-photo-wrap"><img class="khero-bg-photo" src="${esc(SH.heroPhotoUrl)}" alt=""><div class="khero-bg-overlay"></div></div>`;
+ }
+
  const logoCoverHtml=SH.logoUrl?`<div class="khero-brand-logo"><img src="${esc(SH.logoUrl)}" alt="Logo" loading="lazy"></div>`:'';
- e.innerHTML=`<div class="khero-bg-wordmark" aria-hidden="true">${esc(SH.wordmark||"shop")}<span class="khero-dot">.</span></div>
+ e.innerHTML=`${bgMediaHtml}<div class="khero-bg-wordmark" aria-hidden="true">${esc(SH.wordmark||"shop")}<span class="khero-dot">.</span></div>
 <div class="khero-wordmark-wrap">
   ${logoCoverHtml}
   <h1 class="khero-title">${esc(SH.heroTitle||"Tarjetería Jhon")}</h1>
