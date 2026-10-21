@@ -1407,6 +1407,68 @@ html.shopmode:not([data-kt=dark]) #shop .kimg{background:var(--sf2)}
 }
 #shop .kfloat-card{width:176px;background:var(--sf);border-radius:28px;box-shadow:0 4px 6px -1px rgba(0,0,0,.1),0 2px 4px -2px rgba(0,0,0,.1);padding:6px;cursor:pointer;transition:transform .25s cubic-bezier(.2,.8,.2,1),box-shadow .25s;text-align:left}
 #shop .kfloat-card:hover{transform:translateY(-8px) scale(1.04) rotate(0deg)!important;box-shadow:var(--shl)!important;z-index:10}
+
+/* Logo de portada personalizado */
+#shop .khero-brand-logo{margin-bottom:12px;display:flex;justify-content:center}
+#shop .khero-brand-logo img{max-height:68px;max-width:260px;object-fit:contain;filter:drop-shadow(0 4px 12px rgba(0,0,0,.08))}
+
+/* Paletas y Contraste de Watermark */
+#shop .khero{--wm-op:0.14}
+#shop .khero-bg-wordmark{opacity:var(--wm-op,0.14)!important;transition:opacity .3s ease,color .3s ease,text-shadow .3s ease,transform .4s ease}
+#shop .khero.wm_violeta .khero-bg-wordmark{color:#6366f1;text-shadow:0 0 40px rgba(99,102,241,.28)}
+#shop .khero.wm_dorado .khero-bg-wordmark{color:#d97706;text-shadow:0 0 35px rgba(217,119,6,.28)}
+#shop .khero.wm_cian .khero-bg-wordmark{color:#0891b2;text-shadow:0 0 35px rgba(8,145,178,.32)}
+#shop .khero.wm_rosa .khero-bg-wordmark{color:#db2777;text-shadow:0 0 35px rgba(219,39,119,.3)}
+#shop .khero.wm_esmeralda .khero-bg-wordmark{color:#059669;text-shadow:0 0 35px rgba(5,150,105,.3)}
+#shop .khero.wm_plata .khero-bg-wordmark{color:#64748b;text-shadow:0 2px 20px rgba(0,0,0,.15)}
+#shop .khero.wm_coral .khero-bg-wordmark{color:#ea580c;text-shadow:0 0 35px rgba(234,88,12,.28)}
+#shop .khero.wm_neon .khero-bg-wordmark{background:linear-gradient(135deg,#a855f7 0%,#06b6d4 50%,#f43f5e 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 0 20px rgba(168,85,247,.35))}
+#shop .khero.wm_blanco .khero-bg-wordmark{color:#ffffff;text-shadow:0 4px 24px rgba(0,0,0,.22)}
+
+html[data-kt=dark] #shop .khero.wm_violeta .khero-bg-wordmark{color:#818cf8;text-shadow:0 0 50px rgba(129,140,248,.45)}
+html[data-kt=dark] #shop .khero.wm_dorado .khero-bg-wordmark{color:#fbbf24;text-shadow:0 0 45px rgba(251,191,36,.4)}
+html[data-kt=dark] #shop .khero.wm_cian .khero-bg-wordmark{color:#22d3ee;text-shadow:0 0 50px rgba(34,211,238,.45)}
+html[data-kt=dark] #shop .khero.wm_rosa .khero-bg-wordmark{color:#f472b6;text-shadow:0 0 50px rgba(244,114,182,.4)}
+html[data-kt=dark] #shop .khero.wm_esmeralda .khero-bg-wordmark{color:#34d399;text-shadow:0 0 50px rgba(52,211,153,.4)}
+html[data-kt=dark] #shop .khero.wm_plata .khero-bg-wordmark{color:#cbd5e1;text-shadow:0 0 40px rgba(255,255,255,.25)}
+html[data-kt=dark] #shop .khero.wm_coral .khero-bg-wordmark{color:#fb923c;text-shadow:0 0 45px rgba(251,146,60,.4)}
+html[data-kt=dark] #shop .khero.wm_blanco .khero-bg-wordmark{color:#ffffff;text-shadow:0 0 45px rgba(255,255,255,.45)}
+
+/* Graphic Motion: Shimmer (Brillo Cósmico) */
+#shop .khero.motion-shimmer .kfloat-card{position:relative;overflow:hidden;animation:kfltShimmerPulse 5s ease-in-out infinite alternate}
+#shop .khero.motion-shimmer .kfloat-card::after{content:'';position:absolute;top:-50%;left:-100%;width:60%;height:200%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);transform:rotate(25deg);animation:kfltBeam 4s cubic-bezier(.4,0,.2,1) infinite;pointer-events:none}
+@keyframes kfltBeam{0%{left:-100%}40%,100%{left:200%}}
+@keyframes kfltShimmerPulse{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-8px) scale(1.02)}}
+
+/* Graphic Motion: Waves (Ondas Cinéticas) */
+#shop .khero.motion-waves .kfloat-0{animation:kfltWave 4s ease-in-out infinite 0s}
+#shop .khero.motion-waves .kfloat-1{animation:kfltWave 4s ease-in-out infinite 1s}
+#shop .khero.motion-waves .kfloat-2{animation:kfltWave 4s ease-in-out infinite 2s}
+#shop .khero.motion-waves .kfloat-3{animation:kfltWave 4s ease-in-out infinite 3s}
+@keyframes kfltWave{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-14px) rotate(2deg)}}
+
+/* Graphic Motion: Neon Pulse (Pulso Neón Cyber) */
+#shop .khero.motion-neon .kfloat-card{box-shadow:0 0 15px rgba(124,102,255,.35),0 4px 12px rgba(0,0,0,.1);border:1px solid rgba(124,102,255,.4);animation:kfltNeon 3.5s ease-in-out infinite alternate}
+@keyframes kfltNeon{0%,100%{box-shadow:0 0 14px rgba(124,102,255,.35);border-color:rgba(124,102,255,.4)}50%{box-shadow:0 0 28px rgba(6,182,212,.55);border-color:rgba(6,182,212,.65);transform:translateY(-7px)}}
+
+/* Graphic Motion: Clean Minimal */
+#shop .khero.motion-clean .kfloat-card{animation:none!important}
+
+/* Botón selector de tema Día / Noche / Auto */
+.kha.ktheme-btn{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:980px;font-size:13px;font-weight:600;border:1px solid var(--ol);background:var(--sf);color:var(--tx);cursor:pointer;transition:all .18s cubic-bezier(.2,.8,.2,1)}
+.kha.ktheme-btn:hover{background:var(--sf2);transform:scale(1.03);border-color:var(--p)}
+.kha.ktheme-btn:active{transform:scale(.96)}
+.ktheme-ico{font-size:14px;display:inline-flex;align-items:center;justify-content:center}
+.krail-theme{background:none;border:0;color:var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;margin-bottom:8px;font-size:17px;transition:background .15s,transform .15s}
+.krail-theme:hover{background:var(--sf2);transform:scale(1.08)}
+
+/* Mobile Menu Theme Segmented Control */
+.km-theme-box{margin:14px 8px 8px;padding:12px;background:var(--sf2);border-radius:16px;border:1px solid var(--ol)}
+.km-theme-title{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--tx2);font-weight:700;margin-bottom:8px}
+.km-theme-seg{display:flex;gap:6px}
+.km-theme-seg button{flex:1;padding:8px 4px;font-size:12.5px;font-weight:600;border-radius:10px;border:1px solid var(--ol);background:var(--sf);color:var(--tx);cursor:pointer;transition:all .15s}
+.km-theme-seg button.on{background:var(--p);color:#fff;border-color:var(--p);box-shadow:0 2px 8px rgba(124,102,255,.3)}
+
 #shop .kfloat-img{aspect-ratio:1;width:100%;border-radius:20px;overflow:hidden;background:var(--sf2)}
 #shop .kfloat-img img{width:100%;height:100%;object-fit:cover;display:block}
 #shop .kfloat-body{padding:8px 6px 6px}
