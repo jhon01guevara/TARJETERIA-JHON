@@ -28,6 +28,7 @@ const _appC={};function appHtml(n){if(!_appC[n])_appC[n]=fetch('apps/'+n+'.html'
 let DB={prod:[],cli:[],fac:[],ubi:[],agenda:[],cfg:{sig:1058,itbms:0,nombre:'Tarjetería Jhon',ruc:'',tel:'(507) 6074-1150',email:'Tarjeteriajhon@gmail.com',dir:'Panama Oeste',banco:'Banco General',tcuenta:'Ahorro',cuenta:'',yappy:'',dests:[],tema:'claro',snd:1,tono:'campana',vol:70,nsys:0}};
 let cardState={cfg:false,email:false};
 try{cardState=Object.assign(cardState,JSON.parse(localStorage.getItem('tj_cards')||'{}'))}catch(e){window._tjw&&_tjw(e)}
+const TIKTOK_SVG='<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 0 1-2.59-2.59 2.59 2.59 0 0 1 2.59-2.59c.27 0 .53.04.77.12V9.68a5.7 5.7 0 0 0-.77-.05 5.69 5.69 0 0 0-5.69 5.68 5.69 5.69 0 0 0 5.69 5.69 5.69 5.69 0 0 0 5.69-5.69V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>';
 const ALL_CFG_CARDS = ['poliCard','cfg_apariencia','cfg_empresa','cfg_emails','cfg_notif','cfg_nav','cfg_respaldo','waCard','investCard','lbgCard','xmasCard','redesCard','fleCard','bkCard','sesCard','tplCard','recCard','vozCard','cintCard','llamCard'];
 function toggleCard(key){
  cardState[key]=!cardState[key];
