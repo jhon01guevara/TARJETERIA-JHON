@@ -1,6 +1,8 @@
 # Fase 6 · Migración de prueba en proyecto Firebase de pruebas
 
-Fecha: 2026-10-21 · Herramienta: **`migraciones/migrar-pruebas.html`** (subida a GitHub se abre en
+Fecha: 2026-10-21 · **VALIDADA: 2026-10-22 ✅** (proyecto creado · informe sin riesgos · copia verificada en verde · ensayo de borrado/repetición hecho). Siguiente: activación (ver checklist en `docs/ESQUEMA-MULTIEMPRESA.md` §4).
+
+Herramienta: **`migraciones/migrar-pruebas.html`** (subida a GitHub se abre en
 `https://jhon01guevara.github.io/TARJETERIA-JHON/migraciones/migrar-pruebas.html`)
 
 **Objetivo:** ensayar, sin tocar producción, la copia completa de la estructura actual a
@@ -21,6 +23,17 @@ exige antes de activar la separación real (Fase 7).
   de copiar (paso 6). También puede verlo en el panel: Empresas → pestaña Migración.
 - **(c)** Restauración/iteración probada sobre el proyecto de pruebas → borrar la copia y repetir
   el ensayo completo al menos una vez (paso 9).
+
+## Paso 0 · Desplegar las reglas actualizadas (necesario UNA vez)
+
+La simulación y la copia leen colecciones COMPLETAS (chats, llamadas, vendedores); las reglas
+anteriores solo permitían lecturas filtradas por miembro/participante. La versión nueva de
+`firestore.rules` permite a la **administración** enumerarlas (nadie más gana nada):
+
+1. Suba el `firestore.rules` actualizado a GitHub (raíz del repo).
+2. Consola Firebase → Firestore Database → **Reglas** → pegar el contenido completo del archivo →
+   **Publicar**.
+3. Sin este paso, la simulación dirá "Missing or insufficient permissions" (permiso insuficiente).
 
 ## Paso 1 · Crear el proyecto de pruebas (~5 min, gratis)
 
@@ -107,6 +120,7 @@ al informe de simulación de la Fase 5.
 | "Configuración inválida" | Pegó incompleto el firebaseConfig | Copie de nuevo el bloque completo con `{ }` |
 | "permiso denegado" al copiar/verificar | Reglas del proyecto de pruebas no permisivas | Paso 2: modo de prueba o reglas manuales de arriba |
 | "permiso denegado" al leer | Sesión de admin caducada | Vuelva a entrar al panel y recargue la herramienta |
+| "Missing or insufficient permissions" al SIMULAR | Reglas sin desplegar | Paso 0: subir y publicar `firestore.rules` actualizado en la consola |
 | Error `resource-exhausted` / cuota | Catálogo muy grande o muchos reintentos | Espere unos minutos y repita; no pasa nada por reintentar |
 | Ya pasaron 30 días del modo de prueba | Reglas expiradas | Vuelva a publicar las reglas permisivas del paso 2 |
 

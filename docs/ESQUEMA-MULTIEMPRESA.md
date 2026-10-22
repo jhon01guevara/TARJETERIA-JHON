@@ -1,10 +1,10 @@
 # Esquema multiempresa definitivo — TARJETERIA-JHON
 
-Fecha: 2026-10-21 · Estado: **Fases 1-5 completas · Fase 6 lista para ejecutar · Fase 7 implementada pero INACTIVA (MULTIEMP=false)**. La activación real exige: proyecto Firebase de pruebas validado con la herramienta de la Fase 6 + informe aprobado + pruebas de aceptación en verde (ver checklist en §4).
+Fecha: 2026-10-21 · Actualizado 2026-10-22 · Estado: **Fases 1-5 completas · FASE 6 VALIDADA (2026-10-22: proyecto de pruebas creado, informe sin riesgos, copia verificada y ensayo repetido) · Fase 7 lista para activar · Reglas Fase 8 listas para desplegar**.
 
-Empresa inicial: `tarjeteria-jhon` (id estable; ver `js/empresa-contexto.js`).
+Empresa inicial: `tarjeteria-jhon` (id estable; ver `js/empresa-contexto.js`). Empresa 2 registrada en metadatos: `genuine` (GENUINE).
 
-**Estado de fases:** F1 diagnóstico ✅ · F2 respaldo ✅ · F3 módulo Empresas ✅ · F4 contexto ✅ · F5 simulación ✅ · **F6 herramienta de migración de prueba lista** (`migraciones/migrar-pruebas.html`, guía en `docs/FASE6-MIGRACION-PRUEBAS.md`) · **F7 código integrado e inerte** (`fbCol`/`lsk` enrutan TODO el panel, apps externas incluidas vía proxy del puente; se activa cambiando `MULTIEMP=false` → `true` en `js/empresa-contexto.js`, línea 11) · F8 reglas objetivo redactadas (§3; se despliegan al activar) · F9 dominios/DNS futura · el cierre/go-live con la tabla §5.
+**Estado de fases:** F1 diagnóstico ✅ · F2 respaldo ✅ · F3 módulo Empresas ✅ · F4 contexto ✅ · F5 simulación ✅ · **F6 migración de prueba VALIDADA 2026-10-22** (informe `ok:true` sin alertas: 11 facturas admin, 2 vendedores, 63 items tienda, 52 investigación, contador 1080) · **F7 código integrado e inerte** (`fbCol`/`lsk` enrutan TODO el panel, apps externas incluidas vía proxy del puente; se activa cambiando `MULTIEMP=false` → `true` en `js/empresa-contexto.js`, línea 11; la herramienta ya tiene el modo REAL: `migraciones/migrar-pruebas.html?modo=real`) · **F8 reglas por empresa incluidas en `firestore.rules`** (desplegar antes de activar) · F9 dominios/DNS futura · cierre/go-live con la tabla §5.
 
 ---
 
@@ -43,26 +43,18 @@ Regla: `empLSKey(clave)` (js/empresa-contexto.js) — la empresa inicial **conse
 - IndexedDB: `tj_cat` → `tj_cat_{slug}`; `tj_loginbg` → `tj_loginbg_{slug}`.
 - Claves por persona que NO se particionan: `tj_tema_{uid}`, `tj_chr_{uid}`, `tj_act`, `tj_sesmin`, `tj_cfg_tab` (preferencias del navegador).
 
-## 3. Reglas Firestore objetivo (Fase 8 — borrador)
+## 3. Reglas Firestore por empresa (Fase 8 — INCLUIDAS en `firestore.rules`)
 
-```
-function esEmpresa(eid) {
-  // administración global (UID maestro) o miembro declarado de la empresa
-  return isAdmin() ||
-         exists(/databases/$(database)/documents/empresas/$(eid)/miembros/$(request.auth.uid));
-}
-match /empresas/{eid}/{document=**} {
-  allow read, write: if isAdmin() || esEmpresa(eid);
-}
-match /empresas/{eid}/tienda_items/{document=**} {
-  allow read: if true;              // catálogo público
-  allow write: if esEmpresa(eid) && request.auth.token.admin == true;
-}
-match /dominios/{host} { allow read: if true; allow write: if isAdmin(); }
-// roles/perfiles/presencia: como hoy (identidad global)
-```
+La versión desplegable ya está al final de `firestore.rules` (bloques `empresas/{eid}/…`). Diseño:
+`esEmpresa(eid)` = administración global (UID maestro) o miembro declarado (`empresas/{eid}/miembros/{uid}`, uso futuro).
+El árbol general de la empresa queda para `esEmpresa`; las colecciones que la tienda pública y los
+vendedores usan se espejan con las mismas reglas de hoy (tienda_items lectura pública, leads/pedidos
+creación anónima con esquema estricto, contador +1, clientes solo crecen, privado por UID, chats por
+miembro, llamadas por participante). Desplegar ANTES de activar MULTIEMP: no cambian nada de las
+rutas raíz actuales — solo habilitan el árbol nuevo.
 
-Pendiente de diseño fino en la Fase 8: esquemas estrictos por colección (como los actuales de `tienda_leads`/`tienda_pedidos`), miembro-administrador por empresa (`miembros/{uid}` con rol), y pruebas de acceso cruzado (empresa A no lee empresa B).
+Pendiente de diseño fino más adelante: miembro-administrador por empresa (`miembros/{uid}` con rol)
+y pruebas formales de acceso cruzado (empresa A no lee empresa B).
 
 ## 4. Flujo con contexto activo (Fase 7 — IMPLEMENTADO e inerte; checklist de activación)
 
@@ -74,12 +66,12 @@ Pendiente de diseño fino en la Fase 8: esquemas estrictos por colección (como 
 5. `saveLocal()` usa `lsk('tj_db')` = `empLSKey`; IndexedDB abre `tj_cat`/`tj_loginbg` por empresa (la inicial conserva los nombres actuales).
 6. Cambio de empresa (`empActivar` con bandera activa) = recarga limpia con `?emp=`.
 
-**Checklist de activación (sesión futura, en este orden):**
-1. Fase 6 validada: copia verificada en el proyecto de pruebas (todo verde) + ensayo de borrado/repetición hecho (requisitos a/b/c de §6).
-2. Agregar el botón de migración REAL a la herramienta (escribe `empresas/tarjeteria-jhon/…` en PRODUCCIÓN; aditivo, sin tocar rutas actuales) y ejecutarlo.
-3. Cambiar `MULTIEMP=false` → `true` en `js/empresa-contexto.js` (una línea) y subir a GitHub.
-4. Desplegar las reglas objetivo de §3 (Fase 8) en la consola.
-5. Ejecutar la tabla de pruebas de aceptación (§5) y crear ZIP con fecha.
+**Checklist de activación (Fase 7 — en curso):**
+1. ✅ Fase 6 validada (2026-10-22): copia verificada en el proyecto de pruebas + ensayo de borrado/repetición hecho (requisitos a/b/c de §6).
+2. ⏳ Ejecutar la **migración REAL** con la herramienta: abrir `migraciones/migrar-pruebas.html?modo=real`, Leer → escribir "COPIAR" → Ejecutar → Verificar (es aditiva: crea `empresas/tarjeteria-jhon/…` en producción sin tocar las rutas actuales; reversible con «Borrar copia real»).
+3. ⏳ Cambiar `MULTIEMP=false` → `true` en `js/empresa-contexto.js` (una línea) y subir a GitHub (entrega preparada por el asistente tras verificar el paso 2).
+4. ⏳ Desplegar las reglas de §3/Fase 8 (ya incluidas en `firestore.rules`) en la consola.
+5. ⏳ Ejecutar la tabla de pruebas de aceptación (§5) y crear ZIP con fecha.
 
 **Notas técnicas:** `sw.js` usa redes-primero (la caché es solo respaldo sin conexión) → no requiere cambios. `js/tema.js` lee `tj_shop_theme` sin particionar (cosmético, solo tema de la tienda pública). La barra superior del panel (loginbg en Firebase Storage) queda global por ahora (Fase 9+).
 
