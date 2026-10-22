@@ -126,13 +126,17 @@ async function migVerificar(dstDb,plan){
  var simples=['catalogo','tienda_items','tienda_leads','tienda_pedidos','galeria','wa_conversaciones','investigacion_items'];
  for(var c=0;c<simples.length;c++)
   await chk(simples[c],plan.conteos[simples[c]]||0,function(p){return function(){return nCol(base+'/'+p)}}(simples[c]));
- await chk('chats',plan.conteos['chats']||0,function(p){return function(){return nCol(base+'/'+p)}}('chats'));
+ /* chats/llamadas: el conteo del plan suma sus subcolecciones (msgs/ice); para
+    la fila de la colección se espera solo los documentos de primer nivel. */
+ var espChats=Math.max(0,(plan.conteos['chats']||0)-(plan.resumen.msgs||0));
+ var espLlam=Math.max(0,(plan.conteos['llamadas']||0)-(plan.resumen.ice||0));
+ await chk('chats',espChats,function(p){return function(){return nCol(base+'/'+p)}}('chats'));
  await chk('chats/msgs',plan.resumen.msgs,async function(){
   var sn=await dstDb.collection(base+'/chats').get(),n=0;
   for(var i=0;i<sn.docs.length;i++)n+=(await sn.docs[i].ref.collection('msgs').get()).size;
   return n;
  });
- await chk('llamadas',plan.conteos['llamadas']||0,function(p){return function(){return nCol(base+'/'+p)}}('llamadas'));
+ await chk('llamadas',espLlam,function(p){return function(){return nCol(base+'/'+p)}}('llamadas'));
  await chk('llamadas/ice',plan.resumen.ice,async function(){
   var sn=await dstDb.collection(base+'/llamadas').get(),n=0;
   for(var i=0;i<sn.docs.length;i++)n+=(await sn.docs[i].ref.collection('ice').get()).size;
