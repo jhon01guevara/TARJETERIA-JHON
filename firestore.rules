@@ -348,6 +348,28 @@ service cloud.firestore {
       }
     }
 
+    /* ===== Marketing Studio (plan maestro 2026-10-22, v1) =====
+       Acceso por EMPRESA: administración global o miembro declarado
+       (empresas/{eid}/miembros/{uid}, sincronizado por el panel desde cfg.users).
+       Un vendedor de una empresa NO puede leer la de otra. */
+    function esMiembroEmpresa(eid) {
+      return logged()
+        && (isAdmin()
+          || exists(/databases/$(database)/documents/empresas/$(eid)/miembros/$(request.auth.uid)));
+    }
+    match /empresas/{eid}/marketing_projects/{id} {
+      allow read, write: if esMiembroEmpresa(eid);
+    }
+    match /empresas/{eid}/marketing_assets/{id} {
+      allow read, write: if esMiembroEmpresa(eid);
+    }
+    match /empresas/{eid}/marketing_exports/{id} {
+      allow read, write: if esMiembroEmpresa(eid);
+    }
+    match /empresas/{eid}/marketing_colecciones/{id} {
+      allow read, write: if esMiembroEmpresa(eid);
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }
