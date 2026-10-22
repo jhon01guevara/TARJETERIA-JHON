@@ -56,8 +56,25 @@ function empLSKey(k){return empEsInicial()?k:k+'_'+empActiva()}
 function empPath(){return 'empresas/'+empActiva()}
 function empPathDe(slug){return 'empresas/'+(empSlugOk(slug)?slug:EMPRESA_DEF.id)}
 
+/* Colecciones de NEGOCIO: se particionan por empresa cuando MULTIEMP=true.
+   Identidad (roles/perfiles/presencia) y metadatos (empresas/dominios) quedan
+   globales por diseño (docs/ESQUEMA-MULTIEMPRESA.md §1). */
+var EMP_NEGOCIO={panel:1,panel_public:1,vendedores:1,catalogo:1,tienda_items:1,tienda_leads:1,
+ tienda_pedidos:1,galeria:1,chats:1,llamadas:1,wa_conversaciones:1,investigacion_items:1};
+
+/* Ruta de una colección para el panel (Fase 7): con MULTIEMP=false devuelve el
+   nombre tal cual — el panel sigue usando exactamente las rutas actuales; con
+   MULTIEMP=true las colecciones de negocio bajan a empresas/{eid}/... (lee la
+   bandera en cada llamada para que activarla sea un cambio de una línea). */
+function empColPath(n){
+ n=String(n==null?'':n);
+ if(!MULTIEMP||!EMP_NEGOCIO[n])return n;
+ return 'empresas/'+empActiva()+'/'+n;
+}
+
 var TJEmpresa={MULTIEMP:MULTIEMP,EMPRESA_DEF:EMPRESA_DEF,empActiva:empActiva,empSet:empSet,
- empSlugOk:empSlugOk,empEsInicial:empEsInicial,empLSKey:empLSKey,empPath:empPath,empPathDe:empPathDe};
+ empSlugOk:empSlugOk,empEsInicial:empEsInicial,empLSKey:empLSKey,empPath:empPath,empPathDe:empPathDe,
+ EMP_NEGOCIO:EMP_NEGOCIO,empColPath:empColPath};
 if(typeof window!=='undefined')window.TJEmpresa=TJEmpresa;
 /* Export para tests de Node (mismo patrón que js/facturacion.js). */
 if(typeof module!=='undefined'&&module.exports)module.exports=TJEmpresa;

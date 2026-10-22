@@ -97,8 +97,15 @@ function empEstado(id,estado){
 }
 function empActivar(id){
  if(!TJEmpresa.empSet(id))return alert('Identificador de empresa no válido.');
- var aviso=TJEmpresa.MULTIEMP?'':'Preferencia guardada. La separación real de datos por empresa se activa tras aprobar la migración (Fase 6-7 del plan); mientras tanto el panel sigue mostrando los datos de Tarjetería Jhon.';
- EM.msg={ok:true,t:aviso||'✔ Empresa activada.'};
+ if(TJEmpresa.MULTIEMP){
+  /* Con la separación activa, cambiar de empresa exige recarga limpia:
+     purga la DB en memoria y las claves quedan particionadas (lsk/empLSKey). */
+  try{sessionStorage.setItem('tj_emp_swap','1')}catch(e){}
+  location.href=location.pathname+'?emp='+encodeURIComponent(id);
+  return;
+ }
+ var aviso='Preferencia guardada. La separación real de datos por empresa se activa tras aprobar la migración (Fase 6-7 del plan); mientras tanto el panel sigue mostrando los datos de Tarjetería Jhon.';
+ EM.msg={ok:true,t:aviso};
  if(typeof R!=='undefined'&&R.empresas)R.empresas();
 }
 function empCancelar(){EM.edit=null;EM.tab='lista';if(typeof R!=='undefined'&&R.empresas)R.empresas()}
