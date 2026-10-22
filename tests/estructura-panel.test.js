@@ -39,7 +39,7 @@ test('Chat consulta solo conversaciones propias y las reglas separan participant
   const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
   assert.match(app,/\.where\('members','array-contains',chatMe\(\)\)\.onSnapshot/);
   assert.match(rules,/function chatMember\(data\)/);
-  assert.match(rules,/allow read: if chatMember\(resource\.data\);/);
+  assert.match(rules,/allow read: if isAdmin\(\) \|\| chatMember\(resource\.data\);/);
   assert.match(rules,/request\.resource\.data\.members == resource\.data\.members/);
   assert.match(rules,/match \/panel\/loginbg \{\s*allow read, write: if isAdmin\(\);/);
   assert.match(rules,/match \/panel\/data \{/);
