@@ -23,8 +23,9 @@ function cargar(search){
     atob,btoa,Uint8Array,ArrayBuffer};
   ctx.window=ctx;ctx.self=ctx;ctx.globalThis=ctx;
   vm.createContext(ctx);
-  /* El orden replica index.html: los módulos multiempresa se cargan antes que app.js. */
-  const previos=['js/empresa-contexto.js','js/empresas.js','migraciones/migracion-multiempresa.js'];
+  /* El orden replica index.html: contexto + motor/vista de marketing + empresas
+     + migración, todos antes que app.js (que referencia sus funciones). */
+  const previos=['js/empresa-contexto.js','js/mkt-editor.js','js/marketing.js','js/empresas.js','migraciones/migracion-multiempresa.js'];
   try{
     for(const f of previos)vm.runInContext(leer(f),ctx,{filename:f});
     vm.runInContext(src,ctx,{filename:'js/app.js'});return null

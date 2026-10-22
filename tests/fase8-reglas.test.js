@@ -37,4 +37,6 @@ test('La herramienta tiene el modo REAL protegido para la activación (Fase 7)',
  /* El ejecutor en sí sigue sin referenciar la base de producción. */
  const e=leer('migraciones/migracion-ejecutor.js');
  assert.ok(!e.includes('fbDb'),'el ejecutor recibe la bd por parámetro; nunca la de producción');
+ /* Reconexión al proyecto de pruebas debe esperar el borrado de la app anterior. */
+ assert.match(h,/await prev\.delete\(\)/,'la reconexión espera el borrado (evita "client has already been terminated")');
 });

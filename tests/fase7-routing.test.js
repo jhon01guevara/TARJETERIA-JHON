@@ -88,7 +88,7 @@ test('fbCol en app.js funciona en VM: rutas actuales hoy, enrutadas con la bande
   fetch:()=>Promise.resolve(U),Blob,speechSynthesis:U,AudioContext:U,IntersectionObserver:U,MutationObserver:U,ResizeObserver:U,Image:U,FileReader:U,atob,btoa,Uint8Array,ArrayBuffer};
  ctx.window=ctx;ctx.self=ctx;
  vm.createContext(ctx);
- for(const f of ['js/empresa-contexto.js','js/empresas.js','migraciones/migracion-multiempresa.js'])
+ for(const f of ['js/empresa-contexto.js','js/mkt-editor.js','js/marketing.js','js/empresas.js','migraciones/migracion-multiempresa.js'])
   vm.runInContext(leer(f),ctx,{filename:f});
  vm.runInContext(leer('js/app.js'),ctx,{filename:'js/app.js'});
  /* Con la bandera apagada: rutas actuales (simula reversión) */

@@ -66,12 +66,12 @@ y pruebas formales de acceso cruzado (empresa A no lee empresa B).
 5. `saveLocal()` usa `lsk('tj_db')` = `empLSKey`; IndexedDB abre `tj_cat`/`tj_loginbg` por empresa (la inicial conserva los nombres actuales).
 6. Cambio de empresa (`empActivar` con bandera activa) = recarga limpia con `?emp=`.
 
-**Checklist de activación (Fase 7 — en curso):**
+**Checklist de activación (Fase 7 — ejecutada 2026-10-22):**
 1. ✅ Fase 6 validada (2026-10-22): copia verificada en el proyecto de pruebas + ensayo de borrado/repetición hecho (requisitos a/b/c de §6).
-2. ⏳ Ejecutar la **migración REAL** con la herramienta: abrir `migraciones/migrar-pruebas.html?modo=real`, Leer → escribir "COPIAR" → Ejecutar → Verificar (es aditiva: crea `empresas/tarjeteria-jhon/…` en producción sin tocar las rutas actuales; reversible con «Borrar copia real»).
-3. ⏳ Cambiar `MULTIEMP=false` → `true` en `js/empresa-contexto.js` (una línea) y subir a GitHub (entrega preparada por el asistente tras verificar el paso 2).
-4. ⏳ Desplegar las reglas de §3/Fase 8 (ya incluidas en `firestore.rules`) en la consola.
-5. ⏳ Ejecutar la tabla de pruebas de aceptación (§5) y crear ZIP con fecha.
+2. ✅ Migración REAL ejecutada y verificada (2026-10-22): `empresas/tarjeteria-jhon/…` completo en producción (17 colecciones; los ✖ de chats/llamadas en la primera verificación eran doble conteo de msgs/ice en la tabla — verificador corregido).
+3. ✅ `MULTIEMP=true` (js/empresa-contexto.js) + versión de caché 20261024a — preparado y probado (suite 75/75).
+4. ✅ Reglas Fase 8 desplegadas (evidencia: la escritura de la migración real fue aceptada).
+5. ⏳ Tabla de pruebas de aceptación (§5) tras subir la activación.
 
 **Notas técnicas:** `sw.js` usa redes-primero (la caché es solo respaldo sin conexión) → no requiere cambios. `js/tema.js` lee `tj_shop_theme` sin particionar (cosmético, solo tema de la tienda pública). La barra superior del panel (loginbg en Firebase Storage) queda global por ahora (Fase 9+).
 
