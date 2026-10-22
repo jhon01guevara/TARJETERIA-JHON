@@ -160,7 +160,7 @@ test('El mapa general de clientes es solo para administración y se ve en Inicio
   const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
   assert.equal((app.match(/R\.mapa=function\(/g)||[]).length,1);
   assert.match(app,/V\.push\(\['mapa','🗺️','Mapa de clientes'\]\)/);
-  assert.match(app,/const PANELES=V\.filter\(v=>v\[0\]!=='config'&&v\[0\]!=='vend'&&v\[0\]!=='mapa'\)/);
+  assert.match(app,/const PANELES=V\.filter\(v=>v\[0\]!=='config'&&v\[0\]!=='vend'&&v\[0\]!=='mapa'&&v\[0\]!=='empresas'\)/);
   assert.match(app,/k!=='vend'&&k!=='mapa'&&/);
   assert.match(app,/mcPintar\('mcHomeMap'\)/);
   assert.match(app,/function mcStats\(\)/);

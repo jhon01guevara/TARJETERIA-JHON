@@ -7,7 +7,8 @@ const vm=require('node:vm');
 // Ejecuta js/app.js en un entorno simulado (sin navegador) y devuelve el error que lance al cargar.
 // Un error aquí detiene todo el script: la página se ve, pero ningún botón responde.
 function cargar(search){
-  const src=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const leer=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
+  const src=leer('js/app.js');
   const mk=()=>{const f=function(){};const p=new Proxy(f,{
     get:(t,k)=>{if(k===Symbol.toPrimitive)return()=>'';if(k==='then')return undefined;if(k==='length')return 0;if(k===Symbol.iterator)return function*(){};return p},
     apply:()=>p,construct:()=>p,set:()=>true,has:()=>true});return p};
@@ -22,7 +23,12 @@ function cargar(search){
     atob,btoa,Uint8Array,ArrayBuffer};
   ctx.window=ctx;ctx.self=ctx;ctx.globalThis=ctx;
   vm.createContext(ctx);
-  try{vm.runInContext(src,ctx,{filename:'js/app.js'});return null}catch(e){return e}
+  /* El orden replica index.html: los módulos multiempresa se cargan antes que app.js. */
+  const previos=['js/empresa-contexto.js','js/empresas.js','migraciones/migracion-multiempresa.js'];
+  try{
+    for(const f of previos)vm.runInContext(leer(f),ctx,{filename:f});
+    vm.runInContext(src,ctx,{filename:'js/app.js'});return null
+  }catch(e){return e}
 }
 
 test('El panel carga sin errores al iniciar',()=>{
