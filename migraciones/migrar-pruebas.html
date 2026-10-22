@@ -104,7 +104,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="../js/empresa-contexto.js?v=tiktok-live-20261023a"></script>
 <script src="migracion-multiempresa.js?v=tiktok-live-20261023a"></script>
-<script src="migracion-ejecutor.js?v=tiktok-live-20261023a"></script>
+<script src="migracion-ejecutor.js?v=tiktok-live-20261024a"></script>
 <script>
 /* ===== Página autónoma de la Fase 6 (no se carga desde el panel) =====
    Producción = app por defecto (misma configuración que js/app.js; la sesión
@@ -163,18 +163,22 @@ function parseCfg(t){
  try{return JSON.parse(t)}catch(e){}
  try{return JSON.parse(t.replace(/([{,]\s*)([A-Za-z_][\w-]*)(\s*:)/g,'$1"$2"$3').replace(/'/g,'"'))}catch(e){return null}
 }
-$('bCon').onclick=function(){
+$('bCon').onclick=async function(){
  var cfg=parseCfg($('cfg').value);
  if(!cfg||!cfg.projectId||!cfg.apiKey)return st('conSt','<span class="mal">Configuración inválida: pegue el bloque firebaseConfig completo (con apiKey y projectId).</span>');
- st('conSt','');
+ st('conSt','Conectando…');
  try{
-  if(firebase.apps.some(function(a){return a.name==='pruebas'}))firebase.app('pruebas').delete();
+  var prev=null;
+  firebase.apps.forEach(function(a){if(a.name==='pruebas')prev=a});
+  /* Esperar el borrado: sin await, la eliminación pendiente termina también
+     la app recién creada ("The client has already been terminated"). */
+  if(prev){dstDb=null;await prev.delete()}
  }catch(e){}
  try{
   firebase.initializeApp(cfg,'pruebas');
   dstDb=firebase.app('pruebas').firestore();
   try{localStorage.setItem('tj_migpruebas_cfg',$('cfg').value.trim())}catch(e){}
-  st('conSt','<span class="ok">✔ Conectado al proyecto de pruebas: '+cfg.projectId+'</span> (la configuración quedó guardada en este navegador; al recargar solo pulse Conectar de nuevo).');
+  st('conSt','<span class="ok">✔ Conectado al proyecto de pruebas: '+cfg.projectId+'</span> (puede pulsar Conectar de nuevo sin riesgo para reconectar).');
   gates();
  }catch(e){st('conSt','<span class="mal">No se pudo conectar: '+((e&&e.message)||e)+'</span>')}
 };

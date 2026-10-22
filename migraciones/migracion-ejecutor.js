@@ -80,11 +80,19 @@ function migPlan(s,eid){
 }
 
 /* ---------- Ejecución sobre el proyecto de PRUEBAS (dstDb) ---------- */
+function migEjBytes(o){try{return (JSON.stringify(o)||'').length}catch(e){return 0}}
 async function migCopiar(dstDb,plan,onProg){
  if(!dstDb||!plan||!plan.ops)throw new Error('Falta la conexión al proyecto de pruebas o el plan.');
- var hechos=0,errores=[];
- for(var i=0;i<plan.ops.length;i+=400){
-  var lote=plan.ops.slice(i,i+400),b=dstDb.batch();
+ /* Lotes limitados por CANTIDAD (≤400 ops) y por PESO (≤6 MB): Firestore
+    rechaza lotes >10 MB ("transaction or write too big") con imágenes base64. */
+ var hechos=0,errores=[],MAXOPS=400,MAXBYTES=6000000,i=0;
+ while(i<plan.ops.length){
+  var lote=[],bytes=0;
+  while(i<plan.ops.length&&lote.length<MAXOPS&&bytes+migEjBytes(plan.ops[i].d)<=MAXBYTES){
+   bytes+=migEjBytes(plan.ops[i].d);lote.push(plan.ops[i]);i++;
+  }
+  if(!lote.length){lote.push(plan.ops[i]);i++} /* documento grande: lote propio */
+  var b=dstDb.batch();
   lote.forEach(function(o){b.set(dstDb.doc(o.p),o.d)});
   try{await b.commit();hechos+=lote.length}catch(e){errores.push(((e&&e.code)||'')+': '+((e&&e.message)||e))}
   if(onProg)onProg(hechos,plan.ops.length);
@@ -163,5 +171,5 @@ async function migBorrar(dstDb,eid){
 
 var MIG_EJECUTOR={plan:migPlan,copiar:migCopiar,verificar:migVerificar,borrar:migBorrar};
 if(typeof window!=='undefined')window.MIG_EJECUTOR=MIG_EJECUTOR;
-/* Export para tests de Node: solo el núcleo puro. */
-if(typeof module!=='undefined'&&module.exports)module.exports={migPlan:migPlan};
+/* Export para tests de Node: el núcleo puro y el runner (con bd simulada). */
+if(typeof module!=='undefined'&&module.exports)module.exports={migPlan:migPlan,migCopiar:migCopiar};
