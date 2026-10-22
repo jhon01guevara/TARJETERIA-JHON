@@ -69,6 +69,12 @@ service cloud.firestore {
 
     // Espacio privado de cada vendedor: clientes, facturas, ubicaciones y agenda.
     // Administración puede auditarlo; un vendedor solo puede acceder a su UID.
+    // El documento padre de cada vendedor (si existe) también es enumerable por
+    // administración: la simulación y la migración completas (Fase 6) lo requieren.
+    match /vendedores/{uid} {
+      allow read: if isAdmin();
+    }
+
     match /vendedores/{uid}/privado/{doc} {
       allow read, write: if isAdmin() || (logged() && request.auth.uid == uid);
     }
@@ -86,8 +92,9 @@ service cloud.firestore {
 
     // Un chat y sus mensajes solo existen para integrantes declarados. La consulta
     // del navegador debe llevar where('members', 'array-contains', me()).
+    // Administración puede enumerar todos (simulación/migración Fase 6).
     match /chats/{chat} {
-      allow read: if chatMember(resource.data);
+      allow read: if isAdmin() || chatMember(resource.data);
       allow create: if chatMember(request.resource.data);
       allow update: if chatMember(resource.data)
         && request.resource.data.members == resource.data.members;
@@ -95,7 +102,8 @@ service cloud.firestore {
         || (resource.data.type == 'grp' && resource.data.by == me());
 
       match /msgs/{msg} {
-        allow read: if chatMember(get(/databases/$(database)/documents/chats/$(chat)).data);
+        allow read: if isAdmin()
+          || chatMember(get(/databases/$(database)/documents/chats/$(chat)).data);
         allow create: if chatMember(get(/databases/$(database)/documents/chats/$(chat)).data)
           && request.resource.data.from == me()
           && request.resource.data.t is string
@@ -112,8 +120,9 @@ service cloud.firestore {
       allow create: if logged()
         && request.resource.data.from == me()
         && (request.resource.data.from == 'admin' || request.resource.data.to == 'admin');
-      allow read, update: if logged()
-        && (resource.data.from == me() || resource.data.to == me());
+      allow read, update: if isAdmin()
+        || (logged()
+          && (resource.data.from == me() || resource.data.to == me()));
       allow delete: if isAdmin();
 
       match /ice/{c} {
