@@ -82,6 +82,20 @@
   <div class="paso"><span class="num">⬇</span><h2 style="margin:0">Informe para su archivo</h2></div>
   <button id="bDl" disabled>⬇ Descargar informe completo (JSON)</button>
  </div>
+
+ <!-- Sección visible SOLO con ?modo=real (activación Fase 7) -->
+ <div class="card" id="realCard" style="display:none;border-color:var(--mal)">
+  <div class="paso"><span class="num" style="background:var(--mal)">🚨</span><h2 style="margin:0">MODO REAL — Migración a PRODUCCIÓN (Fase 7)</h2></div>
+  <p class="sub" style="margin:0 0 8px">Copia la estructura actual a <code>empresas/tarjeteria-jhon/…</code> en el <b>proyecto REAL</b>. Es <b>aditiva</b>: no borra ni modifica nada de lo que ya existe (las rutas actuales quedan intactas como respaldo natural). Se puede deshacer con «Borrar copia real». Ejecutar solo con la Fase 6 validada (hecha: 2026-10-22) y las reglas nuevas desplegadas.</p>
+  <p class="sub" style="margin:0 0 8px">Requisito en esta página: casilla 0 en ✔ (sesión admin) y haber pulsado <b>📖 Leer colecciones</b> (casilla 2).</p>
+  <input id="realConf" placeholder='Escriba COPIAR para habilitar la migración real' style="width:100%;background:#111318;color:var(--txt);border:1px solid var(--borde);border-radius:8px;padding:10px;font:13px ui-monospace,Consolas,monospace">
+  <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+   <button id="bRealCopiar" class="peligro" disabled>🚀 Ejecutar migración REAL</button>
+   <button id="bRealVer" class="sec" disabled>✅ Verificar migración real</button>
+   <button id="bRealBorrar" class="sec" disabled>🗑 Borrar copia real</button>
+  </div>
+  <div id="realOut" style="margin-top:10px"></div>
+ </div>
 </div>
 
 <!-- Firebase (mismas versiones que el panel) + módulos de migración -->
@@ -98,7 +112,13 @@
    Pruebas = segunda app inicializada con la configuración que usted pega. */
 var ADMIN_UID='o7bHndKtswSHreFnVwORqBSUKL43';
 var firebaseConfig={apiKey:"AIzaSyBle5zbvVjXIVXvOz8tgxBBbu8-Ty1Msrs",authDomain:"tarjeteria-jhon.firebaseapp.com",projectId:"tarjeteria-jhon",storageBucket:"tarjeteria-jhon.firebasestorage.app",messagingSenderId:"386602273549",appId:"1:386602273549:web:8d97182d91d33a79e17e44"};
-var fbDb=null,dstDb=null,MP={user:null,snap:null,plan:null,copiado:null,verif:null};
+var fbDb=null,dstDb=null,MP={user:null,snap:null,plan:null,copiado:null,verif:null,realCopiado:null,realVerif:null};
+
+/* Modo REAL (activación Fase 7): solo visible con ?modo=real. La migración es
+   aditiva sobre el proyecto real y comparte el plan/verificación del ejecutor. */
+var MODO_REAL=false;
+try{MODO_REAL=(new URLSearchParams(location.search).get('modo')==='real')}catch(e){}
+if(MODO_REAL){var _rc=$('realCard');if(_rc)_rc.style.display='';}
 
 function $(id){return document.getElementById(id)}
 function st(id,html){var e=$(id);if(e)e.innerHTML=html}
@@ -109,7 +129,16 @@ function gates(){
  $('bVer').disabled=!(dstDb&&MP.copiado&&MP.copiado.hechos===MP.copiado.total&&!MP.copiado.errores.length);
  $('bBorrar').disabled=!dstDb;
  $('bDl').disabled=!(MP.snap&&MP.plan);
+ if(MODO_REAL)gatesReal();
 }
+function gatesReal(){
+ var okSes=!!(MP.user&&MP.user.uid===ADMIN_UID&&MP.snap);
+ var conf=!!($('realConf')&&$('realConf').value.trim()==='COPIAR');
+ $('bRealCopiar').disabled=!(okSes&&conf);
+ $('bRealVer').disabled=!(okSes&&MP.realCopiado&&MP.realCopiado.hechos===MP.realCopiado.total&&!MP.realCopiado.errores.length);
+ $('bRealBorrar').disabled=!okSes;
+}
+if(MODO_REAL&&$('realConf'))$('realConf').oninput=gatesReal;
 
 /* 0 · sesión (hereda la del panel: mismo dominio GitHub Pages) */
 firebase.initializeApp(firebaseConfig);
@@ -220,6 +249,44 @@ $('bDl').onclick=function(){
  var url=URL.createObjectURL(blob),a=document.createElement('a');
  a.href=url;a.download='informe-fase6-migracion-prueba-'+new Date().toISOString().slice(0,10)+'.json';
  document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},4000);
+};
+ /* Migración REAL (producción) — solo con ?modo=real */
+$('bRealCopiar').onclick=async function(){
+ if(!MP.snap)return alert('Primero pulse «Leer colecciones» (casilla 2).');
+ MP.plan=MIG_EJECUTOR.plan(MP.snap,'tarjeteria-jhon');
+ var r=MP.plan.resumen;
+ if(!confirm('ATENCIÓN: se escribirán '+r.escrituras+' documentos en el PROYECTO REAL bajo empresas/tarjeteria-jhon/…\n\nEs ADITIVA: no se borra ni modifica nada existente. ¿Continuar?'))return;
+ if(!confirm('Confirmación final: esta es la migración REAL a producción. ¿Continuar?'))return;
+ st('realOut','<div class="nota">Ejecutando migración REAL… no cierre esta pestaña.</div><div class="barra"><i id="rbar"></i></div><div id="rpct" class="sub">0 %</div>');
+ try{
+  MP.realCopiado=await MIG_EJECUTOR.copiar(fbDb,MP.plan,function(d,t){
+   var p=Math.round(d*100/t),b=$('rbar'),q=$('rpct');
+   if(b)b.style.width=p+'%';if(q)q.textContent=p+' % ('+d+' de '+t+')';
+  });
+  st('realOut',(MP.realCopiado.errores.length
+   ?'<div class="alerta">Completó con '+MP.realCopiado.errores.length+' error(es): '+MP.realCopiado.errores.slice(0,3).join(' · ')+'</div>'
+   :'<span class="ok">✔ MIGRACIÓN REAL TERMINADA: '+MP.realCopiado.hechos+' de '+MP.realCopiado.total+' documentos escritos en empresas/tarjeteria-jhon/…</span><div class="sub">Ahora «Verificar migración real». Al quedar todo verde, avise al asistente para activar MULTIEMP.</div>'));
+  gates();
+ }catch(e){st('realOut','<div class="alerta">Error en la migración real: '+((e&&e.message)||e)+'</div>')}
+};
+$('bRealVer').onclick=async function(){
+ st('realOut','<div class="nota">Verificando en producción…</div>');
+ try{
+  MP.realVerif=await MIG_EJECUTOR.verificar(fbDb,MP.plan);
+  var filas=MP.realVerif.detalle.map(function(x){return '<tr><td>'+x.coleccion+'</td><td>'+x.esperado+'</td><td>'+x.hallado+'</td><td class="'+(x.ok?'ok':'mal')+'">'+(x.ok?'✔':'✖')+'</td></tr>'}).join('');
+  st('realOut','<b class="'+(MP.realVerif.ok?'ok':'mal')+'">'+(MP.realVerif.ok?'✔ MIGRACIÓN REAL VERIFICADA: todo coincide.':'✖ Hay diferencias — revise la tabla.')+'</b><table style="margin-top:8px"><tr><th>Colección</th><th>Esperado</th><th>Hallado</th><th></th></tr>'+filas+'</table>');
+  gates();
+ }catch(e){st('realOut','<div class="alerta">No se pudo verificar: '+((e&&e.message)||e)+'</div>')}
+};
+$('bRealBorrar').onclick=async function(){
+ if(!confirm('Se borrará SOLO empresas/tarjeteria-jhon/… del PROYECTO REAL (la copia nueva; las rutas actuales NO se tocan). ¿Continuar?'))return;
+ if(!confirm('Confirmación final: ¿borrar la copia real?'))return;
+ st('realOut','<div class="nota">Borrando copia real…</div>');
+ try{var r=await MIG_EJECUTOR.borrar(fbDb,'tarjeteria-jhon');
+  MP.realCopiado=null;MP.realVerif=null;
+  st('realOut','<span class="ok">✔ '+r.borrados+' documentos borrados de empresas/tarjeteria-jhon/…</span> (las rutas actuales quedaron intactas).');
+  gates();
+ }catch(e){st('realOut','<div class="alerta">Error al borrar: '+((e&&e.message)||e)+'</div>')}
 };
 gates();
 </script>
