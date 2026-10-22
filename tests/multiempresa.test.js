@@ -16,9 +16,9 @@ function cargar(){
  return ctx;
 }
 
-test('El contexto de empresa arranca en modo preparación con la empresa inicial',()=>{
+test('El contexto de empresa arranca con la separación ACTIVADA (activación 2026-10-22)',()=>{
  const ctx=cargar();
- assert.equal(ctx.MULTIEMP,false,'MULTIEMP debe ser false: el flujo de datos actual no cambia');
+ assert.equal(ctx.MULTIEMP,true,'MULTIEMP=true desde la activación: negocio bajo empresas/{eid}');
  assert.equal(ctx.TJEmpresa.EMPRESA_DEF.id,'tarjeteria-jhon');
  assert.equal(ctx.TJEmpresa.empActiva(),'tarjeteria-jhon','sin URL ni preferencia: empresa inicial');
  assert.equal(ctx.TJEmpresa.empEsInicial(),true);

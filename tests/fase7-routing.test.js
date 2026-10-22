@@ -12,12 +12,12 @@ function ctxEmpresa(){
  return ctx;
 }
 
-test('Con MULTIEMP=false empColPath devuelve las rutas actuales tal cual (entrega inerte)',()=>{
+test('La separación está ACTIVADA y empColPath enruta el negocio a la empresa inicial',()=>{
  const c=ctxEmpresa();
- assert.equal(c.MULTIEMP,false);
+ assert.equal(c.MULTIEMP,true,'activada 2026-10-22');
  for(const n of ['panel','panel_public','vendedores','catalogo','tienda_items','tienda_leads',
   'tienda_pedidos','galeria','chats','llamadas','wa_conversaciones','investigacion_items'])
-  assert.equal(c.TJEmpresa.empColPath(n),n);
+  assert.equal(c.TJEmpresa.empColPath(n),'empresas/tarjeteria-jhon/'+n);
 });
 
 test('Identidad y metadatos NUNCA se enrutan, aunque la bandera esté activa',()=>{
@@ -34,13 +34,13 @@ test('Con MULTIEMP=true el negocio baja a empresas/{empresa activa}/…',()=>{
  assert.equal(c.TJEmpresa.empColPath('tienda_items'),'empresas/dulceria-la-central/tienda_items');
 });
 
-test('La bandera se lee en cada llamada: activarla es cambiar la variable',()=>{
+test('La bandera se lee en cada llamada: apagarla (reversión) es cambiar la variable',()=>{
  const c=ctxEmpresa();
- assert.equal(c.TJEmpresa.empColPath('chats'),'chats');
+ assert.equal(c.TJEmpresa.empColPath('chats'),'empresas/tarjeteria-jhon/chats','activa por defecto');
+ c.MULTIEMP=false;
+ assert.equal(c.TJEmpresa.empColPath('chats'),'chats','reversión instantánea a rutas raíz');
  c.MULTIEMP=true;
  assert.equal(c.TJEmpresa.empColPath('chats'),'empresas/tarjeteria-jhon/chats');
- c.MULTIEMP=false;
- assert.equal(c.TJEmpresa.empColPath('chats'),'chats');
 });
 
 test('app.js enruta TODO el negocio por fbCol y la identidad sigue directa',()=>{
@@ -91,7 +91,8 @@ test('fbCol en app.js funciona en VM: rutas actuales hoy, enrutadas con la bande
  for(const f of ['js/empresa-contexto.js','js/empresas.js','migraciones/migracion-multiempresa.js'])
   vm.runInContext(leer(f),ctx,{filename:f});
  vm.runInContext(leer('js/app.js'),ctx,{filename:'js/app.js'});
- /* Hoy: rutas actuales */
+ /* Con la bandera apagada: rutas actuales (simula reversión) */
+ vm.runInContext('MULTIEMP=false',ctx);
  assert.equal(vm.runInContext('fbCol("catalogo").p',ctx),'catalogo');
  assert.equal(vm.runInContext('fbCol("panel_public").p',ctx),'panel_public');
  /* Borrar lo grabado y activar la bandera: mismo panel, rutas por empresa. */

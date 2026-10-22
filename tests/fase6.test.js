@@ -61,6 +61,24 @@ test('El ejecutor JAMÁS referencia la base de datos de producción',()=>{
  });
 });
 
+test('La copia parte los lotes por PESO además de por cantidad (límite de Firestore)',async()=>{
+ const {migPlan,migCopiar}=require('../migraciones/migracion-ejecutor.js');
+ const big='x'.repeat(4*1024*1024); /* imágenes base64 simuladas de 4 MB */
+ const s={panelData:{fac:[]},clientesCli:[],vendedores:{},catalogo:[],tiendaItems:[],tiendaLeads:[],
+  tiendaPedidos:[],galeria:[],chats:[],llamadas:[],waConversaciones:[],
+  investigacion:[{id:'a',data:big},{id:'b',data:big},{id:'c',data:big},{id:'d',data:big}]};
+ const plan=migPlan(s,'tarjeteria-jhon');
+ const commits=[];
+ const dstDb={doc:function(p){return{p:p}},batch:function(){
+  const ops=[];const b={set:function(r){ops.push(r.p)},commit:async function(){commits.push(ops.length)}};
+  return b}};
+ const r=await migCopiar(dstDb,plan,null);
+ assert.equal(r.hechos,plan.ops.length,'todo escrito');
+ assert.equal(r.errores.length,0,'sin errores');
+ assert.ok(commits.length>=3,'los documentos pesados van en lotes separados: '+commits.join('+'));
+ assert.ok(commits.every(function(n){return n<=400}),'nunca más de 400 ops por lote');
+});
+
 test('La herramienta de la Fase 6 es una página aparte y el panel NO la carga',()=>{
  const html=leer('migraciones/migrar-pruebas.html');
  const pos=[html.indexOf('empresa-contexto.js'),html.indexOf('migracion-multiempresa.js'),html.indexOf('migracion-ejecutor.js')];
