@@ -27,13 +27,13 @@ const _appC={};function appHtml(n){if(!_appC[n])_appC[n]=fetch('apps/'+n+'.html'
 
 let DB={prod:[],cli:[],fac:[],ubi:[],agenda:[],cfg:{sig:1058,itbms:0,nombre:'Tarjetería Jhon',ruc:'',tel:'(507) 6074-1150',email:'Tarjeteriajhon@gmail.com',dir:'Panama Oeste',banco:'Banco General',tcuenta:'Ahorro',cuenta:'',yappy:'',dests:[],tema:'claro',snd:1,tono:'campana',vol:70,nsys:0}};
 let cardState={cfg:false,email:false};
-try{cardState=Object.assign(cardState,JSON.parse(localStorage.getItem('tj_cards')||'{}'))}catch(e){window._tjw&&_tjw(e)}
+try{cardState=Object.assign(cardState,JSON.parse(localStorage.getItem(lsk('tj_cards'))||'{}'))}catch(e){window._tjw&&_tjw(e)}
 const wmClean=v=>{v=String(v||'').trim();return v.toLowerCase()==='shop'?'':v};
 const TIKTOK_SVG='<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 0 1-2.59-2.59 2.59 2.59 0 0 1 2.59-2.59c.27 0 .53.04.77.12V9.68a5.7 5.7 0 0 0-.77-.05 5.69 5.69 0 0 0-5.69 5.68 5.69 5.69 0 0 0 5.69 5.69 5.69 5.69 0 0 0 5.69-5.69V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>';
 const ALL_CFG_CARDS = ['poliCard','cfg_apariencia','cfg_empresa','cfg_emails','cfg_notif','cfg_nav','cfg_respaldo','waCard','investCard','lbgCard','xmasCard','redesCard','fleCard','bkCard','sesCard','tplCard','recCard','vozCard','cintCard','llamCard'];
 function toggleCard(key){
  cardState[key]=!cardState[key];
- try{localStorage.setItem('tj_cards',JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}
+ try{localStorage.setItem(lsk('tj_cards'),JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}
  const body=$('body_'+key)||$(key==='cfg'?'bodyCfg':key==='email'?'bodyEmail':null);
  const caret=$('caret_'+key)||$(key==='cfg'?'caretCfg':key==='email'?'caretEmail':null);
  const btn=$('btnToggle_'+key)||$(key==='cfg'?'btnToggleCfg':key==='email'?'btnToggleEmail':null);
@@ -55,8 +55,8 @@ function wrapCardInner(key, title, body){
    ${body}
  </div>`;
 }
-function cfgExpandAll(){for(const k of ALL_CFG_CARDS)cardState[k]=true;try{localStorage.setItem('tj_cards',JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}if(vista==='config')R.config()}
-function cfgCollapseAll(){for(const k of ALL_CFG_CARDS)cardState[k]=false;try{localStorage.setItem('tj_cards',JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}if(vista==='config')R.config()}
+function cfgExpandAll(){for(const k of ALL_CFG_CARDS)cardState[k]=true;try{localStorage.setItem(lsk('tj_cards'),JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}if(vista==='config')R.config()}
+function cfgCollapseAll(){for(const k of ALL_CFG_CARDS)cardState[k]=false;try{localStorage.setItem(lsk('tj_cards'),JSON.stringify(cardState))}catch(e){window._tjw&&_tjw(e)}if(vista==='config')R.config()}
 /* ===== Personalización y configuración web =====
    La pantalla Configuración se divide en dos pestañas: "Personalización y configuración
    web" (todo lo que cambia el aspecto de la web: temas, fondos, imágenes, videos, textos
@@ -76,14 +76,14 @@ function cfgTab(t){
 window.cfgTab=cfgTab;
 function catExpandAll(){document.querySelectorAll('.cg2').forEach(d=>{d.open=true;catCl.add(d.dataset.k)})}
 function catCollapseAll(){document.querySelectorAll('.cg2').forEach(d=>{d.open=false;catCl.delete(d.dataset.k)})}
-try{const s=localStorage.getItem('tj_db');if(s){const o=JSON.parse(s),c=DB.cfg;DB=Object.assign(DB,o);DB.cfg=Object.assign(c,o.cfg||{})}}catch(e){window._tjw&&_tjw(e)}
+try{const s=localStorage.getItem(lsk('tj_db'));if(s){const o=JSON.parse(s),c=DB.cfg;DB=Object.assign(DB,o);DB.cfg=Object.assign(c,o.cfg||{})}}catch(e){window._tjw&&_tjw(e)}
 if(!DB.prod.length)DB.prod=[['TARJETAS DE TODA OCACION',1.30],['TARJETAS DE TODA OCACION',1.25],['TARJETAS DE TODA OCACION',1.20],['TARJETAS DE TODA OCACION',1.15],['TARJETAS DE TODA OCACION',1.00],['TARJETAS DE TODA OCACION DISTRUBUCION',0.95]].map((p,i)=>({id:'p'+i,n:p[0],p:p[1]}));
 // Si la copia local (localStorage) falla (p.ej. el navegador llenó su cuota), antes esto quedaba
 // en silencio total: nadie se enteraba, ni en consola. Ahora avisa una vez cada 5 minutos como
 // máximo (para no llenar la pantalla de avisos si falla seguido) — la nube sigue intentando guardar
 // aparte, pero es la única señal visible de que algo no se está guardando donde debería.
 let _slWarnT=0;
-const saveLocal=()=>{try{localStorage.setItem('tj_db',JSON.stringify(DB))}catch(e){console.warn('[saveLocal] no se pudo guardar localmente:',e);const n=Date.now();if(n-_slWarnT>300000){_slWarnT=n;try{cloudEstado('⚠ No se pudo guardar una copia local (memoria llena). Revise espacio del navegador.',false)}catch(_){window._tjw&&_tjw(_)}}}};
+const saveLocal=()=>{try{localStorage.setItem(lsk('tj_db'),JSON.stringify(DB))}catch(e){console.warn('[saveLocal] no se pudo guardar localmente:',e);const n=Date.now();if(n-_slWarnT>300000){_slWarnT=n;try{cloudEstado('⚠ No se pudo guardar una copia local (memoria llena). Revise espacio del navegador.',false)}catch(_){window._tjw&&_tjw(_)}}}};
 const save=()=>{saveLocal();syncToCloud()};
 
 // ===== Sincronización en la nube (Firebase) =====
@@ -125,8 +125,14 @@ function cloudEstado(txt,ok){_cloudOn=!!ok;const els=document.querySelectorAll('
 // historial de clientes ni la agenda. Cada vendedor guarda su trabajo en su propio documento.
 const PUBLIC_CFG=['sig','itbms','nombre','ruc','tel','email','dir','banco','tcuenta','cuenta','yappy','dests','tema','snd','tono','vol','nsys'];
 const pickCfg=(cfg,keys=PUBLIC_CFG)=>keys.reduce((o,k)=>(Object.prototype.hasOwnProperty.call(cfg||{},k)&&(o[k]=cfg[k]),o),{});
-const publicRef=()=>fbDb&&fbDb.collection('panel_public').doc('general');
-const privateRef=()=>fbDb&&(esAdmin()?fbDb.collection('panel').doc('data'):fbDb.collection('vendedores').doc(SES.id).collection('privado').doc('data'));
+/* Multiempresa (Fase 7 preparada): fbCol enruta las colecciones de negocio a la empresa
+   activa SOLO cuando MULTIEMP=true (hoy devuelve las rutas actuales tal cual); las de
+   identidad (roles/perfiles/presencia) siguen globales. lsk particiona las claves
+   locales por empresa — la inicial conserva las suyas (retro-compatible). */
+const fbCol=n=>fbDb&&fbDb.collection(TJEmpresa.empColPath(n));
+const lsk=k=>TJEmpresa.empLSKey(k);
+const publicRef=()=>fbDb&&fbCol('panel_public').doc('general');
+const privateRef=()=>fbDb&&(esAdmin()?fbCol('panel').doc('data'):fbCol('vendedores').doc(SES.id).collection('privado').doc('data'));
 const publicPayload=ts=>({prod:Array.isArray(DB.prod)?DB.prod:[],cfg:pickCfg(DB.cfg),_ts:ts});
 const privatePayload=ts=>({cli:Array.isArray(DB.cli)?DB.cli:[],fac:Array.isArray(DB.fac)?DB.fac:[],ubi:Array.isArray(DB.ubi)?DB.ubi:[],agenda:Array.isArray(DB.agenda)?DB.agenda:[],cfg:pickCfg(DB.cfg),_ts:ts});
 function limpiarMemoriaVendedor(){
@@ -158,7 +164,7 @@ function escucharVendedores(){
  Object.keys(_vendUnsub).forEach(id=>{if(!ids.has(id)){try{_vendUnsub[id]()}catch(e){}delete _vendUnsub[id];delete _vendSnap[id];aplicarFacVend()}});
  ids.forEach(id=>{
   if(_vendUnsub[id])return;
-  _vendUnsub[id]=fbDb.collection('vendedores').doc(id).collection('privado').doc('data').onSnapshot(doc=>{
+  _vendUnsub[id]=fbCol('vendedores').doc(id).collection('privado').doc('data').onSnapshot(doc=>{
    const fac=doc.exists&&Array.isArray(doc.data().fac)?doc.data().fac:[];
    _vendSnap[id]=fac.map(f=>Object.assign({},f,{vend:f.vend||id}));
    aplicarFacVend();saveLocal();
@@ -173,7 +179,7 @@ function devolverFacVend(){
   const antes=new Map((_vendSnap[id]||[]).map(f=>[f.id,JSON.stringify(f)])),ahora=new Map((por[id]||[]).map(f=>[f.id,f]));
   const cambiadas=[...ahora.values()].filter(f=>antes.get(f.id)!==JSON.stringify(f)),borradas=new Set([...antes.keys()].filter(k=>!ahora.has(k)));
   if(!cambiadas.length&&!borradas.size)return null;
-  const ref=fbDb.collection('vendedores').doc(id).collection('privado').doc('data');
+  const ref=fbCol('vendedores').doc(id).collection('privado').doc('data');
   return fbDb.runTransaction(async tx=>{
    const d=await tx.get(ref),dat=d.exists?d.data():{};
    let fac=(Array.isArray(dat.fac)?dat.fac:[]).filter(f=>!borradas.has(f.id));
@@ -188,7 +194,7 @@ function devolverFacVend(){
    nunca reciben el mismo número. Administración lo mantiene por encima de todas las
    facturas conocidas; los vendedores solo pueden avanzarlo de uno en uno. */
 let _ctrT=0,_ctrVal=0;
-const contadorRef=()=>fbDb&&fbDb.collection('panel_public').doc('contador');
+const contadorRef=()=>fbDb&&fbCol('panel_public').doc('contador');
 function asegurarContador(){
  if(!esAdmin()||!fbDb)return;
  const mx=(DB.fac||[]).reduce((m,f)=>Math.max(m,+f.n||0),0),piso=Math.max(mx+1,+(DB.cfg||{}).sig||0);
@@ -216,7 +222,7 @@ async function reservarNumeroFactura(){
    (panel_public/clientes). Los cambios se fusionan por id dentro de una transacción para no
    pisar lo que otra cuenta agregó al mismo tiempo. Solo administración puede eliminar. */
 let _cliBase=null,_cliUnsub=null;
-const clientesRef=()=>fbDb&&fbDb.collection('panel_public').doc('clientes');
+const clientesRef=()=>fbDb&&fbCol('panel_public').doc('clientes');
 const _cliNorm=t=>String(t||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 const _cliId=t=>String(t||'').replace(/[^A-Za-z0-9]/g,'').toLowerCase();
 const _cliDig=t=>String(t||'').replace(/\D/g,'');
@@ -256,7 +262,7 @@ function guardarClientes(){
 }
 async function migrarClientes(ref){
  const us=((DB.cfg||{}).users||[]).filter(u=>u&&typeof u.id==='string');
- const docs=await Promise.all(us.map(u=>fbDb.collection('vendedores').doc(u.id).collection('privado').doc('data').get().catch(()=>null)));
+ const docs=await Promise.all(us.map(u=>fbCol('vendedores').doc(u.id).collection('privado').doc('data').get().catch(()=>null)));
  const union=[],ids=new Set();
  const add=c=>{if(!c||!c.id||!c.n||ids.has(c.id))return;
   if(union.some(x=>_cliNorm(x.n)===_cliNorm(c.n)&&_cliId(x.r)===_cliId(c.r)&&_cliDig(x.t)===_cliDig(c.t)))return;
@@ -290,16 +296,16 @@ function syncToCloud(){
 }
 async function migrarPanelPorRoles(){
  if(!esAdmin()||!fbDb)return;
- const marca=fbDb.collection('panel').doc('migracion_roles_v1');
+ const marca=fbCol('panel').doc('migracion_roles_v1');
  const ya=await marca.get();if(ya.exists)return;
- const antiguo=await fbDb.collection('panel').doc('data').get();
+ const antiguo=await fbCol('panel').doc('data').get();
  const d=antiguo.exists?antiguo.data():DB,us=((d.cfg||{}).users||[]).filter(u=>u&&typeof u.id==='string');
  const ts=Date.now(),lotes=[];
  // Clientes, ubicaciones y agenda heredados no tienen dueño: se conservan solo en panel/data.
  // Las facturas que sí guardan vend pasan a su propietario.
  for(let i=0;i<us.length;i+=400){const b=fbDb.batch();us.slice(i,i+400).forEach(u=>{
    const fac=(d.fac||[]).filter(f=>f&&f.vend===u.id);
-   b.set(fbDb.collection('vendedores').doc(u.id).collection('privado').doc('data'),{cli:[],fac,ubi:[],agenda:[],cfg:pickCfg(d.cfg),_ts:ts,migrado:true},{merge:true});
+   b.set(fbCol('vendedores').doc(u.id).collection('privado').doc('data'),{cli:[],fac,ubi:[],agenda:[],cfg:pickCfg(d.cfg),_ts:ts,migrado:true},{merge:true});
   });lotes.push(b.commit())}
  await Promise.all([publicRef().set({prod:d.prod||[],cfg:pickCfg(d.cfg),_ts:ts},{merge:true}),...lotes]);
  await marca.set({version:1,ts,criterio:'clientes_y_agenda_heredados_admin; facturas_con_vend_al_vendedor'});
@@ -348,11 +354,11 @@ async function subirArchivoNube(o){
  if(!fbDb)return false;
  try{
   const p=await _blobParaNube(o),data=await blobToBase64(p.blob);
-  await fbDb.collection('catalogo').doc(o.id).set({id:o.id,name:o.name,ext:p.blob===o.blob?o.ext:'jpg',cat:o.cat,price:o.price,desc:o.desc,type:p.type,size:p.blob.size,imgKB:o.imgKB||null,date:o.date,data,ts:Date.now()});
+  await fbCol('catalogo').doc(o.id).set({id:o.id,name:o.name,ext:p.blob===o.blob?o.ext:'jpg',cat:o.cat,price:o.price,desc:o.desc,type:p.type,size:p.blob.size,imgKB:o.imgKB||null,date:o.date,data,ts:Date.now()});
   await syncTiendaCat(o);return true
  }catch(e){_catFalla(o,e);return false}
 }
-async function eliminarArchivoNube(id){if(!fbDb)return;try{await fbDb.collection('catalogo').doc(id).delete()}catch(e){window._tjw&&_tjw(e)}}
+async function eliminarArchivoNube(id){if(!fbDb)return;try{await fbCol('catalogo').doc(id).delete()}catch(e){window._tjw&&_tjw(e)}}
 async function _aplicarDocCatalogo(r){
  try{
   const blob=base64ToBlob(r.data,r.type);
@@ -367,11 +373,11 @@ async function _aplicarDocCatalogo(r){
 async function sincronizarCatalogoNube(){
  if(!fbDb)return;
  try{
-  const snap=await fbDb.collection('catalogo').get();
+  const snap=await fbCol('catalogo').get();
   const localIds=new Set(CL.map(f=>f.id));
   for(const doc of snap.docs){const r=doc.data();if(!localIds.has(r.id))await _aplicarDocCatalogo(r)}
   if(esAdmin()){const enNube=new Set(snap.docs.map(d=>d.id));let k=0;for(const o of CL){if(k>=40)break;if(o.blob&&!enNube.has(o.id)){k++;if(!await subirArchivoNube(o))break}}}
-  fbDb.collection('catalogo').onSnapshot(snap=>{
+  fbCol('catalogo').onSnapshot(snap=>{
    snap.docChanges().forEach(ch=>{
     const r=ch.doc.data();
     if(ch.type==='removed'){
@@ -801,7 +807,7 @@ async function redesGuardar(){
  }
  msg(true,'Guardando…');
  try{
-  await fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,redes,contacto:ct,ts:Date.now()},{merge:true});
+  await fbCol('tienda_items').doc('__cfg').set({__cfg:true,redes,contacto:ct,ts:Date.now()},{merge:true});
   TD.redes=redes;TD.contacto=ct;RS_DRAFT={};
   RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i)i.value=redes[k]});CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i)i.value=ct[k]});
   msg(true,'✔ Guardado. Ya se ve en la tienda virtual.')
@@ -1097,8 +1103,8 @@ function cintCard(){const k=cintCfg(),ck=(key,lab,on)=>`<label class="pchk"><inp
  return `<h3 style="margin:0 0 4px">🎠 Cinta de avisos</h3><p style="font-size:12.5px;color:var(--gris)">Las tarjetas de arriba muestran sus cobros a crédito, vencimientos y eventos. Aquí elige cada cuánto cambia de aviso y qué muestra.</p><div class="g"><div><label>Cinta de avisos</label><select data-h-change="h250"><option value="1" ${k.on?'selected':''}>Activada</option><option value="0" ${k.on?'':'selected'}>Desactivada</option></select></div><div><label>Cambiar de aviso cada <b id="cs_v">${k.seg}</b> seg</label><input type="range" min="2" max="20" step="1" value="${k.seg}" data-h-input="h249" data-h-change="h248"></div><div><label>Mostrar próximos</label><select data-h-change="h247">${[7,14,30].map(d=>`<option value="${d}" ${k.dias===d?'selected':''}>${d} días</option>`).join('')}</select></div></div><label style="display:block;margin-top:12px">Qué mostrar</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px;margin-top:6px">${ck('cintCr','💰 Cobros a crédito',k.cr)}${ck('cintOt','📅 Otros eventos',k.ot)}${ck('cintVe','🔴 Vencidas',k.ve)}${ck('cintHo','🟢 Hoy',k.ho)}${ck('cintPr','🔜 Próximos días',k.pr)}${ck('cintMod','🎴 Modelos si no hay avisos',k.mod)}</div><p style="font-size:12px;color:var(--gris);margin:10px 0 0">Se detiene mientras la toca o pasa el mouse por encima. Deslice con el dedo para ver el siguiente aviso.</p>`}
 setInterval(()=>{cintillo()},30000);
 
-let _ac=null,AGN={},AGSN={};try{AGN=JSON.parse(localStorage.getItem('tj_ag_n')||'{}');Object.keys(AGN).forEach(k=>{if(Date.now()-AGN[k]>2.5*864e5)delete AGN[k]})}catch(e){window._tjw&&_tjw(e)}
-const agNSave=()=>{try{localStorage.setItem('tj_ag_n',JSON.stringify(AGN))}catch(e){window._tjw&&_tjw(e)}};
+let _ac=null,AGN={},AGSN={};try{AGN=JSON.parse(localStorage.getItem(lsk('tj_ag_n'))||'{}');Object.keys(AGN).forEach(k=>{if(Date.now()-AGN[k]>2.5*864e5)delete AGN[k]})}catch(e){window._tjw&&_tjw(e)}
+const agNSave=()=>{try{localStorage.setItem(lsk('tj_ag_n'),JSON.stringify(AGN))}catch(e){window._tjw&&_tjw(e)}};
 function agAc(){try{if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume()}catch(e){window._tjw&&_tjw(e)}return _ac}
 ['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,agAc,{passive:true}));
 const AGSND={campana:[[880,0,1.3,'sine'],[1320,.1,1.3,'sine'],[880,.8,1.3,'sine'],[1320,.9,1.3,'sine']],alerta:[[1000,0,.18,'square'],[1000,.28,.18,'square'],[1000,.56,.18,'square'],[1000,.84,.18,'square']],suave:[[523,0,.7,'triangle'],[659,.22,.7,'triangle'],[784,.44,1,'triangle']],digital:[[1500,0,.1,'sawtooth'],[1800,.14,.1,'sawtooth'],[1500,.5,.1,'sawtooth'],[1800,.64,.1,'sawtooth']]};
@@ -1511,7 +1517,7 @@ function dibujarGraficos(){
  }
  }catch(e){console.error('Error al dibujar gráficos:',e);if(w){w.style.display='block';w.textContent='No se pudieron generar los gráficos: '+((e&&e.message)||e)}}
 }
-const idb=()=>new Promise((a,b)=>{const r=indexedDB.open('tj_cat',1);r.onupgradeneeded=()=>r.result.createObjectStore('f',{keyPath:'id'});r.onsuccess=()=>a(r.result);r.onerror=()=>b(r.error)});
+const idb=()=>new Promise((a,b)=>{const r=indexedDB.open(TJEmpresa.empLSKey('tj_cat'),1);r.onupgradeneeded=()=>r.result.createObjectStore('f',{keyPath:'id'});r.onsuccess=()=>a(r.result);r.onerror=()=>b(r.error)});
 const tx=(m,fn)=>idb().then(db=>new Promise((a,b)=>{const t=db.transaction('f',m),rq=fn(t.objectStore('f'));t.oncomplete=()=>a(rq&&rq.result);t.onerror=()=>b(t.error)}));
 const CATS=['Cumpleaños','Quinceaños','Graduación','Boda','Amor','Baby shower','Revelación de sexo','Pésame','Agradecimiento','Aniversario','Felicidades','Día de la Madre','Día del Padre','Navidad','Otros'];
 let CL=[],CU={},cq='',cc='',catCl=new Set();function catTg(d){d.open?catCl.add(d.dataset.k):catCl.delete(d.dataset.k)}
@@ -1520,8 +1526,8 @@ const ext=f=>(f.ext||'').toUpperCase()||'ARCHIVO';
 const tam=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
 const IMG_KB_MIN=500,IMG_KB_MAX=700,IMG_KB_DEF=500;
 function imgKBClamp(v){const n=Math.round(+v||IMG_KB_DEF);return Math.max(IMG_KB_MIN,Math.min(IMG_KB_MAX,n))}
-function imgKBPreference(){try{return imgKBClamp(localStorage.getItem('tj_img_kb')||IMG_KB_DEF)}catch(e){return IMG_KB_DEF}}
-function imgTargetKB(){const e=$('u_imgkb'),n=imgKBClamp(e?e.value:imgKBPreference());try{localStorage.setItem('tj_img_kb',n)}catch(x){window._tjw&&_tjw(x)}return n}
+function imgKBPreference(){try{return imgKBClamp(localStorage.getItem(lsk('tj_img_kb'))||IMG_KB_DEF)}catch(e){return IMG_KB_DEF}}
+function imgTargetKB(){const e=$('u_imgkb'),n=imgKBClamp(e?e.value:imgKBPreference());try{localStorage.setItem(lsk('tj_img_kb'),n)}catch(x){window._tjw&&_tjw(x)}return n}
 function imgQualityOpts(){const now=imgKBPreference();return [500,550,600,650,700].map(n=>`<option value="${n}" ${n===now?'selected':''}>${n} KB${n===500?' — alta (recomendado)':n===700?' — máxima permitida':''}</option>`).join('')}
 function imgPicker(){const price=$('u_pr');if(!price||$('u_imgkb'))return;const box=document.createElement('div');box.innerHTML=`<label>Calidad de imágenes nuevas</label><select id="u_imgkb" data-h-change="h221">${imgQualityOpts()}</select><small style="display:block;color:var(--gris);margin-top:5px">Tope por imagen: 500–700 KB. Si el original pesa menos, se conserva sin reducir.</small>`;price.parentElement.insertAdjacentElement('afterend',box)}
 R.cat=async()=>{try{CL=await tx('readonly',s=>s.getAll())}catch(e){memW=1}
@@ -1543,7 +1549,7 @@ const catDetect=f=>{const t=shopN((f.name||'')+' '+(f.desc||'')+' '+(f.cat||''))
 const catOpts=c=>{const L=[...CATS];if(c&&!L.includes(c))L.push(c);return '<option value="">Sin categoría</option>'+L.map(k=>`<option value="${esc(k)}" ${k===c?'selected':''}>${esc(k)}</option>`).join('')};
 async function syncTiendaCat(f){
  if(!fbDb||!f||!f.id||!esAdmin())return false;
- const ref=fbDb.collection('tienda_items').doc(f.id),cat=String(f.cat||'').trim();
+ const ref=fbCol('tienda_items').doc(f.id),cat=String(f.cat||'').trim();
  try{
   const cur=await ref.get();
   if(!cur.exists)return false;
@@ -1834,7 +1840,7 @@ if(!/[?&]tienda(=|&|$)/.test(location.search))precargarCatalogoDeFabrica();
    los datos LIVE reales permanecen desconectados y no se muestran métricas inventadas. */
 const TJLIVE_KEY='tj_tiktok_live_draft_v1';
 function tjLiveLoad(){
- try{return Object.assign({title:'',topic:'',promo:'',discount:'',productId:'',script:'',platform:'TikTok LIVE',updatedAt:0},JSON.parse(localStorage.getItem(TJLIVE_KEY)||'{}'))}
+ try{return Object.assign({title:'',topic:'',promo:'',discount:'',productId:'',script:'',platform:'TikTok LIVE',updatedAt:0},JSON.parse(localStorage.getItem(lsk(TJLIVE_KEY))||'{}'))}
  catch(e){return {title:'',topic:'',promo:'',discount:'',productId:'',script:'',platform:'TikTok LIVE',updatedAt:0}}
 }
 function tjLiveSaveDraft(){
@@ -1842,7 +1848,7 @@ function tjLiveSaveDraft(){
   promo:($('tjl_promo')||{}).value||'',discount:($('tjl_discount')||{}).value||'',
   productId:($('tjl_product')||{}).value||'',script:($('tjl_script')||{}).value||'',
   platform:'TikTok LIVE',updatedAt:Date.now()};
- try{localStorage.setItem(TJLIVE_KEY,JSON.stringify(d));const e=$('tjl_status');if(e)e.textContent='Borrador guardado en este dispositivo · '+new Date(d.updatedAt).toLocaleString('es-PA');return true}
+ try{localStorage.setItem(lsk(TJLIVE_KEY),JSON.stringify(d));const e=$('tjl_status');if(e)e.textContent='Borrador guardado en este dispositivo · '+new Date(d.updatedAt).toLocaleString('es-PA');return true}
  catch(e){const x=$('tjl_status');if(x)x.textContent='No se pudo guardar en este navegador. Copia el guion antes de salir.';return false}
 }
 function tjLiveProductOptions(selected){
@@ -1938,7 +1944,7 @@ const PANELES=V.filter(v=>v[0]!=='config'&&v[0]!=='vend'&&v[0]!=='mapa'&&v[0]!==
 let SES=null,_authMode='',_fail=0,_lock=0;
 const usuarios=()=>DB.cfg.users||(DB.cfg.users=[]);
 const esAdmin=()=>!!SES&&SES.id==='admin';
-window.__panelBridge=()=>({db:fbDb,admin:esAdmin()});
+window.__panelBridge=()=>({db:fbDb?new Proxy(fbDb,{get(t,p){if(p==='collection')return n=>fbCol(n);const v=t[p];return typeof v==='function'?v.bind(t):v}}):fbDb,admin:esAdmin(),col:fbCol});
 const usr=()=>SES&&!esAdmin()?SES.u:null;
 const puede=k=>esAdmin()||(!!usr()&&k!=='config'&&k!=='vend'&&k!=='mapa'&&k!=='empresas'&&(usr().panels||[]).includes(k));
 const _no=navOrd;navOrd=()=>_no().filter(v=>puede(v[0]));
@@ -2035,17 +2041,17 @@ emitir=function(){
 const _an=anular;anular=function(id){const a=DB.fac.find(f=>f.id==id),was=a&&a.anulada,r=_an.apply(this,arguments),b=DB.fac.find(f=>f.id==id);if(b&&b.anulada&&!was){DB.agenda=DB.agenda.filter(e=>e.fid!==id);save()}return r};
 // --- Galería de fotos ---
 let GAL=[],_galOn=false;
-function galListen(){if(_galOn||!fbDb)return;_galOn=true;try{fbDb.collection('galeria').onSnapshot(sn=>{GAL=sn.docs.map(d=>sanGal(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);if(vista==='gal'&&SES)R.gal()},()=>{})}catch(e){window._tjw&&_tjw(e)}}
+function galListen(){if(_galOn||!fbDb)return;_galOn=true;try{fbCol('galeria').onSnapshot(sn=>{GAL=sn.docs.map(d=>sanGal(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);if(vista==='gal'&&SES)R.gal()},()=>{})}catch(e){window._tjw&&_tjw(e)}}
 function galComp(file){return new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{let w=im.width,h=im.height;const k=Math.min(1,1280/Math.max(w,h));w=Math.round(w*k);h=Math.round(h*k);const c=document.createElement('canvas');c.width=w;c.height=h;c.getContext('2d').drawImage(im,0,0,w,h);URL.revokeObjectURL(u);let q=.72,d=c.toDataURL('image/jpeg',q);while(d.length>900000&&q>.3){q-=.1;d=c.toDataURL('image/jpeg',q)}res(d)};im.onerror=()=>rej(new Error('img'));im.src=u})}
 async function galAdd(inp,cam){if(!fbDb)return alert('La galería necesita conexión a internet.');const fs=[...inp.files];inp.value='';if(!fs.length)return;const b=$('galSt');if(b)b.textContent='Guardando…';let ok=0;
- for(const f of fs){if(!/^image\//.test(f.type))continue;try{const img=await galComp(f),id=uid(),u=usr();await fbDb.collection('galeria').doc(id).set({id,t:cam?'Foto '+new Date().toLocaleString('es-PA'):f.name.replace(/\.[^.]+$/,'').slice(0,60),n:'',by:esAdmin()?'Administrador':(u?u.n:''),o:SES.id,ts:Date.now(),img});ok++}catch(e){alert('No se pudo guardar una imagen.')}}
+ for(const f of fs){if(!/^image\//.test(f.type))continue;try{const img=await galComp(f),id=uid(),u=usr();await fbCol('galeria').doc(id).set({id,t:cam?'Foto '+new Date().toLocaleString('es-PA'):f.name.replace(/\.[^.]+$/,'').slice(0,60),n:'',by:esAdmin()?'Administrador':(u?u.n:''),o:SES.id,ts:Date.now(),img});ok++}catch(e){alert('No se pudo guardar una imagen.')}}
  const b2=$('galSt');if(b2)b2.textContent=ok?'✔ '+ok+' foto(s) guardada(s)':''}
 R.gal=function(){const adm=esAdmin();
  $('v').innerHTML=`<div class="card"><div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn p" data-h-click="h183">📸 Tomar foto</button>${adm?`<button class="btn" data-h-click="h182">⬆ Subir imágenes</button>`:''}<span id="galSt" style="font-size:12.5px;color:var(--gris)"></span></div><input id="gal_c" type="file" accept="image/*" capture="environment" hidden data-h-change="h181">${adm?'<input id="gal_u" type="file" accept="image/*" multiple hidden data-h-change="h180">':''}</div>${GAL.length?`<div class="galg">${GAL.map(g=>`<div class="galt"><div class="galim" data-h-click="h179" data-a-click="${_ha(g.id)}"><img loading="lazy" src="${g.img}" alt=""></div><div class="galc"><b>${esc(g.t||'Foto')}</b><small>${esc(g.by||'')} · ${new Date(g.ts).toLocaleDateString('es-PA')}</small><div class="galb">${adm?`<button class="btn s" data-h-click="h178" data-a-click="${_ha(g.id)}">✏️ Editar</button>`:''}${galCan(g)?`<button class="btn s d" data-h-click="h177" data-a-click="${_ha(g.id)}">🗑</button>`:''}</div></div></div>`).join('')}</div>`:'<div class="card"><div class="vacio">Aún no hay fotos.</div></div>'}`};
 function galVer(id){const g=GAL.find(x=>x.id===id);if(!g)return;$('mb').innerHTML=`<div style="display:flex;justify-content:space-between;gap:10px;margin-bottom:10px"><b>${esc(g.t||'Foto')}</b><button class="btn s" data-h-click="h12">✕</button></div><img src="${g.img}" style="max-width:100%;max-height:70vh;border-radius:14px;display:block;margin:auto" alt=""><div style="font-size:12.5px;color:var(--gris);margin-top:10px">${esc(g.by||'')} · ${new Date(g.ts).toLocaleString('es-PA')}</div>${g.n?`<div style="margin-top:6px">${esc(g.n)}</div>`:''}`;$('md').classList.add('on')}
-function galEdit(id){if(!esAdmin()||!fbDb)return;const g=GAL.find(x=>x.id===id);if(!g)return;const t=prompt('Título de la foto:',g.t||'');if(t===null)return;const n=prompt('Nota / descripción (opcional):',g.n||'');if(n===null)return;fbDb.collection('galeria').doc(id).update({t:t.trim(),n:n.trim()}).catch(()=>alert('No se pudo guardar el cambio.'))}
+function galEdit(id){if(!esAdmin()||!fbDb)return;const g=GAL.find(x=>x.id===id);if(!g)return;const t=prompt('Título de la foto:',g.t||'');if(t===null)return;const n=prompt('Nota / descripción (opcional):',g.n||'');if(n===null)return;fbCol('galeria').doc(id).update({t:t.trim(),n:n.trim()}).catch(()=>alert('No se pudo guardar el cambio.'))}
 const galCan=g=>esAdmin()||(!!SES&&(g.o?g.o===SES.id:(!!usr()&&g.by===usr().n)));
-function galDel(id){const g=GAL.find(x=>x.id===id);if(!fbDb||!g||!galCan(g))return alert('Solo puede eliminar las fotos que usted tomó.');if(!confirm('¿Eliminar esta foto?'))return;fbDb.collection('galeria').doc(id).delete().catch(()=>alert('No se pudo eliminar.'))}
+function galDel(id){const g=GAL.find(x=>x.id===id);if(!fbDb||!g||!galCan(g))return alert('Solo puede eliminar las fotos que usted tomó.');if(!confirm('¿Eliminar esta foto?'))return;fbCol('galeria').doc(id).delete().catch(()=>alert('No se pudo eliminar.'))}
 // --- Voz femenina para cobros pendientes (facturas a crédito en la agenda) ---
 function vozEs(){const L=(window.speechSynthesis?speechSynthesis.getVoices():[]).filter(v=>/^es/i.test(v.lang));if(!L.length)return null;
  const mal=/jorge|diego|juan|carlos|pablo|raul|raúl|andres|andrés|alvaro|álvaro|enrique|miguel|male|hombre/i,fem=/paulina|monica|mónica|helena|laura|sabina|sofia|sofía|elena|lucia|lucía|marisol|dalia|elvira|camila|female|mujer|google español|google es|paloma|salome|salomé|valentina|catalina|ximena|marta|maria|maría|samantha/i,reg=['es-MX','es-US','es-PA','es-419','es-CO','es-AR','es-ES'];
@@ -2055,13 +2061,13 @@ function vozDama(txt,ok,err){const ss=window.speechSynthesis;if(!ss)return;
  const go=()=>{try{const u=new SpeechSynthesisUtterance(vozTxt(txt));vozPerf(u);u.volume=Math.min(1,(DB.cfg.vol||70)/100+.25);u.onstart=()=>{ok&&ok()};u.onerror=()=>{err&&err()};ss.speak(u)}catch(e){err&&err()}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,900)}}
 const _vozQ=new Set();
-function cobroK(){let K={};const t=hoy();try{K=JSON.parse(localStorage.getItem('tj_voz')||'{}')}catch(e){window._tjw&&_tjw(e)}Object.keys(K).forEach(k=>{if(K[k]!==t)delete K[k]});return K}
+function cobroK(){let K={};const t=hoy();try{K=JSON.parse(localStorage.getItem(lsk('tj_voz'))||'{}')}catch(e){window._tjw&&_tjw(e)}Object.keys(K).forEach(k=>{if(K[k]!==t)delete K[k]});return K}
 function cobroTxt(e,d){const f=DB.fac.find(x=>x.id===e.fid),m=f&&f.credito?+f.credito.monto:0,h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',t=hoy(),
  fv=x=>new Date(x+'T12:00').toLocaleDateString('es-PA',{day:'numeric',month:'long'}),cu=d<t?'venció el '+fv(d):d===t?'vence hoy':'vence el '+fv(d),
  en=Math.floor(m),ct=Math.round((m-en)*100);
  return sal+'. Le recuerdo amablemente que tiene una factura pendiente por cobrar a nombre de '+(e.cn||'un cliente')+(m?', por un monto de '+en+' dólares'+(ct?' con '+ct+' centavos':''):'')+'. Esta factura '+cu+'.'}
 function cobroDecir(o){const t=hoy(),id=o.e.id+'|'+t;if(_vozQ.has(id)||cobroK()[o.e.id]===t)return false;_vozQ.add(id);
- vozDama(cobroTxt(o.e,o.d),()=>{const k=cobroK();k[o.e.id]=t;try{localStorage.setItem('tj_voz',JSON.stringify(k))}catch(x){window._tjw&&_tjw(x)}},()=>_vozQ.delete(id));return true}
+ vozDama(cobroTxt(o.e,o.d),()=>{const k=cobroK();k[o.e.id]=t;try{localStorage.setItem(lsk('tj_voz'),JSON.stringify(k))}catch(x){window._tjw&&_tjw(x)}},()=>_vozQ.delete(id));return true}
 function cobroVoz(){if(!esAdmin()||DB.cfg.vozCobro===0)return;const t=hoy(),q0=AG.q,c0=AG.c;AG.q='';AG.c='';let l=[];try{l=agOcc(addD(t,-30),t)}catch(e){window._tjw&&_tjw(e)}AG.q=q0;AG.c=c0;
  l=l.filter(o=>o.e.fid&&!agDn(o));if(!l.length)return;let n=0,r=0;
  l.forEach(o=>{if(n<3){if(cobroDecir(o))n++}else if(cobroK()[o.e.id]!==t&&!_vozQ.has(o.e.id+'|'+t))r++});
@@ -2115,9 +2121,9 @@ function llamPC(id,me){const pc=new RTCPeerConnection({iceServers:llamIce()});LL
  pc.onicecandidate=e=>{if(!e.candidate)return;const c=e.candidate.toJSON();if(LL.ready)llamIceSend(id,me,c);else LL.q.push(c)};
  pc.onconnectionstatechange=()=>{if(LL.pc!==pc)return;const s=pc.connectionState;if(s==='connected')llamActiva();else if(s==='failed')llamFin('No se pudo conectar. Puede que la red bloquee las llamadas.');else if(s==='disconnected')setTimeout(()=>{if(LL.pc===pc&&pc.connectionState==='disconnected')llamFin('Se perdió la conexión')},6000)};
  return pc}
-const llamIceSend=(id,me,c)=>fbDb.collection('llamadas').doc(id).collection('ice').add({by:me,c,ts:Date.now()}).catch(()=>{});
+const llamIceSend=(id,me,c)=>fbCol('llamadas').doc(id).collection('ice').add({by:me,c,ts:Date.now()}).catch(()=>{});
 function llamIceListen(id,me,pc){LL.ready=true;LL.q.forEach(c=>llamIceSend(id,me,c));LL.q=[];
- LL.unsub.push(fbDb.collection('llamadas').doc(id).collection('ice').onSnapshot(sn=>sn.docChanges().forEach(ch=>{if(ch.type!=='added')return;const d=ch.doc.data();if(d.by===me)return;if(pc.remoteDescription)pc.addIceCandidate(d.c).catch(()=>{});else LL.pend.push(d.c)}),()=>{}))}
+ LL.unsub.push(fbCol('llamadas').doc(id).collection('ice').onSnapshot(sn=>sn.docChanges().forEach(ch=>{if(ch.type!=='added')return;const d=ch.doc.data();if(d.by===me)return;if(pc.remoteDescription)pc.addIceCandidate(d.c).catch(()=>{});else LL.pend.push(d.c)}),()=>{}))}
 const llamFlush=pc=>{LL.pend.forEach(c=>pc.addIceCandidate(c).catch(()=>{}));LL.pend=[]};
 function llamActiva(){if(LL.t0||!LL.id)return;LL.t0=Date.now();clearTimeout(LL.ringTm);llamTono(0);llamUI({p:LL.peer,n:chatName(LL.peer),s:'00:00',b:BT_ON,x:llamHint()});llamSalidas();
  LL.tm=setInterval(()=>{const s=Math.floor((Date.now()-LL.t0)/1000);llamSt(String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'))},1000)}
@@ -2128,7 +2134,7 @@ async function llamar(chatId){
  try{LL.stream=await llamMic()}catch(e){return alert('No se pudo usar el micrófono. Permita el acceso al micrófono en el navegador y vuelva a intentar.')}
  const id='c'+uid();LL.id=id;LL.peer=peer;LL.t0=0;LL.muted=false;llamUI({p:peer,n:nom,s:'Llamando…',b:'<button class="no" data-h-click="h168" title="Cancelar">✖</button>',ring:1});llamTono(1,1);
  try{const pc=llamPC(id,me),off=await pc.createOffer();await pc.setLocalDescription(off);
-  const ref=fbDb.collection('llamadas').doc(id);
+  const ref=fbCol('llamadas').doc(id);
   await ref.set({id,chat:chatId,from:me,to:peer,fn:chatName(me),state:'ringing',offer:{type:off.type,sdp:off.sdp},ts:Date.now()});
   llamIceListen(id,me,pc);
   LL.unsub.push(ref.onSnapshot(async s=>{const d=s.data();if(!d||LL.id!==id)return;
@@ -2142,12 +2148,12 @@ async function llamAcepta(){const d=LL.incoming;if(!d||LL.id)return;llamTono(0);
  try{LL.stream=await llamMic()}catch(e){llamRechazar();return alert('No se pudo usar el micrófono. Permita el acceso al micrófono en el navegador.')}
  const me=chatMe();LL.id=d.id;LL.peer=d.from;LL.t0=0;LL.muted=false;LL.incoming=null;llamUI({p:d.from,n:d.fn||chatName(d.from),s:'Conectando…',b:BT_ON});
  try{const pc=llamPC(d.id,me);await pc.setRemoteDescription(d.offer);const an=await pc.createAnswer();await pc.setLocalDescription(an);
-  const ref=fbDb.collection('llamadas').doc(d.id);await ref.update({answer:{type:an.type,sdp:an.sdp},state:'active'});
+  const ref=fbCol('llamadas').doc(d.id);await ref.update({answer:{type:an.type,sdp:an.sdp},state:'active'});
   llamIceListen(d.id,me,pc);llamFlush(pc);
   LL.unsub.push(ref.onSnapshot(s=>{const x=s.data();if(x&&LL.id===d.id&&['ended','missed','declined'].includes(x.state))llamFin('Llamada finalizada')},()=>{}))
  }catch(e){console.warn('Contestar:',e);llamFin('No se pudo conectar')}}
-function llamRechazar(){const d=LL.incoming;if(!d)return;LL.incoming=null;fbDb.collection('llamadas').doc(d.id).update({state:'declined'}).catch(()=>{});llamFin('')}
-function llamCuelga(){const id=LL.id;if(id)fbDb.collection('llamadas').doc(id).update({state:LL.t0?'ended':'missed'}).catch(()=>{});llamFin('Llamada finalizada')}
+function llamRechazar(){const d=LL.incoming;if(!d)return;LL.incoming=null;fbCol('llamadas').doc(d.id).update({state:'declined'}).catch(()=>{});llamFin('')}
+function llamCuelga(){const id=LL.id;if(id)fbCol('llamadas').doc(id).update({state:LL.t0?'ended':'missed'}).catch(()=>{});llamFin('Llamada finalizada')}
 function llamMute(){LL.muted=!LL.muted;(LL.stream?LL.stream.getAudioTracks():[]).forEach(k=>{k.enabled=!LL.muted});const b=$('llmu');if(b)b.classList.toggle('on',LL.muted)}
 function llamFin(msg){if(!LL.id&&!LL.incoming&&!$('llam'))return;
  llamTono(0);clearTimeout(LL.ringTm);clearInterval(LL.tm);LL.unsub.forEach(u=>{try{u()}catch(e){window._tjw&&_tjw(e)}});LL.unsub=[];
@@ -2156,8 +2162,8 @@ function llamFin(msg){if(!LL.id&&!LL.incoming&&!$('llam'))return;
  Object.assign(LL,{pc:null,id:null,stream:null,t0:0,tm:null,peer:null,ringTm:null,incoming:null,ready:false,q:[],pend:[],muted:false,priv:false});
  if(msg){llamUI({p:pid,n:nom||'Llamada',s:msg,b:''});LL.hTm=setTimeout(()=>{if(!LL.id&&!LL.incoming)llamUI(null)},1800)}else if(!LL.id&&!LL.incoming)llamUI(null)}
 function llamListen(){if(window._llOn||!fbDb||!llamOn())return;window._llOn=true;const me=chatMe();
- fbDb.collection('llamadas').where('to','==',me).where('state','==','ringing').onSnapshot(sn=>sn.docChanges().forEach(ch=>{const d=ch.doc.data();
-  if(ch.type==='added'){if(Date.now()-(d.ts||0)>40000)return;if(LL.id||LL.incoming){fbDb.collection('llamadas').doc(d.id).update({state:'declined'}).catch(()=>{});return}llamEntrante(d)}
+ fbCol('llamadas').where('to','==',me).where('state','==','ringing').onSnapshot(sn=>sn.docChanges().forEach(ch=>{const d=ch.doc.data();
+  if(ch.type==='added'){if(Date.now()-(d.ts||0)>40000)return;if(LL.id||LL.incoming){fbCol('llamadas').doc(d.id).update({state:'declined'}).catch(()=>{});return}llamEntrante(d)}
   else if(ch.type==='removed'&&LL.incoming&&LL.incoming.id===d.id&&!LL.id){LL.incoming=null;llamFin('Llamada perdida')}}),e=>console.warn('Llamadas:',e))}
 const llamHint=()=>(window.matchMedia&&matchMedia('(pointer:coarse)').matches)?'<small class="llh">En el celular el sonido sale por el altavoz. Para más privacidad toque 🔊 para bajar el volumen y acérquelo al oído, o use auriculares.</small>':'';
 function llamVol(){LL.priv=!LL.priv;const a=llamAud();a.volume=LL.priv?.3:1;const b=$('llvo');if(b){b.classList.toggle('on',LL.priv);b.textContent=LL.priv?'🔉':'🔊'}}
@@ -2378,7 +2384,7 @@ async function enviarFacAChat(chatId, text){
   };
   if(c.type === 'grp'){ base.name = c.name; base.by = c.by || ''; }
   try {
-    const ref = fbDb.collection('chats').doc(c.id);
+    const ref = fbCol('chats').doc(c.id);
     await ref.collection('msgs').doc(id).set({ id, from: me, fn: chatName(me), t: text, ts });
     await ref.set(base, { merge: true });
     cerrar();
@@ -2403,7 +2409,7 @@ const _nv=nav;nav=function(){_nv.apply(this,arguments);try{chatBadge()}catch(e){
 function chatListen(){if(_chOn||!fbDb)return;_chOn=true;let first=true;
  // La consulta coincide con la regla de Firestore: cada cuenta solo descarga los
  // chats cuyo arreglo members la incluye. Nunca se carga la lista global de chats.
- fbDb.collection('chats').where('members','array-contains',chatMe()).onSnapshot(sn=>{
+ fbCol('chats').where('members','array-contains',chatMe()).onSnapshot(sn=>{
   if(!first)sn.docChanges().forEach(ch=>{const c=ch.doc.data();if(!c||!/^[\w-]{1,64}$/.test(ch.doc.id))return;if(ch.type!=='removed'&&SES&&c.lastFrom&&c.lastFrom!==chatMe()&&(c.type==='dm'?(esAdmin()||c.id==='dm_'+chatMe()):chatMine(c))){if(!(vista==='chat'&&CH.sel===c.id)){try{agSound()}catch(e){window._tjw&&_tjw(e)}}chatVoz(c)}});
   first=false;CHS=sn.docs.map(d=>{const o=d.data();return o&&/^[\w-]{1,64}$/.test(d.id)?Object.assign(o,{id:d.id}):null}).filter(Boolean);if(SES){chatBadge();if(vista==='chat')chatList()}},()=>{})}
 R.chat=function(){if(!fbDb){$('v').innerHTML='<div class="card"><div class="vacio">El chat necesita conexión a internet.</div></div>';chatFitSoon();return}chatListen();
@@ -2414,8 +2420,8 @@ function chatList(){const el=$('chl');if(!el)return;const L=chatVis().sort((a,b)
 async function chatOpen(id){CH.sel=id;CH.msgs=[];if(CH.unsub){CH.unsub();CH.unsub=null}const w=$('chw');if(w)w.classList.add('sel');
  // El chat directo aparece inicialmente como un contacto local. Créelo antes de
  // escuchar sus mensajes, pues las reglas comprueban la membresía del padre.
- const c=chatVis().find(x=>x.id===id);if(c&&c.ph)try{await fbDb.collection('chats').doc(id).set({id,type:'dm',members:c.members||[],ts:Date.now(),lastTs:0,lastFrom:'',lastTxt:''},{merge:true})}catch(e){alert('No se pudo abrir el chat. Revise su conexión.');return}
- CH.unsub=fbDb.collection('chats').doc(id).collection('msgs').orderBy('ts').limitToLast(300).onSnapshot(sn=>{CH.msgs=sn.docs.map(d=>d.data());if(CH.sel===id){chatConv();chatMark(id,(CH.msgs[CH.msgs.length-1]||{}).ts);chatList()}},()=>{});chatList();chatConv()}
+ const c=chatVis().find(x=>x.id===id);if(c&&c.ph)try{await fbCol('chats').doc(id).set({id,type:'dm',members:c.members||[],ts:Date.now(),lastTs:0,lastFrom:'',lastTxt:''},{merge:true})}catch(e){alert('No se pudo abrir el chat. Revise su conexión.');return}
+ CH.unsub=fbCol('chats').doc(id).collection('msgs').orderBy('ts').limitToLast(300).onSnapshot(sn=>{CH.msgs=sn.docs.map(d=>d.data());if(CH.sel===id){chatConv();chatMark(id,(CH.msgs[CH.msgs.length-1]||{}).ts);chatList()}},()=>{});chatList();chatConv()}
 function chatBack(){CH.sel=null;if(CH.unsub){CH.unsub();CH.unsub=null}const w=$('chw');if(w)w.classList.remove('sel');chatList();chatConv()}
 function chatConv(){const el=$('chm');if(!el)return;const c=chatVis().find(x=>x.id===CH.sel);
  if(!c){el.innerHTML='<div class="vacio" style="margin:auto">Elija una conversación</div>';return}
@@ -2427,14 +2433,14 @@ async function chatSend(){const i=$('chin');if(!i||!CH.sel||!fbDb)return;const t
  if(c.type==='grp'){base.name=c.name;base.by=c.by||''}
  // Primero existe/actualiza el chat y después se agrega el mensaje: las reglas de
  // Firestore verifican que el remitente sea integrante del documento padre.
- try{const ref=fbDb.collection('chats').doc(c.id);await ref.set(base,{merge:true});await ref.collection('msgs').doc(id).set({id,from:me,fn:chatName(me),t,ts});chatMark(c.id,ts)}catch(e){alert('No se pudo enviar. Revise su conexión.')}}
+ try{const ref=fbCol('chats').doc(c.id);await ref.set(base,{merge:true});await ref.collection('msgs').doc(id).set({id,from:me,fn:chatName(me),t,ts});chatMark(c.id,ts)}catch(e){alert('No se pudo enviar. Revise su conexión.')}}
 function chatNewGrp(){const me=chatMe(),op=usuarios().filter(u=>u.id!==me);
  $('mb').innerHTML=`<h3 style="margin-top:0">Nuevo grupo</h3><label>Nombre del grupo</label><input id="cg_n" placeholder="Ej. Ventas Panamá Oeste"><label style="display:block;margin-top:12px">Integrantes</label><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:6px">${op.map(u=>`<label class="pchk"><input type="checkbox" value="${u.id}"> ${esc(u.n)}</label>`).join('')||'<div class="vacio">Aún no hay otros vendedores.</div>'}</div><div id="cg_m" style="color:#d92d20;font-size:13px;margin-top:8px"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px"><button class="btn" data-h-click="h12">Cancelar</button><button class="btn p" data-h-click="h138">Crear grupo</button></div>`;$('md').classList.add('on')}
 async function chatMkGrp(){const n=$('cg_n').value.trim(),sel=[...document.querySelectorAll('#mb .pchk input:checked')].map(x=>x.value),me=chatMe(),m=t=>{$('cg_m').textContent=t};
  if(!n)return m('Escriba el nombre del grupo.');if(!sel.length)return m('Elija al menos un integrante.');
- const id='g'+uid(),ts=Date.now();try{await fbDb.collection('chats').doc(id).set({id,type:'grp',name:n,by:me,members:[me,...sel],ts,lastTs:ts,lastFrom:me,lastTxt:'Grupo creado'});cerrar();chatOpen(id)}catch(e){m('No se pudo crear. Revise su conexión.')}}
+ const id='g'+uid(),ts=Date.now();try{await fbCol('chats').doc(id).set({id,type:'grp',name:n,by:me,members:[me,...sel],ts,lastTs:ts,lastFrom:me,lastTxt:'Grupo creado'});cerrar();chatOpen(id)}catch(e){m('No se pudo crear. Revise su conexión.')}}
 async function chatDelGrp(id){if(!confirm('¿Eliminar este grupo y todos sus mensajes?'))return;
- try{const ref=fbDb.collection('chats').doc(id),sn=await ref.collection('msgs').get(),b=fbDb.batch();sn.docs.forEach(d=>b.delete(d.ref));b.delete(ref);await b.commit();if(CH.unsub){CH.unsub();CH.unsub=null}CH.sel=null;if(vista==='chat')R.chat()}catch(e){alert('No se pudo eliminar el grupo.')}}
+ try{const ref=fbCol('chats').doc(id),sn=await ref.collection('msgs').get(),b=fbDb.batch();sn.docs.forEach(d=>b.delete(d.ref));b.delete(ref);await b.commit();if(CH.unsub){CH.unsub();CH.unsub=null}CH.sel=null;if(vista==='chat')R.chat()}catch(e){alert('No se pudo eliminar el grupo.')}}
 let _chVz={};
 function chatVoz(c){if(DB.cfg.vozChat===0)return;const now=Date.now();if(_chVz[c.id]&&now-_chVz[c.id]<4000)return;_chVz[c.id]=now;
  const de=c.lastFrom==='admin'?'la administración':chatName(c.lastFrom);let t;
@@ -2565,8 +2571,8 @@ function vdAdmHTML(){const ids=['admin',...usuarios().map(u=>u.id)],
 ${A.length?`<div class="tw" style="margin-top:12px"><table><tr><th>Vendedor</th><th class="r">Ventas</th><th class="r">Facturas</th><th class="r">Ticket prom.</th><th>Mejor cliente</th><th class="r">Por cobrar</th><th>Participación</th><th></th></tr>${A.map(r=>{const i=top.indexOf(r.id),b=r.s.cli[0],pc=T?Math.round(r.s.tot/T*100):0;return `<tr><td>${i>=0&&i<3?med[i]+' ':''}<b>${esc(vdName(r.id))}</b>${r.id==='admin'?'<br><small style="color:var(--gris)">incluye facturas anteriores</small>':''}</td><td class="r">${$$(r.s.tot)}</td><td class="r">${r.s.n}</td><td class="r">${$$(r.s.avg)}</td><td>${b?esc(b.n):'—'}</td><td class="r">${$$(r.pm)}</td><td style="min-width:110px"><div class="vdbar"><i style="width:${pc}%"></i></div><small style="color:var(--gris)">${pc}%</small></td><td class="r"><button class="btn s" data-h-click="h122" data-a-click="${_ha(r.id)}">Ver dashboard</button></td></tr>`}).join('')}<tr><td><b>Total</b></td><td class="r"><b>${$$(T)}</b></td><td class="r"><b>${N}</b></td><td class="r"><b>${$$(N?T/N:0)}</b></td><td></td><td class="r"><b>${$$(PM)}</b></td><td></td><td></td></tr></table></div>`:'<div class="vacio">Aún no hay ventas ni vendedores.</div>'}</div>`}
 const _homeBase=R.home;
 if(typeof dibujarGraficos==='function'){const _dg=dibujarGraficos;dibujarGraficos=function(){if(esVend())return;try{return _dg.apply(this,arguments)}catch(e){window._tjw&&_tjw(e)}}}
-function tplMinOn(){try{return localStorage.getItem('tj_tpl_min')==='1'}catch(e){return false}}
-function tplMin(){try{localStorage.setItem('tj_tpl_min',tplMinOn()?'0':'1')}catch(e){window._tjw&&_tjw(e)}tplRef()}
+function tplMinOn(){try{return localStorage.getItem(lsk('tj_tpl_min'))==='1'}catch(e){return false}}
+function tplMin(){try{localStorage.setItem(lsk('tj_tpl_min'),tplMinOn()?'0':'1')}catch(e){window._tjw&&_tjw(e)}tplRef()}
 const _tc0=tplCard;tplCard=function(){const cur=TPLS.find(t=>t[0]===(DB.cfg.tpl||'clasica'))||TPLS[0];
  if(tplMinOn())return `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h3 style="margin:0">🧾 Plantillas de factura</h3><small style="color:var(--gris)">Actual: <b>${cur[1]}</b> · Sello ${DB.cfg.sello===0?'desactivado':'activado'}</small></div><button class="btn s" data-h-click="h121">⬆ Maximizar</button></div>`;
  return `<div style="position:relative"><button class="btn s" style="position:absolute;right:0;top:0;z-index:1" data-h-click="h121">⬇ Minimizar</button>`+_tc0()+`</div>`};
@@ -2793,7 +2799,7 @@ function fleMsg(ok,t){FLE_MSG={ok,t};const e=$('fle_est');if(e){e.style.color=ok
 async function fleGuardar(C){
  if(!esAdmin())return alert('Solo el administrador puede cambiar los transportistas.'),false;
  if(!fbDb)return alert('Sin conexión con Firebase. Intente de nuevo en un momento.'),false;
- C=fleSanCfg(C);const ref=fbDb.collection('tienda_items').doc('__cfg');fleMsg(true,'Guardando…');
+ C=fleSanCfg(C);const ref=fbCol('tienda_items').doc('__cfg');fleMsg(true,'Guardando…');
  try{try{await ref.update({fletes:C,ts:Date.now()})}catch(e){await ref.set({__cfg:true,fletes:C,ts:Date.now()},{merge:true})}
   TD.fletes=C;fleMsg(true,'✔ Guardado. Ya se ve en la tienda virtual.');fleRefrescar(true);return true
  }catch(e){window._tjw&&_tjw(e);fleMsg(false,'✖ No se pudo guardar. Revise su conexión o permisos.');return false}
@@ -2967,9 +2973,9 @@ function etqPDF(lista,tam){
 
 /*ETQ-UI-INI*/
 let ETQ_SEL=new Set();
-const etqCfg=()=>{try{return JSON.parse(localStorage.getItem('tj_etq_cfg')||'{}')||{}}catch(e){return{}}};
-const etqCfgSet=o=>{try{localStorage.setItem('tj_etq_cfg',JSON.stringify(Object.assign(etqCfg(),o)))}catch(e){window._tjw&&_tjw(e)}};
-const etqLocal=()=>{try{return JSON.parse(localStorage.getItem('tj_etq_env')||'{}')||{}}catch(e){return{}}};
+const etqCfg=()=>{try{return JSON.parse(localStorage.getItem(lsk('tj_etq_cfg'))||'{}')||{}}catch(e){return{}}};
+const etqCfgSet=o=>{try{localStorage.setItem(lsk('tj_etq_cfg'),JSON.stringify(Object.assign(etqCfg(),o)))}catch(e){window._tjw&&_tjw(e)}};
+const etqLocal=()=>{try{return JSON.parse(localStorage.getItem(lsk('tj_etq_env'))||'{}')||{}}catch(e){return{}}};
 function sanEnv(v){if(!v||typeof v!=='object')return null;const o={};
  if(v.tipo)o.tipo=v.tipo==='internacional'?'internacional':'nacional';
  [['agencia',80],['fid',30],['rec',120],['rtel',40],['rced',30],['suc',100],['ref',200],['pais',60],['prov',80],['ciudad',80],['dir',200],['guia',60],['cont',300],['obs',200]].forEach(([k,n])=>{if(v[k]!=null&&String(v[k])!=='')o[k]=sTxt(v[k],n)});
@@ -2982,9 +2988,9 @@ const etqEnvio=p=>Object.assign({},etqLocal()[p.id]||{},p.envio||{});
 const etqImpresa=p=>!!(etqEnvio(p).etq);
 function etqGuardar(p,env,marcar){
  const ts=marcar?Date.now():0,add=Object.assign({},env||{},marcar?{etq:ts}:{});
- try{const L=etqLocal();L[p.id]=Object.assign({},L[p.id]||{},add);localStorage.setItem('tj_etq_env',JSON.stringify(L))}catch(e){window._tjw&&_tjw(e)}
+ try{const L=etqLocal();L[p.id]=Object.assign({},L[p.id]||{},add);localStorage.setItem(lsk('tj_etq_env'),JSON.stringify(L))}catch(e){window._tjw&&_tjw(e)}
  p.envio=Object.assign({},p.envio||{},add);
- if(esAdmin()&&fbDb)fbDb.collection('tienda_pedidos').doc(p.id).update(env?{envio:sanEnv(p.envio)}:{'envio.etq':ts}).catch(e=>console.warn('No se pudieron guardar los datos de envío en la nube',e))
+ if(esAdmin()&&fbDb)fbCol('tienda_pedidos').doc(p.id).update(env?{envio:sanEnv(p.envio)}:{'envio.etq':ts}).catch(e=>console.warn('No se pudieron guardar los datos de envío en la nube',e))
 }
 /* Datos de una etiqueta: lo guardado del pedido, completado con los valores comunes (def) del lote. */
 function etqDatos(p,def){
@@ -3089,8 +3095,8 @@ function etqImprimirLote(){
 
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
-function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbDb.collection(c):fbDb.collection(c).where('ref','==',me);let f1=true,f2=true;
- fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||'Tarjetería Jhon';TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbCol(c):fbCol(c).where('ref','==',me);let f1=true,f2=true;
+ fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||'Tarjetería Jhon';TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -3099,7 +3105,7 @@ function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(
   f2=false;tdBadge();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Pedidos:',e))}
 function tdImport(){let ch=0;TD.leads.filter(l=>!l.imp).forEach(l=>{const d=String(l.tel||'').replace(/\D/g,'');
  if(!DB.cli.some(c=>(d&&String(c.t||'').replace(/\D/g,'')===d)||c.n===l.name)){DB.cli.push({id:uid(),n:l.name+(l.empresa?' — '+l.empresa:''),r:'',t:l.tel||'',d:l.dir||'',m:l.email||'',o:'tienda'});ch=1}
- fbDb.collection('tienda_leads').doc(l.id).update({imp:true}).catch(()=>{})});
+ fbCol('tienda_leads').doc(l.id).update({imp:true}).catch(()=>{})});
  if(ch){save();if(vista==='cli')R.cli()}}
 const tdWa=(tel,txt)=>{const n=waNum(tel);return n?'https://wa.me/'+n+'?text='+encodeURIComponent(txt):''};
 R.tienda=function(){tdRender();if(esAdmin())tdLoadCat()};
@@ -3116,14 +3122,14 @@ ${pubCard}`;try{tdAplicarFiltro()}catch(e){window._tjw&&_tjw(e)}}
 let TDF='todos';const TDG_CLOSED=new Set();
 const TDSTK={ok:'✅ Disponible',low:'⚠️ Pocas existencias',out:'⛔ Agotado',disc:'🚫 Descontinuado'};
 const tdStkSel=(id,v)=>`<select class="tdstk" data-id="${id}" data-h-change="h105" data-a-change="${_ha(id)}">${Object.keys(TDSTK).map(k=>`<option value="${k}" ${k===v?'selected':''}>${TDSTK[k]}</option>`).join('')}</select>`;
-function tdStockSet(id,v){const pi=TD.items.find(x=>x.id===id);if(!pi||!fbDb)return;pi.stock=v;fbDb.collection('tienda_items').doc(id).update({stock:v}).catch(()=>alert('No se pudo guardar la existencia.'))}
+function tdStockSet(id,v){const pi=TD.items.find(x=>x.id===id);if(!pi||!fbDb)return;pi.stock=v;fbCol('tienda_items').doc(id).update({stock:v}).catch(()=>alert('No se pudo guardar la existencia.'))}
 function tdStockAplicar(){const v=$('tdStk').value,ids=[...document.querySelectorAll('.tdck:checked')].map(x=>x.value);if(!ids.length)return alert('Marque los productos a los que desea aplicar la existencia.');
  ids.forEach(id=>{const e=document.querySelector('.tdstk[data-id="'+id+'"]');if(e)e.value=v;tdStockSet(id,v)});const st=$('tdSt');if(st)st.textContent='✔ Existencia aplicada a '+ids.length+' producto(s)'+(ids.some(id=>!TD.items.some(x=>x.id===id))?' (los no publicados se guardan al publicarlos)':'')}
 const TDBD={new:'🆕 Recién llegado',model:'✨ Modelo nuevo',best:'🔥 Más vendido',hero:'🎠 Carrusel principal'};
 const tdBdSel=(id,b)=>`<details class="tdtm"><summary><span class="tdsum" id="tdbs_${id}">${b.length?b.map(k=>(TDBD[k]||'').split(' ').slice(1).join(' ')).join(' · '):'<em>Ninguna</em>'}</span><i>▾</i></summary><div class="tdpop">${Object.keys(TDBD).map(k=>`<label class="tdtg"><input type="checkbox" class="tdbdk" data-id="${id}" value="${k}" ${b.includes(k)?'checked':''} data-h-change="h104" data-a-change="${_ha(id)}"><span>${TDBD[k]}</span></label>`).join('')}</div></details>`;
 const _bdT={};
 function tdBadgeSet(id){const b=[...document.querySelectorAll('.tdbdk[data-id="'+id+'"]:checked')].map(x=>x.value),e=$('tdbs_'+id);if(e)e.innerHTML=b.length?b.map(k=>TDBD[k].split(' ').slice(1).join(' ')).join(' · '):'<em>Ninguna</em>';
- const pi=TD.items.find(x=>x.id===id);if(!pi||!fbDb)return;clearTimeout(_bdT[id]);_bdT[id]=setTimeout(()=>{pi.badges=b;fbDb.collection('tienda_items').doc(id).update({badges:b}).catch(()=>alert('No se pudo guardar la etiqueta.'))},1200)}
+ const pi=TD.items.find(x=>x.id===id);if(!pi||!fbDb)return;clearTimeout(_bdT[id]);_bdT[id]=setTimeout(()=>{pi.badges=b;fbCol('tienda_items').doc(id).update({badges:b}).catch(()=>alert('No se pudo guardar la etiqueta.'))},1200)}
 function tdBadgeBulk(on){const k=$('tdBd').value,ids=[...document.querySelectorAll('.tdck:checked')].map(x=>x.value);if(!ids.length)return alert('Marque los productos primero.');
  ids.forEach(id=>{const c=document.querySelector('.tdbdk[data-id="'+id+'"][value="'+k+'"]');if(c){c.checked=!!on;tdBadgeSet(id)}})}
 const PAFLAG="<svg viewBox='0 0 60 40' width='20' height='13' style='vertical-align:-2px;border-radius:2px;box-shadow:0 0 0 1px rgba(0,0,0,.15)'><rect width='60' height='40' fill='#fff'/><rect x='30' width='30' height='20' fill='#D21034'/><rect y='20' width='30' height='20' fill='#005293'/><polygon points='15.00,3.00 16.65,7.73 21.66,7.84 17.66,10.87 19.11,15.66 15.00,12.80 10.89,15.66 12.34,10.87 8.34,7.84 13.35,7.73' fill='#005293'/><polygon points='45.00,23.00 46.65,27.73 51.66,27.84 47.66,30.87 49.11,35.66 45.00,32.80 40.89,35.66 42.34,30.87 38.34,27.84 43.35,27.73' fill='#D21034'/><rect x='.5' y='.5' width='59' height='39' fill='none' stroke='#cfd6df'/></svg>";
@@ -3159,7 +3165,7 @@ function shopBrandSave(){
    ts: Date.now()
  };
 
- fbDb.collection("tienda_items").doc("__cfg").set(dataToSave, {merge:true})
+ fbCol('tienda_items').doc("__cfg").set(dataToSave, {merge:true})
   .then(()=>{
     TD.wordmark = wm;
     TD.heroTitle = title;
@@ -3310,10 +3316,10 @@ function xmasCard(){
  <h3 style="margin:0">🔗 Enlaces de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Si los clientes ven una versión vieja al abrir el enlace de un vendedor, toque este botón para forzar la actualización.</p><button class="btn" data-h-click="h99">🔄 Actualizar enlaces de vendedores</button> <small style="color:var(--gris)">Versión: ${esc(String(TD.rev||BUILD))}</small>`
 }
 
-function linksRefresh(){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,rev:Date.now()},{merge:true}).then(()=>{alert('Listo. Los vendedores ya comparten enlaces nuevos. Si un vendedor ya tiene abierto el panel, que lo recargue una vez.');R.config()}).catch(()=>alert('No se pudo actualizar. Revise su conexión o permisos.'))}
-function temaSet(t){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,tema:t,navidad:t==='navidad',ts:Date.now()},{merge:true}).then(()=>{TD.tema=t;TD.xmas=t==='navidad';R.config()}).catch(()=>alert('No se pudo guardar. Revise su conexión o permisos.'))}
-function heroModeSet(m){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,heroMode:m,ts:Date.now()},{merge:true}).then(()=>{TD.heroMode=m;R.config()}).catch(()=>alert('No se pudo guardar la configuración del carrusel. Revise su conexión o permisos.'))}
-function paletaSet(p){if(!fbDb)return;fbDb.collection('tienda_items').doc('__cfg').set({__cfg:true,paleta:p,ts:Date.now()},{merge:true}).then(()=>{TD.paleta=p;R.config()}).catch(()=>alert('No se pudo guardar la paleta. Revise su conexión o permisos.'))}
+function linksRefresh(){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cfg:true,rev:Date.now()},{merge:true}).then(()=>{alert('Listo. Los vendedores ya comparten enlaces nuevos. Si un vendedor ya tiene abierto el panel, que lo recargue una vez.');R.config()}).catch(()=>alert('No se pudo actualizar. Revise su conexión o permisos.'))}
+function temaSet(t){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cfg:true,tema:t,navidad:t==='navidad',ts:Date.now()},{merge:true}).then(()=>{TD.tema=t;TD.xmas=t==='navidad';R.config()}).catch(()=>alert('No se pudo guardar. Revise su conexión o permisos.'))}
+function heroModeSet(m){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cfg:true,heroMode:m,ts:Date.now()},{merge:true}).then(()=>{TD.heroMode=m;R.config()}).catch(()=>alert('No se pudo guardar la configuración del carrusel. Revise su conexión o permisos.'))}
+function paletaSet(p){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cfg:true,paleta:p,ts:Date.now()},{merge:true}).then(()=>{TD.paleta=p;R.config()}).catch(()=>alert('No se pudo guardar la paleta. Revise su conexión o permisos.'))}
 function tdRowHTML(o,pub){const isp=pub.has(o.id),pi=TD.items.find(x=>x.id===o.id),sel=new Set(pi&&Array.isArray(pi.tags)?pi.tags:temaOf(o)),ch=TEMAS.filter(t=>sel.has(t.id));
  const tm=`<details class="tdtm" id="tdd_${o.id}"><summary><span class="tdsum">${ch.length?ch.map(t=>t.e).join(' '):'<em>Sin tema</em>'}</span><i>▾</i></summary><div class="tdpop">${TEMAS.map(t=>`<label class="tdtg"><input type="checkbox" class="tdtgk" data-id="${o.id}" value="${t.id}" ${sel.has(t.id)?'checked':''} data-h-change="h98" data-a-change="${_ha(o.id)}"><span>${t.e} ${t.n}</span></label>`).join('')}</div></details>`;
  return `<tr data-pub="${isp?1:0}"><td><input type="checkbox" class="tdck mck" value="${o.id}"></td><td><img class="tdth" src="${o.thumb||''}" alt="" data-h-click="h97" data-a-click="${_ha(o.id)}" title="Ampliar"></td><td>${esc(o.name||'')}</td><td>${tm}</td><td class="r">${+o.price>0?$$(+o.price):'<small>Sin precio</small>'}</td><td>${tdStkSel(o.id,(pi&&pi.stock)||'ok')}</td><td>${tdBdSel(o.id,(pi&&pi.badges)||[])}</td><td>${isp?'<b style="color:#2fa84f">✔ Publicado</b>':'<small>No publicado</small>'}</td><td><button class="btn s d" data-h-click="h96" data-a-click="${_ha(o.id)}" title="Eliminar">🗑</button></td></tr>`}
@@ -3338,8 +3344,8 @@ function tdSendCli(){const c=DB.cli.find(x=>x.id==$('td_cli').value);if(!c)retur
 async function tdImg(o){if(o.blob&&/^image\//.test(o.type||'')){const b=await comprimirImagenCatalogo(o.blob,imgKBClamp(o.imgKB||IMG_KB_DEF));return await rd(b)}
  if(o.thumb)return o.thumb;throw new Error('sin imagen')}
 const tdRows=()=>{const ids=new Set(TD.cat.map(x=>x.id));return [...TD.cat,...TD.items.filter(x=>x&&x.img&&!ids.has(x.id)).map(x=>({id:x.id,name:x.name,cat:x.cat,price:x.price,desc:x.desc,tags:x.tags,thumb:x.img,_pub:1}))].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{numeric:true}))};
-const tdMinV=()=>{try{return localStorage.getItem('tj_td_min')==='1'}catch(e){return false}};
-function tdMin(){const m=!tdMinV();try{localStorage.setItem('tj_td_min',m?'1':'0')}catch(e){window._tjw&&_tjw(e)}const b=$('tdBody'),t=$('tdMinB');if(b)b.style.display=m?'none':'';if(t)t.textContent=m?'▸ Maximizar':'▾ Minimizar'}
+const tdMinV=()=>{try{return localStorage.getItem(lsk('tj_td_min'))==='1'}catch(e){return false}};
+function tdMin(){const m=!tdMinV();try{localStorage.setItem(lsk('tj_td_min'),m?'1':'0')}catch(e){window._tjw&&_tjw(e)}const b=$('tdBody'),t=$('tdMinB');if(b)b.style.display=m?'none':'';if(t)t.textContent=m?'▸ Maximizar':'▾ Minimizar'}
 function tdZoom(id){try{const o=tdRows().find(x=>x.id===id)||{},p=TD.items.find(x=>x.id===id),L=[];
  if(o.blob&&o.blob.size>0&&/^image\//.test(o.blob.type||o.type||'')){try{L.push(URL.createObjectURL(o.blob))}catch(e){window._tjw&&_tjw(e)}}
  if(p&&p.img)L.push(p.img);if(o.thumb)L.push(o.thumb);
@@ -3349,7 +3355,7 @@ function tdZoom(id){try{const o=tdRows().find(x=>x.id===id)||{},p=TD.items.find(
  z.insertAdjacentHTML('beforeend',`<div class="tdzc"><b>${esc(o.name||'')}</b><small>${esc(o.cat||'')}${+o.price>0?' · '+$$(+o.price):''}</small></div><button aria-label="Cerrar">✕</button>`);document.body.appendChild(z)}catch(e){alert('No se pudo ampliar la foto: '+(e&&e.message||e))}}
 addEventListener('keydown',e=>{if(e.key==='Escape'){const z=document.getElementById('tdzoom');if(z)z.remove()}});
 function tdDel(id){const o=tdRows().find(x=>x.id===id)||{},pub=TD.items.some(x=>x.id===id);$('mb').innerHTML=`<h3 style="margin-top:0">Eliminar “${esc(o.name||'producto')}”</h3><p style="font-size:13.5px;color:var(--gris)">Elija qué desea hacer:</p><div style="display:grid;gap:8px">${pub?`<button class="btn" data-h-click="h89" data-a-click="${_ha(id)}">🛍 Quitar solo de la tienda (se queda en el Catálogo)</button>`:''}<button class="btn d" data-h-click="h88" data-a-click="${_ha(id)}">🗑 Eliminar del Catálogo y de la tienda</button><button class="btn" data-h-click="h12">Cancelar</button></div>`;$('md').classList.add('on')}
-async function tdDelDo(id,full){cerrar();try{if(TD.items.some(x=>x.id===id))await fbDb.collection('tienda_items').doc(id).delete();if(full){await tx('readwrite',s=>s.delete(id));if(typeof CL!=='undefined')CL=CL.filter(f=>f.id!=id);TD.cat=TD.cat.filter(x=>x.id!==id);eliminarArchivoNube(id)}}catch(e){alert('No se pudo eliminar.')}tdRender()}
+async function tdDelDo(id,full){cerrar();try{if(TD.items.some(x=>x.id===id))await fbCol('tienda_items').doc(id).delete();if(full){await tx('readwrite',s=>s.delete(id));if(typeof CL!=='undefined')CL=CL.filter(f=>f.id!=id);TD.cat=TD.cat.filter(x=>x.id!==id);eliminarArchivoNube(id)}}catch(e){alert('No se pudo eliminar.')}tdRender()}
 const tdAgo=t=>{const m=Math.max(1,Math.round((Date.now()-t)/60000));return m<60?m+' min':m<1440?Math.round(m/60)+' h':Math.round(m/1440)+' d'};
 function tdHomeHTML(){if(!SES||!puede('tienda'))return'';const nu=TD.peds.filter(p=>p.estado==='nuevo'),sem=Date.now()-6048e5,ln=TD.leads.filter(l=>l.ts>sem),tot=nu.reduce((a,p)=>a+(+p.total||0),0);
  const pl=nu.slice(0,5).map(p=>{
@@ -3363,10 +3369,10 @@ function tdHomeRefresh(){const e=$('tdHome');if(!e||vista!=='home')return;const 
 function tdTmSum(id){const d=$('tdd_'+id);if(!d)return;const ch=[...document.querySelectorAll('.tdtgk[data-id="'+id+'"]:checked')].map(x=>TEMAS.find(t=>t.id===x.value)).filter(Boolean);d.querySelector('.tdsum').innerHTML=ch.length?ch.map(t=>t.e).join(' '):'<em>Sin tema</em>'}
 function tdTemaAplicar(on){const t=$('tdTema').value;[...document.querySelectorAll('.tdck:checked')].forEach(c=>{const k=document.querySelector('.tdtgk[data-id="'+c.value+'"][value="'+t+'"]');if(k){k.checked=!!on;tdTmSum(c.value)}})}
 async function tdPub(){if(!esAdmin()||!fbDb)return;const ids=[...document.querySelectorAll('.tdck:checked')].map(x=>x.value);if(!ids.length)return alert('Marque los productos que desea publicar.');let ok=0;const st=()=>$('tdSt');
- for(const id of ids){const o=tdRows().find(x=>x.id===id);if(!o)continue;if(st())st().textContent='Publicando '+(ok+1)+' de '+ids.length+'…';try{const img=await tdImg(o),tags=[...document.querySelectorAll('.tdtgk:checked')].filter(x=>x.dataset.id===id).map(x=>x.value);await fbDb.collection('tienda_items').doc(id).set({id,name:o.name||'Producto',cat:o.cat||'',price:+o.price||0,desc:o.desc||'',img,tags,stock:(document.querySelector('.tdstk[data-id="'+id+'"]')||{}).value||'ok',badges:[...document.querySelectorAll('.tdbdk[data-id="'+id+'"]:checked')].map(x=>x.value),ts:Date.now()});ok++}catch(e){console.warn('Publicar:',o.name,e)}}
+ for(const id of ids){const o=tdRows().find(x=>x.id===id);if(!o)continue;if(st())st().textContent='Publicando '+(ok+1)+' de '+ids.length+'…';try{const img=await tdImg(o),tags=[...document.querySelectorAll('.tdtgk:checked')].filter(x=>x.dataset.id===id).map(x=>x.value);await fbCol('tienda_items').doc(id).set({id,name:o.name||'Producto',cat:o.cat||'',price:+o.price||0,desc:o.desc||'',img,tags,stock:(document.querySelector('.tdstk[data-id="'+id+'"]')||{}).value||'ok',badges:[...document.querySelectorAll('.tdbdk[data-id="'+id+'"]:checked')].map(x=>x.value),ts:Date.now()});ok++}catch(e){console.warn('Publicar:',o.name,e)}}
  if(st())st().textContent=ok===ids.length?'✔ '+ok+' producto(s) publicado(s)':'Se publicaron '+ok+' de '+ids.length+'. Revise la conexión o los permisos de Firebase.'}
-async function tdUnpub(){if(!esAdmin()||!fbDb)return;const ids=[...document.querySelectorAll('.tdck:checked')].map(x=>x.value).filter(id=>TD.items.some(i=>i.id===id));if(!ids.length)return alert('Marque productos que estén publicados.');if(!confirm('¿Quitar '+ids.length+' producto(s) de la tienda?'))return;for(const id of ids){try{await fbDb.collection('tienda_items').doc(id).delete()}catch(e){alert('No se pudo quitar un producto.')}}}
-function tdEstado(id){const p=TD.peds.find(x=>x.id===id);if(!p)return;fbDb.collection('tienda_pedidos').doc(id).update({estado:p.estado==='nuevo'?'atendido':'nuevo'}).catch(()=>alert('No se pudo actualizar el pedido.'))}
+async function tdUnpub(){if(!esAdmin()||!fbDb)return;const ids=[...document.querySelectorAll('.tdck:checked')].map(x=>x.value).filter(id=>TD.items.some(i=>i.id===id));if(!ids.length)return alert('Marque productos que estén publicados.');if(!confirm('¿Quitar '+ids.length+' producto(s) de la tienda?'))return;for(const id of ids){try{await fbCol('tienda_items').doc(id).delete()}catch(e){alert('No se pudo quitar un producto.')}}}
+function tdEstado(id){const p=TD.peds.find(x=>x.id===id);if(!p)return;fbCol('tienda_pedidos').doc(id).update({estado:p.estado==='nuevo'?'atendido':'nuevo'}).catch(()=>alert('No se pudo actualizar el pedido.'))}
 function tdFactura(id){const p=TD.peds.find(x=>x.id===id);if(!p)return;const l=p.lead||{},d=String(l.tel||'').replace(/\D/g,''),c=DB.cli.find(x=>(d&&String(x.t||'').replace(/\D/g,'')===d)||x.n===l.name);
  items=(p.items||[]).map(i=>({d:i.n,q:i.q,p:i.p}));ir('nueva');
  setTimeout(()=>{try{if(c&&$('f_cs')){$('f_cs').value=c.id;selCli()}else{$('f_cn').value=l.name||'';$('f_cd').value=l.dir||''}$('f_nt').value='Pedido de tienda virtual'+(p.nota?' · '+p.nota:'');calc()}catch(e){window._tjw&&_tjw(e)}},80)}
@@ -3376,17 +3382,17 @@ async function shopPurge(){try{if(sessionStorage.getItem('tj_purged'))return;let
  if(window.caches){const ks=await caches.keys();if(ks.length){need=true;await Promise.all(ks.map(k=>caches.delete(k)))}}
  sessionStorage.setItem('tj_purged','1');if(need)location.replace(location.href.split('#')[0]+(location.search?'&':'?')+'_r='+Date.now())}catch(e){window._tjw&&_tjw(e)}}
 
-function shopThemeGet(){try{return localStorage.getItem('tj_shop_theme')||'auto'}catch(e){return 'auto'}}
+function shopThemeGet(){try{return localStorage.getItem(lsk('tj_shop_theme'))||'auto'}catch(e){return 'auto'}}
 function shopThemeIsDark(m){const cur=m||shopThemeGet();if(cur==='dark')return true;if(cur==='light')return false;const mq=typeof window!=='undefined'&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches;const hr=new Date().getHours();return mq||(hr>=19||hr<6)}
 function shopThemeApply(){const cur=shopThemeGet(),isDark=shopThemeIsDark(cur),H=typeof document!=='undefined'&&document.documentElement;if(H){if(isDark){H.setAttribute('data-kt','dark');H.setAttribute('data-paleta','dark')}else{H.removeAttribute('data-kt');H.setAttribute('data-paleta',(typeof SH!=='undefined'&&SH.paleta)||'shop')}}shopThemeSyncUI()}
 function shopThemeSyncUI(){const cur=shopThemeGet(),icon=cur==='dark'?'🌙':cur==='light'?'☀️':'⚙️',lbl=cur==='dark'?'Oscuro':cur==='light'?'Día':'Auto';if(typeof document!=='undefined'&&document.querySelectorAll){document.querySelectorAll('.ktheme-btn').forEach(b=>{b.setAttribute('title','Tema: '+lbl+' (Clic para cambiar Día/Oscuro/Auto)');b.innerHTML='<span class="ktheme-ico">'+icon+'</span><span>'+lbl+'</span>'});document.querySelectorAll('.krail-theme').forEach(b=>{b.setAttribute('title','Tema: '+lbl+' (Clic para cambiar)');b.innerHTML=icon});document.querySelectorAll('.km-theme-seg button').forEach(b=>{b.classList.toggle('on',b.getAttribute('data-theme-val')===cur)})}}
 function shopThemeCycle(){const cur=shopThemeGet(),next=cur==='auto'?'light':cur==='light'?'dark':'auto';shopThemeSet(next)}
-function shopThemeSet(mode){try{localStorage.setItem('tj_shop_theme',mode)}catch(e){}if(typeof shopThemeApply==="function")shopThemeApply();const msg=mode==='dark'?'🌙 Modo Oscuro activado':mode==='light'?'☀️ Modo Día activado':'⚙️ Modo Automático activado (se adapta a la hora y a tu dispositivo)';if(typeof shopSnack==='function')shopSnack(msg)}
+function shopThemeSet(mode){try{localStorage.setItem(lsk('tj_shop_theme'),mode)}catch(e){}if(typeof shopThemeApply==="function")shopThemeApply();const msg=mode==='dark'?'🌙 Modo Oscuro activado':mode==='light'?'☀️ Modo Día activado':'⚙️ Modo Automático activado (se adapta a la hora y a tu dispositivo)';if(typeof shopSnack==='function')shopSnack(msg)}
 window.shopThemeGet=shopThemeGet;window.shopThemeApply=shopThemeApply;window.shopThemeCycle=shopThemeCycle;window.shopThemeSet=shopThemeSet;
 
 function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{
-   const cCfg=JSON.parse(localStorage.getItem('tj_cached_cfg')||'null');
+   const cCfg=JSON.parse(localStorage.getItem(lsk('tj_cached_cfg'))||'null');
    if(cCfg){
      SH.paleta=cCfg.paleta||'shop';SH.wordmark=wmClean(cCfg.wordmark);
      SH.heroTitle=cCfg.heroTitle||'Tarjetería Jhon';
@@ -3396,14 +3402,14 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
    }else{
      SH.paleta='shop';document.documentElement.setAttribute('data-paleta','shop');
    }
-   const cItems=JSON.parse(localStorage.getItem('tj_cached_items')||'[]');
+   const cItems=JSON.parse(localStorage.getItem(lsk('tj_cached_items'))||'[]');
    if(Array.isArray(cItems)&&cItems.length>0){
      SH.items=cItems;SH.ok=1;
    }
  }catch(e){window._tjw&&_tjw(e)}
- try{SH.cli=JSON.parse(localStorage.getItem('tj_shop_cli')||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem('tj_shop_cart')||'{}')}catch(e){window._tjw&&_tjw(e)}
- const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem('tj_shop_fav')||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbDb.collection('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.heroTitle=cd.heroTitle||'Tarjetería Jhon';SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;try{localStorage.setItem('tj_cached_items',JSON.stringify(SH.items.slice(0,180)));if(cf&&cf.data())localStorage.setItem('tj_cached_cfg',JSON.stringify(cf.data()))}catch(e){window._tjw&&_tjw(e)}{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ try{SH.cli=JSON.parse(localStorage.getItem(lsk('tj_shop_cli'))||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem(lsk('tj_shop_cart'))||'{}')}catch(e){window._tjw&&_tjw(e)}
+ const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem(lsk('tj_shop_fav'))||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
+ if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.heroTitle=cd.heroTitle||'Tarjetería Jhon';SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;try{localStorage.setItem(lsk('tj_cached_items'),JSON.stringify(SH.items.slice(0,180)));if(cf&&cf.data())localStorage.setItem(lsk('tj_cached_cfg'),JSON.stringify(cf.data()))}catch(e){window._tjw&&_tjw(e)}{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -3430,7 +3436,7 @@ const KI={user:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c
 const kico=(d,s)=>`<svg viewBox="0 0 24 24" width="${s||24}" height="${s||24}" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`;
 Object.assign(KI,{menu:'M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z',filter:'M3 5h18v2H3V5zm4 6h10v2H7v-2zm3 6h4v2h-4v-2z',grid:'M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z',list:'M4 6h3v3H4V6zm5 1h11v1H9V7zM4 11h3v3H4v-3zm5 1h11v1H9v-1zM4 16h3v3H4v-3zm5 1h11v1H9v-1z',star:'M12 2l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L12 2z'});
 const shopLogo=()=>{const custom=(typeof SH!=='undefined'&&SH.logoUrl)||(typeof TD!=='undefined'&&TD.logoUrl);if(custom)return '<img src="'+esc(custom)+'" alt="Logo" class="klogo-custom">';if(SH.logo!==undefined)return SH.logo;const g=document.querySelector('.logo img');return SH.logo=g?'<img src="'+g.src+'" alt="">':''};
-const shopSaveCart=()=>{try{localStorage.setItem('tj_shop_cart',JSON.stringify(SH.cart))}catch(e){window._tjw&&_tjw(e)}};
+const shopSaveCart=()=>{try{localStorage.setItem(lsk('tj_shop_cart'),JSON.stringify(SH.cart))}catch(e){window._tjw&&_tjw(e)}};
 function shopRender(){const o=$('shop');if(!o)return;
  if(SH.err)return o.innerHTML=`<div class="kreg-w"><div class="kreg">${shopLogo()}<h2>Catálogo no disponible</h2><p>No se pudo conectar. Intente de nuevo en unos minutos.</p><button class="sbtn" data-h-click="h24">Reintentar</button></div></div>`;
  shopCatalog()}
@@ -3444,16 +3450,16 @@ function shopHP(){return '<div style="position:absolute;left:-9999px;top:-9999px
 // página (eso solo lo frena Firebase App Check, pendiente de que Google lo vuelva a habilitar
 // gratis), pero sí frena a un script simple o a un clic repetido que reutiliza este navegador.
 const RL_KEY='tj_shop_rl',RL_MAX=6,RL_WIN=600000;
-function shopRateOk(){let a=[];try{a=JSON.parse(localStorage.getItem(RL_KEY)||'[]')}catch(e){window._tjw&&_tjw(e)}
+function shopRateOk(){let a=[];try{a=JSON.parse(localStorage.getItem(lsk(RL_KEY))||'[]')}catch(e){window._tjw&&_tjw(e)}
  const now=Date.now();a=a.filter(t=>now-t<RL_WIN);if(a.length>=RL_MAX)return false;
- a.push(now);try{localStorage.setItem(RL_KEY,JSON.stringify(a))}catch(e){window._tjw&&_tjw(e)}return true}
+ a.push(now);try{localStorage.setItem(lsk(RL_KEY),JSON.stringify(a))}catch(e){window._tjw&&_tjw(e)}return true}
 function shopAntiBot(){const hp=$('sh_hp');if(hp&&hp.value.trim())return'no';if(!SH.openTs||Date.now()-SH.openTs<2500)return'no';if(!shopRateOk())return'rl';return'ok'}
 const shopAntiBotMsg=r=>r==='rl'?'Demasiados envíos seguidos desde este dispositivo. Espere unos minutos e intente de nuevo.':'No se pudo registrar. Intente de nuevo.';
 async function shopReg(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('sh_t'),e=g('sh_e'),m=s=>{$('sh_m').textContent=s};
  if(n.length<2)return m('Escriba su nombre.');if(t.replace(/\D/g,'').length<7)return m('Escriba un teléfono válido.');if(!/^\S+@\S+\.\S+$/.test(e))return m('Escriba un correo válido.');{const r=shopAntiBot();if(r!=='ok')return m(shopAntiBotMsg(r))}
  const l={id:uid(),name:n,tel:t,email:e,empresa:g('sh_c'),dir:g('sh_d'),ref:SH.ref,ts:Date.now(),imp:false};$('sh_b').disabled=true;m('Registrando…');
- try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
- SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){window._tjw&&_tjw(x)}shopRender()}
+ try{await fbCol('tienda_leads').doc(l.id).set(l)}catch(x){$('sh_b').disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
+ SH.cli=l;try{localStorage.setItem(lsk('tj_shop_cli'),JSON.stringify(l))}catch(x){window._tjw&&_tjw(x)}shopRender()}
 function shopCatalog(){const o=$("shop");if(!o)return;
  const rCount=shopLines().reduce((s,l)=>s+l.q,0);
  o.innerHTML=`<nav class="krail" id="k_rail" aria-label="Navegación principal"><div class="krail-top"><div class="krail-logo" data-h-click="call" data-a-click="${_ha('shopDNavGo','home')}" title="Inicio"><span class="krail-dot"></span></div><button class="krail-item ${!SH.favOnly?'on':''}" data-h-click="call" data-a-click="${_ha('shopDNavGo','home')}" title="Inicio" aria-label="Inicio">${kico(KI.home,24)}</button><button class="krail-item" data-h-click="call" data-a-click="${_ha('shopDNavGo','cats')}" title="Categorías" aria-label="Categorías">${kico(KI.grid,24)}</button><button class="krail-item" data-h-click="call" data-a-click="${_ha('shopDNavGo','dest')}" title="Destacados" aria-label="Destacados">${kico(KI.star,24)}</button><button class="krail-item ${SH.favOnly?'on':''}" data-h-click="call" data-a-click="${_ha('shopTab','fav')}" title="Favoritos" aria-label="Favoritos">${kico(SH.favOnly?KI.heart:KI.heartO,24)}</button><button class="krail-item krail-cart" data-h-click="call" data-a-click="${_ha('shopCart')}" title="Carrito" aria-label="Carrito">${kico(KI.cart,24)}${rCount?`<i class="kbdg">${rCount}</i>`:""}</button></div><div class="krail-bottom"><button class="krail-theme" data-h-click="call" data-a-click="${_ha('shopThemeCycle')}" title="Cambiar tema visual" aria-label="Cambiar tema visual">${shopThemeGet()==='dark'?'🌙':shopThemeGet()==='light'?'☀️':'⚙️'}</button><button class="krail-avatar" data-h-click="call" data-a-click="${_ha('shopAcc')}" title="Mi cuenta" aria-label="Mi cuenta">${SH.cli?esc((SH.cli.name||'?').trim().charAt(0).toUpperCase()):kico(KI.user,18)}</button></div></nav><div class="kwrap"><header class="khd"><div class="kh-top"><div class="kbrand">${shopLogo()}<div class="kht"><b>Catálogo virtual</b><small>${SH.guest?'Vista previa 👁':SH.cli?'Hola, '+esc((SH.cli.name||'').split(' ')[0])+' 👋':'Bienvenido 👋'}</small></div></div><div class="khact" id="k_ha"></div><button class="kmenu-btn" id="k_menu_b" data-h-click="h83" aria-label="Abrir menú" aria-expanded="false">${kico(KI.menu,22)}</button></div><div class="kh-search"><label class="ksr">${kico(KI.search,20)}<input id="sh_q" type="search" placeholder="¿Qué estás buscando hoy?" value="${esc(SH.q)}" data-h-input="h82" enterkeyhint="search" autocomplete="off"><button type="button" id="k_x" data-h-click="h81" ${SH.q?'':'hidden'} aria-label="Borrar">✕</button><button type="button" class="ksr-btn-go" data-h-click="call" data-a-click="${_ha('shopSearchSubmit')}" aria-label="Buscar"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg></button></label><button class="kfilter-btn" data-h-click="h80" aria-label="Abrir filtros">${kico(KI.filter,21)}</button><nav class="kh-links">${shopDNavHtml()}</nav></div><nav class="kmobile-menu" id="k_mmenu" hidden>${shopMobileNavHtml()}</nav></header><nav class="kdnav" id="k_dnav">${shopDNavHtml()}</nav><section class="khero" id="khero" aria-label="Diseños destacados"></section><section class="kpromo-carousel" id="k_promo" aria-label="Banners promocionales" hidden></section><section class="kcats" id="k_cats" hidden></section><section class="kdest" id="k_dest" hidden></section>
@@ -3611,7 +3617,7 @@ function shopView(){SH.view=SH.view==='mini'?'tiles':'mini';shopGrid(1)}
 const shopBtn=id=>{const it=SH.items.find(x=>x.id===id);if(noDisp(it))return '<span class="kno">'+stkLbl[it.stock]+'</span>';return shopBtn0(id)};
 const shopBtn0=id=>SH.cart[id]?`<div class="kst"><button data-h-click="h45" data-a-click="${_ha(id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h47" data-a-click="${_ha(id)}" aria-label="Cambiar cantidad">${SH.cart[id]}</button><button data-h-click="h43" data-a-click="${_ha(id)}" aria-label="Agregar uno">+</button></div>`:`<button class="kadd" data-h-click="h47" data-a-click="${_ha(id)}" aria-label="Agregar al carrito">${kico(KI.plus)}</button>`;
 function shopAct(id){document.querySelectorAll('[data-a="'+id+'"]').forEach(e=>e.innerHTML=shopBtn(id))}
-function shopFav(id){if(SH.fav[id])delete SH.fav[id];else SH.fav[id]=1;try{localStorage.setItem('tj_shop_fav',JSON.stringify(SH.fav))}catch(e){window._tjw&&_tjw(e)}
+function shopFav(id){if(SH.fav[id])delete SH.fav[id];else SH.fav[id]=1;try{localStorage.setItem(lsk('tj_shop_fav'),JSON.stringify(SH.fav))}catch(e){window._tjw&&_tjw(e)}
  try{navigator.vibrate&&navigator.vibrate(8)}catch(e){window._tjw&&_tjw(e)}
  document.querySelectorAll('[data-f="'+id+'"]').forEach(b=>{b.classList.toggle('on',!!SH.fav[id]);b.innerHTML=kico(SH.fav[id]?KI.heart:KI.heartO,20)});
  if(SH.favOnly&&!SH.fav[id]&&$('shopm').style.display!=='flex')shopGrid(1);if($('shopm').dataset.k==='det'&&$('shopm').dataset.id===id)shopDet(id)}
@@ -3713,11 +3719,11 @@ function shopPdfVer(blob,name){const old=document.getElementById('pdfv');if(old)
  document.body.appendChild(v);const cl=()=>{v.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)};document.getElementById('pdfvx').onclick=cl;
  const k=e=>{if(e.key==='Escape'){cl();removeEventListener('keydown',k)}};addEventListener('keydown',k)}
 function tdPedDel(id){const p=TD.peds.find(x=>x.id===id);if(!p||!fbDb)return;const l=p.lead||{};if(!confirm('¿Eliminar el pedido de '+(l.name||'este cliente')+(p.total>0?' por '+$$(p.total):'')+'?\nEsta acción no se puede deshacer.'))return;
- fbDb.collection('tienda_pedidos').doc(id).delete().catch(()=>alert('No se pudo eliminar el pedido. Revise su conexión o sus permisos.'))}
+ fbCol('tienda_pedidos').doc(id).delete().catch(()=>alert('No se pudo eliminar el pedido. Revise su conexión o sus permisos.'))}
 // Solo el administrador puede borrar registros de la tienda (así lo exigen las reglas de Firestore).
 function tdLeadDel(id){if(!esAdmin()||!fbDb)return;const l=TD.leads.find(x=>x.id===id);if(!l)return;
  if(!confirm('¿Eliminar el registro de '+(l.name||'este cliente')+'?\nEsto no borra al cliente de su lista de Clientes si ya se importó, solo el registro de la tienda.\nEsta acción no se puede deshacer.'))return;
- fbDb.collection('tienda_leads').doc(id).delete().catch(()=>alert('No se pudo eliminar el registro. Revise su conexión o sus permisos.'))}
+ fbCol('tienda_leads').doc(id).delete().catch(()=>alert('No se pudo eliminar el registro. Revise su conexión o sus permisos.'))}
 
 function shopAskReg(){shopM(`<div style="text-align:center;padding:6px 0 2px"><h2 style="margin:6px 0 4px">Último paso</h2><p style="color:var(--tx2);margin:0 0 16px;font-size:14.5px;line-height:1.45">Complete sus datos para enviar su pedido. Solo se lo pediremos esta vez.</p></div><label class="kf"><span>Nombre completo *</span><input id="sh_n" autocomplete="name"></label><label class="kf"><span>Teléfono / WhatsApp *</span><input id="sh_t" type="tel" autocomplete="tel" inputmode="tel"></label><label class="kf"><span>Correo electrónico *</span><input id="sh_e" type="email" autocomplete="email" inputmode="email"></label><label class="kf"><span>Empresa (opcional)</span><input id="sh_c" autocomplete="organization"></label><label class="kf"><span>Dirección o ciudad (opcional)</span><input id="sh_d" autocomplete="street-address"></label>${shopHP()}<div id="sh_reg_poli_box" style="background:var(--sf);border:1px solid var(--linea);border-radius:10px;padding:10px 12px;margin:10px 0;font-size:11.5px;line-height:1.4;text-align:left">  <label class="pchk" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">    <input type="checkbox" id="sh_chk_poli_reg" style="width:17px;height:17px;margin-top:1px;accent-color:var(--p);cursor:pointer;flex-shrink:0" data-h-change="call" data-a-change="${_ha('poliChkLimpiar')}">    <span style="color:var(--txt)">Acepto los <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas','2')}" style="color:var(--p);font-weight:700;text-decoration:underline">Términos</a> y la <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas','3')}" style="color:var(--p);font-weight:700;text-decoration:underline">Política de Privacidad (Ley 81)</a> en etapa preparatoria.</span>  </label></div><div class="serr" id="sh_m"></div><div class="kact2"><button class="sbtn" id="sh_b" data-h-click="h41">Registrarme y enviar pedido</button><button class="sbtn g" data-h-click="h40">Volver al pedido</button></div><p style="font-size:11.5px;margin:6px 0 0;text-align:center;color:var(--tx2)">Sus datos se usan solo para atender su pedido.</p>`,'reg');setTimeout(()=>{const i=$('sh_n');if(i)i.focus()},350)}
 async function shopRegSend(){const g=id=>($(id).value||'').trim(),n=g('sh_n'),t=g('sh_t'),e=g('sh_e'),m=s=>{$('sh_m').textContent=s};
@@ -3761,18 +3767,18 @@ async function shopCodeResend(){const pr=SH.pendReg;if(!pr)return;const btn=$('s
  const m=$('sh_cm');if(m)m.textContent=ok?'Le enviamos un nuevo código.':'No se pudo reenviar. Intente de nuevo en un momento.';
  if(btn)btn.disabled=false}
 async function shopRegFinish(l){const m=s=>{const e=$('sh_m')||$('sh_cm');if(e)e.textContent=s};const b=$('sh_b')||$('sh_cb');if(b)b.disabled=true;m('Registrando…');
- try{await fbDb.collection('tienda_leads').doc(l.id).set(l)}catch(x){if(b)b.disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
- SH.cli=l;try{localStorage.setItem('tj_shop_cli',JSON.stringify(l))}catch(x){window._tjw&&_tjw(x)}
+ try{await fbCol('tienda_leads').doc(l.id).set(l)}catch(x){if(b)b.disabled=false;return m('No se pudo registrar. Intente de nuevo.')}
+ SH.cli=l;try{localStorage.setItem(lsk('tj_shop_cli'),JSON.stringify(l))}catch(x){window._tjw&&_tjw(x)}
  const h=document.querySelector('#shop .khd .kht small');if(h)h.textContent='Hola, '+(l.name.split(' ')[0])+' 👋';
  shopCart();const nt=$('sh_nt');if(nt)nt.value=SH.pendNote||'';shopSend()}
 
 // ---------- Mi cuenta: pedidos del cliente ----------
 const OKEY='tj_shop_orders';
-function shopOrdLoad(){try{const a=JSON.parse(localStorage.getItem(OKEY)||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
-function shopOrdSave(p){const a=shopOrdLoad().filter(x=>x.id!==p.id);a.push(p);try{localStorage.setItem(OKEY,JSON.stringify(a.slice(-150)))}catch(e){window._tjw&&_tjw(e)}}
+function shopOrdLoad(){try{const a=JSON.parse(localStorage.getItem(lsk(OKEY))||'[]');return Array.isArray(a)?a:[]}catch(e){return[]}}
+function shopOrdSave(p){const a=shopOrdLoad().filter(x=>x.id!==p.id);a.push(p);try{localStorage.setItem(lsk(OKEY),JSON.stringify(a.slice(-150)))}catch(e){window._tjw&&_tjw(e)}}
 function shopOrdMine(){const c=SH.cli;if(!c)return[];const tel=String(c.tel||'').replace(/\D/g,'');return shopOrdLoad().filter(p=>p.cid===c.id||(tel&&String((p.lead||{}).tel||'').replace(/\D/g,'')===tel)).sort((a,b)=>b.ts-a.ts)}
 async function shopOrdSync(){const c=SH.cli;if(!c||SH.guest||!fbDb)return;let ch=false;const tel=c.tel||'';
- for(const q of [['cid',c.id],['lead.tel',tel]]){if(!q[1])continue;try{const r=await fbDb.collection('tienda_pedidos').where(q[0],'==',q[1]).get();r.docs.forEach(d=>{const p=sanPed(d.data());if(p&&p.id){const o=shopOrdLoad().find(x=>x.id===p.id);if(!o||o.estado!==p.estado||o.total!==p.total){shopOrdSave(p);ch=true}}})}catch(e){window._tjw&&_tjw(e)}}
+ for(const q of [['cid',c.id],['lead.tel',tel]]){if(!q[1])continue;try{const r=await fbCol('tienda_pedidos').where(q[0],'==',q[1]).get();r.docs.forEach(d=>{const p=sanPed(d.data());if(p&&p.id){const o=shopOrdLoad().find(x=>x.id===p.id);if(!o||o.estado!==p.estado||o.total!==p.total){shopOrdSave(p);ch=true}}})}catch(e){window._tjw&&_tjw(e)}}
  const m=$('shopm');if(ch&&m&&m.dataset.k==='acc')shopAcc(1)}
 const shopEst=e=>e==='atendido'?['Atendido','#2bb673']:['Recibido','#E8870A'];
 function shopOrdAct(id,modo){const p=shopOrdLoad().find(x=>x.id===id);if(!p)return;if(modo==='img')shopImgVer(p);else shopPdf(p,modo)}
@@ -3838,12 +3844,12 @@ const auditTerminos={ok:true,fecha:dNow.toISOString(),fmt:dFmt,ver:'1.0 - Ley 81
 const notaBase=(($('sh_nt')||{}).value||SH.pendNote||'').trim();
 const notaConEvidencia=(notaBase?notaBase+' · ':'')+'[🛡️ Aceptó Términos y Privacidad Ley 81: '+dFmt+']';
 const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa||'',dir:c.dir||'',terminos:auditTerminos},items:L.map(l=>({id:l.id,n:l.n,p:l.p,q:l.q})),total:L.reduce((s,l)=>s+l.q*l.p,0),nota:notaConEvidencia.slice(0,500),ref:SH.ref,ts:Date.now(),estado:'nuevo'};
-if(c){c.terminos=auditTerminos;try{localStorage.setItem('tj_cli_term_'+c.id,JSON.stringify(auditTerminos))}catch(e){}}
+if(c){c.terminos=auditTerminos;try{localStorage.setItem(lsk('tj_cli_term_'+c.id),JSON.stringify(auditTerminos))}catch(e){}}
  {const fl=shopFleSel();let ed=null;if(fl){ed=shopEnvDatos(fl);p.envio=sanEnv(ed)}
-  try{await fbDb.collection('tienda_pedidos').doc(id).set(p)}catch(e){let ok=false;
-   if(fl){/* respaldo: si las reglas no admiten el campo envío, el transportista viaja en la nota */delete p.envio;p.nota=((p.nota?p.nota+'\n':'')+fleNotaTxt(fl,ed)).slice(0,1200);try{await fbDb.collection('tienda_pedidos').doc(id).set(p);ok=true}catch(e2){window._tjw&&_tjw(e2)}}
+  try{await fbCol('tienda_pedidos').doc(id).set(p)}catch(e){let ok=false;
+   if(fl){/* respaldo: si las reglas no admiten el campo envío, el transportista viaja en la nota */delete p.envio;p.nota=((p.nota?p.nota+'\n':'')+fleNotaTxt(fl,ed)).slice(0,1200);try{await fbCol('tienda_pedidos').doc(id).set(p);ok=true}catch(e2){window._tjw&&_tjw(e2)}}
    if(!ok){b.disabled=false;b.textContent='Enviar pedido';$('sh_m2').textContent='No se pudo enviar. Intente de nuevo.';return}}}
- SH.last=p;SH.pendNote='';shopOrdSave(p);try{shopConfetti()}catch(e){window._tjw&&_tjw(e)}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica();if(document.documentElement.classList.contains('panama'))shopPatrio(1)}SH.cart={};try{localStorage.removeItem('tj_shop_cart')}catch(e){window._tjw&&_tjw(e)}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
+ SH.last=p;SH.pendNote='';shopOrdSave(p);try{shopConfetti()}catch(e){window._tjw&&_tjw(e)}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica();if(document.documentElement.classList.contains('panama'))shopPatrio(1)}SH.cart={};try{localStorage.removeItem(lsk('tj_shop_cart'))}catch(e){window._tjw&&_tjw(e)}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
  shopM('<div style="text-align:center;padding:10px 0"><div style="font-size:54px">✅</div><h2 style="margin:6px 0">¡Pedido enviado!</h2><p style="color:var(--tx2);margin:0 0 16px">Gracias, '+esc((c.name||'').split(' ')[0])+'. Nos pondremos en contacto con usted muy pronto para confirmar su pedido.</p>'+(document.documentElement.classList.contains('xmas')?'<div class="kxg">🎄 ¡Le deseamos una <b>feliz Navidad</b> y un <b>próspero Año Nuevo</b>! 🎁</div>':(document.documentElement.classList.contains('summer')?'<div class="kxg ksm">☀️ ¡Que disfrute un <b>verano increíble</b>! 🌴</div>':(document.documentElement.classList.contains('panama')?'<div class="kxg kpa2"><span class="kfl"></span> ¡<b>Viva Panamá</b>! Que disfrute un <b>feliz mes patrio</b></div>':'')))+'<button class="sbtn" data-h-click="h34" style="margin-bottom:8px">👁 Ver comprobante</button><button class="sbtn g" data-h-click="h33" style="margin-bottom:8px">📄 Descargar PDF</button><button class="sbtn g" data-h-click="h32" style="margin-bottom:8px">🧾 Mis pedidos</button><button class="sbtn g" data-h-click="h31">Seguir viendo el catálogo</button></div>','ok');}
 function shopFab(){const e=$('k_fab');if(!e)return;const L=shopLines(),n=L.reduce((a,l)=>a+l.q,0),t=L.reduce((a,l)=>a+l.q*l.p,0);e.innerHTML=n?`<button class="kfab" data-h-click="h30">${kico(KI.cart,22)}<span>Ver pedido · ${n}${t>0?' · '+$$(t):''}</span></button>`:''}
 const _kn=shopNav;shopNav=function(){_kn.apply(this,arguments);try{shopFab()}catch(e){window._tjw&&_tjw(e)}};
@@ -4033,9 +4039,9 @@ if(window.visualViewport){visualViewport.addEventListener('resize',fitChat)}
 const LBG={k:'tj_lbg',db:null,url:null,sig:''};
 const LBG_PRE=[['medianoche','Medianoche','radial-gradient(120% 90% at 20% 0%,#2b3a7a 0%,#0b0e1a 62%)'],['oceano','Océano','linear-gradient(135deg,#0f2027,#203a43,#2c5364,#0f2027)'],['atardecer','Atardecer','linear-gradient(135deg,#ff512f,#dd2476 50%,#4a1c6b,#ff512f)'],['grafito','Grafito','linear-gradient(160deg,#111,#3a3a3c 55%,#111)'],['esmeralda','Esmeralda','linear-gradient(135deg,#06201a,#0f5b4a 50%,#06201a)']];
 const LBG_DEF={mode:'aurora',dim:35,blur:0,url:'',kind:'',name:'',size:0,cts:0,cloud:null};
-const lbgMeta=()=>{try{return Object.assign({},LBG_DEF,JSON.parse(localStorage.getItem(LBG.k)||'{}'))}catch(e){return Object.assign({},LBG_DEF)}};
-const lbgSave=m=>{try{localStorage.setItem(LBG.k,JSON.stringify(m))}catch(e){window._tjw&&_tjw(e)}};
-function lbgDb(){return new Promise((res,rej)=>{if(LBG.db)return res(LBG.db);let r;try{r=indexedDB.open('tj_loginbg',1)}catch(e){return rej(e)}r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>{LBG.db=r.result;res(r.result)};r.onerror=()=>rej(r.error)})}
+const lbgMeta=()=>{try{return Object.assign({},LBG_DEF,JSON.parse(localStorage.getItem(lsk(LBG.k))||'{}'))}catch(e){return Object.assign({},LBG_DEF)}};
+const lbgSave=m=>{try{localStorage.setItem(lsk(LBG.k),JSON.stringify(m))}catch(e){window._tjw&&_tjw(e)}};
+function lbgDb(){return new Promise((res,rej)=>{if(LBG.db)return res(LBG.db);let r;try{r=indexedDB.open(TJEmpresa.empLSKey('tj_loginbg'),1)}catch(e){return rej(e)}r.onupgradeneeded=()=>r.result.createObjectStore('f');r.onsuccess=()=>{LBG.db=r.result;res(r.result)};r.onerror=()=>rej(r.error)})}
 async function lbgPut(file){const d=await lbgDb();return new Promise((res,rej)=>{const t=d.transaction('f','readwrite');t.objectStore('f').put({blob:file,type:file.type,name:file.name,size:file.size},'bg');t.oncomplete=res;t.onerror=()=>rej(t.error);t.onabort=()=>rej(t.error)})}
 async function lbgGet(){try{const d=await lbgDb();return await new Promise(res=>{const q=d.transaction('f').objectStore('f').get('bg');q.onsuccess=()=>res(q.result||null);q.onerror=()=>res(null)})}catch(e){return null}}
 async function lbgDel(){try{const d=await lbgDb();await new Promise(res=>{const t=d.transaction('f','readwrite');t.objectStore('f').delete('bg');t.oncomplete=res;t.onerror=res})}catch(e){window._tjw&&_tjw(e)}}
@@ -4069,7 +4075,7 @@ function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
  <p style="font-size:12px;color:var(--gris);margin:12px 0 0;line-height:1.5">☁ Se sincroniza solo con sus otros dispositivos: aparece en el inicio de sesión de todos los equipos. Las imágenes y videos se suben a Firebase Storage sin comprimir; si Storage no está disponible, la imagen se envía optimizada (1920 px) y el video queda solo en este equipo (use un enlace para sincronizarlo). Los videos se reproducen en bucle y sin sonido; use MP4 (H.264) o WebM.</p>`}
 
 // ---- Sincronización con la nube (Firebase) ----
-const LBG_DOC=()=>fbDb&&fbDb.collection('panel').doc('loginbg');
+const LBG_DOC=()=>fbDb&&fbCol('panel').doc('loginbg');
 function lbgStatus(t,ok){const e=$('lbgSync');if(!e)return;e.textContent=t;e.style.color=ok===false?'#d92d20':ok?'#1a8f55':'var(--gris)'}
 let _lbgPT=0;function lbgPushSoon(){clearTimeout(_lbgPT);_lbgPT=setTimeout(()=>lbgPush(),700)}
 async function lbgPush(extra){const d=LBG_DOC();if(!d||typeof esAdmin!=='function'||!esAdmin())return;const m=lbgMeta(),ts=Date.now(),DEL=firebase.firestore.FieldValue.delete();
@@ -4145,13 +4151,13 @@ function investHomeHTML(){return `<div class="card" id="investHome"><div style="
    porque los escribe con el mismo formato que usa la tienda virtual. */
 let WA={list:[],on:false};
 function waListen(){if(WA.on||!fbDb)return;WA.on=true;
- try{fbDb.collection('wa_conversaciones').where('estado','==','humano').onSnapshot(sn=>{
+ try{fbCol('wa_conversaciones').where('estado','==','humano').onSnapshot(sn=>{
   WA.list=sn.docs.map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));
   waRefreshCard();waRefreshHome()
  },e=>console.warn('Agente WhatsApp: no se pudo escuchar conversaciones.',e))}catch(e){window._tjw&&_tjw(e)}
 }
 function waUltimo(c){const h=c.historial||[];for(let i=h.length-1;i>=0;i--)if(h[i].role==='user')return h[i].content||'';return''}
-function waBack(phone){if(!fbDb)return;fbDb.collection('wa_conversaciones').doc(phone).set({estado:'bot'},{merge:true}).catch(()=>alert('No se pudo devolver la conversación al agente. Revise su conexión o permisos.'))}
+function waBack(phone){if(!fbDb)return;fbCol('wa_conversaciones').doc(phone).set({estado:'bot'},{merge:true}).catch(()=>alert('No se pudo devolver la conversación al agente. Revise su conexión o permisos.'))}
 function waRow(c){return `<div class="tdr"><div><b>${esc(c.phone||'')}</b><small>${esc((waUltimo(c)||'').slice(0,70))}</small></div><a class="btn s" href="https://wa.me/${esc((c.phone||'').replace(/\D/g,''))}" target="_blank" rel="noopener" title="Abrir WhatsApp">💬</a><button class="btn s p" data-h-click="h1" data-a-click="${_ha(c.phone||'')}" title="Devolver al agente">🤖 Volver al bot</button></div>`}
 function waCard(){return `<h3 style="margin:0">🤖 Agente de ventas (WhatsApp)</h3><p style="font-size:12.5px;color:var(--gris)">Responde preguntas de catálogo, precios y disponibilidad, y crea pedidos automáticamente por WhatsApp usando IA, con los datos reales de su tienda. Cuando el agente no puede resolver algo (o el cliente pide hablar con una persona), la conversación aparece abajo para que usted la continúe manualmente; mientras tanto el agente deja de responder ahí para no cruzarse con usted.</p><div id="waList">${WA.list.length?WA.list.map(waRow).join(''):'<small style="color:var(--gris)">No hay conversaciones esperando un asesor ahora mismo.</small>'}</div>`}
 function waRefreshCard(){const e=$('waCard');if(!e||vista!=='config')return;e.innerHTML=waCard()}
