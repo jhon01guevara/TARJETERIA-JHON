@@ -97,7 +97,7 @@ test('El administrador entra por su UID autenticado sin depender de una lectura 
 test('Administración recibe las facturas de todos los vendedores sin copiarlas a panel/data',()=>{
   const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
   assert.match(app,/function escucharVendedores\(\)/);
-  assert.match(app,/collection\('vendedores'\)\.doc\(id\)\.collection\('privado'\)\.doc\('data'\)\.onSnapshot/);
+  assert.match(app,/fbCol\('vendedores'\)\.doc\(id\)\.collection\('privado'\)\.doc\('data'\)\.onSnapshot/);
   assert.match(app,/fac:\(DB\.fac\|\|\[\]\)\.filter\(f=>!f\._v\)/);
   assert.match(app,/function devolverFacVend\(\)/);
   assert.match(app,/<th>Vendedor<\/th>/);
@@ -172,7 +172,7 @@ test('Las redes sociales se configuran en Configuración y se muestran en la tie
   assert.match(app,/\['redesCard',redesCard\]/);
   assert.match(app,/function redUrl\(red,txt\)/);
   assert.match(app,/function redesGuardar\(\)/);
-  assert.match(app,/collection\('tienda_items'\)\.doc\('__cfg'\)\.set\(\{__cfg:true,redes,contacto:ct/);
+  assert.match(app,/fbCol\('tienda_items'\)\.doc\('__cfg'\)\.set\(\{__cfg:true,redes,contacto:ct/);
   assert.match(app,/SH\.redes=cd\.redes/);
   assert.match(app,/id="k_redes"/);
   assert.match(app,/shopHdrScroll\(\);shopRedes\(\)/);
@@ -230,7 +230,7 @@ test('Las etiquetas de envío de los pedidos de la tienda están integradas',()=
   for(const h of ['h337','h338','h339','h340','h341','h342','h343'])assert.match(app,new RegExp('__H\\.'+h+'='));
   assert.match(app,/\$\{etqBarra\(\)\}\$\{TD\.peds\.length\?TD\.peds\.map/);
   assert.match(app,/envio:sanEnv\(d\.envio\)/);
-  assert.match(app,/if\(esAdmin\(\)&&fbDb\)fbDb\.collection\('tienda_pedidos'\)\.doc\(p\.id\)\.update\(/);
+  assert.match(app,/if\(esAdmin\(\)&&fbDb\)fbCol\('tienda_pedidos'\)\.doc\(p\.id\)\.update\(/);
   assert.match(app,/<option value="internacional"/);
 });
 

@@ -1,8 +1,10 @@
 # Esquema multiempresa definitivo — TARJETERIA-JHON
 
-Fecha: 2026-10-21 · Estado: **diseño aprobado para simulación** (Fase 5). La migración real (Fase 6) requiere proyecto Firebase de pruebas + informe de simulación aprobado + pruebas de aceptación en verde.
+Fecha: 2026-10-21 · Estado: **Fases 1-5 completas · Fase 6 lista para ejecutar · Fase 7 implementada pero INACTIVA (MULTIEMP=false)**. La activación real exige: proyecto Firebase de pruebas validado con la herramienta de la Fase 6 + informe aprobado + pruebas de aceptación en verde (ver checklist en §4).
 
 Empresa inicial: `tarjeteria-jhon` (id estable; ver `js/empresa-contexto.js`).
+
+**Estado de fases:** F1 diagnóstico ✅ · F2 respaldo ✅ · F3 módulo Empresas ✅ · F4 contexto ✅ · F5 simulación ✅ · **F6 herramienta de migración de prueba lista** (`migraciones/migrar-pruebas.html`, guía en `docs/FASE6-MIGRACION-PRUEBAS.md`) · **F7 código integrado e inerte** (`fbCol`/`lsk` enrutan TODO el panel, apps externas incluidas vía proxy del puente; se activa cambiando `MULTIEMP=false` → `true` en `js/empresa-contexto.js`, línea 11) · F8 reglas objetivo redactadas (§3; se despliegan al activar) · F9 dominios/DNS futura · el cierre/go-live con la tabla §5.
 
 ---
 
@@ -62,13 +64,24 @@ match /dominios/{host} { allow read: if true; allow write: if isAdmin(); }
 
 Pendiente de diseño fino en la Fase 8: esquemas estrictos por colección (como los actuales de `tienda_leads`/`tienda_pedidos`), miembro-administrador por empresa (`miembros/{uid}` con rol), y pruebas de acceso cruzado (empresa A no lee empresa B).
 
-## 4. Flujo con contexto activo (Fase 7 futura)
+## 4. Flujo con contexto activo (Fase 7 — IMPLEMENTADO e inerte; checklist de activación)
 
+**Ya integrado en el panel (sin efecto mientras MULTIEMP=false):**
 1. Login → identidad global (`roles/{uid}`).
 2. `TJEmpresa.empActiva()` resuelve la empresa (URL `?emp=` → preferencia → inicial).
-3. `publicRef()/privateRef()/contadorRef()/clientesRef()` pasan a devolver rutas `empresas/{eid}/…` (parche pequeño: las 4 funciones ya están centralizadas en app.js:128-130).
-4. `saveLocal()` usa `empLSKey('tj_db')`; IndexedDB abre `tj_cat_{eid}`.
-5. Cambio de empresa = recarga limpia (purga de memoria DB + claves particionadas).
+3. `fbCol(nombre)` (app.js) enruta TODAS las colecciones de negocio (panel, panel_public, vendedores, catalogo, tienda_*, galeria, chats, llamadas, wa_conversaciones, investigacion_items) a `empresas/{eid}/…` cuando la bandera esté activa; `publicRef()/privateRef()/contadorRef()/clientesRef()/LBG_DOC` y la tienda pública ya pasan por ahí. Identidad (roles/perfiles/presencia) queda global.
+4. Apps externas (apps/investigacion.js) también quedan enrutadas: `__panelBridge().db` devuelve un proxy que redirige `.collection()`.
+5. `saveLocal()` usa `lsk('tj_db')` = `empLSKey`; IndexedDB abre `tj_cat`/`tj_loginbg` por empresa (la inicial conserva los nombres actuales).
+6. Cambio de empresa (`empActivar` con bandera activa) = recarga limpia con `?emp=`.
+
+**Checklist de activación (sesión futura, en este orden):**
+1. Fase 6 validada: copia verificada en el proyecto de pruebas (todo verde) + ensayo de borrado/repetición hecho (requisitos a/b/c de §6).
+2. Agregar el botón de migración REAL a la herramienta (escribe `empresas/tarjeteria-jhon/…` en PRODUCCIÓN; aditivo, sin tocar rutas actuales) y ejecutarlo.
+3. Cambiar `MULTIEMP=false` → `true` en `js/empresa-contexto.js` (una línea) y subir a GitHub.
+4. Desplegar las reglas objetivo de §3 (Fase 8) en la consola.
+5. Ejecutar la tabla de pruebas de aceptación (§5) y crear ZIP con fecha.
+
+**Notas técnicas:** `sw.js` usa redes-primero (la caché es solo respaldo sin conexión) → no requiere cambios. `js/tema.js` lee `tj_shop_theme` sin particionar (cosmético, solo tema de la tienda pública). La barra superior del panel (loginbg en Firebase Storage) queda global por ahora (Fase 9+).
 
 ## 5. Pruebas de aceptación (del plan; deben pasar ANTES de producción)
 

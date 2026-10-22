@@ -6,8 +6,10 @@
    escritura de Firestore (set / update / remove / add) — verificado estáticamente
    por tests/multiempresa.test.js. Puede ejecutarse cuantas veces sea (idempotente).
 
-   El núcleo (mapa + analizar) es puro y testeable en Node; solo simular() toca
-   Firebase y el DOM, siempre con .get(). */
+   El núcleo (mapa + analizar) es puro y testeable en Node; migSnapshot()/
+   simular() tocan Firebase y el DOM, siempre con .get(). La Fase 6 reutiliza
+   migSnapshot() desde migraciones/migracion-ejecutor.js (que escribe SOLO en
+   el proyecto Firebase de pruebas, jamás en producción). */
 'use strict';
 
 /* Mapeo origen → destino para la empresa inicial (ver docs/ESQUEMA-MULTIEMPRESA.md).
@@ -118,31 +120,60 @@ function migAnalizar(s,empresaInicial){
 }
 
 /* ---------- Ejecución en el panel (solo lectura) ---------- */
-function migCol(nombre){return fbDb.collection(nombre).get().then(function(sn){return sn.docs.map(function(d){return d.data()})})}
+function migCol(nombre){return fbDb.collection(nombre).get().then(function(sn){return sn.docs.map(function(d){return Object.assign({id:d.id},d.data())})})}
+/* Colección cuyos documentos tienen una subcolección (msgs de chats, ice de
+   llamadas): cada elemento queda como {id,...datos,_sub:[{id,...datos}]}. */
+function migColConSub(nombre,sub){
+ return fbDb.collection(nombre).get().then(function(sn){
+  return Promise.all(sn.docs.map(function(d){
+   return d.ref.collection(sub).get().then(function(ms){
+    var e=Object.assign({id:d.id},d.data());
+    e['_'+sub]=ms.docs.map(function(m){return Object.assign({id:m.id},m.data())});
+    return e;
+   });
+  }));
+ });
+}
+/* Instantánea completa de las colecciones actuales (siempre rutas raíz actuales,
+   aunque MULTIEMP cambie: la migración parte SIEMPRE del legado). Solo .get().
+   La usa la simulación (Fase 5) y el ejecutor de la Fase 6 (migracion-ejecutor.js). */
+async function migSnapshot(){
+ var pdDoc=await fbDb.doc('panel/data').get();
+ var pd=pdDoc.exists?pdDoc.data():{};
+ var lg=await fbDb.doc('panel/loginbg').get();
+ var pg=await fbDb.doc('panel_public/general').get();
+ var pc=await fbDb.doc('panel_public/contador').get();
+ var pcl=await fbDb.doc('panel_public/clientes').get();
+ /* Vendedores: unión de cfg.users + documentos existentes + roles (identidad
+    global) para no dejar fuera a nadie; el analizador avisa de los que no
+    estén declarados en cfg.users. */
+ var users=((((pd||{}).cfg)||{}).users||[]).map(function(u){return u&&u.id}).filter(Boolean);
+ var vendSn=await fbDb.collection('vendedores').get();
+ var rolesSn=await fbDb.collection('roles').get();
+ var ids={},vendRoot={},vend={};
+ users.forEach(function(id){ids[id]=1});
+ vendSn.docs.forEach(function(d){ids[d.id]=1;vendRoot[d.id]=d.data()||null});
+ rolesSn.docs.forEach(function(d){if(d.id&&((d.data()||{}).rol==='vend'))ids[d.id]=1});
+ for(var k in ids){
+  var vd=await fbDb.doc('vendedores/'+k+'/privado/data').get();
+  if(vd.exists)vend[k]=vd.data();
+ }
+ return {panelData:pd,loginBg:lg.exists?lg.data():null,publicGeneral:pg.exists?pg.data():null,
+  contador:pc.exists?pc.data():null,clientesCli:(pcl.exists&&pcl.data().cli)||[],
+  vendedores:vend,vendedoresRoot:vendRoot,
+  catalogo:await migCol('catalogo'),tiendaItems:await migCol('tienda_items'),
+  tiendaLeads:await migCol('tienda_leads'),tiendaPedidos:await migCol('tienda_pedidos'),
+  galeria:await migCol('galeria'),
+  chats:await migColConSub('chats','msgs'),llamadas:await migColConSub('llamadas','ice'),
+  waConversaciones:await migCol('wa_conversaciones'),investigacion:await migCol('investigacion_items')};
+}
 async function migSimular(){
  if(typeof esAdmin==='function'&&!esAdmin())return alert('Solo el administrador puede ejecutar la simulación.');
  if(typeof fbDb==='undefined'||!fbDb)return alert('Sin conexión con Firebase.');
  var out=document.getElementById('emMigOut');
  if(out)out.innerHTML='<div class="nota">Leyendo colecciones (solo lectura)… puede tardar unos segundos.</div>';
  try{
-  var pdDoc=await fbDb.doc('panel/data').get();
-  var pd=pdDoc.exists?pdDoc.data():{};
-  var users=(((pd||{}).cfg||{}).users||[]).map(function(u){return u&&u.id}).filter(Boolean);
-  var vend={};
-  for(var i=0;i<users.length;i++){
-   var vd=await fbDb.doc('vendedores/'+users[i]+'/privado/data').get();
-   if(vd.exists)vend[users[i]]=vd.data();
-  }
-  var lg=await fbDb.doc('panel/loginbg').get();
-  var pg=await fbDb.doc('panel_public/general').get();
-  var pc=await fbDb.doc('panel_public/contador').get();
-  var pcl=await fbDb.doc('panel_public/clientes').get();
-  var s={panelData:pd,loginBg:lg.exists?lg.data():null,publicGeneral:pg.exists?pg.data():null,
-   contador:pc.exists?pc.data():null,clientesCli:(pcl.exists&&pcl.data().cli)||[],
-   vendedores:vend,catalogo:await migCol('catalogo'),tiendaItems:await migCol('tienda_items'),
-   tiendaLeads:await migCol('tienda_leads'),tiendaPedidos:await migCol('tienda_pedidos'),
-   galeria:await migCol('galeria'),chats:await migCol('chats'),llamadas:await migCol('llamadas'),
-   waConversaciones:await migCol('wa_conversaciones'),investigacion:await migCol('investigacion_items')};
+  var s=await migSnapshot();
   var informe=migAnalizar(s,(typeof TJEmpresa!=='undefined'&&TJEmpresa.EMPRESA_DEF)?TJEmpresa.EMPRESA_DEF.id:'tarjeteria-jhon');
   migPintar(informe);
  }catch(e){
@@ -170,6 +201,6 @@ function migPintar(inf){
   document.body.appendChild(a);a.click();a.remove();setTimeout(function(){URL.revokeObjectURL(url)},4000);
  };
 }
-var MIGRACION_MULTI={mapa:MIG_MAPA,analizar:migAnalizar,simular:migSimular};
+var MIGRACION_MULTI={mapa:MIG_MAPA,analizar:migAnalizar,simular:migSimular,snapshot:migSnapshot};
 if(typeof window!=='undefined')window.MIGRACION_MULTI=MIGRACION_MULTI;
 if(typeof module!=='undefined'&&module.exports)module.exports={MIG_MAPA:MIG_MAPA,migAnalizar:migAnalizar};

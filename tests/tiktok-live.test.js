@@ -25,7 +25,7 @@ test('La preparación LIVE no finge conexión de métricas oficiales',()=>{
 
 test('El borrador LIVE se guarda localmente sin secretos ni llamadas de API',()=>{
   assert.match(app,/tj_tiktok_live_draft_v1/);
-  assert.match(app,/localStorage\.setItem\(TJLIVE_KEY/);
+  assert.match(app,/localStorage\.setItem\(lsk\(TJLIVE_KEY\)/);
   assert.doesNotMatch(app,/client_secret|access_token\s*=/i);
 });
 
