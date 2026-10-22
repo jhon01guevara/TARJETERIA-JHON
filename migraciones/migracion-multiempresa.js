@@ -178,7 +178,7 @@ async function migSimular(){
   migPintar(informe);
  }catch(e){
   window._tjw&&window._tjw(e);
-  if(out)out.innerHTML='<div class="nota" style="color:#b3261e">No se pudo completar la lectura: '+((e&&e.message)||e)+'. Revise conexión y permisos.</div>';
+  if(out)out.innerHTML='<div class="nota" style="color:#b3261e">No se pudo completar la lectura: '+((e&&e.message)||e)+'. Revise conexión y permisos. Si el error es de permisos, despliegue las reglas actualizadas en la consola de Firebase (Firestore Database → Reglas → pegar firestore.rules → Publicar); ver docs/FASE6-MIGRACION-PRUEBAS.md.</div>';
  }
 }
 function migPintar(inf){
