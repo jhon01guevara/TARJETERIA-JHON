@@ -1,14 +1,14 @@
 /* ===== Contexto de empresa activa (Fase 4 del plan multiempresa) =====
    Resuelve qué empresa está usando el panel y da las llaves/rutas particionadas
-   por empresa que usará la migración (Fases 6-7). Es autónomo: no depende de
-   app.js ni de Firebase, y se carga antes que app.js.
+   por empresa. Es autónomo: no depende de app.js ni de Firebase, y se carga
+   antes que app.js.
 
-   IMPORTANTE: mientras MULTIEMP sea false, el flujo de datos del panel NO cambia;
-   el contexto solo registra la empresa activa (por defecto Tarjetería Jhon) y
-   expone helpers para el futuro. Así lo exige el plan: sin migración productiva
-   hasta aprobar la simulación y las pruebas. */
+   MULTIEMP=true desde el 2026-10-22: separación REAL de datos ACTIVADA tras
+   validar la Fase 6 (proyecto de pruebas) y ejecutar+verificar la migración
+   real (empresas/tarjeteria-jhon/… completo en producción). Para revertir:
+   volver a false y subir — las rutas actuales raíz siguen intactas. */
 'use strict';
-var MULTIEMP=false;
+var MULTIEMP=true;
 
 /* Empresa inicial: id estable, no depende del nombre comercial (criterio del plan).
    Sus claves locales actuales (tj_db, etc.) se conservan tal cual para no romper
