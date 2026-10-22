@@ -11,11 +11,9 @@ service cloud.firestore {
     }
 
     function isAdmin() {
-      // UID de la cuenta administradora creada en Firebase Authentication. El UID no
-      // procede del navegador y Firebase no permite falsificarlo, por lo que evita
-      // depender de una lectura adicional de /roles para autorizar el panel.
       return logged()
-        && request.auth.uid == 'o7bHndKtswSHreFnVwORqBSUKL43';
+        && (request.auth.uid == 'o7bHndKtswSHreFnVwORqBSUKL43'
+          || get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.rol == 'admin');
     }
 
     // El administrador usa la identidad interna "admin"; los vendedores usan su UID.
@@ -67,30 +65,6 @@ service cloud.firestore {
     match /panel_public/general {
       allow read: if logged();
       allow write: if isAdmin();
-    }
-
-    // Contador único de facturas: guarda el próximo número libre. Administración lo
-    // gestiona; un vendedor solo puede avanzarlo de uno en uno al reservar un número.
-    match /panel_public/contador {
-      allow read: if logged();
-      allow create, update, delete: if isAdmin();
-      allow update: if logged()
-        && request.resource.data.keys().hasOnly(['sig'])
-        && request.resource.data.sig is int
-        && request.resource.data.sig == resource.data.sig + 1;
-    }
-
-    // Lista de clientes compartida entre administración y vendedores. Todos pueden
-    // leerla y agregar o editar clientes, pero un vendedor no puede reducir la lista:
-    // solo administración crea el documento y elimina clientes.
-    match /panel_public/clientes {
-      allow read: if logged();
-      allow create, delete: if isAdmin();
-      allow update: if isAdmin();
-      allow update: if logged()
-        && request.resource.data.keys().hasOnly(['cli', '_ts', 'mig'])
-        && request.resource.data.cli is list
-        && request.resource.data.cli.size() >= resource.data.cli.size();
     }
 
     // Espacio privado de cada vendedor: clientes, facturas, ubicaciones y agenda.
@@ -212,6 +186,31 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
 
+        match /panel_public/contador {
+      allow read: if logged();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (logged() && request.resource.data.sig == resource.data.sig + 1);
+    }
+
+    match /panel_public/clientes {
+      allow read: if logged();
+      allow create, delete: if isAdmin();
+      allow update: if logged() && (isAdmin() || request.resource.data.cli.size() >= resource.data.cli.size());
+    }
+
+    /* ===== Multiempresa (Fases 3-5 del plan): SOLO metadatos nuevos =====
+       empresas: registro de negocios propios (admin). dominios: asociación de
+       subdominios/dominios por empresa; lectura pública para que la tienda
+       pueda resolver la empresa por hostname en la Fase 9. Ninguna colección
+       existente cambia. */
+    match /empresas/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /dominios/{host} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
     match /{document=**} {
       allow read, write: if false;
     }
