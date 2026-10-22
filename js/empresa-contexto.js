@@ -58,9 +58,11 @@ function empPathDe(slug){return 'empresas/'+(empSlugOk(slug)?slug:EMPRESA_DEF.id
 
 /* Colecciones de NEGOCIO: se particionan por empresa cuando MULTIEMP=true.
    Identidad (roles/perfiles/presencia) y metadatos (empresas/dominios) quedan
-   globales por diseño (docs/ESQUEMA-MULTIEMPRESA.md §1). */
+   globales por diseño (docs/ESQUEMA-MULTIEMPRESA.md §1). Marketing Studio
+   (plan maestro 2026-10-22) añade sus 4 colecciones por empresa. */
 var EMP_NEGOCIO={panel:1,panel_public:1,vendedores:1,catalogo:1,tienda_items:1,tienda_leads:1,
- tienda_pedidos:1,galeria:1,chats:1,llamadas:1,wa_conversaciones:1,investigacion_items:1};
+ tienda_pedidos:1,galeria:1,chats:1,llamadas:1,wa_conversaciones:1,investigacion_items:1,
+ marketing_projects:1,marketing_assets:1,marketing_exports:1,marketing_colecciones:1};
 
 /* Ruta de una colección para el panel (Fase 7): con MULTIEMP=false devuelve el
    nombre tal cual — el panel sigue usando exactamente las rutas actuales; con

@@ -1936,10 +1936,15 @@ R.tiktoklive=function(){
 };
 
 // ===== Usuarios, PIN y permisos por panel =====
-V.push(['vend','🧑‍💼','Vendedores']);V.push(['mapa','🗺️','Mapa de clientes']);V.push(['gal','📷','Galería']);V.push(['chat','💬','Chat']);V.push(['tienda','🛍','Tienda virtual']);V.push(['tiktoklive','📡','TikTok LIVE']);V.push(['empresas','🏢','Empresas']);
+V.push(['vend','🧑‍💼','Vendedores']);V.push(['mapa','🗺️','Mapa de clientes']);V.push(['gal','📷','Galería']);V.push(['chat','💬','Chat']);V.push(['tienda','🛍','Tienda virtual']);V.push(['tiktoklive','📡','TikTok LIVE']);V.push(['empresas','🏢','Empresas']);V.push(['marketing','🎨','Marketing']);
 /* Multiempresa (Fases 3-5): la vista la renderiza js/empresas.js; solo administración,
    igual que config/vend/mapa. El flujo de datos del panel no cambia (MULTIEMP=false). */
 R.empresas=empresasRender;
+/* Marketing Studio (plan maestro v1): la vista la renderiza js/marketing.js con el
+   motor js/mkt-editor.js. Visible para administración y para vendedores con el
+   panel «Marketing» activado; los datos van por empresa (fbCol) y las reglas
+   aíslan por empresas/{eid}/miembros. */
+R.marketing=marketingRender;
 const PANELES=V.filter(v=>v[0]!=='config'&&v[0]!=='vend'&&v[0]!=='mapa'&&v[0]!=='empresas'),SK='tj_sess';
 let SES=null,_authMode='',_fail=0,_lock=0;
 const usuarios=()=>DB.cfg.users||(DB.cfg.users=[]);
