@@ -1,0 +1,176 @@
+/* ============================================================
+   UBER SKIN · Tarjetería Jhon — capa de rediseño estilo Uber
+   Guía: guia-rediseno-uber.json (2026-10-22) · Fases 1-2
+   Se carga DESPUÉS del CSS del panel (mismo peso, gana por orden).
+   Revertir todo: quitar el <link> de index.html y subir.
+   No toca: tienda pública (#shop / estilo-tienda-shop.css),
+   factura imprimible (#prt/.fa) ni la lógica de app.js.
+   ============================================================ */
+
+/* ---------- 1 · Tokens + re-mapeo de los 4 temas existentes ----------
+   El panel ya funciona con variables: al redefinirlas aquí cambia casi todo.
+   Tema claro (antes "rosa") pasa a acento negro estilo Uber. */
+:root{
+  --ink:#000000;
+  --ok:#0E8345;
+  --err:#D92D20;
+  --info:#276EF1;
+  --az:#000000;
+  --az-bg:rgba(0,0,0,.07);
+  --fondo:#ffffff;
+  --card:#ffffff;
+  --txt:#111111;
+  --gris:#6B6B6B;
+  --linea:#E8E8E8;
+  --soft:#F3F3F3;
+  --r:12px;
+  --rs:8px;
+  --sh:none;
+  --mica:none;
+}
+:root[data-t="oceano"]{--az:#276EF1;--az-bg:rgba(39,110,241,.10)}
+:root[data-t="violeta"]{--az:#7B4FE0;--az-bg:rgba(123,79,224,.12)}
+:root[data-t="nocturno"]{
+  --az:#ffffff;
+  --az-bg:rgba(255,255,255,.14);
+  --fondo:#000000;
+  --card:#141414;
+  --txt:#f5f5f5;
+  --gris:#9b9b9b;
+  --linea:#2a2a2a;
+  --soft:#1f1f1f;
+}
+
+/* ---------- 2 · Base ---------- */
+body{
+  font-family:'Inter',-apple-system,'Segoe UI',system-ui,sans-serif;
+  letter-spacing:0;
+  background:var(--fondo);
+  color:var(--txt);
+}
+::selection{background:var(--ink);color:#fff}
+:root[data-t="nocturno"] ::selection{background:#fff;color:#000}
+
+/* Sin fondo animado ni degradados de ambiente. */
+.aurora{display:none!important}
+
+/* ---------- 3 · Menú lateral ---------- */
+.sb{
+  background:var(--card);
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-right:1px solid var(--linea);
+}
+.brand .logo{border:1px solid var(--linea);box-shadow:none;border-radius:14px}
+.brand small{color:var(--gris)}
+.ni{
+  border-radius:999px;
+  font-weight:500;
+  font-size:13.5px;
+  color:var(--txt);
+  margin-bottom:2px;
+}
+.ni:hover{background:var(--soft)}
+.ni.on{background:var(--az);color:var(--fondo);font-weight:600}
+.ni.on:hover{background:var(--az)}
+.ni.on span:first-child{color:inherit}
+.sf{border-top:1px solid var(--linea);color:var(--gris)}
+
+/* ---------- 4 · Barra superior ---------- */
+.top{
+  background:var(--card);
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border-bottom:1px solid var(--linea);
+  padding:14px 28px;
+}
+.top h2{font-size:22px;letter-spacing:-.01em}
+
+/* ---------- 5 · Contenido: ancho completo ---------- */
+.wrap{max-width:1440px;padding:26px 28px 60px}
+
+/* ---------- 6 · Tarjetas planas (sin vidrio ni sombras) ---------- */
+.card{
+  background:var(--card);
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  border:1px solid var(--linea);
+  border-radius:var(--r);
+  box-shadow:none;
+  padding:20px 22px;
+  margin-bottom:16px;
+}
+.card h3{font-size:16px;font-weight:600}
+
+/* ---------- 7 · Botones (píldora, uno primario por pantalla) ----------
+   !important gana a los degradados y variantes por tema del CSS base. */
+.btn{border-radius:999px;font-weight:600}
+.btn.p{background:var(--az)!important;color:var(--fondo)!important;box-shadow:none!important;border:0!important;text-shadow:none!important}
+.btn.p:hover{background:var(--az)!important;opacity:.88}
+:root[data-t="nocturno"] .btn.p{background:#ffffff!important;color:#000000!important}
+:root:not([data-t="nocturno"]) .btn.p{background:var(--az)!important;color:#ffffff!important}
+.btn.d{color:var(--err)}
+.pt button.on{background:var(--az);color:var(--fondo);box-shadow:none}
+:root[data-t="nocturno"] .pt button.on{color:#000000}
+:root[data-t="nocturno"] .ni.on{color:#000000}
+button:active{transform:scale(.97)}
+.btn:focus-visible,button:focus-visible,.ni:focus-visible{
+  outline:2px solid var(--info);outline-offset:2px;
+}
+
+/* ---------- 8 · Campos ---------- */
+select,input,textarea{
+  background:var(--card);
+  border:1px solid var(--linea);
+  border-radius:var(--rs);
+}
+select:hover,input:hover,textarea:hover{border-color:color-mix(in srgb,var(--gris) 45%,var(--linea))}
+select:focus,input:focus,textarea:focus{
+  box-shadow:none;
+  border-color:var(--az);
+  background:var(--card);
+}
+label{font-size:12px;color:var(--gris);font-weight:500}
+
+/* ---------- 9 · Tablas y listas ---------- */
+th{font-size:11px;letter-spacing:.03em;color:var(--gris)}
+td{border-bottom:1px solid var(--linea)}
+.tw td:last-child{white-space:nowrap}
+.dl{border-bottom:1px solid var(--linea)}
+
+/* ---------- 10 · Métricas del Inicio ---------- */
+.kp b{
+  font-size:32px;
+  font-weight:700;
+  letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+.kp small{font-size:12px}
+.ck b{font-variant-numeric:tabular-nums}
+
+/* ---------- 11 · Etiquetas de estado: neutras por defecto ----------
+   Verde solo para positivo, rojo solo para error (regla Uber). */
+.bd{background:var(--soft);color:var(--txt);font-weight:600}
+.bd.x{background:color-mix(in srgb,var(--err) 10%,transparent);color:var(--err)}
+.vacio{color:var(--gris)}
+
+/* ---------- 12 · Estado vacío y skeletons (para Fase 3+) ---------- */
+.uj-vacio{display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 16px;text-align:center;color:var(--gris)}
+.uj-vacio b{font-size:16px;color:var(--txt)}
+.uj-skeleton{background:linear-gradient(90deg,var(--soft) 25%,var(--linea) 50%,var(--soft) 75%);background-size:200% 100%;animation:ujShimmer 1.2s linear infinite;border-radius:var(--rs);min-height:16px}
+@keyframes ujShimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+@media(prefers-reduced-motion:reduce){.uj-skeleton{animation:none}}
+
+/* ---------- 13 · Movimiento sobrio ---------- */
+.ni,.btn,.card{transition-duration:.16s}
+@media(prefers-reduced-motion:reduce){
+  .ni,.btn,.card,main *{transition:none!important;animation:none!important}
+}
+
+/* ---------- 14 · Impresión de facturas: intacta ---------- */
+@media print{.aurora{display:none!important}}
+
+/* ---------- 16 · Títulos de grupo del menú (con js/uber-nav.js) ---------- */
+.ug{padding:18px 12px 6px;font-size:12px;font-weight:600;color:var(--gris)}
+.ug:first-child{padding-top:4px}
+body.navEd .ug{display:none}
