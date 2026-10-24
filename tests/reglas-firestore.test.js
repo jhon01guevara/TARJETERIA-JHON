@@ -1,22 +1,23 @@
-/* Pruebas de las reglas PROPUESTAS (firestore.rules.propuesta). No sustituyen a las
-   que verifican firestore.rules (producción); comprueban el comportamiento nuevo.
-   Las reglas propuestas se probaron además con el emulador de Firestore (26 pruebas)
-   y en el proyecto tarjeteria-jhon-prueba; ver docs/DESPLIEGUE-REGLAS.md. */
+/* Pruebas de las reglas de firestore.rules (publicadas en producción el 2026-10-24).
+   Se probaron además con el emulador de Firestore (27 pruebas) y en el proyecto
+   tarjeteria-jhon-prueba; ver docs/DESPLIEGUE-REGLAS.md. */
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const leer=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 
-test('Producción (firestore.rules) NO ha sido reemplazada por la propuesta',()=>{
- assert.notEqual(leer('firestore.rules'),leer('firestore.rules.propuesta'),
-  'firestore.rules es producción: la propuesta vive en firestore.rules.propuesta');
- assert.match(leer('firestore.rules'),/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if esEmpresa\(eid\);/,
-  'producción conserva el comodín actual hasta que el usuario decida desplegar');
+test('firestore.rules es el texto publicado en producción (2026-10-24) y el respaldo anterior sigue disponible',()=>{
+ assert.match(leer('firestore.rules'),/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if isAdmin\(\);/,
+  'el comodín de empresas ya no admite a los miembros');
+ assert.ok(!fs.existsSync(path.join(__dirname,'..','firestore.rules.propuesta')),'la propuesta ya no existe: es firestore.rules');
+ const ant=leer('docs/respaldo-reglas-anteriores-2026-10-24.rules');
+ assert.match(ant,/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if esEmpresa\(eid\);/,'respaldo de las reglas anteriores para poder revertir');
+ assert.notEqual(ant,leer('firestore.rules'));
 });
 
-test('Propuesta: chat (equivalente a «Chat consulta solo conversaciones propias»)',()=>{
- const app=leer('js/app.js'),r=leer('firestore.rules.propuesta');
+test('Reglas: chat (equivalente a «Chat consulta solo conversaciones propias»)',()=>{
+ const app=leer('js/app.js'),r=leer('firestore.rules');
  assert.match(app,/\.where\('members','array-contains',chatMe\(\)\)\.onSnapshot/);
  assert.match(r,/function chatMember\(data\)/);
  /* La lectura de chats exige ser admin o participante (hasAny sobre resource.data). */
@@ -26,16 +27,16 @@ test('Propuesta: chat (equivalente a «Chat consulta solo conversaciones propias
  assert.match(r,/match \/panel\/data \{/);
 });
 
-test('Propuesta: administración LEE todo lo que la simulación enumera',()=>{
- const r=leer('firestore.rules.propuesta');
+test('Reglas: administración LEE todo lo que la simulación enumera',()=>{
+ const r=leer('firestore.rules');
  assert.match(r,/match \/vendedores\/\{uid\} \{\s*allow read: if isAdmin\(\);/);
  assert.match(r,/match \/chats\/\{chat\} \{[\s\S]{0,700}allow read: if isAdmin\(\) \|\|/,'chats completos para administración');
  assert.match(r,/match \/msgs\/\{msg\} \{\s*allow read: if isAdmin\(\)/,'msgs de cualquier chat para administración');
  assert.match(r,/match \/llamadas\/\{id\} \{[\s\S]{0,420}allow read, update: if isAdmin\(\)/,'llamadas completas para administración');
 });
 
-test('Propuesta: el árbol empresas/{eid} es solo de administración, salvo reglas específicas',()=>{
- const r=leer('firestore.rules.propuesta');
+test('Reglas: el árbol empresas/{eid} es solo de administración, salvo reglas específicas',()=>{
+ const r=leer('firestore.rules');
  assert.match(r,/function esMiembroEmpresa\(eid\)/);
  assert.match(r,/exists\(\/databases\/\$\(database\)\/documents\/empresas\/\$\(eid\)\/miembros\/\$\(request\.auth\.uid\)\)/);
  /* El comodín ya NO admite a los miembros: solo isAdmin(). */
@@ -54,15 +55,15 @@ test('Propuesta: el árbol empresas/{eid} es solo de administración, salvo regl
  assert.match(r,/match \/\{document=\*\*\} \{\s*allow read, write: if false;/);
 });
 
-test('Propuesta: metadatos de empresa y dominios',()=>{
- const r=leer('firestore.rules.propuesta');
+test('Reglas: metadatos de empresa y dominios',()=>{
+ const r=leer('firestore.rules');
  /* Antes: leer/escribir solo admin. Ahora los miembros leen SU empresa; escribir sigue siendo del admin. */
  assert.match(r,/match \/empresas\/\{id\} \{\s*allow read: if esMiembroEmpresa\(id\);\s*allow write: if isAdmin\(\);/);
  assert.match(r,/match \/dominios\/\{host\} \{\s*allow read: if true;\s*allow write: if isAdmin\(\);/);
 });
 
-test('Propuesta: los límites de tamaño de la tienda cuadran con los inputs de la app',()=>{
- const r=leer('firestore.rules.propuesta'),app=leer('js/app.js');
+test('Reglas: los límites de tamaño de la tienda cuadran con los inputs de la app',()=>{
+ const r=leer('firestore.rules'),app=leer('js/app.js');
  assert.match(r,/data\.empresa is string && request\.resource\.data\.empresa\.size\(\) <= 120/);
  assert.match(r,/data\.dir is string && request\.resource\.data\.dir\.size\(\) <= 200/);
  assert.match(app,/<input id="sh_c" autocomplete="organization" maxlength="120">/);

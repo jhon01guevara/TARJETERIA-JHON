@@ -1,6 +1,9 @@
-# Propuesta de endurecimiento de `firestore.rules` (NO aplicada)
+# Propuesta de endurecimiento de `firestore.rules` (APLICADA el 2026-10-24)
 
-> **Estado:** solo propuesta. **`firestore.rules` no se modificó en este PR.**
+> **Estado: Publicado en producción el 2026-10-24.** Este documento es la propuesta original (histórica). La versión final, probada con emulador y en `tarjeteria-jhon-prueba`, es hoy `firestore.rules` (antes `firestore.rules.propuesta`), idéntica a lo publicado. Las reglas anteriores están en `docs/respaldo-reglas-anteriores-2026-10-24.rules`. Procedimiento: `docs/DESPLIEGUE-REGLAS.md`.
+>
+> *Texto original de la propuesta:*
+> **Estado:** solo propuesta.
 > Las reglas **no se despliegan desde git**: se publican desde la consola de Firebase o con `firebase deploy --only firestore:rules`.
 > Los diffs de abajo **no se ejecutaron en el emulador** (el equipo donde se preparó no tenía Java, que el emulador necesita).
 > Trátelos como borrador: pruébelos con el emulador (sección 3) antes de publicar nada.
@@ -14,7 +17,7 @@
 2. Aplique **un cambio a la vez**, en este orden: A → (comprobar miembros) → B → C → D.
 3. Pruebe cada cambio con el emulador **y** con cuentas reales de prueba (una de administrador y una de vendedor).
 4. Publique en un horario de poco uso y revise la pestaña **Uso/Monitor** de Firestore por errores `permission-denied`.
-5. Al cambiar el texto de `firestore.rules` en el repo, hay que actualizar `tests/fase8-reglas.test.js` (comprueba literalmente el comodín `esEmpresa(eid)`).
+5. Al cambiar el texto de `firestore.rules` en el repo, hay que actualizar `tests/fase8-reglas.test.js` (hecho el 2026-10-24).
 
 ---
 

@@ -1,3 +1,4 @@
+
 rules_version = '2';
 
 service cloud.firestore {
@@ -14,21 +15,6 @@ service cloud.firestore {
       return logged()
         && (request.auth.uid == 'o7bHndKtswSHreFnVwORqBSUKL43'
           || get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.rol == 'admin');
-    }
-
-    // Cuenta con sesión Y con documento en roles/ (admin o vendedor activo).
-    // exists() no falla si el documento no existe.
-    function isStaff() {
-      return logged()
-        && (request.auth.uid == 'o7bHndKtswSHreFnVwORqBSUKL43'
-          || exists(/databases/$(database)/documents/roles/$(request.auth.uid)));
-    }
-
-    // Administración global o miembro declarado de la empresa (empresas/{eid}/miembros/{uid}).
-    function esMiembroEmpresa(eid) {
-      return logged()
-        && (isAdmin()
-          || exists(/databases/$(database)/documents/empresas/$(eid)/miembros/$(request.auth.uid)));
     }
 
     // El administrador usa la identidad interna "admin"; los vendedores usan su UID.
@@ -78,7 +64,7 @@ service cloud.firestore {
 
     // Datos comunes sin información de clientes, usuarios, agenda o credenciales.
     match /panel_public/general {
-      allow read: if isStaff();
+      allow read: if logged();
       allow write: if isAdmin();
     }
 
@@ -95,27 +81,22 @@ service cloud.firestore {
     }
 
     match /catalogo/{doc} {
-      allow read: if isStaff();
+      allow read: if logged();
       allow write: if isAdmin();
     }
 
     match /galeria/{doc} {
-      allow read: if isStaff();
-      allow create: if isStaff() && request.resource.data.o == me();
-      allow update: if isAdmin() || (resource.data.o == me() && request.resource.data.o == resource.data.o);
-      allow delete: if isAdmin() || resource.data.o == me();
+      allow read: if logged();
+      allow create: if logged() && request.resource.data.o == me();
+      allow update, delete: if isAdmin() || resource.data.o == me();
     }
 
     // Un chat y sus mensajes solo existen para integrantes declarados. La consulta
     // del navegador debe llevar where('members', 'array-contains', me()).
     // Administración puede enumerar todos (simulación/migración Fase 6).
     match /chats/{chat} {
-      // PRUEBA: sin chatMember() aquí; su "data.members is list" impide que Firestore
-      // demuestre la consulta where('members','array-contains',me()) (el emulador la
-      // rechaza con "evaluation error"). hasAny sobre resource.data sí es demostrable
-      // y, si members no fuera lista, falla y deniega (misma seguridad).
-      allow read: if isAdmin() || (logged() && resource.data.members.hasAny([me()]));
-      allow create: if isStaff() && chatMember(request.resource.data);
+      allow read: if isAdmin() || chatMember(resource.data);
+      allow create: if chatMember(request.resource.data);
       allow update: if chatMember(resource.data)
         && request.resource.data.members == resource.data.members;
       allow delete: if isAdmin()
@@ -137,7 +118,7 @@ service cloud.firestore {
 
     // Llamadas de voz: solo entre administrador y vendedor.
     match /llamadas/{id} {
-      allow create: if isStaff()
+      allow create: if logged()
         && request.resource.data.from == me()
         && (request.resource.data.from == 'admin' || request.resource.data.to == 'admin');
       allow read, update: if isAdmin()
@@ -153,7 +134,7 @@ service cloud.firestore {
     }
 
     match /perfiles/{uid} {
-      allow read: if isStaff();
+      allow read: if logged();
       allow write: if logged()
         && (request.auth.uid == uid || (isAdmin() && uid == 'admin'));
     }
@@ -176,8 +157,6 @@ service cloud.firestore {
         && request.resource.data.name.size() > 1 && request.resource.data.name.size() <= 120
         && request.resource.data.tel is string && request.resource.data.tel.size() <= 40
         && request.resource.data.email is string && request.resource.data.email.size() <= 120
-        && request.resource.data.empresa is string && request.resource.data.empresa.size() <= 120
-        && request.resource.data.dir is string && request.resource.data.dir.size() <= 200
         && validRef(request.resource.data.ref)
         && request.resource.data.ts is number
         && request.resource.data.imp == false;
@@ -194,8 +173,6 @@ service cloud.firestore {
         && request.resource.data.id == id
         && request.resource.data.cid is string && request.resource.data.cid.size() <= 100
         && request.resource.data.lead is map
-        && request.resource.data.lead.keys().hasOnly(['name','tel','email','empresa','dir','terminos'])
-        && request.resource.data.lead.size() <= 8
         && request.resource.data.items is list
         && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 100
         && request.resource.data.total is number && request.resource.data.total >= 0
@@ -220,15 +197,15 @@ service cloud.firestore {
     }
 
         match /panel_public/contador {
-      allow read: if isStaff();
+      allow read: if logged();
       allow create, delete: if isAdmin();
-      allow update: if isAdmin() || (isStaff() && request.resource.data.sig == resource.data.sig + 1);
+      allow update: if isAdmin() || (logged() && request.resource.data.sig == resource.data.sig + 1);
     }
 
     match /panel_public/clientes {
-      allow read: if isStaff();
+      allow read: if logged();
       allow create, delete: if isAdmin();
-      allow update: if isStaff() && (isAdmin() || request.resource.data.cli.size() >= resource.data.cli.size());
+      allow update: if logged() && (isAdmin() || request.resource.data.cli.size() >= resource.data.cli.size());
     }
 
     /* ===== Multiempresa (Fases 3-5 del plan): SOLO metadatos nuevos =====
@@ -236,12 +213,8 @@ service cloud.firestore {
        subdominios/dominios por empresa; lectura pública para que la tienda
        pueda resolver la empresa por hostname en la Fase 9. Ninguna colección
        existente cambia. */
-    // PRUEBA: los miembros leen el documento de SU empresa (marca: logo/colores que
-    // Marketing Studio carga también para vendedores, js/marketing.js:mktCargarMarca).
-    // Antes lo permitía el comodín; tras la propuesta A se perdería sin esta regla.
     match /empresas/{id} {
-      allow read: if esMiembroEmpresa(id);
-      allow write: if isAdmin();
+      allow read, write: if isAdmin();
     }
 
     match /dominios/{host} {
@@ -259,33 +232,27 @@ service cloud.firestore {
     }
 
     // Árbol general de la empresa (panel, catálogo, chats, llamadas, wa…):
-    // SOLO administración global. Las colecciones que usan los vendedores y la tienda
-    // pública tienen su regla específica más abajo. Un comodín que admitiera miembros
-    // anularía esas reglas (en Firestore basta que UNA regla permita).
+    // administración global o miembros. Las colecciones que la tienda pública
+    // y los vendedores usan se espejan abajo con las mismas reglas de hoy.
     match /empresas/{eid}/{document=**} {
-      allow read, write: if isAdmin();
-    }
-
-    match /empresas/{eid}/miembros/{uid} {
-      allow read: if isAdmin() || (logged() && request.auth.uid == uid);
-      allow write: if isAdmin();
+      allow read, write: if esEmpresa(eid);
     }
 
     match /empresas/{eid}/panel_public/general {
-      allow read: if esMiembroEmpresa(eid);
+      allow read: if logged();
       allow write: if isAdmin();
     }
 
     match /empresas/{eid}/panel_public/contador {
-      allow read: if esMiembroEmpresa(eid);
+      allow read: if logged();
       allow create, delete: if isAdmin();
-      allow update: if isAdmin() || (esMiembroEmpresa(eid) && request.resource.data.sig == resource.data.sig + 1);
+      allow update: if isAdmin() || (logged() && request.resource.data.sig == resource.data.sig + 1);
     }
 
     match /empresas/{eid}/panel_public/clientes {
-      allow read: if esMiembroEmpresa(eid);
+      allow read: if logged();
       allow create, delete: if isAdmin();
-      allow update: if esMiembroEmpresa(eid) && (isAdmin() || request.resource.data.cli.size() >= resource.data.cli.size());
+      allow update: if logged() && (isAdmin() || request.resource.data.cli.size() >= resource.data.cli.size());
     }
 
     match /empresas/{eid}/vendedores/{uid}/privado/{doc} {
@@ -293,15 +260,14 @@ service cloud.firestore {
     }
 
     match /empresas/{eid}/catalogo/{doc} {
-      allow read: if esMiembroEmpresa(eid);
+      allow read: if logged();
       allow write: if isAdmin();
     }
 
     match /empresas/{eid}/galeria/{doc} {
-      allow read: if esMiembroEmpresa(eid);
-      allow create: if esMiembroEmpresa(eid) && request.resource.data.o == me();
-      allow update: if isAdmin() || (resource.data.o == me() && request.resource.data.o == resource.data.o);
-      allow delete: if isAdmin() || resource.data.o == me();
+      allow read: if logged();
+      allow create: if logged() && request.resource.data.o == me();
+      allow update, delete: if isAdmin() || resource.data.o == me();
     }
 
     // Catálogo público de la tienda por empresa.
@@ -317,8 +283,6 @@ service cloud.firestore {
         && request.resource.data.name.size() > 1 && request.resource.data.name.size() <= 120
         && request.resource.data.tel is string && request.resource.data.tel.size() <= 40
         && request.resource.data.email is string && request.resource.data.email.size() <= 120
-        && request.resource.data.empresa is string && request.resource.data.empresa.size() <= 120
-        && request.resource.data.dir is string && request.resource.data.dir.size() <= 200
         && validRef(request.resource.data.ref)
         && request.resource.data.ts is number
         && request.resource.data.imp == false;
@@ -334,8 +298,6 @@ service cloud.firestore {
         && request.resource.data.id == id
         && request.resource.data.cid is string && request.resource.data.cid.size() <= 100
         && request.resource.data.lead is map
-        && request.resource.data.lead.keys().hasOnly(['name','tel','email','empresa','dir','terminos'])
-        && request.resource.data.lead.size() <= 8
         && request.resource.data.items is list
         && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 100
         && request.resource.data.total is number && request.resource.data.total >= 0
@@ -351,12 +313,8 @@ service cloud.firestore {
     }
 
     match /empresas/{eid}/chats/{chat} {
-      // PRUEBA: sin chatMember() aquí; su "data.members is list" impide que Firestore
-      // demuestre la consulta where('members','array-contains',me()) (el emulador la
-      // rechaza con "evaluation error"). hasAny sobre resource.data sí es demostrable
-      // y, si members no fuera lista, falla y deniega (misma seguridad).
-      allow read: if isAdmin() || (logged() && resource.data.members.hasAny([me()]));
-      allow create: if esMiembroEmpresa(eid) && chatMember(request.resource.data);
+      allow read: if isAdmin() || chatMember(resource.data);
+      allow create: if chatMember(request.resource.data);
       allow update: if chatMember(resource.data)
         && request.resource.data.members == resource.data.members;
       allow delete: if isAdmin()
@@ -376,7 +334,7 @@ service cloud.firestore {
     }
 
     match /empresas/{eid}/llamadas/{id} {
-      allow create: if esMiembroEmpresa(eid)
+      allow create: if logged()
         && request.resource.data.from == me()
         && (request.resource.data.from == 'admin' || request.resource.data.to == 'admin');
       allow read, update: if isAdmin()
@@ -395,6 +353,11 @@ service cloud.firestore {
        Acceso por EMPRESA: administración global o miembro declarado
        (empresas/{eid}/miembros/{uid}, sincronizado por el panel desde cfg.users).
        Un vendedor de una empresa NO puede leer la de otra. */
+    function esMiembroEmpresa(eid) {
+      return logged()
+        && (isAdmin()
+          || exists(/databases/$(database)/documents/empresas/$(eid)/miembros/$(request.auth.uid)));
+    }
     match /empresas/{eid}/marketing_projects/{id} {
       allow read, write: if esMiembroEmpresa(eid);
     }
@@ -413,3 +376,5 @@ service cloud.firestore {
     }
   }
 }
+
+

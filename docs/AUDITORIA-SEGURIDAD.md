@@ -3,6 +3,8 @@
 Fecha: 2026-10-24 · Alcance: `firestore.rules`, CSP de `index.html`, `js/app.js` (XSS), `migraciones/`, `sw.js`,
 `package.json`, workflow de GitHub Actions, enlaces externos y scripts de terceros.
 
+> **Actualización 2026-10-24:** las reglas endurecidas (propuestas A–D) se probaron con el emulador y en `tarjeteria-jhon-prueba` y están **publicadas en producción**; `firestore.rules` del repo es el texto publicado y las reglas anteriores están en `docs/respaldo-reglas-anteriores-2026-10-24.rules`. El texto de abajo es el informe original y describe el estado previo (hallazgos 1–4 y 8 ya mitigados en reglas).
+>
 > **Qué es este documento:** un informe de lectura del código del repositorio. **No** tuve acceso a la consola de
 > Firebase ni a Google Cloud, así que todo lo que depende de cómo está configurado el proyecto allí (reglas
 > publicadas, App Check en modo "Enforce", restricciones de la apiKey, registro abierto de usuarios, datos reales)
@@ -337,7 +339,7 @@ Todos los `<script>` y la hoja de Leaflet de `index.html` y de `apps/modelos.htm
    qué API falta.
 5. Guarde (tarda unos minutos), pruebe inicio de sesión, facturas y tienda. Para deshacer: quite las restricciones.
 
-### 6.4 Probar y publicar reglas (cuando decida aplicar la propuesta)
+### 6.4 Probar y publicar reglas (hecho el 2026-10-24; procedimiento en `docs/DESPLIEGUE-REGLAS.md`)
 Siga `docs/PROPUESTA-SEGURIDAD-REGLAS.md`: primero el emulador con las pruebas, luego una cuenta de vendedor de prueba,
 y **antes de publicar copie el texto de reglas actual** (Firestore → Reglas) en un archivo. Publique en horario de poco uso.
 
@@ -352,4 +354,4 @@ Active la **verificación en dos pasos** en la cuenta de Google del administrado
 * Si `empresas/{eid}/miembros` ya contiene a los vendedores (determina el alcance real de H1).
 * Datos reales de Firestore (formato de `lat/lng`, `n`, `fecha`, etc.).
 * Comportamiento en navegador/móvil: el cambio de `window.open` y de `esc()` se verificó por código y tests, **no** en un navegador.
-* Las reglas propuestas **no** se ejecutaron en el emulador (no había Java en el equipo de trabajo): están como propuesta.
+* (Informe original) Las reglas propuestas no se ejecutaron entonces en el emulador. Después sí: 27 pruebas con emulador y prueba manual en `tarjeteria-jhon-prueba` antes de publicar.
