@@ -75,6 +75,9 @@ Antes de unir cambios, confirma que GitHub Actions termina en verde.
 - Proyecto Firebase: `tarjeteria-jhon` (configuración en `js/app.js`).
 - Las reglas están en `firestore.rules` y **no se despliegan solas**: se copian a
   Firebase Console → Firestore Database → Rules y se pulsa **Publicar**.
+- `firestore.rules` es el texto **publicado en producción el 2026-10-24** (reglas endurecidas; ver
+  `docs/DESPLIEGUE-REGLAS.md`). Las reglas anteriores están en
+  `docs/respaldo-reglas-anteriores-2026-10-24.rules` por si hay que revertir.
 - Las colecciones no listadas en las reglas quedan denegadas por defecto.
 - Detalle de colecciones y permisos: `docs/DIAGNOSTICO-MULTIEMPRESA.md` y `docs/ESQUEMA-MULTIEMPRESA.md`.
 

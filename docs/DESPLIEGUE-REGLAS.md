@@ -1,10 +1,10 @@
-# Despliegue seguro de las reglas propuestas (`firestore.rules.propuesta`)
+# Despliegue seguro de las reglas nuevas (`firestore.rules`)
 
-> **Estado: NADA está desplegado.** `firestore.rules` (producción, proyecto `tarjeteria-jhon`) **no se ha modificado** y es idéntico a lo publicado. Las reglas nuevas están en `firestore.rules.propuesta`, que Firebase no lee por sí solo. Las reglas propuestas se publicaron únicamente en el proyecto de pruebas `tarjeteria-jhon-prueba`.
+> **Estado: publicado en producción el 2026-10-24** (proyecto `tarjeteria-jhon`). `firestore.rules` del repo es idéntico a lo publicado (antes se llamaba `firestore.rules.propuesta`; ese archivo ya no existe). Las reglas anteriores se conservan en [`respaldo-reglas-anteriores-2026-10-24.rules`](respaldo-reglas-anteriores-2026-10-24.rules) para poder revertir (ver sección 5). El resto de este documento es el procedimiento que se siguió, con los nombres de archivo de entonces.
 
 Orden obligatorio: **1) probar en `tarjeteria-jhon-prueba` → 2) decidir → 3) publicar en producción** (solo cuando tú lo confirmes).
 
-## 0. Qué cambian las reglas propuestas
+## 0. Qué cambian las reglas nuevas respecto a las anteriores
 
 Origen: `docs/AUDITORIA-SEGURIDAD.md` y `docs/PROPUESTA-SEGURIDAD-REGLAS.md`. Resumen:
 
@@ -23,22 +23,22 @@ Origen: `docs/AUDITORIA-SEGURIDAD.md` y `docs/PROPUESTA-SEGURIDAD-REGLAS.md`. Re
    Un vendedor que no esté en `miembros` perdería el acceso a sus datos al publicar las reglas, por eso la comprobación previa de abajo es obligatoria.
 3. **Baja de vendedores.** Con este PR, `vendDel` borra también `empresas/{eid}/miembros/{uid}` (si falla, no interrumpe la baja). Un vendedor eliminado *antes* de este cambio conserva su documento `miembros`: bórralo a mano (ver paso 2.3).
 4. **Límites de la tienda.** Empresa ≤ 120 y dirección ≤ 200 caracteres (el formulario ya tiene `maxlength` con esos valores).
-5. Los tests de `tests/reglas-propuestas.test.js` verifican el texto de la propuesta; los de `firestore.rules` siguen verificando producción.
+5. Los tests de `tests/reglas-firestore.test.js` (antes `reglas-propuestas.test.js`) y los demás que leen `firestore.rules` verifican el texto publicado.
 
 ## 1. Antes de empezar: copia de seguridad
 
 1. Firebase Console → proyecto **`tarjeteria-jhon`** → Firestore Database → pestaña **Reglas**.
-2. Selecciona todo el texto y guárdalo en un archivo con fecha, p. ej. `reglas-produccion-AAAA-MM-DD.rules`. (Debe ser idéntico a `firestore.rules` del repo; compáralo.)
+2. Selecciona todo el texto y guárdalo en un archivo con fecha, p. ej. `reglas-produccion-AAAA-MM-DD.rules`. (Antes de la publicación del 2026-10-24 era idéntico al `firestore.rules` anterior del repo; esa copia está en `docs/respaldo-reglas-anteriores-2026-10-24.rules`.)
 3. Haz lo mismo con el proyecto de pruebas antes de cambiarlo.
 
 ## 2. Prueba en `tarjeteria-jhon-prueba`
 
 ### 2.1 Publicar la propuesta SOLO en pruebas
 
-- **Consola:** proyecto `tarjeteria-jhon-prueba` → Firestore → Reglas → pega el contenido de `firestore.rules.propuesta` → **Publicar**.
-- **CLI:** desde una copia temporal del repo (para no tocar `firestore.rules`):
+- **Consola:** proyecto `tarjeteria-jhon-prueba` → Firestore → Reglas → pega el contenido de `firestore.rules` → **Publicar**.
+- **CLI:** desde una copia temporal del repo:
   ```bash
-  mkdir /tmp/prueba && cp firestore.rules.propuesta /tmp/prueba/firestore.rules
+  mkdir /tmp/prueba && cp firestore.rules /tmp/prueba/firestore.rules
   cd /tmp/prueba
   echo '{"firestore":{"rules":"firestore.rules"}}' > firebase.json
   firebase deploy --only firestore:rules --project tarjeteria-jhon-prueba
@@ -106,16 +106,16 @@ Pasa a producción solo si toda la lista anterior está en verde, y confirma:
 
 ## 4. Publicar en producción (solo cuando tú lo decidas)
 
-- **Consola:** proyecto **`tarjeteria-jhon`** → Firestore → Reglas → pega `firestore.rules.propuesta` → **Publicar**.
+- **Consola:** proyecto **`tarjeteria-jhon`** → Firestore → Reglas → pega `firestore.rules` → **Publicar**. *(Hecho el 2026-10-24.)*
 - **CLI:** igual que en 2.1, pero con `--project tarjeteria-jhon`, y sabiendo que desplegará lo que haya en ese archivo.
-- Para que el repo y producción coincidan, después se reemplaza `firestore.rules` por la propuesta en un PR aparte (y se actualizan los tests de `firestore.rules`, que hoy validan las reglas antiguas).
+- El repo y producción coinciden: `firestore.rules` es el texto publicado y los tests se actualizaron para validarlo.
 
 Tras publicar, prueba de inmediato con la cuenta admin y con un vendedor real (lista 2.4, versión corta). Las reglas pueden tardar unos segundos en propagarse.
 
 ## 5. Revertir
 
 1. Firestore → Reglas → **Historial/versiones** de la pestaña Reglas: elige la versión anterior y publícala; **o**
-2. pega la copia guardada en el paso 1 (o el contenido actual de `firestore.rules` del repo) y pulsa **Publicar**.
-3. Con CLI: `firebase deploy --only firestore:rules --project tarjeteria-jhon` desde una carpeta cuyo `firestore.rules` sea la copia antigua.
+2. pega la copia guardada en el paso 1 (la del repo: `docs/respaldo-reglas-anteriores-2026-10-24.rules`) y pulsa **Publicar**. Las reglas anteriores abrían más acceso (p. ej. comodín `esEmpresa(eid)` en el árbol por empresa); revertir es solo una salida de emergencia.
+3. Con CLI: `firebase deploy --only firestore:rules --project tarjeteria-jhon` desde una carpeta cuyo `firestore.rules` sea la copia antigua (`cp docs/respaldo-reglas-anteriores-2026-10-24.rules /tmp/rev/firestore.rules`). Si lo haces, restaura también `firestore.rules` del repo con otro PR para que sigan coincidiendo.
 
 Revertir no borra datos: las reglas solo controlan el acceso. Si borraste `miembros` por error, el admin puede recrearlos abriendo «Marketing» (los vendedores nuevos ya se crean solos al darlos de alta).

@@ -102,7 +102,7 @@ test('El snapshot de la Fase 6 enumera vendedores también vía roles y subcolec
 test('Las reglas permiten a administración LEER todo lo que la simulación enumera',()=>{
  const r=leer('firestore.rules');
  assert.match(r,/match \/vendedores\/\{uid\} \{\s*allow read: if isAdmin\(\);/,'documento padre de vendedores enumerable');
- assert.match(r,/match \/chats\/\{chat\} \{\s*allow read: if isAdmin\(\) \|\| chatMember/,'chats completos para administración');
+ assert.match(r,/match \/chats\/\{chat\} \{[\s\S]{0,700}allow read: if isAdmin\(\) \|\|/,'chats completos para administración');
  assert.match(r,/match \/msgs\/\{msg\} \{\s*allow read: if isAdmin\(\)/,'msgs de cualquier chat para administración');
- assert.match(r,/allow read, update: if isAdmin\(\)\s*\|\| \(logged\(\)/,'llamadas completas para administración');
+ assert.match(r,/match \/llamadas\/\{id\} \{[\s\S]{0,420}allow read, update: if isAdmin\(\)/,'llamadas completas para administración');
 });
