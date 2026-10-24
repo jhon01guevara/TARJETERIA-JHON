@@ -486,3 +486,8 @@ html.amor :is(#shop,#shopm,#ksnack) {
   36%{transform:scale(1) rotate(0deg);box-shadow:0 12px 30px -4px rgba(37,211,102,.7),0 0 35px 12px rgba(255,255,255,.75)}
   48%{box-shadow:0 8px 20px -6px rgba(0,0,0,.45),0 0 0 0 rgba(37,211,102,0)}
 }
+
+/* ===== Forma de los botones (Configuración → Plantilla de la web) =====
+   La administración elige píldora (999), redondeado (12) o casi cuadrado (4);
+   el panel aplica la variable --kbtn-r en el documento. */
+#shop .sbtn,#shop .kcat-pill,#shop .kfilter-btn,#shop .kchip,#shop .kadd,#shop .kdc-buy,#shop .kpill,#shop .ksheet,#shop .ktheme-btn,#shopm .sbtn{border-radius:var(--kbtn-r,9999px)!important}
