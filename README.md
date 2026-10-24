@@ -34,11 +34,13 @@ Según el código y la documentación de `docs/`:
 ├── migraciones/               # Herramientas de migración multiempresa
 ├── docs/                      # Documentación técnica
 ├── tests/                     # Pruebas automáticas (Node)
-├── assets/ banners/ video-assets/   # Imágenes y recursos
+├── assets/ banners/           # Imágenes y recursos
 ├── catalogo_default.zip       # Catálogo por defecto que carga la app
 ├── icon-*.png, apple-touch-icon.png # Iconos de la PWA
 └── .github/workflows/facturacion.yml  # CI: ejecuta las pruebas
 ```
+
+> Los recursos del video promocional (logos y tarjetas, antes en `video-assets/`) se archivaron en el [Release `respaldo-video-assets`](https://github.com/jhon01guevara/TARJETERIA-JHON/releases/tag/respaldo-video-assets).
 
 ## Cómo ejecutarlo en local
 
