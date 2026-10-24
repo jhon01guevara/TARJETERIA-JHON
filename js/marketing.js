@@ -32,6 +32,13 @@ function mktListen(){
   },function(e){console.warn('Marketing colecciones:',e)});
  }
 }
+/* Declara empresas/{eid}/miembros/{uid} (idempotente). Lo usan mktMiembros y el alta de
+   vendedor (vendSave en js/app.js): un único formato {uid,ts}. */
+async function mktMiembroSet(uid){
+ var ref=fbDb.collection('empresas').doc(mktEid()).collection('miembros').doc(uid);
+ var ex=await ref.get();
+ if(!ex.exists)await ref.set({uid:uid,ts:Date.now()});
+}
 /* La administración declara miembros/{uid} por empresa (idempotente): base del
    aislamiento de las reglas (un vendedor solo ve el marketing de SU empresa). */
 async function mktMiembros(){
@@ -41,9 +48,7 @@ async function mktMiembros(){
   var users=((typeof DB!=='undefined'&&DB.cfg&&DB.cfg.users)||[]);
   for(var i=0;i<users.length;i++){
    var u=users[i];if(!u||!u.id)continue;
-   var ref=fbDb.collection('empresas').doc(mktEid()).collection('miembros').doc(u.id);
-   var ex=await ref.get();
-   if(!ex.exists)await ref.set({uid:u.id,ts:Date.now()});
+   await mktMiembroSet(u.id);
   }
  }catch(e){window._tjw&&window._tjw(e)}
 }
