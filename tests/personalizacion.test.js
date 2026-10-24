@@ -62,8 +62,11 @@ test('Las empresas nuevas nacen con demo completo y SIN contenido de Tarjetería
  assert.match(emp,/function empDemoImg/,'imágenes placeholder SVG');
  assert.match(emp,/Producto de ejemplo '\+\(i\+1\)/,'3 productos demo');
  assert.match(emp,/heroTitle:d\.nombre/,'la plantilla lleva SU nombre');
- assert.match(emp,/banners:\[\]/,'sin banners heredados');
- assert.match(emp,/cfg:\{nombre:d\.nombre\}/,'el panel arranca con su nombre');
+ assert.match(emp,/banners:\[\{id:'demo_b1',src:empDemoBanner\(d\.nombre\)\}\]/,'un banner demo propio, nada heredado');
+ assert.match(emp,/function empDemoBanner/);
+ assert.match(emp,/function empDemoLogo/,'logo demo para el inicio de sesión');
+ assert.match(emp,/cfg:\{nombre:d\.nombre,/,'el panel arranca con su nombre');
+ assert.match(emp,/loginLogoSrc:empDemoLogo\(d\.nombre\)/,'logo demo en el inicio de sesión');
  assert.match(emp,/if\(nueva\)empCrearDemo\(d\)/,'se crea solo para empresas nuevas');
 });
 
