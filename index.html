@@ -33,6 +33,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.2/jszip.min.js" integrity="sha384-DdGlNq+wVXAn83gXqwyeFHB7iyXy6L0rLrNzgDmhKWPjiJLg9vj6qosYmZmkMfQ+" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@4.2.1/dist/jspdf.umd.min.js" integrity="sha384-qovJwSBbRDPP5cEjCp8S0UP66wrvnjaa60XMOGzTNanrThcrGfXfnZkvgY8N1KT3" crossorigin="anonymous"></script>
 <title>Tarjetería Jhon · Panel de Facturación</title>
+<meta name="description" content="Panel de ventas, facturación y catálogo de Tarjetería Jhon. Aplicación web instalable (PWA) para gestionar ventas, facturas y catálogo, con acceso mediante inicio de sesión.">
+<link rel="canonical" href="https://jhon01guevara.github.io/TARJETERIA-JHON/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="es_ES">
+<meta property="og:site_name" content="Tarjetería Jhon">
+<meta property="og:title" content="Tarjetería Jhon · Panel de Facturación">
+<meta property="og:description" content="Panel de ventas, facturación y catálogo de Tarjetería Jhon. Aplicación web instalable (PWA) para gestionar ventas, facturas y catálogo, con acceso mediante inicio de sesión.">
+<meta property="og:url" content="https://jhon01guevara.github.io/TARJETERIA-JHON/">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Tarjetería Jhon · Panel de Facturación">
+<meta name="twitter:description" content="Panel de ventas, facturación y catálogo de Tarjetería Jhon. Aplicación web instalable (PWA) para gestionar ventas, facturas y catálogo, con acceso mediante inicio de sesión.">
 <style>
 :root{--az:#E0457B;--az-bg:rgba(224,69,123,.10);--fondo:#F2F2F5;--card:#fff;--txt:#1D1D1F;--gris:#6E6E73;--linea:#E4E4E9;--soft:#F5F5F7;--amb:#FF9F0A;--sw:264px;--r:20px;--rs:12px;--sh:0 1px 2px rgba(0,0,0,.04),0 10px 26px -14px rgba(0,0,0,.16);--mica:radial-gradient(1200px 700px at 14% -10%,rgba(224,69,123,.08),transparent 60%),radial-gradient(1000px 800px at 100% 0%,rgba(15,108,189,.06),transparent 55%)}
 :root[data-t="nocturno"]{--fondo:#1c1c1e;--card:#2c2c2e;--txt:#f5f5f7;--gris:#9b9ba1;--linea:#3a3a3c;--soft:#3a3a3c}
@@ -1762,7 +1773,7 @@ html.amor :is(#shop,#shopm,#ksnack) {
 <main>
  <div class="top"><div><h2 id="tt">Inicio</h2><div class="rt">Tarjetería Jhon · Panel de Facturación</div></div>
   <div class="ck"><b id="ct"></b><span id="cd"></span></div>
-  <select id="th" style="width:auto;border-radius:980px" data-h-change="hs3"><option value="claro">Tema claro</option><option value="oceano">Tema océano</option><option value="violeta">Tema violeta</option><option value="nocturno">Tema nocturno</option></select></div>
+  <select id="th" aria-label="Tema de color" style="width:auto;border-radius:980px" data-h-change="hs3"><option value="claro">Tema claro</option><option value="oceano">Tema océano</option><option value="violeta">Tema violeta</option><option value="nocturno">Tema nocturno</option></select></div>
  <div class="cint" id="cint" hidden><div class="cintVw" id="cintVw"><div class="cintTr" id="cintTr"></div></div><div class="cintFt"><span id="cintTag"></span><span id="cintDots"></span><span id="cintCnt"></span></div></div>
  <div class="wrap" id="v"></div>
 </main>
