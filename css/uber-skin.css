@@ -174,3 +174,10 @@ td{border-bottom:1px solid var(--linea)}
 .ug{padding:18px 12px 6px;font-size:12px;font-weight:600;color:var(--gris)}
 .ug:first-child{padding-top:4px}
 body.navEd .ug{display:none}
+
+/* ---------- 17 · Forma de los botones de la tienda pública ----------
+   Elegida en Configuración → Plantilla de la web (píldora 999 / redondeado 12 /
+   casi cuadrado 4). El panel aplica la variable --kbtn-r al documento.
+   Los estilos de la tienda viven en index.html: esta capa (que sí se carga)
+   es el lugar correcto para la regla. */
+#shop .sbtn,#shop .kcat-pill,#shop .kfilter-btn,#shop .kchip,#shop .kadd,#shop .kdc-buy,#shop .kpill,#shop .ksheet,#shop .ktheme-btn,#shopm .sbtn{border-radius:var(--kbtn-r,9999px)!important}
