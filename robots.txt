@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /docs/
+
+Sitemap: https://jhon01guevara.github.io/TARJETERIA-JHON/sitemap.xml
