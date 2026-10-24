@@ -82,8 +82,10 @@ function empGuardar(){
  if(d.err)return alert(d.err);
  if(EM.list.length>=20&&!EM.list.some(function(x){return x.id===d.id}))
   return alert('Ya llegó al máximo de 20 empresas previsto por ahora.');
+ var nueva=!EM.list.some(function(x){return x.id===d.id});
  fbDb.collection('empresas').doc(d.id).set(d,{merge:true}).then(function(){
-  EM.edit=null;EM.msg={ok:true,t:'✔ Empresa guardada.'};R.empresas();
+  if(nueva)empCrearDemo(d);
+  EM.edit=null;EM.msg={ok:true,t:'✔ Empresa guardada.'+(nueva?' Se creó su tienda de muestra con 3 productos de ejemplo (todo editable en Configuración → Plantilla de la web).':'')};R.empresas();
  }).catch(function(e){window._tjw&&window._tjw(e);alert('No se pudo guardar. Revise su conexión o las reglas de Firestore.')});
 }
 function empEditar(id){
@@ -109,6 +111,46 @@ function empActivar(id){
  if(typeof R!=='undefined'&&R.empresas)R.empresas();
 }
 function empCancelar(){EM.edit=null;EM.tab='lista';if(typeof R!=='undefined'&&R.empresas)R.empresas()}
+
+/* Nombre comercial de la empresa activa (para textos de login, tienda, políticas
+   y factura — ninguna empresa nueva debe heredar el nombre de Tarjetería Jhon). */
+function empNombreActiva(){
+ try{
+  var a=TJEmpresa.empActiva();
+  var e=(EM.list||[]).find(function(x){return x&&x.id===a});
+  return (e&&e.nombre)||'';
+ }catch(x){return ''}
+}
+/* Imagen de demostración (SVG embebido, sin archivos externos). */
+function empDemoImg(nombre,n){
+ var inicial=(nombre||'?').charAt(0).toUpperCase();
+ var svg='<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800">'+
+  '<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>'+
+  '<rect width="800" height="800" fill="url(#g)"/>'+
+  '<text x="400" y="380" font-family="Segoe UI,sans-serif" font-size="210" font-weight="700" fill="#ffffff" text-anchor="middle">'+inicial+'</text>'+
+  '<text x="400" y="480" font-family="Segoe UI,sans-serif" font-size="42" fill="rgba(255,255,255,.9)" text-anchor="middle">Producto de ejemplo '+(n+1)+'</text>'+
+  '<text x="400" y="536" font-family="Segoe UI,sans-serif" font-size="28" fill="rgba(255,255,255,.7)" text-anchor="middle">Cambie esta imagen desde su catálogo</text></svg>';
+ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+/* Contenido de muestra de una empresa NUEVA: plantilla con SU nombre, 3 productos
+   demo y sin banners de Tarjetería Jhon. Todo editable/borrable después.
+   Solo usa colecciones por empresa ya permitidas (tienda_items, panel). */
+function empCrearDemo(d){
+ try{
+  if(typeof fbCol!=='function'||!fbCol)return;
+  var ts=Date.now();
+  fbCol('tienda_items').doc('__cfg').set({__cfg:true,heroTitle:d.nombre,
+   heroSub:'Bienvenido a '+d.nombre+' · Tienda de muestra: personalícela desde el panel',
+   banners:[],btnRadio:999,demo:1,ts:ts},{merge:true}).catch(function(){});
+  for(var i=0;i<3;i++){
+   fbCol('tienda_items').doc('demo_'+(i+1)).set({id:'demo_'+(i+1),
+    name:'Producto de ejemplo '+(i+1),cat:'Demo',price:0,
+    desc:'Producto de demostración de '+d.nombre+'. Edítelo o publíquelo cuando tenga el suyo.',
+    img:empDemoImg(d.nombre,i),tags:[],stock:'ok',badges:[],ts:ts+i,demo:1}).catch(function(){});
+  }
+  fbCol('panel').doc('data').set({cfg:{nombre:d.nombre},demo:1},{merge:true}).catch(function(){});
+ }catch(e){window._tjw&&window._tjw(e)}
+}
 
 /* Dominios: solo metadatos. La verificación DNS/HTTPS llega en la Fase 9. */
 function empDomGuardar(){

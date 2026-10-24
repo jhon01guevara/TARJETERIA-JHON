@@ -439,7 +439,7 @@ const redLink=(k,n,u,mini)=>`<a class="kred kred-${k}" href="${esc(u)}" target="
 function shopFooterRender(){
  const f=$('k_footer');if(!f)return;
  f.innerHTML=`<div style="margin-top:36px;padding:26px 16px 80px;border-top:1px solid var(--linea);text-align:center;font-size:12.5px;color:var(--gris);background:var(--sf);border-radius:14px;margin-bottom:14px">
-   <div style="font-weight:700;font-size:14.5px;color:var(--txt);margin-bottom:4px">Distribuidora Jhon · Tarjetería Jhon</div>
+   <div style="font-weight:700;font-size:14.5px;color:var(--txt);margin-bottom:4px">${esc(nombreNegocio())}</div>
    <p style="margin:4px 0 10px;font-size:12px;color:var(--gris)">Tienda en línea en etapa preparatoria informativa · Panamá</p>
    <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:12px">
      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPoliticas')}" style="font-size:12px;display:inline-flex;align-items:center;gap:5px"><span>🛡️</span><span>Políticas y Privacidad (Ley 81)</span></button>
@@ -472,10 +472,11 @@ function shopContacto(){
 // Configuración (administrador). Lo escrito sin guardar y el aviso sobreviven a los redibujados de la pantalla.
 /* ===== POLÍTICAS DE PRIVACIDAD, USO Y PROTECCIÓN LEGAL (LEY 81 DE PANAMÁ) ===== */
 const TJ_POLITICAS = {
- nombre: "Distribuidora Jhon / Tarjetería Jhon",
- web: "https://jhon01guevara.github.io/TARJETERIA-JHON/index.html?tienda=1",
- correo: "tarjeteriajhon@gmail.com",
- tel: "6074-1150",
+ /* Getters: se evalúan al usarse, así reflejan la empresa activa y su cfg. */
+ get nombre(){return nombreNegocio()},
+ get web(){return location.origin+location.pathname+'?tienda=1'},
+ get correo(){return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com'},
+ get tel(){return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.tel)||'6074-1150'},
  estado: "Etapa preparatoria. La tienda todavía no recibe pedidos ni pagos comerciales.",
 };
 
@@ -494,7 +495,7 @@ function shopPoliticas(tabSel){
  if(t === "1"){
    body = `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#92400e;font-size:12.5px;line-height:1.5">
      <b style="display:block;font-size:13.5px;margin-bottom:4px">⚠️ Estado: Etapa preparatoria informativa</b>
-     Actualmente, <b>Distribuidora Jhon</b> se encuentra preparando su tienda en línea para una posible apertura comercial futura.<br><br>
+     Actualmente, <b>${esc(nombreNegocio())}</b> se encuentra preparando su tienda en línea para una posible apertura comercial futura.<br><br>
      <b>Durante esta etapa:</b>
      <ul style="margin:6px 0 6px 18px;padding:0">
        <li>No se reciben pedidos comerciales.</li>
@@ -508,7 +509,7 @@ function shopPoliticas(tabSel){
  } else if(t === "2"){
    body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
      <h3 style="margin:0 0 6px;font-size:14.5px">2. Términos y condiciones de uso</h3>
-     <p><b>2.1. Objeto:</b> Estos términos establecen las reglas preliminares de acceso y uso del sitio web de Distribuidora Jhon, destinado a presentar productos de la categoría de accesorios y ofrecer información sobre una futura tienda en línea.</p>
+     <p><b>2.1. Objeto:</b> Estos términos establecen las reglas preliminares de acceso y uso del sitio web de ${esc(nombreNegocio())}, destinado a presentar productos de la categoría de accesorios y ofrecer información sobre una futura tienda en línea.</p>
      <p><b>2.2. Uso permitido:</b> El usuario se compromete a utilizar el sitio de forma lícita, respetar los derechos de terceros y no intentar alterar, interrumpir o acceder sin autorización a sus sistemas, cuentas, bases de datos o funciones administrativas. Queda prohibido enviar información falsa, realizar pruebas abusivas o suplantar a otras personas.</p>
      <p><b>2.3. Productos, fotografías y precios:</b> Las fotografías, descripciones, existencias y precios publicados durante la etapa preparatoria son informativos. Pueden existir diferencias de color, presentación o disponibilidad.</p>
      <p><b>2.4. Pedidos y contratación:</b> La tienda no está recibiendo pedidos comerciales durante esta etapa para evitar que una prueba técnica se interprete como una compra real.</p>
@@ -569,7 +570,7 @@ function shopPoliticas(tabSel){
    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:10px">
      <div>
        <h2 style="margin:0 0 2px;font-size:18px">🛡️ Políticas y Privacidad</h2>
-       <small style="color:var(--gris)">Distribuidora Jhon · Tarjetería Jhon (Ley 81 de Panamá)</small>
+       <small style="color:var(--gris)">${esc(nombreNegocio())} (Ley 81 de Panamá)</small>
      </div>
    </div>
    <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;border-bottom:1px solid var(--linea)">
@@ -630,7 +631,7 @@ function poliVerEvidencia(id){
    
    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-bottom:14px;color:#166534;font-size:11.5px;line-height:1.45">
      <b>⚖️ Declaración de Consentimiento Expreso:</b><br>
-     El cliente marcó formalmente la casilla de verificación obligatoria en la tienda web antes de enviar su pedido, declarando haber leído y aceptado los Términos de Uso y la Política de Privacidad de <b>Distribuidora Jhon / Tarjetería Jhon</b>, reconociendo la etapa preparatoria informativa conforme a la <b>Ley 81 de 2019</b>.
+     El cliente marcó formalmente la casilla de verificación obligatoria en la tienda web antes de enviar su pedido, declarando haber leído y aceptado los Términos de Uso y la Política de Privacidad de <b>${esc(nombreNegocio())}</b>, reconociendo la etapa preparatoria informativa conforme a la <b>Ley 81 de 2019</b>.
    </div>
    
    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
@@ -651,7 +652,7 @@ function poliImprimirEvidencia(id){
  const l=p.lead||{},t=l.terminos||{};
  const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
  const w=window.open('','_blank');if(!w)return alert('Permita ventanas emergentes para imprimir.');
- w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Constancia Legal - ${esc(l.name||'Cliente')}</title><style>body{font-family:system-ui,sans-serif;padding:32px;color:#1e293b;max-width:700px;margin:auto;font-size:14px;line-height:1.6}h1{font-size:20px;margin-bottom:4px;color:#0f172a}table{width:100%;border-collapse:collapse;margin:18px 0}td,th{padding:8px 12px;border:1px solid #cbd5e1;text-align:left}.box{background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:8px;margin:16px 0}@media print{button{display:none}}</style></head><body><h1>🛡️ CONSTANCIA DE CONSENTIMIENTO Y AUDITORÍA LEGAL</h1><p style="color:#64748b;margin:0 0 16px">Distribuidora Jhon / Tarjetería Jhon · Marco legal: Ley 81 de 2019 de la República de Panamá</p><div class="box"><b>Estado:</b> Consentimiento libre, previo, expreso e informado registrado en sistema.</div><table><tr><th>Identificador del Pedido</th><td>${esc(p.id)}</td></tr><tr><th>Nombre del Cliente</th><td>${esc(l.name||'—')}</td></tr><tr><th>Teléfono</th><td>${esc(l.tel||'—')}</td></tr><tr><th>Correo electrónico</th><td>${esc(l.email||'—')}</td></tr><tr><th>Empresa</th><td>${esc(l.empresa||'—')}</td></tr><tr><th>Dirección</th><td>${esc(l.dir||'—')}</td></tr><tr><th>Fecha y Hora de Aceptación</th><td><b>${esc(fechaAcep)}</b></td></tr><tr><th>Versión de Políticas</th><td>${esc(t.ver||'1.0 - Etapa preparatoria (Ley 81 Panamá)')}</td></tr><tr><th>Firma Técnica / Dispositivo</th><td style="font-family:monospace;font-size:11px">${esc(t.ua||'—')}</td></tr><tr><th>Registro en pedido</th><td>${esc(p.nota||'—')}</td></tr></table><div class="box" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534"><b>Certificación:</b> El cliente aceptó formalmente mediante casilla de verificación los Términos de Uso y la Política de Privacidad vigentes al momento de la orden.</div><br><button onclick="window.print()" style="padding:8px 16px;cursor:pointer">🖨️ Imprimir</button></body></html>`);
+ w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Constancia Legal - ${esc(l.name||'Cliente')}</title><style>body{font-family:system-ui,sans-serif;padding:32px;color:#1e293b;max-width:700px;margin:auto;font-size:14px;line-height:1.6}h1{font-size:20px;margin-bottom:4px;color:#0f172a}table{width:100%;border-collapse:collapse;margin:18px 0}td,th{padding:8px 12px;border:1px solid #cbd5e1;text-align:left}.box{background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:8px;margin:16px 0}@media print{button{display:none}}</style></head><body><h1>🛡️ CONSTANCIA DE CONSENTIMIENTO Y AUDITORÍA LEGAL</h1><p style="color:#64748b;margin:0 0 16px">${esc(nombreNegocio())} · Marco legal: Ley 81 de 2019 de la República de Panamá</p><div class="box"><b>Estado:</b> Consentimiento libre, previo, expreso e informado registrado en sistema.</div><table><tr><th>Identificador del Pedido</th><td>${esc(p.id)}</td></tr><tr><th>Nombre del Cliente</th><td>${esc(l.name||'—')}</td></tr><tr><th>Teléfono</th><td>${esc(l.tel||'—')}</td></tr><tr><th>Correo electrónico</th><td>${esc(l.email||'—')}</td></tr><tr><th>Empresa</th><td>${esc(l.empresa||'—')}</td></tr><tr><th>Dirección</th><td>${esc(l.dir||'—')}</td></tr><tr><th>Fecha y Hora de Aceptación</th><td><b>${esc(fechaAcep)}</b></td></tr><tr><th>Versión de Políticas</th><td>${esc(t.ver||'1.0 - Etapa preparatoria (Ley 81 Panamá)')}</td></tr><tr><th>Firma Técnica / Dispositivo</th><td style="font-family:monospace;font-size:11px">${esc(t.ua||'—')}</td></tr><tr><th>Registro en pedido</th><td>${esc(p.nota||'—')}</td></tr></table><div class="box" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534"><b>Certificación:</b> El cliente aceptó formalmente mediante casilla de verificación los Términos de Uso y la Política de Privacidad vigentes al momento de la orden.</div><br><button onclick="window.print()" style="padding:8px 16px;cursor:pointer">🖨️ Imprimir</button></body></html>`);
  w.document.close();
 }
 
@@ -730,7 +731,8 @@ function poliExportarCSV(){
 }
 
 function poliCopiar(){
- const txt = `DISTRIBUIDORA JHON\nPolíticas preliminares de uso, privacidad y protección del cliente\nEstado: etapa preparatoria. La tienda todavía no recibe pedidos ni pagos.\nNombre comercial: Distribuidora Jhon / Tarjetería Jhon\nSitio web: https://jhon01guevara.github.io/TARJETERIA-JHON/index.html?tienda=1\nCorreo de contacto: tarjeteriajhon@gmail.com\nTeléfono: 6074-1150\n\n1. Aviso de etapa preparatoria\nNo se reciben pedidos comerciales ni pagos por la tienda. No envíes dinero ni compartas claves.\n\n2. Términos y condiciones de uso\nUso lícito, productos y precios informativos.\n\n3. Política preliminar de privacidad y protección de datos\nProtección conforme a la Ley 81 de 2019 de la República de Panamá y Decreto Ejecutivo 285 de 2021.\n\n4. Entregas y retiros\nModalidades a domicilio y retiro en punto acordado.\n\n5. Atención al cliente y reclamaciones\ntarjeteriajhon@gmail.com · 6074-1150\n\n6. Lista de verificación antes de la apertura\nRUC, Aviso de Operación y formalización comercial.`;
+ const NN=nombreNegocio(),CORREO=(DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com',TEL=(DB.cfg&&DB.cfg.tel)||'6074-1150',SITIO=location.origin+location.pathname+'?tienda=1';
+ const txt = `${NN}\nPolíticas preliminares de uso, privacidad y protección del cliente\nEstado: etapa preparatoria. La tienda todavía no recibe pedidos ni pagos.\nNombre comercial: ${NN}\nSitio web: ${SITIO}\nCorreo de contacto: ${CORREO}\nTeléfono: ${TEL}\n\n1. Aviso de etapa preparatoria\nNo se reciben pedidos comerciales ni pagos por la tienda. No envíes dinero ni compartas claves.\n\n2. Términos y condiciones de uso\nUso lícito, productos y precios informativos.\n\n3. Política preliminar de privacidad y protección de datos\nProtección conforme a la Ley 81 de 2019 de la República de Panamá y Decreto Ejecutivo 285 de 2021.\n\n4. Entregas y retiros\nModalidades a domicilio y retiro en punto acordado.\n\n5. Atención al cliente y reclamaciones\n${CORREO} · ${TEL}\n\n6. Lista de verificación antes de la apertura\nRUC, Aviso de Operación y formalización comercial.`;
  navigator.clipboard&&navigator.clipboard.writeText(txt).then(()=>alert("Copiado al portapapeles.")).catch(()=>alert(txt));
 }
 
@@ -740,7 +742,7 @@ function poliAdmCard(){
  <div style="background:var(--sf);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:14px">
    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
      <div>
-       <b style="font-size:14px">Distribuidora Jhon / Tarjetería Jhon</b><br>
+       <b style="font-size:14px">${esc(nombreNegocio())}</b><br>
        <small style="color:var(--gris)">Estado: Etapa preparatoria informativa activa</small>
      </div>
      <span style="padding:4px 10px;border-radius:12px;background:#fef3c7;color:#b45309;font-weight:700;font-size:11.5px">⚠️ Etapa Preparatoria</span>
@@ -993,7 +995,14 @@ ubi(){const cliOpts=DB.cli.map(c=>`<option value="${c.id}">${esc(c.n)}</option>`
 config(){editEmails=false;
  const temas=[['claro','Claro'],['oceano','Océano'],['violeta','Violeta'],['nocturno','Nocturno']],ta=DB.cfg.tema||'claro';
  const c1=wrapCardInner('cfg_apariencia','🎨 Apariencia',`<p style="font-size:12.5px;color:var(--gris);margin-top:-6px">Elija el tema de color del panel.</p><div class="pt" id="ptTema">${temas.map(([k,l])=>`<button class="${k==ta?'on':''}" data-h-click="h290" data-a-click="${_ha(k)}">${l}</button>`).join('')}</div>`);
- const c2=wrapCardInner('cfg_empresa','🏢 Datos de la empresa (aparecen en la factura)',`<div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn s" id="btnEditCfg" data-h-click="h289">✏️ Editar</button></div><div class="g" style="margin-top:12px"><div><label>Nombre</label><input id="c1" value="${esc(DB.cfg.nombre)}" disabled></div><div><label>Teléfono</label><input id="c3" value="${esc(DB.cfg.tel)}" disabled></div><div><label>Correo</label><input id="c6" value="${esc(DB.cfg.email)}" disabled></div><div><label>Ubicación</label><input id="c4" value="${esc(DB.cfg.dir)}" disabled></div><div><label>Banco</label><input id="c7" value="${esc(DB.cfg.banco)}" disabled></div><div><label>Tipo de cuenta</label><input id="c8" value="${esc(DB.cfg.tcuenta)}" disabled></div><div><label>N.º de cuenta</label><input id="c9" value="${esc(DB.cfg.cuenta)}" disabled></div><div><label>Yappy</label><input id="c10" value="${esc(DB.cfg.yappy)}" disabled></div><div><label>ITBMS %</label><input id="c5" type="number" value="${DB.cfg.itbms}" disabled></div><div><label>Próximo n.º de factura</label><input id="c11" type="number" value="${DB.cfg.sig}" disabled></div></div><br><button class="btn p" id="btnSaveCfg" style="display:none" data-h-click="h288">💾 Guardar datos</button> <button class="btn s" id="btnCancelCfg" style="display:none" data-h-click="h287">Cancelar</button>`);
+ const c2=wrapCardInner('cfg_empresa','🏢 Datos de la empresa (aparecen en la factura)',`<div style="display:flex;justify-content:flex-end;margin-bottom:6px"><button class="btn s" id="btnEditCfg" data-h-click="h289">✏️ Editar</button></div><div class="g" style="margin-top:12px"><div><label>Nombre</label><input id="c1" value="${esc(DB.cfg.nombre)}" disabled></div><div><label>Teléfono</label><input id="c3" value="${esc(DB.cfg.tel)}" disabled></div><div><label>Correo</label><input id="c6" value="${esc(DB.cfg.email)}" disabled></div><div><label>Ubicación</label><input id="c4" value="${esc(DB.cfg.dir)}" disabled></div><div><label>Banco</label><input id="c7" value="${esc(DB.cfg.banco)}" disabled></div><div><label>Tipo de cuenta</label><input id="c8" value="${esc(DB.cfg.tcuenta)}" disabled></div><div><label>N.º de cuenta</label><input id="c9" value="${esc(DB.cfg.cuenta)}" disabled></div><div><label>Yappy</label><input id="c10" value="${esc(DB.cfg.yappy)}" disabled></div><div><label>ITBMS %</label><input id="c5" type="number" value="${DB.cfg.itbms}" disabled></div><div><label>Próximo n.º de factura</label><input id="c11" type="number" value="${DB.cfg.sig}" disabled></div></div>
+ <div style="margin-top:14px"><label>Logo de la empresa (aparece en la factura)</label>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+   ${DB.cfg.logoFac?`<img src="${DB.cfg.logoFac}" alt="logo" style="height:54px;border-radius:10px;background:#fff;padding:4px 10px;border:1px solid var(--linea)">`:'<small style="color:var(--gris)">Sin logo propio: la factura usa el logo del panel.</small>'}
+   <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">📁 Subir logo<input type="file" accept="image/*" hidden data-h-change="call" data-a-change="${_ha('facLogoFile')}"></label>
+   ${DB.cfg.logoFac?`<button class="btn s d" data-h-click="call" data-a-click="${_ha('facLogoQuitar')}">Quitar</button>`:''}
+  </div></div>
+ <br><button class="btn p" id="btnSaveCfg" style="display:none" data-h-click="h288">💾 Guardar datos</button> <button class="btn s" id="btnCancelCfg" style="display:none" data-h-click="h287">Cancelar</button>`);
  const c3=wrapCardInner('cfg_emails','✉️ Correos predeterminados',`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><p style="font-size:12.5px;color:var(--gris);margin:0">Se sugieren al enviar reportes o facturas por correo.</p><span><button class="btn s" id="btnEditE" data-h-click="h286">✏️ Editar</button><button class="btn s" id="btnDoneE" style="display:none" data-h-click="h285">✔ Listo</button></span></div><div class="g" style="margin-bottom:10px"><div><label>Nombre</label><input id="e_n" placeholder="Ej. Contabilidad" disabled></div><div><label>Correo</label><input id="e_m" type="email" placeholder="correo@ejemplo.com" disabled></div></div><button class="btn s" id="btnAddE" data-h-click="h284" disabled>+ Agregar correo</button><div id="elist" style="margin-top:12px"></div>`);
  const c4=wrapCardInner('cfg_notif','🔔 Notificaciones de la agenda',`<p style="font-size:12.5px;color:var(--gris);margin-top:-6px">Aviso con sonido para los eventos que tengan "Avisar". Funciona mientras el panel esté abierto en el navegador.</p><div class="g"><div><label>Sonido</label><select data-h-change="h283"><option value="1" ${DB.cfg.snd?'selected':''}>Activado</option><option value="0" ${DB.cfg.snd?'':'selected'}>Silenciado</option></select></div><div><label>Tono</label><select data-h-change="h282">${[['campana','🔔 Campana'],['suave','🎵 Suave'],['alerta','🚨 Alerta'],['digital','📟 Digital']].map(([k,l])=>`<option value="${k}" ${DB.cfg.tono==k?'selected':''}>${l}</option>`).join('')}</select></div><div><label>Volumen: <span id="volv">${DB.cfg.vol}%</span></label><input type="range" min="10" max="100" value="${DB.cfg.vol}" data-h-input="h281" data-h-change="h280"></div></div><br><button class="btn p" data-h-click="h279">▶ Probar sonido</button> <button class="btn" data-h-click="h278">🔔 Probar notificación</button> <button class="btn" data-h-click="h277">🖥 Avisos del sistema</button> <small id="permSt" style="color:var(--gris)">${window.Notification&&Notification.permission==='granted'&&DB.cfg.nsys?'✔ Activados':''}</small>`);
  const c5=wrapCardInner('cfg_nav','🧭 Orden de los botones del menú',`<p style="font-size:12.5px;color:var(--gris);margin-top:-6px">Toque "Ordenar botones" y mueva cada botón con sus flechas, o arrástrelo con el dedo o el mouse. Al terminar toque "Listo".</p><button class="btn p" id="navEdBtn2" data-h-click="h276">${navEd?'✔ Listo':'↕ Ordenar botones'}</button> <button class="btn" data-h-click="h275">↺ Restablecer orden</button>`);
@@ -1212,7 +1221,7 @@ function facApple(f){
  const notas=L.length?L.map(([a,b])=>`<li><b>${a}</b> ${b.replace(/\n/g,'<br>')}</li>`).join(''):'<li>Gracias por su compra.</li>';
  const row=(a,b)=>b?`<div class="ar"><span>${a}</span><b>${b}</b></div>`:'';
  return `<div class="fa tpl-apple">${facSello(f)}
- <div class="ap-top"><div class="ap-brand"><img src="${LOGO_T}" alt=""><i></i><div><h2>${esc(c.nombre)}</h2><small>TARJETAS PARA TODA OCASIÓN</small></div></div>
+ <div class="ap-top"><div class="ap-brand"><img src="${c.logoFac||LOGO_T}" alt=""><i></i><div><h2>${esc(c.nombre)}</h2><small>${esc((c.loginDesc||'TARJETAS PARA TODA OCASIÓN')).toUpperCase()}</small></div></div>
   <div class="ap-contact">${c.dir?`<div><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>${esc(c.dir)}</span></div>`:''}${c.tel?`<div><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><span>${esc(c.tel)}</span></div>`:''}${c.email?`<div><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span>${esc(c.email)}</span></div>`:''}</div></div>
  <div class="ap-mid"><div><h1>Factura</h1><p>Gracias por tu confianza</p>${f.anulada?'<div class="ap-anu">ANULADA</div>':''}</div>
   <div class="ap-meta"><div><span>N.º de Factura</span><b>${f.n}</b></div><div><span>Fecha de Emisión</span><b>${fdate(f.fecha)}</b></div><div><span>Fecha de Vencimiento</span><b>${venc}</b></div><div><span>Moneda</span><b>USD</b></div></div></div>
@@ -1222,7 +1231,7 @@ function facApple(f){
  <div class="ap-two"><div class="ap-box"><h4><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0a84ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h4"/></svg>Información de Pago</h4>${row('Banco:',esc(c.banco))}${row('Tipo:',esc(c.tcuenta))}${row('Cuenta:',esc(c.cuenta))}${row('Beneficiario:',esc(c.nombre))}${c.yappy?row('Yappy:',esc(c.yappy)):''}</div>
   <div class="ap-box"><h4><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Notas</h4><ol>${notas}</ol></div></div>
  <div class="ap-ft"><div class="ap-tag">GRACIAS POR SER PARTE DE NUESTRO CRECIMIENTO<i></i></div><div class="ap-bd"><div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Calidad</span></div><div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l4-4 4 2 4-2 6 5-5 5-3-1-3 2-4-3z"/></svg><span>Confianza</span></div><div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19C5 9 11 4 20 4c0 9-5 15-14 15z"/><path d="M5 19l8-8"/></svg><span>Innovación</span></div></div></div></div>`}
-function facHTML(id){const f=DB.fac.find(x=>x.id==id),c=DB.cfg;if(facTpl(f)==='apple')return facApple(f);return `<div class="fa tpl-${facTpl(f)}">${facSello(f)}<div class="h"><div><h1>FACTURA</h1><div class="m"><div><span>Factura n.°</span><b>${f.n}</b></div><div><span>Fecha</span><b>${fdate(f.fecha)}</b></div>${f.anulada?'<div><b style="color:#d92d20">ANULADA</b></div>':''}</div></div><div class="lg"><img src="assets/logo.png" alt=""></div></div>
+function facHTML(id){const f=DB.fac.find(x=>x.id==id),c=DB.cfg;if(facTpl(f)==='apple')return facApple(f);return `<div class="fa tpl-${facTpl(f)}">${facSello(f)}<div class="h"><div><h1>FACTURA</h1><div class="m"><div><span>Factura n.°</span><b>${f.n}</b></div><div><span>Fecha</span><b>${fdate(f.fecha)}</b></div>${f.anulada?'<div><b style="color:#d92d20">ANULADA</b></div>':''}</div></div><div class="lg"><img src="${c.logoFac||'assets/logo.png'}" alt=""></div></div>
  <div class="cl"><b>${esc(f.cli).toUpperCase()}</b>${f.ruc?'RUC/Céd.: '+esc(f.ruc)+'<br>':''}${esc(f.dir||'')}</div>
  <table><tr><th>Articulo</th><th>Cantidad</th><th>Precio Unitario</th><th>Total</th></tr>${f.items.map(i=>`<tr><td>${esc(i.d).toUpperCase()}</td><td>${i.q}</td><td>${$$(i.p)}</td><td>${(i.q*i.p).toFixed(2)}</td></tr>`).join('')}</table><div class="fill"></div>
  <div class="tt"><div><span>Subtotal:</span><span>${$$(f.sub)}</span></div>${f.ds?`<div><span>Descuento:</span><span>-${$$(f.ds)}</span></div>`:''}<div><span>I.T.B.M.S(${f.itbmsp??c.itbms}%):</span><span>${$$(f.itbms)}</span></div><div class="gt"><span>Total:</span><span>${$$(f.total)}</span></div></div>
@@ -1965,7 +1974,7 @@ const esVend=()=>!!SES&&!esAdmin();
 const _af=agForm;agForm=function(id){if(id&&esVend()){alert('Su usuario no tiene permiso para editar.');return}return _af.apply(this,arguments)};
 function waNum(t){for(const p of String(t||'').split(/[\/,;|]| y /)){let d=p.replace(/\D/g,'');if(!d)continue;if(d.startsWith('00'))d=d.slice(2);if(d.length===7||d.length===8)d='507'+d;if(d.length>=10&&d.length<=15)return d}return ''}
 const waBtn=c=>waNum(c.t)?`<button class="btn s wa" data-h-click="h191" data-a-click="${_ha(c.id)}">💬 WhatsApp</button> `:'';
-function waCli(id){const c=DB.cli.find(x=>x.id==id),n=c&&waNum(c.t);if(!n)return alert('No se detectó un número de teléfono válido para este cliente.');window.open('https://wa.me/'+n+'?text='+encodeURIComponent('Hola '+c.n+', le escribimos de '+(DB.cfg.nombre||'Tarjetería Jhon')+'. '),'_blank')}
+function waCli(id){const c=DB.cli.find(x=>x.id==id),n=c&&waNum(c.t);if(!n)return alert('No se detectó un número de teléfono válido para este cliente.');window.open('https://wa.me/'+n+'?text='+encodeURIComponent('Hola '+c.n+', le escribimos de '+nombreNegocio()+'. '),'_blank')}
 // --- Recuperación de cuenta del administrador por correo ---
 const recDest=()=>{const d=DB.cfg.dests||[];return d.find(x=>x.id===DB.cfg.recId)||d[0]||null};
 const maskMail=m=>{const p=String(m).split('@');return p[0].slice(0,1)+'***@'+p[1]};
@@ -3101,7 +3110,7 @@ function etqImprimirLote(){
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbCol(c):fbCol(c).where('ref','==',me);let f1=true,f2=true;
- fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||'Tarjetería Jhon';TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||nombreNegocio();TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.banners=Array.isArray(cd.banners)?cd.banners:undefined;TD.btnRadio=cd.btnRadio||999;TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{document.documentElement.style.setProperty('--kbtn-r',(TD.btnRadio)+'px')}catch(e){}try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -3141,7 +3150,7 @@ const PAFLAG="<svg viewBox='0 0 60 40' width='20' height='13' style='vertical-al
 function shopBrandSave(){
  if(!esAdmin()||!fbDb)return alert("Se requieren permisos de administrador y conexión a internet.");
  const wm=wmClean($("sh_cfg_wm")&&$("sh_cfg_wm").value).slice(0,30);
- const title=(($("sh_cfg_title")&&$("sh_cfg_title").value.trim())||"Tarjetería Jhon").slice(0,60);
+ const title=(($("sh_cfg_title")&&$("sh_cfg_title").value.trim())||nombreNegocio()).slice(0,60);
  const sub=(($("sh_cfg_sub")&&$("sh_cfg_sub").value.trim())||"Cada momento merece una tarjeta especial · Tarjetas para toda ocasión").slice(0,160);
  const logo=(($("sh_cfg_logo")&&$("sh_cfg_logo").value.trim())||"").slice(0,250000);
  const motion=TD._curMotion||TD.motionStyle||'float';
@@ -3198,9 +3207,17 @@ function xmasCard(){
  const tNombres={madres:'🌸 Día de las Madres',padres:'👔 Día del Padre',trabajador:'🛠️ Día del Trabajador',galaxia:'🌌 Galaxia Cósmica',amor:'💖 Día del Amor',navidad:'🎄 Navidad',verano:'☀️ Verano',panama:PAFLAG+' Mes patrio'};
  const curBgType = TD._curBgType || TD.heroBgType || 'none';
  const curBgColor = TD._curHeroBgColor || TD.heroBgColor || 'hero-bg-aurora';
- return `<h3 style="margin:0">🎨 Temática de temporada</h3><p style="font-size:12.5px;color:var(--gris)">Viste la tienda virtual con una temática especial (fondo inmersivo, decoraciones y ambiente). Se activa para todos los clientes al instante y tiene prioridad sobre la paleta.</p><p style="margin:8px 0">${t?'<b>'+(tNombres[t]||t)+'</b> activada.':'🔹 <b>Sin temática</b> (diseño Shop normal).'}</p><div style="display:flex;gap:8px;flex-wrap:wrap">${bt('','Ninguna')}${bt('madres','🌸 Madres')}${bt('padres','👔 Padres')}${bt('trabajador','🛠️ Trabajador')}${bt('galaxia','🌌 Galaxia')}${bt('amor','💖 Amor')}${bt('navidad','🎄 Navidad')}${bt('verano','☀️ Verano')}${bt('panama',PAFLAG+' Mes patrio')}<button class="btn" data-h-click="h100">👁️ Ver cómo queda</button></div>
+ const bR=TD.btnRadio||999;
+ return `<h3 style="margin:0">🖼 Plantilla de la web</h3><p style="font-size:12.5px;color:var(--gris)">Todo lo que ve el cliente en su página, en un solo lugar: temáticas de temporada, paletas de color, logo y portada (foto o video), banners promocionales, forma de los botones y políticas. Cada cambio queda guardado para la empresa activa.</p>
+ <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
+ <h3 style="margin:0">🎨 Temática de temporada</h3><p style="font-size:12.5px;color:var(--gris)">Viste la tienda virtual con una temática especial (fondo inmersivo, decoraciones y ambiente). Se activa para todos los clientes al instante y tiene prioridad sobre la paleta.</p><p style="margin:8px 0">${t?'<b>'+(tNombres[t]||t)+'</b> activada.':'🔹 <b>Sin temática</b> (diseño Shop normal).'}</p><div style="display:flex;gap:8px;flex-wrap:wrap">${bt('','Ninguna')}${bt('madres','🌸 Madres')}${bt('padres','👔 Padres')}${bt('trabajador','🛠️ Trabajador')}${bt('galaxia','🌌 Galaxia')}${bt('amor','💖 Amor')}${bt('navidad','🎄 Navidad')}${bt('verano','☀️ Verano')}${bt('panama',PAFLAG+' Mes patrio')}<button class="btn" data-h-click="h100">👁️ Ver cómo queda</button></div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🎨 Paletas PRO: Fondo de página y colores coordinados</h3><p style="font-size:12.5px;color:var(--gris)">Elija una combinación profesional completa: cambia el color de fondo de la página, tarjetas, bordes y botones acento.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${PALETAS.map(pb).join('')}</div>
+ <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
+ <h3 style="margin:0">🔘 Forma de los botones de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Elija el estilo de los botones que ven los clientes (aplica al instante en la tienda pública).</p>
+ <div style="display:flex;gap:8px;flex-wrap:wrap">
+  ${[[999,'💊 Píldora'],[12,'▢ Redondeado'],[4,'⬛ Casi cuadrado']].map(([k,l])=>`<button class="btn s ${bR===k?'p':''}" data-h-click="call" data-a-click="${_ha('btnRadioSet',k)}">${l}</button>`).join('')}
+ </div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  
  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
@@ -3316,6 +3333,17 @@ function xmasCard(){
    <a class="btn s" href="index.html?tienda=1" target="_blank" rel="noopener">👁️ Abrir tienda para probar</a>
  </div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
+ <h3 style="margin:0">🎠 Banners promocionales de la portada</h3>
+ <p style="font-size:12.5px;color:var(--gris)">Imágenes grandes que rotan en el inicio de la tienda. Suba hasta 6 (JPG/PNG/GIF ≤250 KB) o pegue enlaces. Si no agrega ninguno, la tienda usa los banners que trae el panel.</p>
+ <div id="banList" style="margin:10px 0">
+ ${(TD.banners||[]).length?(TD.banners||[]).map((b,i)=>`<div class="dl"><span style="display:flex;gap:10px;align-items:center"><img src="${esc(b.src)}" alt="" style="width:86px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--linea)"><small style="color:var(--gris)">Banner ${i+1}</small></span><span style="display:flex;gap:6px"><button class="btn s" data-h-click="call" data-a-click="${_ha('banMover',i+'|-1')}" ${i===0?'disabled':''}>↑</button><button class="btn s" data-h-click="call" data-a-click="${_ha('banMover',i+'|1')}" ${i===(TD.banners||[]).length-1?'disabled':''}>↓</button><button class="btn s d" data-h-click="call" data-a-click="${_ha('banQuitar',i)}">🗑</button></span></div>`).join(''):'<div class="vacio" style="padding:14px">Usando los banners predeterminados del panel. Agregue los suyos para reemplazarlos.</div>'}
+ </div>
+ <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">📁 Subir banner<input type="file" accept="image/*,.gif" hidden data-h-change="call" data-a-change="${_ha('banSubir')}"></label>
+  <input id="ban_url" placeholder="…o enlace (URL) de la imagen" style="flex:1;min-width:200px">
+  <button class="btn s" data-h-click="call" data-a-click="${_ha('banUrl')}">➕ Agregar enlace</button>
+ </div>
+ <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🎠 Carrusel de portada</h3><p style="font-size:12.5px;color:var(--gris)">Elija cómo se eligen los diseños para las tarjetas flotantes de la portada.</p><div style="display:flex;gap:8px;flex-wrap:wrap">${hb('random','🎲 Aleatorio')}${hb('mix','✨ Mixto (seleccionados + aleatorios)')}${hb('manual','📌 Personalizado (solo seleccionados)')}</div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🔗 Enlaces de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Si los clientes ven una versión vieja al abrir el enlace de un vendedor, toque este botón para forzar la actualización.</p><button class="btn" data-h-click="h99">🔄 Actualizar enlaces de vendedores</button> <small style="color:var(--gris)">Versión: ${esc(String(TD.rev||BUILD))}</small>`
@@ -3344,8 +3372,8 @@ function tdGrpT(d){const k=d.dataset.k;if(d.open)TDG_CLOSED.delete(k);else TDG_C
 function tdMarcar(el){const on=el.checked;el.closest('table').querySelectorAll('tr[data-pub]').forEach(r=>{if(r.style.display==='none')return;const c=r.querySelector('.tdck');if(c)c.checked=on})}
 function tdMarcarVis(){const cs=[...document.querySelectorAll('.tdg tr[data-pub]')].filter(r=>r.style.display!=='none').map(r=>r.querySelector('.tdck')).filter(Boolean);const on=cs.some(c=>!c.checked);cs.forEach(c=>c.checked=on)}
 function tdCopy(){const i=$('td_link');i.select();try{navigator.clipboard.writeText(i.value).then(()=>alert('Enlace copiado ✔'),()=>{document.execCommand('copy');alert('Enlace copiado ✔')})}catch(e){document.execCommand('copy');alert('Enlace copiado ✔')}}
-function tdWaLink(){window.open('https://wa.me/?text='+encodeURIComponent('Le comparto el catálogo virtual de '+(DB.cfg.nombre||'Tarjetería Jhon')+': '+tdLink()),'_blank')}
-function tdSendCli(){const c=DB.cli.find(x=>x.id==$('td_cli').value);if(!c)return alert('Elija un cliente con teléfono.');const u=tdWa(c.t,'Hola '+c.n+', le comparto el catálogo virtual de '+(DB.cfg.nombre||'Tarjetería Jhon')+'. Regístrese, vea los productos y precios y haga su pedido aquí: '+tdLink());if(!u)return alert('Ese cliente no tiene un teléfono válido.');window.open(u,'_blank')}
+function tdWaLink(){window.open('https://wa.me/?text='+encodeURIComponent('Le comparto el catálogo virtual de '+nombreNegocio()+': '+tdLink()),'_blank')}
+function tdSendCli(){const c=DB.cli.find(x=>x.id==$('td_cli').value);if(!c)return alert('Elija un cliente con teléfono.');const u=tdWa(c.t,'Hola '+c.n+', le comparto el catálogo virtual de '+nombreNegocio()+'. Regístrese, vea los productos y precios y haga su pedido aquí: '+tdLink());if(!u)return alert('Ese cliente no tiene un teléfono válido.');window.open(u,'_blank')}
 async function tdImg(o){if(o.blob&&/^image\//.test(o.type||'')){const b=await comprimirImagenCatalogo(o.blob,imgKBClamp(o.imgKB||IMG_KB_DEF));return await rd(b)}
  if(o.thumb)return o.thumb;throw new Error('sin imagen')}
 const tdRows=()=>{const ids=new Set(TD.cat.map(x=>x.id));return [...TD.cat,...TD.items.filter(x=>x&&x.img&&!ids.has(x.id)).map(x=>({id:x.id,name:x.name,cat:x.cat,price:x.price,desc:x.desc,tags:x.tags,thumb:x.img,_pub:1}))].sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'es',{numeric:true}))};
@@ -3400,10 +3428,12 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
    const cCfg=JSON.parse(localStorage.getItem(lsk('tj_cached_cfg'))||'null');
    if(cCfg){
      SH.paleta=cCfg.paleta||'shop';SH.wordmark=wmClean(cCfg.wordmark);
-     SH.heroTitle=cCfg.heroTitle||'Tarjetería Jhon';
+     SH.heroTitle=cCfg.heroTitle||nombreNegocio();
      SH.heroSub=cCfg.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';
      SH.logoUrl=cCfg.logoUrl||'';SH.motionStyle=cCfg.motionStyle||'float';SH.watermarkStyle=cCfg.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cCfg.watermarkOpacity||'14';SH.heroBgType=cCfg.heroBgType||'none';SH.heroPhotoUrl=cCfg.heroPhotoUrl||'';SH.heroVideoUrl=cCfg.heroVideoUrl||'';SH.heroBgColor=cCfg.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cCfg.heroBgSolid||'#18181b';
+     SH.banners=Array.isArray(cCfg.banners)?cCfg.banners:undefined;SH.btnRadio=cCfg.btnRadio||999;
      document.documentElement.setAttribute('data-paleta',SH.paleta);
+     document.documentElement.style.setProperty('--kbtn-r',SH.btnRadio+'px');
    }else{
      SH.paleta='shop';document.documentElement.setAttribute('data-paleta','shop');
    }
@@ -3414,7 +3444,7 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
  }catch(e){window._tjw&&_tjw(e)}
  try{SH.cli=JSON.parse(localStorage.getItem(lsk('tj_shop_cli'))||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem(lsk('tj_shop_cart'))||'{}')}catch(e){window._tjw&&_tjw(e)}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem(lsk('tj_shop_fav'))||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.heroTitle=cd.heroTitle||'Tarjetería Jhon';SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;try{localStorage.setItem(lsk('tj_cached_items'),JSON.stringify(SH.items.slice(0,180)));if(cf&&cf.data())localStorage.setItem(lsk('tj_cached_cfg'),JSON.stringify(cf.data()))}catch(e){window._tjw&&_tjw(e)}{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.heroTitle=cd.heroTitle||nombreNegocio();SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.banners=Array.isArray(cd.banners)?cd.banners:undefined;SH.btnRadio=cd.btnRadio||999;SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.style.setProperty('--kbtn-r',SH.btnRadio+'px');H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;try{localStorage.setItem(lsk('tj_cached_items'),JSON.stringify(SH.items.slice(0,180)));if(cf&&cf.data())localStorage.setItem(lsk('tj_cached_cfg'),JSON.stringify(cf.data()))}catch(e){window._tjw&&_tjw(e)}{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -3491,10 +3521,12 @@ function shopDNavGo(k){
 }
 function shopBanner(){const e=$('k_banner');if(!e)return;const L=SH.items.filter(i=>i&&i.img&&!noDisp(i));if(!L.length){e.hidden=true;e.innerHTML='';return}
  if(e._k===L.length)return;e._k=L.length;e.hidden=false;const bg=L[Math.floor(Math.random()*L.length)].img;
- e.innerHTML=`<div class="kban-bg"><img src="${bg}" alt="" loading="lazy"></div><div class="kban-copy"><h1>Cada momento merece una tarjeta especial</h1><p>Diseños únicos para todas las ocasiones</p><button class="sbtn" data-h-click="h79">Descubre nuestra colección</button></div>`}
+ e.innerHTML=`<div class="kban-bg"><img src="${bg}" alt="" loading="lazy"></div><div class="kban-copy"><h1>${esc(SH.heroTitle||nombreNegocio())}</h1><p>${esc((SH.heroSub||'').split('·')[0].trim())}</p><button class="sbtn" data-h-click="h79">Descubre nuestra colección</button></div>`}
 function shopPromo(){
  const e=$("k_promo");if(!e)return;
- const L=[...PROMO];if(!L.length){e.hidden=true;e.innerHTML="";return}
+ const custom=Array.isArray(SH.banners)?SH.banners:null;
+ const L=custom?custom.map((b,i)=>({id:b.id||('ban'+i),custom:true,src:b.src,name:'Banner '+(i+1)})):[...PROMO];
+ if(!L.length){e.hidden=true;e.innerHTML="";return}
  e.hidden=false;
  if(SH.promoT){clearInterval(SH.promoT);SH.promoT=0}
  SH.promoL=L;SH.promoI=SH.promoI||0;
@@ -3525,7 +3557,7 @@ function shopHeroList(){const mode=SH.heroMode||'mix',all=SH.items.filter(i=>i&&
 // Para quitar o reordenar posts, edite esta lista. Archivos: banners/<id>.jpg (escritorio) y banners/<id>-m.jpg (celular).
 const PROMO_IMG={"quince": ["banners/quince.jpg", "banners/quince-m.jpg"], "quince2": ["banners/quince2.jpg", "banners/quince2-m.jpg"], "baby": ["banners/baby.jpg", "banners/baby-m.jpg"], "baby2": ["banners/baby2.jpg", "banners/baby2-m.jpg"], "grad": ["banners/grad.jpg", "banners/grad-m.jpg"], "grad2": ["banners/grad2.jpg", "banners/grad2-m.jpg"], "boda": ["banners/boda.jpg", "banners/boda-m.jpg"], "boda2": ["banners/boda2.jpg", "banners/boda2-m.jpg"], "cumple": ["banners/cumple.jpg", "banners/cumple-m.jpg"], "cumple2": ["banners/cumple2.jpg", "banners/cumple2-m.jpg"], "amor": ["banners/amor.jpg", "banners/amor-m.jpg"], "amor2": ["banners/amor2.jpg", "banners/amor2-m.jpg"], "felic": ["banners/felic.jpg", "banners/felic-m.jpg"], "felic2": ["banners/felic2.jpg", "banners/felic2-m.jpg"]};
 const PROMO=[['quince2','quince','Tarjetas para Quinceañeras'],['quince','quince','Tarjetas para Quinceañeras'],['baby2','baby','Tarjetas para Baby Shower'],['baby','baby','Tarjetas para Baby Shower'],['grad2','grad','Tarjetas para Graduación'],['grad','grad','Tarjetas para Graduación'],['boda2','boda','Tarjetas para Bodas'],['boda','boda','Tarjetas para Bodas'],['cumple2','cumple','Tarjetas para Cumpleaños'],['cumple','cumple','Tarjetas para Cumpleaños'],['amor2','amor','Tarjetas para Amor'],['amor','amor','Tarjetas para Amor'],['felic2','felic','Tarjetas para Felicitaciones'],['felic','felic','Tarjetas para Felicitaciones']].map(([key,tema,name])=>({id:'promo-'+key,key,tema,name,promo:true}));
-function promoSlide(i){return `<article class="khero-slide khero-promo" data-h-click="h78" data-a-click="${_ha(i.tema)}"><picture><source media="(max-width:700px)" srcset="${PROMO_IMG[i.key][1]}"><img src="${PROMO_IMG[i.key][0]}" alt="${esc(i.name)}" loading="lazy"></picture></article>`}
+function promoSlide(i){if(i.custom)return `<article class="khero-slide khero-promo"><picture><img src="${esc(i.src)}" alt="${esc(i.name)}" loading="lazy"></picture></article>`;return `<article class="khero-slide khero-promo" data-h-click="h78" data-a-click="${_ha(i.tema)}"><picture><source media="(max-width:700px)" srcset="${PROMO_IMG[i.key][1]}"><img src="${PROMO_IMG[i.key][0]}" alt="${esc(i.name)}" loading="lazy"></picture></article>`}
 function shopHero(){
  const e=$("khero");if(!e)return;if(SH.heroT){clearInterval(SH.heroT);SH.heroT=0}
  const all=(typeof shopHeroList==="function"?shopHeroList():SH.items).filter(i=>i&&i.img&&!noDisp(i));
@@ -3560,7 +3592,7 @@ function shopHero(){
  e.innerHTML=`${bgMediaHtml}${SH.wordmark?`<div class="khero-bg-wordmark" aria-hidden="true">${esc(SH.wordmark)}<span class="khero-dot">.</span></div>`:''}
 <div class="khero-wordmark-wrap">
   ${logoCoverHtml}
-  <h1 class="khero-title">${esc(SH.heroTitle||"Tarjetería Jhon")}</h1>
+  <h1 class="khero-title">${esc(SH.heroTitle||nombreNegocio())}</h1>
   <p class="khero-wordmark-sub">${esc(SH.heroSub||"Cada momento merece una tarjeta especial · Tarjetas para toda ocasión")}</p>
 </div>
 <div class="khero-constellation">${flHtml}</div>
@@ -3677,7 +3709,7 @@ function shopCart(){const L=shopLines();if(!L.length)return shopM('<h2 style="ma
   <div style="display:flex;align-items:center;gap:6px;font-weight:700;color:var(--txt);margin-bottom:6px">
     <span style="font-size:14px">🛡️</span><span>Protección y Políticas de la Tienda (Ley 81 de Panamá)</span>
   </div>
-  <p style="margin:0 0 8px;font-size:11.5px;color:var(--gris)">Distribuidora Jhon prepara su tienda en línea. No se solicitan pagos ni claves bancarias por este medio.</p>
+  <p style="margin:0 0 8px;font-size:11.5px;color:var(--gris)">${esc(nombreNegocio())} prepara su tienda en línea. No se solicitan pagos ni claves bancarias por este medio.</p>
   <label class="pchk" style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;margin:0">
     <input type="checkbox" id="sh_chk_poli" style="width:18px;height:18px;margin-top:1px;accent-color:var(--p);cursor:pointer;flex-shrink:0" data-h-change="call" data-a-change="${_ha('poliChkLimpiar')}">
     <span style="color:var(--txt)">He leído y acepto los <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas','2')}" style="color:var(--p);font-weight:700;text-decoration:underline">Términos de Uso</a> y la <a href="#" data-h-click="call" data-a-click="${_ha('shopPoliticas','3')}" style="color:var(--p);font-weight:700;text-decoration:underline">Política de Privacidad</a>. Entiendo y acepto que la tienda está en <b>etapa preparatoria informativa</b>.</span>
@@ -3971,7 +4003,22 @@ if(document.documentElement.classList.contains('shopmode')){
 NAVI.tienda=['M18 6h-2c0-2.21-1.79-4-4-4S8 3.79 8 6H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-8 4c0 .55-.45 1-1 1s-1-.45-1-1V8h2v2zm2-6c1.1 0 2 .9 2 2h-4c0-1.1.9-2 2-2zm4 6c0 .55-.45 1-1 1s-1-.45-1-1V8h2v2z','#06b6d4','#0e7490'];
 NAVI.mapa=['M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z','#10b981','#047857'];
 const _mr=mergeRemote;mergeRemote=function(r){_mr(r);authRefresh()};
-function authUI(h){let o=$('auth');if(!o){o=document.createElement('div');o.id='auth';o.dataset.r='a';o.innerHTML='<div class="abg"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div><div id="authc"></div>';document.body.appendChild(o)}const lg=document.querySelector('.logo img');$('authc').innerHTML='<div class="authb">'+(lg?'<div class="alogo"><img src="'+lg.src+'" alt="Tarjetería Jhon"></div>':'')+h+'<div class="afoot">🔒 Acceso restringido · Panel de Facturación</div></div>';o.style.display='flex'}
+/* Nombre comercial real de la empresa activa (empresas.js lo resuelve; aquí cae
+   a cfg.nombre y por último al histórico). Usar en login, tienda, políticas... */
+function nombreNegocio(){
+ try{if(typeof empNombreActiva==='function'){var n=empNombreActiva();if(n)return n}}catch(e){}
+ return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon';
+}
+/* Logo del inicio de sesión: foto, GIF animado o video corto por empresa. */
+function loginLogoHTML(){
+ const c=(typeof DB!=='undefined'&&DB.cfg)||{};
+ const src=c.loginLogoSrc||c.logoFac||'';
+ const esVid=c.loginLogoKind==='video';
+ if(!src)return '';
+ if(esVid)return '<div class="alogo"><video src="'+esc(src)+'" autoplay muted loop playsinline style="max-height:120px;border-radius:16px"></video></div>';
+ return '<div class="alogo"><img src="'+esc(src)+'" alt="'+esc(nombreNegocio())+'"></div>';
+}
+function authUI(h){let o=$('auth');if(!o){o=document.createElement('div');o.id='auth';o.dataset.r='a';o.innerHTML='<div class="abg"><span class="a1"></span><span class="a2"></span><span class="a3"></span></div><div id="authc"></div>';document.body.appendChild(o)}const lg=document.querySelector('.logo img');const lgo=loginLogoHTML()||(lg?'<div class="alogo"><img src="'+lg.src+'" alt="'+esc(nombreNegocio())+'"></div>':'');$('authc').innerHTML='<div class="authb">'+lgo+h+'<div class="afoot">🔒 Acceso restringido · Panel de Facturación</div></div>';o.style.display='flex'}
 function authOff(){const o=$('auth');if(o)o.style.display='none'}
 const authMsg=t=>{const e=$('au_m');if(e)e.textContent=t};
 function topUser(){let c=$('uchip');if(!c){c=document.createElement('div');c.id='uchip';c.style.cssText='display:flex;align-items:center;gap:8px;font-size:12.5px';document.querySelector('.top').appendChild(c)}
@@ -4001,7 +4048,7 @@ function authInit(){
   const r=d.data();SES={id:r.rol==='admin'?'admin':u.uid,u:r};
   try{entrar()}catch(e){window._tjw&&_tjw(e);authUI('<h2>Acceso aceptado</h2><p>Su sesión está activa, pero una sección del panel no pudo cargarse. Actualice la página.</p><button class="btn p" data-h-click="h24">Actualizar</button>')}
  })}
-function authLogin(){authUI(`<h2>Tarjetería Jhon</h2><p>Inicie sesión para continuar.</p><label>Correo</label><input id="au_e" type="email" autocomplete="username"><label>Contraseña</label><input id="au_p" type="password" autocomplete="current-password" data-h-keydown="h23"><label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0"><input type="checkbox" style="width:auto" data-h-change="h22"> Mostrar contraseña</label><div id="au_m"></div><button class="btn p" data-h-click="h21">Entrar</button><a href="#" data-h-click="h20" style="display:block;text-align:center;margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.85);text-decoration:underline">¿Olvidó su contraseña?</a>`);if(_note){authMsg(_note);_note=''}}
+function authLogin(){authUI(`<h2>${esc((DB.cfg&&DB.cfg.loginTitulo)||nombreNegocio())}</h2><p>${esc((DB.cfg&&DB.cfg.loginDesc)||'Inicie sesión para continuar.')}</p><label>Correo</label><input id="au_e" type="email" autocomplete="username"><label>Contraseña</label><input id="au_p" type="password" autocomplete="current-password" data-h-keydown="h23"><label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0"><input type="checkbox" style="width:auto" data-h-change="h22"> Mostrar contraseña</label><div id="au_m"></div><button class="btn p" data-h-click="h21">Entrar</button><a href="#" data-h-click="h20" style="display:block;text-align:center;margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.85);text-decoration:underline">¿Olvidó su contraseña?</a>`);if(_note){authMsg(_note);_note=''}}
 async function authGo(){const e=$('au_e').value.trim(),p=$('au_p').value;if(!e||!p)return authMsg('Escriba correo y contraseña.');authMsg('Verificando…');
  try{idleStamp();await firebase.auth().signInWithEmailAndPassword(e,p)}catch(x){const c=x.code||String(x.message||x);const m={'auth/invalid-credential':'Correo o contraseña incorrectos','auth/wrong-password':'Contraseña incorrecta','auth/user-not-found':'No existe ese usuario','auth/invalid-email':'Correo no válido','auth/too-many-requests':'Demasiados intentos, espere unos minutos','auth/network-request-failed':'Sin conexión o bloqueado por la red','auth/operation-not-allowed':'Correo/contraseña no está habilitado en Firebase'};authMsg((m[c]||'No se pudo entrar')+' ['+c+']')}}
 async function authReset(){const e=($('au_e')&&$('au_e').value||'').trim();if(!e)return authMsg('Escriba su correo arriba y toque el enlace otra vez.');
@@ -4068,10 +4115,119 @@ async function lbgApply(){const o=document.getElementById('auth');if(!o)return;c
  if(!L){L=document.createElement('div');L.id='lbg';L.className='lbgv';o.insertBefore(L,o.firstChild)}
  o.classList.add('hasbg');LBG.sig=sig;await lbgFill(L,m)}
 const _au0=authUI;authUI=function(){const r=_au0.apply(this,arguments);try{lbgApply()}catch(e){window._tjw&&_tjw(e)}return r};
+// ---- Personalización: logos, inicio de sesión, banners y forma de botones ----
+/* Comprime una imagen a dataURL (los GIF se conservan intactos para no perder la
+   animación; si son muy grandes se pide usar enlace). */
+async function logoCompress(file,maxKB,maxW){
+ if(file.type==='image/gif'){
+  if(file.size>maxKB*1024*3)throw new Error('gif-grande');
+  return await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)});
+ }
+ const bmp=await createImageBitmap(file);
+ let W=Math.min(maxW,bmp.width);
+ for(let t=0;t<6;t++){
+  const H=Math.round(bmp.height*W/bmp.width),c=document.createElement('canvas');
+  c.width=W;c.height=H;c.getContext('2d').drawImage(bmp,0,0,W,H);
+  for(const q of [.9,.82,.72,.62,.5]){
+   const b=await new Promise(r=>c.toBlob(r,'image/jpeg',q));
+   if(b&&b.size<=maxKB*1024)return await new Promise((res,rej)=>{const fr=new FileReader();fr.onload=()=>res(fr.result);fr.onerror=rej;fr.readAsDataURL(b)});
+  }
+  W=Math.round(W*.8);
+ }
+ throw new Error('grande');
+}
+/* Logo de la factura (Datos de la empresa). */
+async function facLogoFile(ev){
+ const f=ev&&ev.target&&ev.target.files&&ev.target.files[0];if(!f)return;
+ try{DB.cfg.logoFac=await logoCompress(f,150,600);save();R.config();alert('✔ Logo guardado: aparecerá en la factura.')}
+ catch(e){alert(e.message==='gif-grande'?'El GIF es muy grande para la factura (máx ~450 KB). Use una imagen estática o un enlace.':'No se pudo procesar la imagen.')}
+}
+function facLogoQuitar(){if(!confirm('¿Quitar el logo de la factura?'))return;delete DB.cfg.logoFac;save();R.config()}
+/* Logo/textos del inicio de sesión. Videos → Firebase Storage (patrón del fondo);
+   imágenes/GIF → dataURL en la configuración (sincroniza por panel/data). */
+async function loginLogoCloud(f){
+ try{
+  if(!(window.firebase&&firebase.storage))throw 0;
+  const ref=firebase.storage().ref('loginlogo/'+Date.now()+'_'+f.name.replace(/[^\w.\-]+/g,'_'));
+  await ref.put(f,f.type?{contentType:f.type}:undefined);
+  return await ref.getDownloadURL();
+ }catch(e){window._tjw&&window._tjw(e);return ''}
+}
+async function loginLogoFile(ev){
+ const f=ev&&ev.target&&ev.target.files&&ev.target.files[0];if(!f)return;
+ const esVid=/^video\//.test(f.type||'')||/\.(mp4|webm|mov|m4v)$/i.test(f.name||'');
+ try{
+  if(esVid){
+   const url=await loginLogoCloud(f);
+   if(!url)return alert('El video no pudo subirse a la nube. Use la opción de enlace o un archivo más liviano.');
+   DB.cfg.loginLogoSrc=url;DB.cfg.loginLogoKind='video';
+  }else{
+   DB.cfg.loginLogoSrc=await logoCompress(f,300,800);DB.cfg.loginLogoKind='image';
+  }
+  save();R.config();if(!SES)authLogin();
+ }catch(e){alert(e.message==='gif-grande'?'El GIF es muy grande (máx ~900 KB). Suba uno más liviano o use un enlace.':'No se pudo procesar el archivo.')}
+}
+function loginLogoUrl(){
+ const u=($('lg_url')||{value:''}).value.trim();if(!u)return;
+ DB.cfg.loginLogoSrc=u;DB.cfg.loginLogoKind=(/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)?'video':'image');save();R.config();if(!SES)authLogin();
+}
+function loginLogoQuitar(){if(!confirm('¿Quitar el logo del inicio de sesión?'))return;DB.cfg.loginLogoSrc='';DB.cfg.loginLogoKind='';save();R.config();if(!SES)authLogin()}
+function loginIdentGuardar(){
+ const t=($('lg_t')||{value:''}).value.trim(),d=($('lg_d')||{value:''}).value.trim();
+ DB.cfg.loginTitulo=t;DB.cfg.loginDesc=d;save();R.config();if(!SES)authLogin();else alert('✔ Textos del inicio de sesión guardados.');
+}
+/* Banners promocionales de la tienda (por empresa, en tienda_items/__cfg.banners). */
+function banGuardar(banners){
+ banners=(banners||[]).slice(0,6);
+ fbCol('tienda_items').doc('__cfg').set({__cfg:true,banners,ts:Date.now()},{merge:true})
+  .then(()=>{TD.banners=banners;R.config()})
+  .catch(e=>alert('No se pudo guardar los banners: '+((e&&e.message)||e)));
+}
+async function banSubir(ev){
+ const f=ev&&ev.target&&ev.target.files&&ev.target.files[0];if(!f)return;
+ try{
+  const du=await logoCompress(f,250,1400);
+  const B=[...(TD.banners||[])];if(B.length>=6)return alert('Máximo 6 banners.');
+  B.push({id:uid(),src:du});banGuardar(B);
+ }catch(e){alert(e.message==='gif-grande'?'El GIF es muy grande (máx ~750 KB).':'No se pudo procesar la imagen.')}
+}
+function banUrl(){
+ const u=($('ban_url')||{value:''}).value.trim();if(!u)return;
+ if(!/^https?:\/\//i.test(u))return alert('Pegue un enlace que empiece por http…');
+ const B=[...(TD.banners||[])];if(B.length>=6)return alert('Máximo 6 banners.');
+ B.push({id:uid(),src:u});$('ban_url').value='';banGuardar(B);
+}
+function banQuitar(i){const B=[...(TD.banners||[])];B.splice(i,1);banGuardar(B)}
+function banMover(i,d){const B=[...(TD.banners||[])],j=i+d;if(j<0||j>=B.length)return;[B[i],B[j]]=[B[j],B[i]];banGuardar(B)}
+/* Forma de los botones de la tienda (píldora/redondeado/cuadrado). */
+function btnRadioSet(v){
+ v=+v||999;
+ fbCol('tienda_items').doc('__cfg').set({__cfg:true,btnRadio:v,ts:Date.now()},{merge:true})
+  .then(()=>{TD.btnRadio=v;document.documentElement.style.setProperty('--kbtn-r',v+'px');R.config()})
+  .catch(e=>alert('No se pudo guardar: '+((e&&e.message)||e)));
+}
 // ---- Tarjeta en Configuración ----
 function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
- return `<h3 style="margin:0 0 4px">🎬 Fondo del inicio de sesión</h3><p style="font-size:12.5px;color:var(--gris);margin:0 0 12px">Personalice la pantalla donde entra con su correo: imagen en alta resolución, video en movimiento o un fondo animado. Sin límite de resolución ni de tamaño.</p>
- <div class="lbgPrevW"><div class="lbgv" id="lbgPrev"></div><div class="lbgMock"><b>Tarjetería Jhon</b><span></span><span></span><em>Entrar</em></div></div>
+ const ll=(DB.cfg||{}),tieneLogo=!!ll.loginLogoSrc;
+ return `<h3 style="margin:0 0 4px">🔐 Configuración de inicio de sesión</h3><p style="font-size:12.5px;color:var(--gris);margin:0 0 12px">Todo lo que se ve antes de entrar: logo, textos y fondo de la pantalla de acceso. Acepta imagen, GIF animado o video corto.</p>
+ <div class="card" style="margin:0 0 14px;padding:14px;background:var(--soft)">
+  <b style="font-size:13.5px">🖼 Logo y textos de la pantalla de acceso</b>
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:10px 0">
+   ${tieneLogo?(ll.loginLogoKind==='video'?`<video src="${esc(ll.loginLogoSrc)}" autoplay muted loop playsinline style="height:64px;border-radius:12px;background:#000"></video>`:`<img src="${esc(ll.loginLogoSrc)}" alt="logo" style="height:64px;border-radius:12px;background:#fff;padding:4px 8px;border:1px solid var(--linea)">`):'<small style="color:var(--gris)">Sin logo propio: se usa el del menú.</small>'}
+   <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">📁 Subir imagen/GIF/video<input type="file" accept="image/*,video/mp4,video/webm,.gif" hidden data-h-change="call" data-a-change="${_ha('loginLogoFile')}"></label>
+    ${tieneLogo?`<button class="btn s d" data-h-click="call" data-a-click="${_ha('loginLogoQuitar')}">Quitar</button>`:''}
+   </div>
+  </div>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+   <input id="lg_url" placeholder="…o enlace (URL) de imagen/GIF/video" style="flex:1;min-width:200px"><button class="btn s" data-h-click="call" data-a-click="${_ha('loginLogoUrl')}">Usar enlace</button>
+  </div>
+  <div class="g"><div><label>Título (nombre que va arriba)</label><input id="lg_t" value="${esc(ll.loginTitulo||'')}" placeholder="${esc(nombreNegocio())}" maxlength="60"></div>
+  <div><label>Descripción (línea de abajo)</label><input id="lg_d" value="${esc(ll.loginDesc||'')}" placeholder="Inicie sesión para continuar." maxlength="120"></div></div>
+  <div style="margin-top:10px"><button class="btn p s" data-h-click="call" data-a-click="${_ha('loginIdentGuardar')}">💾 Guardar textos</button></div>
+ </div>
+ <b style="font-size:13.5px">🎬 Fondo de la pantalla de acceso</b>
+ <div class="lbgPrevW"><div class="lbgv" id="lbgPrev"></div><div class="lbgMock"><b>${esc(nombreNegocio())}</b><span></span><span></span><em>Entrar</em></div></div>
  <div class="lbgRow"><button class="btn s ${on('aurora')}" data-h-click="h10">✨ Aurora (original)</button>${LBG_PRE.map(p=>`<button class="btn s ${on(p[0])}" data-h-click="h9" data-a-click="${_ha(p[0])}">${p[1]}</button>`).join('')}</div>
  <div class="lbgRow"><button class="btn p" data-h-click="h8">📁 Subir imagen o video</button><input id="lbgFile" type="file" accept="image/*,video/*,.mp4,.webm,.mov,.m4v,.jpg,.jpeg,.png,.webp,.avif,.gif" hidden data-h-change="h7"><button class="btn s" data-h-click="h6">↺ Restablecer</button><span id="lbgInfo" style="font-size:12.5px;color:var(--gris)">${m.mode==='file'?esc(m.name||'')+' · '+lbgSz(m.size):m.mode==='url'?'Enlace: '+esc(m.url.slice(0,48)):''}</span></div>
  <div class="lbgRow" style="align-items:center"><input id="lbgUrl" placeholder="…o pegue el enlace (URL) de una imagen o video" value="${m.mode==='url'?esc(m.url):''}" style="flex:1;min-width:200px"><button class="btn s" data-h-click="h5">Usar enlace</button></div>
@@ -4195,11 +4351,11 @@ R.config=function(){
  /* Personalización y configuración web: todo lo que cambia cómo se ve la web
     (panel de entrada, tienda pública, redes y transporte) junto en la pestaña web. */
  const webCards=[
-  ['lbgCard',lbgCard],['xmasCard',xmasCard],['redesCard',redesCard],['fleCard',fleAdmCard]
+  ['xmasCard',xmasCard],['lbgCard',lbgCard],['poliCard',poliAdmCard],['redesCard',redesCard],['fleCard',fleAdmCard]
  ];
  /* El resto son ajustes internos del negocio: van a la pestaña general. */
  const genCards=[
-  ['poliCard',poliAdmCard],['waCard',waCard],['investCard',investCard],['bkCard',bkCard],['sesCard',sesCard],['tplCard',tplCard],['recCard',recCard],
+  ['waCard',waCard],['investCard',investCard],['bkCard',bkCard],['sesCard',sesCard],['tplCard',tplCard],['recCard',recCard],
   ['vozCard',vozCard],['cintCard',cintCard],['llamCard',llamCard]
  ];
  const wEx=$('cfgWebExtra'),gEx=$('cfgGenExtra');
