@@ -85,3 +85,23 @@ test('vendDel borra roles/{uid} y también miembros/{uid} (MULTIEMP) sin romper 
  assert.match(f,/try\{if\(typeof MULTIEMP!=='undefined'&&MULTIEMP&&typeof TJEmpresa!=='undefined'&&TJEmpresa\.empActiva\)await fbDb\.collection\('empresas'\)\.doc\(TJEmpresa\.empActiva\(\)\)\.collection\('miembros'\)\.doc\(id\)\.delete\(\)\}catch\(e\)\{window\._tjw&&_tjw\(e\)\}/);
  assert.match(f,/DB\.cfg\.users=usuarios\(\)\.filter\(x=>x\.id!==id\);save\(\);R\.vend\(\)\}$/,'el resto del flujo no cambia');
 });
+
+test('Alta de vendedor crea empresas/{eid}/miembros/{uid} en su propio try/catch y con el mismo formato que mktMiembros',()=>{
+ const app=leer('js/app.js'),mk=leer('js/marketing.js');
+ /* Formato único {uid,ts} en mktMiembroSet; mktMiembros lo reutiliza. */
+ const j=mk.indexOf('async function mktMiembroSet(');
+ const fset=mk.slice(j,mk.indexOf('\nasync function mktMiembros(',j));
+ assert.match(fset,/collection\('empresas'\)\.doc\(mktEid\(\)\)\.collection\('miembros'\)\.doc\(uid\)/);
+ assert.match(fset,/if\(!ex\.exists\)await ref\.set\(\{uid:uid,ts:Date\.now\(\)\}\)/);
+ const k=mk.indexOf('async function mktMiembros(');
+ const fm=mk.slice(k,mk.indexOf('\nasync function mktCargarMarca',k));
+ assert.match(fm,/await mktMiembroSet\(u\.id\)/);
+ assert.ok(!/\.set\(\{uid/.test(fm),'mktMiembros no duplica el formato');
+ /* vendSave: tras escribir roles/{uid}, en try/catch propio, solo con MULTIEMP y empresa activa. */
+ const i=app.indexOf('async function vendSave(');
+ const f=app.slice(i,app.indexOf('async function vendDel(',i));
+ const re=/await fbDb\.collection\('roles'\)\.doc\(c\.user\.uid\)\.set\(\{rol:'vend',n,email:e,panels\}\);\n\s*try\{if\(typeof MULTIEMP!=='undefined'&&MULTIEMP&&typeof TJEmpresa!=='undefined'&&TJEmpresa\.empActiva&&typeof mktMiembroSet==='function'\)await mktMiembroSet\(c\.user\.uid\)\}catch\(e\)\{window\._tjw&&_tjw\(e\)\}\n\s*usuarios\(\)\.push\(\{id:c\.user\.uid,n,email:e,panels\}\)/;
+ assert.match(f,re,'el alta crea miembros en try/catch propio y el resto del flujo no cambia');
+ /* La edición no crea miembros. */
+ assert.equal((f.match(/await mktMiembroSet\(/g)||[]).length,1);
+});

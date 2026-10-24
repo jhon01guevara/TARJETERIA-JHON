@@ -17,7 +17,10 @@ Origen: `docs/AUDITORIA-SEGURIDAD.md` y `docs/PROPUESTA-SEGURIDAD-REGLAS.md`. Re
 ### Efectos conocidos (decide si los aceptas)
 
 1. **Fondo de login en vendedores.** Hoy cada vendedor sincroniza `empresas/{eid}/panel/loginbg` desde la nube. Con las reglas nuevas solo lo lee el admin. `lbgPull` (en `js/app.js`) ya captura el error y no muestra nada: el vendedor simplemente conserva el fondo que tenga guardado en su navegador (o el predeterminado). No se abrió la regla.
-2. **Pertenencia a la empresa (`miembros`).** Un vendedor solo accede a los datos de la empresa si existe `empresas/{eid}/miembros/{uid}`. En la app, esos documentos los crea la administración **al abrir la vista «Marketing»** (función `mktMiembros`, una vez por sesión del admin). Si un vendedor no está en `miembros`, **perdería el acceso** a sus datos. Un vendedor nuevo creado después necesita que el admin vuelva a abrir Marketing (o crear su documento a mano).
+2. **Pertenencia a la empresa (`miembros`).** Un vendedor solo accede a los datos de la empresa si existe `empresas/{eid}/miembros/{uid}` (formato `{uid, ts}`). La app los crea de dos formas, ambas ejecutadas por el admin y con el mismo formato (función `mktMiembroSet` en `js/marketing.js`):
+   - **Vendedores existentes:** al abrir la vista «Marketing» (`mktMiembros`, una vez por sesión del admin, idempotente: no pisa los que ya existen).
+   - **Vendedores nuevos:** al crearlos en «Vendedores» (`vendSave`), si `MULTIEMP` está activo y hay empresa activa. Va en su propio `try/catch`: si falla, el alta del vendedor no se corta (y el documento se completará al abrir Marketing).
+   Un vendedor que no esté en `miembros` perdería el acceso a sus datos al publicar las reglas, por eso la comprobación previa de abajo es obligatoria.
 3. **Baja de vendedores.** Con este PR, `vendDel` borra también `empresas/{eid}/miembros/{uid}` (si falla, no interrumpe la baja). Un vendedor eliminado *antes* de este cambio conserva su documento `miembros`: bórralo a mano (ver paso 2.3).
 4. **Límites de la tienda.** Empresa ≤ 120 y dirección ≤ 200 caracteres (el formulario ya tiene `maxlength` con esos valores).
 5. Los tests de `tests/reglas-propuestas.test.js` verifican el texto de la propuesta; los de `firestore.rules` siguen verificando producción.
@@ -53,7 +56,7 @@ El proyecto de pruebas está vacío. Crea:
 | **Vendedor B (otra empresa)** | Usuario + `roles/{uidB}` + `empresas/otra-empresa/miembros/{uidB}`, **sin** miembros en `tarjeteria-jhon`. |
 | **Datos mínimos** | Algunos documentos en `empresas/tarjeteria-jhon/panel_public/general`, `…/clientes`, `…/catalogo` y un chat entre admin y A. |
 
-Puedes crear el vendedor A desde la vista «Vendedores» del panel (si lo abres apuntando a pruebas) o a mano en la consola, y abrir «Marketing» una vez como admin para que se generen los `miembros`.
+Puedes crear el vendedor A desde la vista «Vendedores» del panel (si lo abres apuntando a pruebas) o a mano en la consola, y abrir «Marketing» una vez como admin para que se generen los `miembros` (los vendedores creados desde «Vendedores» ya generan el suyo al darlos de alta).
 
 ### 2.3 Abrir una copia del panel apuntando a pruebas
 
@@ -94,7 +97,9 @@ Si algo falla, anota la ruta exacta del error (consola del navegador → «Missi
 ## 3. Decidir
 
 Pasa a producción solo si toda la lista anterior está en verde, y confirma:
-- [ ] Todos los vendedores reales tienen documento en `empresas/tarjeteria-jhon/miembros/` (se ve en Firestore → `empresas` → `tarjeteria-jhon` → `miembros`). Si falta alguno: entra como admin, abre «Marketing» y vuelve a mirar.
+- [ ] **Paso previo a la publicación:** antes de publicar, el admin abre la vista «Marketing» una vez y verifica en Firebase Console que cada vendedor activo tiene su documento en `empresas/{eid}/miembros` (Firestore → `empresas` → `tarjeteria-jhon` → `miembros`; el ID del documento es el UID del vendedor, el mismo que en `roles/{uid}`).
+  - Si falta alguno: recarga el panel como admin, abre «Marketing» de nuevo y vuelve a mirar (ten en cuenta que `mktMiembros` solo corre una vez por sesión).
+  - Si sigue faltando, créalo a mano en la consola: en `empresas/{eid}/miembros` pulsa «Agregar documento», **ID del documento = UID del vendedor**, campos `uid` (string, el mismo UID) y `ts` (number, p. ej. `1790000000000`).
 - [ ] Aceptas los efectos de la sección 0.
 - [ ] Tienes la copia de las reglas actuales (sección 1).
 - [ ] Haces el cambio en un momento de poco uso y puedes probar con un vendedor real justo después.
@@ -113,4 +118,4 @@ Tras publicar, prueba de inmediato con la cuenta admin y con un vendedor real (l
 2. pega la copia guardada en el paso 1 (o el contenido actual de `firestore.rules` del repo) y pulsa **Publicar**.
 3. Con CLI: `firebase deploy --only firestore:rules --project tarjeteria-jhon` desde una carpeta cuyo `firestore.rules` sea la copia antigua.
 
-Revertir no borra datos: las reglas solo controlan el acceso. Si borraste `miembros` por error, el admin puede recrearlos abriendo «Marketing».
+Revertir no borra datos: las reglas solo controlan el acceso. Si borraste `miembros` por error, el admin puede recrearlos abriendo «Marketing» (los vendedores nuevos ya se crean solos al darlos de alta).

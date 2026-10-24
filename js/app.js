@@ -4115,6 +4115,7 @@ async function vendSave(id){const n=$('vf_n').value.trim(),panels=[...document.q
    const sec=firebase.apps.find(a=>a.name==='sec')||firebase.initializeApp(firebaseConfig,'sec');
    const c=await sec.auth().createUserWithEmailAndPassword(e,p);await sec.auth().signOut();
    await fbDb.collection('roles').doc(c.user.uid).set({rol:'vend',n,email:e,panels});
+   try{if(typeof MULTIEMP!=='undefined'&&MULTIEMP&&typeof TJEmpresa!=='undefined'&&TJEmpresa.empActiva&&typeof mktMiembroSet==='function')await mktMiembroSet(c.user.uid)}catch(e){window._tjw&&_tjw(e)}
    usuarios().push({id:c.user.uid,n,email:e,panels})}
   else{const u=usuarios().find(x=>x.id===id);if(!u.email)return m('Vendedor antiguo sin cuenta: elimínelo y créelo de nuevo con correo.');
    u.n=n;u.panels=panels;await fbDb.collection('roles').doc(id).set({rol:'vend',n,email:u.email,panels})}
