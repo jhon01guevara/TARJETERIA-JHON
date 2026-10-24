@@ -15,9 +15,15 @@ test('La tarjeta de inicio de sesión agrupa logo, textos y fondo',()=>{
  assert.match(app,/loginLogoKind==='video'/,'video en el login');
  assert.match(app,/DB\.cfg\.loginTitulo/,'título editable');
  assert.match(app,/DB\.cfg\.loginDesc/,'descripción editable');
- /* el login ya no tiene el nombre fijado en el código */
+ /* el login ya no tiene el nombre fijado en el código: prioriza la copia local
+    (la pantalla aparece antes de cargar la cfg de la nube) */
  assert.doesNotMatch(app,/authUI\(`<h2>Tarjetería Jhon<\/h2>/);
- assert.match(app,/authUI\(`<h2>\$\{esc\(\(DB\.cfg&&DB\.cfg\.loginTitulo\)\|\|nombreNegocio\(\)\)\}<\/h2>/);
+ assert.match(app,/authLogin\(\)\{const L=loginIdentLocal\(\);authUI\(`<h2>\$\{esc\(L\.titulo\|\|\(DB\.cfg&&DB\.cfg\.loginTitulo\)\|\|nombreNegocio\(\)\)\}<\/h2>/);
+ assert.match(app,/function loginIdentLocal/,'copia local del inicio (sobrevive al recargar)');
+ assert.match(app,/function loginIdentPull/,'se sincroniza desde la nube al entrar');
+ assert.match(app,/function panelLogoApply/,'logo del menú lateral aplicable');
+ assert.match(app,/function panelLogoFile/,'subida del logo del panel');
+ assert.match(app,/cfg\.panelLogoSrc/);
 });
 
 test('La factura usa el logo de la empresa con fallback al del panel',()=>{
