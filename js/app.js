@@ -472,11 +472,18 @@ function shopContacto(){
 // Configuración (administrador). Lo escrito sin guardar y el aviso sobreviven a los redibujados de la pantalla.
 /* ===== POLÍTICAS DE PRIVACIDAD, USO Y PROTECCIÓN LEGAL (LEY 81 DE PANAMÁ) ===== */
 const TJ_POLITICAS = {
- /* Getters: se evalúan al usarse, así reflejan la empresa activa y su cfg. */
+ /* Getters: se evalúan al usarse — reflejan la empresa activa (panel) o los
+    datos publicados de la tienda (__cfg.empresaNombre / contacto) en la web. */
  get nombre(){return nombreNegocio()},
  get web(){return location.origin+location.pathname+'?tienda=1'},
- get correo(){return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com'},
- get tel(){return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.tel)||'6074-1150'},
+ get correo(){
+  try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.email)return SH.contacto.email}catch(e){}
+  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com';
+ },
+ get tel(){
+  try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.tel)return SH.contacto.tel}catch(e){}
+  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.tel)||'6074-1150';
+ },
  estado: "Etapa preparatoria. La tienda todavía no recibe pedidos ni pagos comerciales.",
 };
 
@@ -1001,6 +1008,8 @@ config(){editEmails=false;
    ${DB.cfg.logoFac?`<img src="${DB.cfg.logoFac}" alt="logo" style="height:54px;border-radius:10px;background:#fff;padding:4px 10px;border:1px solid var(--linea)">`:'<small style="color:var(--gris)">Sin logo propio: la factura usa el logo del panel.</small>'}
    <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">📁 Subir logo<input type="file" accept="image/*" hidden data-h-change="call" data-a-change="${_ha('facLogoFile')}"></label>
    ${DB.cfg.logoFac?`<button class="btn s d" data-h-click="call" data-a-click="${_ha('facLogoQuitar')}">Quitar</button>`:''}
+  </div>
+  <small style="display:block;color:var(--gris);font-size:11.5px;margin-top:4px">Dimensiones: horizontal, recomendado <b>600×200 px</b> (mínimo 200 de ancho) · PNG con fondo transparente ideal.</small>
   </div></div>
  <br><button class="btn p" id="btnSaveCfg" style="display:none" data-h-click="h288">💾 Guardar datos</button> <button class="btn s" id="btnCancelCfg" style="display:none" data-h-click="h287">Cancelar</button>`);
  const c3=wrapCardInner('cfg_emails','✉️ Correos predeterminados',`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><p style="font-size:12.5px;color:var(--gris);margin:0">Se sugieren al enviar reportes o facturas por correo.</p><span><button class="btn s" id="btnEditE" data-h-click="h286">✏️ Editar</button><button class="btn s" id="btnDoneE" style="display:none" data-h-click="h285">✔ Listo</button></span></div><div class="g" style="margin-bottom:10px"><div><label>Nombre</label><input id="e_n" placeholder="Ej. Contabilidad" disabled></div><div><label>Correo</label><input id="e_m" type="email" placeholder="correo@ejemplo.com" disabled></div></div><button class="btn s" id="btnAddE" data-h-click="h284" disabled>+ Agregar correo</button><div id="elist" style="margin-top:12px"></div>`);
@@ -1465,7 +1474,17 @@ function toggleEditCfg(on){
  if(sv)sv.style.display=on?'':'none';
  if(cn)cn.style.display=on?'':'none';
 }
-function cfg(){Object.assign(DB.cfg,{nombre:$('c1').value||'Tarjetería Jhon',tel:$('c3').value,dir:$('c4').value,itbms:+$('c5').value||0,email:$('c6').value,banco:$('c7').value,tcuenta:$('c8').value,cuenta:$('c9').value,yappy:$('c10').value,sig:+$('c11').value||DB.cfg.sig});save();toggleEditCfg(false);alert('Datos guardados. Los campos se bloquearon de nuevo.')}
+function cfg(){Object.assign(DB.cfg,{nombre:$('c1').value||'Tarjetería Jhon',tel:$('c3').value,dir:$('c4').value,itbms:+$('c5').value||0,email:$('c6').value,banco:$('c7').value,tcuenta:$('c8').value,cuenta:$('c9').value,yappy:$('c10').value,sig:+$('c11').value||DB.cfg.sig});save();toggleEditCfg(false);
+ /* La web lee el nombre/correo/teléfono de la empresa desde su plantilla: se
+    replican aquí para que la tienda y las políticas cambien en automático. */
+ try{
+  if(typeof fbCol==='function'&&fbCol){
+   var contacto={};try{if(typeof TD!=='undefined'&&TD.contacto)Object.assign(contacto,TD.contacto)}catch(e){}
+  contacto.email=DB.cfg.email;contacto.tel=DB.cfg.tel;
+   fbCol('tienda_items').doc('__cfg').set({__cfg:true,empresaNombre:DB.cfg.nombre,contacto:contacto,ts:Date.now()},{merge:true}).then(function(){try{TD.empresaNombre=DB.cfg.nombre;TD.contacto=contacto}catch(e){}}).catch(function(){});
+  }
+ }catch(e){window._tjw&&window._tjw(e)}
+ alert('Datos guardados. Los campos se bloquearon de nuevo.\nNombre, correo y teléfono también se actualizaron en la web (tienda y políticas).')}
 function respaldo(){const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,1));a.download='respaldo_tarjeteria_john.json';a.click()}
 
 function dibujarGraficos(){
@@ -3110,7 +3129,7 @@ function etqImprimirLote(){
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbCol(c):fbCol(c).where('ref','==',me);let f1=true,f2=true;
- fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||nombreNegocio();TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.banners=Array.isArray(cd.banners)?cd.banners:undefined;TD.btnRadio=cd.btnRadio||999;TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{document.documentElement.style.setProperty('--kbtn-r',(TD.btnRadio)+'px')}catch(e){}try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||nombreNegocio();TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.banners=Array.isArray(cd.banners)?cd.banners:undefined;TD.btnRadio=cd.btnRadio||999;TD.empresaNombre=cd.empresaNombre||'';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{document.documentElement.style.setProperty('--kbtn-r',(TD.btnRadio)+'px')}catch(e){}try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -3230,7 +3249,7 @@ function xmasCard(){
 
  <div class="g" style="margin-top:14px">
   <div style="grid-column:1/-1">
-    <label>Logo de la tienda (URL o subir archivo de imagen)</label>
+    <label>Logo del encabezado de la tienda — junto a «Catálogo virtual» (URL o subir imagen)</label>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <input id="sh_cfg_logo" value="${esc(TD.logoUrl||'')}" placeholder="https://... o elija un archivo" style="flex:1;min-width:220px">
       <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
@@ -3334,7 +3353,8 @@ function xmasCard(){
  </div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🎠 Banners promocionales de la portada</h3>
- <p style="font-size:12.5px;color:var(--gris)">Imágenes grandes que rotan en el inicio de la tienda. Suba hasta 6 (JPG/PNG/GIF ≤250 KB) o pegue enlaces. Si no agrega ninguno, la tienda usa los banners que trae el panel.</p>
+ <p style="font-size:12.5px;color:var(--gris)">Se numeran en orden: <b>Banner 1</b>, <b>banner 2</b>… hasta 6, y rotan en el inicio de la tienda. Puede subir imágenes (JPG/PNG/GIF ≤250 KB) o pegar enlaces; el primero de la lista es el Banner 1. Sin banners propios se usan los que trae el panel.</p>
+ <small style="display:block;color:var(--gris);font-size:11.5px;margin-bottom:8px">Dimensiones por banner: panorámico, recomendado <b>1200×600 px</b> (mínimo 600 de ancho).</small>
  <div id="banList" style="margin:10px 0">
  ${(TD.banners||[]).length?(TD.banners||[]).map((b,i)=>`<div class="dl"><span style="display:flex;gap:10px;align-items:center"><img src="${esc(b.src)}" alt="" style="width:86px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--linea)"><small style="color:var(--gris)">Banner ${i+1}</small></span><span style="display:flex;gap:6px"><button class="btn s" data-h-click="call" data-a-click="${_ha('banMover',i+'|-1')}" ${i===0?'disabled':''}>↑</button><button class="btn s" data-h-click="call" data-a-click="${_ha('banMover',i+'|1')}" ${i===(TD.banners||[]).length-1?'disabled':''}>↓</button><button class="btn s d" data-h-click="call" data-a-click="${_ha('banQuitar',i)}">🗑</button></span></div>`).join(''):'<div class="vacio" style="padding:14px">Usando los banners predeterminados del panel. Agregue los suyos para reemplazarlos.</div>'}
  </div>
@@ -3444,7 +3464,7 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
  }catch(e){window._tjw&&_tjw(e)}
  try{SH.cli=JSON.parse(localStorage.getItem(lsk('tj_shop_cli'))||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem(lsk('tj_shop_cart'))||'{}')}catch(e){window._tjw&&_tjw(e)}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem(lsk('tj_shop_fav'))||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.heroTitle=cd.heroTitle||nombreNegocio();SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.banners=Array.isArray(cd.banners)?cd.banners:undefined;SH.btnRadio=cd.btnRadio||999;SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.style.setProperty('--kbtn-r',SH.btnRadio+'px');H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;try{localStorage.setItem(lsk('tj_cached_items'),JSON.stringify(SH.items.slice(0,180)));if(cf&&cf.data())localStorage.setItem(lsk('tj_cached_cfg'),JSON.stringify(cf.data()))}catch(e){window._tjw&&_tjw(e)}{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.heroTitle=cd.heroTitle||nombreNegocio();SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.banners=Array.isArray(cd.banners)?cd.banners:undefined;SH.btnRadio=cd.btnRadio||999;SH.empresaNombre=cd.empresaNombre||'';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.style.setProperty('--kbtn-r',SH.btnRadio+'px');H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;try{localStorage.setItem(lsk('tj_cached_items'),JSON.stringify(SH.items.slice(0,180)));if(cf&&cf.data())localStorage.setItem(lsk('tj_cached_cfg'),JSON.stringify(cf.data()))}catch(e){window._tjw&&_tjw(e)}{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
 const TEMAS=[
  {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
@@ -4006,6 +4026,10 @@ const _mr=mergeRemote;mergeRemote=function(r){_mr(r);authRefresh()};
 /* Nombre comercial real de la empresa activa (empresas.js lo resuelve; aquí cae
    a cfg.nombre y por último al histórico). Usar en login, tienda, políticas... */
 function nombreNegocio(){
+ /* En la tienda pública (sin sesión) manda el nombre de la empresa guardado en
+	    su plantilla (__cfg.empresaNombre, que escriben Datos de la empresa y el
+	    demo de empresas nuevas). */
+ try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&(SH.empresaNombre||SH.heroTitle))return SH.empresaNombre||SH.heroTitle}catch(e){}
  try{if(typeof empNombreActiva==='function'){var n=empNombreActiva();if(n)return n}}catch(e){}
  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon';
 }
@@ -4116,6 +4140,12 @@ async function lbgApply(){const o=document.getElementById('auth');if(!o)return;c
  o.classList.add('hasbg');LBG.sig=sig;await lbgFill(L,m)}
 const _au0=authUI;authUI=function(){const r=_au0.apply(this,arguments);try{lbgApply()}catch(e){window._tjw&&_tjw(e)}return r};
 // ---- Personalización: logos, inicio de sesión, banners y forma de botones ----
+/* La delegación de eventos (data-h-change="call") llama al manejador con this=INPUT
+   y sin evento: los archivos se leen de this.files (con respaldo por ev.target). */
+function archivoDe(ev){var el=(this&&this.files)?this:(ev&&ev.target&&ev.target.files?ev.target:null);return el&&el.files&&el.files[0]||null}
+function fmtKB(b){return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB'}
+/* Mide una imagen para informar resolución al subir (4 s de margen). */
+function medirImagen(file){return new Promise(function(res){var im=new Image(),ok=0;im.onload=function(){ok=1;res({w:im.naturalWidth,h:im.naturalHeight})};im.onerror=function(){ok=1;res(null)};im.src=URL.createObjectURL(file);setTimeout(function(){if(!ok)res(null)},4000)})}
 /* Comprime una imagen a dataURL (los GIF se conservan intactos para no perder la
    animación; si son muy grandes se pide usar enlace). */
 async function logoCompress(file,maxKB,maxW){
@@ -4136,15 +4166,19 @@ async function logoCompress(file,maxKB,maxW){
  }
  throw new Error('grande');
 }
-/* Logo de la factura (Datos de la empresa). */
+/* Logo de la factura (Datos de la empresa). Recomendado 600×200 horizontal. */
 async function facLogoFile(ev){
- const f=ev&&ev.target&&ev.target.files&&ev.target.files[0];if(!f)return;
- try{DB.cfg.logoFac=await logoCompress(f,150,600);save();R.config();alert('✔ Logo guardado: aparecerá en la factura.')}
- catch(e){alert(e.message==='gif-grande'?'El GIF es muy grande para la factura (máx ~450 KB). Use una imagen estática o un enlace.':'No se pudo procesar la imagen.')}
+ const file=archivoDe.call(this,ev);if(!file)return;
+ if(!/^image\//.test(file.type||''))return alert('❌ Ese archivo no es una imagen (use PNG o JPG).');
+ try{
+  const dim=await medirImagen(file);
+  if(dim&&dim.w<200)return alert('❌ La imagen es muy pequeña: '+dim.w+'×'+dim.h+' px.\nMínimo 200 px de ancho · Recomendado: 600×200 px horizontal (PNG con fondo transparente ideal).');
+  DB.cfg.logoFac=await logoCompress(file,150,600);save();R.config();
+  alert('✔ Logo de la factura subido con éxito'+(dim?(' ('+dim.w+'×'+dim.h+' px · '+fmtKB(file.size)+')'):'')+'.');
+ }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~450 KB: use una imagen estática o un enlace.':'❌ No se pudo procesar la imagen ('+((e&&e.message)||e)+').')}
 }
-function facLogoQuitar(){if(!confirm('¿Quitar el logo de la factura?'))return;delete DB.cfg.logoFac;save();R.config()}
-/* Logo/textos del inicio de sesión. Videos → Firebase Storage (patrón del fondo);
-   imágenes/GIF → dataURL en la configuración (sincroniza por panel/data). */
+function facLogoQuitar(){if(!confirm('¿Quitar el logo de la factura? Volverá el logo del panel.'))return;delete DB.cfg.logoFac;save();R.config();alert('✔ Logo de la factura eliminado.')}
+/* Logo/textos del inicio de sesión. Recomendado cuadrado 400×400. Videos → Storage. */
 async function loginLogoCloud(f){
  try{
   if(!(window.firebase&&firebase.storage))throw 0;
@@ -4154,42 +4188,50 @@ async function loginLogoCloud(f){
  }catch(e){window._tjw&&window._tjw(e);return ''}
 }
 async function loginLogoFile(ev){
- const f=ev&&ev.target&&ev.target.files&&ev.target.files[0];if(!f)return;
- const esVid=/^video\//.test(f.type||'')||/\.(mp4|webm|mov|m4v)$/i.test(f.name||'');
+ const file=archivoDe.call(this,ev);if(!file)return;
+ const esVid=/^video\//.test(file.type||'')||/\.(mp4|webm|mov|m4v)$/i.test(file.name||'');
  try{
   if(esVid){
-   const url=await loginLogoCloud(f);
-   if(!url)return alert('El video no pudo subirse a la nube. Use la opción de enlace o un archivo más liviano.');
-   DB.cfg.loginLogoSrc=url;DB.cfg.loginLogoKind='video';
-  }else{
-   DB.cfg.loginLogoSrc=await logoCompress(f,300,800);DB.cfg.loginLogoKind='image';
+   const url=await loginLogoCloud(file);
+   if(!url)return alert('❌ El video no pudo subirse a la nube. Use la opción de enlace o un archivo más liviano (MP4/WebM corto).');
+   DB.cfg.loginLogoSrc=url;DB.cfg.loginLogoKind='video';save();R.config();if(!SES)authLogin();
+   return alert('✔ Video del inicio de sesión subido con éxito ('+fmtKB(file.size)+').');
   }
-  save();R.config();if(!SES)authLogin();
- }catch(e){alert(e.message==='gif-grande'?'El GIF es muy grande (máx ~900 KB). Suba uno más liviano o use un enlace.':'No se pudo procesar el archivo.')}
+  if(!/^image\//.test(file.type||''))return alert('❌ Archivo no válido: use imagen, GIF o video MP4/WebM.');
+  const dim=await medirImagen(file);
+  if(dim&&dim.w<160)return alert('❌ La imagen es muy pequeña: '+dim.w+'×'+dim.h+' px.\nMínimo 160 px · Recomendado: 400×400 px cuadrado (se ve arriba del formulario).');
+  DB.cfg.loginLogoSrc=await logoCompress(file,300,800);DB.cfg.loginLogoKind='image';save();R.config();if(!SES)authLogin();
+  alert('✔ Logo del inicio de sesión subido con éxito'+(dim?(' ('+dim.w+'×'+dim.h+' px · '+fmtKB(file.size)+')'):'')+'.');
+ }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~900 KB: suba uno más liviano o use un enlace.':'❌ No se pudo procesar el archivo ('+((e&&e.message)||e)+').')}
 }
 function loginLogoUrl(){
  const u=($('lg_url')||{value:''}).value.trim();if(!u)return;
- DB.cfg.loginLogoSrc=u;DB.cfg.loginLogoKind=(/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)?'video':'image');save();R.config();if(!SES)authLogin();
+ DB.cfg.loginLogoSrc=u;DB.cfg.loginLogoKind=(/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)?'video':'image');save();R.config();if(!SES)authLogin();alert('✔ Logo por enlace guardado.');
 }
-function loginLogoQuitar(){if(!confirm('¿Quitar el logo del inicio de sesión?'))return;DB.cfg.loginLogoSrc='';DB.cfg.loginLogoKind='';save();R.config();if(!SES)authLogin()}
+function loginLogoQuitar(){if(!confirm('¿Quitar el logo del inicio de sesión?'))return;DB.cfg.loginLogoSrc='';DB.cfg.loginLogoKind='';save();R.config();if(!SES)authLogin();alert('✔ Logo del inicio de sesión eliminado.')}
 function loginIdentGuardar(){
  const t=($('lg_t')||{value:''}).value.trim(),d=($('lg_d')||{value:''}).value.trim();
- DB.cfg.loginTitulo=t;DB.cfg.loginDesc=d;save();R.config();if(!SES)authLogin();else alert('✔ Textos del inicio de sesión guardados.');
+ DB.cfg.loginTitulo=t;DB.cfg.loginDesc=d;save();R.config();if(!SES)authLogin();
+ alert('✔ Textos del inicio de sesión guardados.');
 }
-/* Banners promocionales de la tienda (por empresa, en tienda_items/__cfg.banners). */
+/* Banners promocionales de la tienda (por empresa, en tienda_items/__cfg.banners).
+   Recomendado 1200×600 px panorámico por banner. */
 function banGuardar(banners){
  banners=(banners||[]).slice(0,6);
  fbCol('tienda_items').doc('__cfg').set({__cfg:true,banners,ts:Date.now()},{merge:true})
-  .then(()=>{TD.banners=banners;R.config()})
-  .catch(e=>alert('No se pudo guardar los banners: '+((e&&e.message)||e)));
+  .then(()=>{TD.banners=banners;R.config();alert('✔ Banners guardados ('+banners.length+' de 6). Ya se ven en la tienda.')})
+  .catch(e=>alert('❌ No se pudo guardar los banners: '+((e&&e.message)||e)));
 }
 async function banSubir(ev){
- const f=ev&&ev.target&&ev.target.files&&ev.target.files[0];if(!f)return;
+ const file=archivoDe.call(this,ev);if(!file)return;
+ if(!/^image\//.test(file.type||''))return alert('❌ Ese archivo no es una imagen.');
+ const B=[...(TD.banners||[])];if(B.length>=6)return alert('Máximo 6 banners.');
  try{
-  const du=await logoCompress(f,250,1400);
-  const B=[...(TD.banners||[])];if(B.length>=6)return alert('Máximo 6 banners.');
+  const dim=await medirImagen(file);
+  if(dim&&dim.w<600)return alert('❌ El banner es muy pequeño: '+dim.w+'×'+dim.h+' px.\nMínimo 600 px de ancho · Recomendado: 1200×600 px panorámico.');
+  const du=await logoCompress(file,250,1400);
   B.push({id:uid(),src:du});banGuardar(B);
- }catch(e){alert(e.message==='gif-grande'?'El GIF es muy grande (máx ~750 KB).':'No se pudo procesar la imagen.')}
+ }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~750 KB.':'❌ No se pudo procesar la imagen.')}
 }
 function banUrl(){
  const u=($('ban_url')||{value:''}).value.trim();if(!u)return;
@@ -4198,13 +4240,13 @@ function banUrl(){
  B.push({id:uid(),src:u});$('ban_url').value='';banGuardar(B);
 }
 function banQuitar(i){const B=[...(TD.banners||[])];B.splice(i,1);banGuardar(B)}
-function banMover(i,d){const B=[...(TD.banners||[])],j=i+d;if(j<0||j>=B.length)return;[B[i],B[j]]=[B[j],B[i]];banGuardar(B)}
+function banMover(s){const p=String(s||'').split('|');const i=+p[0],d=+p[1];const B=[...(TD.banners||[])],j=i+d;if(!(i>=0)||!(j>=0)||j>=B.length)return;[B[i],B[j]]=[B[j],B[i]];banGuardar(B)}
 /* Forma de los botones de la tienda (píldora/redondeado/cuadrado). */
 function btnRadioSet(v){
  v=+v||999;
  fbCol('tienda_items').doc('__cfg').set({__cfg:true,btnRadio:v,ts:Date.now()},{merge:true})
-  .then(()=>{TD.btnRadio=v;document.documentElement.style.setProperty('--kbtn-r',v+'px');R.config()})
-  .catch(e=>alert('No se pudo guardar: '+((e&&e.message)||e)));
+  .then(()=>{TD.btnRadio=v;document.documentElement.style.setProperty('--kbtn-r',v+'px');R.config();alert('✔ Forma guardada: '+(v===999?'💊 Píldora':v===12?'▢ Redondeado':'⬛ Casi cuadrado')+'. Abra la tienda para verla (recargue si la tenía abierta).')})
+  .catch(e=>alert('❌ No se pudo guardar: '+((e&&e.message)||e)));
 }
 // ---- Tarjeta en Configuración ----
 function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
@@ -4219,6 +4261,7 @@ function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
     ${tieneLogo?`<button class="btn s d" data-h-click="call" data-a-click="${_ha('loginLogoQuitar')}">Quitar</button>`:''}
    </div>
   </div>
+  <small style="display:block;color:var(--gris);font-size:11.5px;margin:-4px 0 8px">Dimensiones: imagen/GIF cuadrado, recomendado <b>400×400 px</b> (mínimo 160) · video corto MP4/WebM.</small>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
    <input id="lg_url" placeholder="…o enlace (URL) de imagen/GIF/video" style="flex:1;min-width:200px"><button class="btn s" data-h-click="call" data-a-click="${_ha('loginLogoUrl')}">Usar enlace</button>
   </div>

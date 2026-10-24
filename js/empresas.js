@@ -132,23 +132,46 @@ function empDemoImg(nombre,n){
   '<text x="400" y="536" font-family="Segoe UI,sans-serif" font-size="28" fill="rgba(255,255,255,.7)" text-anchor="middle">Cambie esta imagen desde su catálogo</text></svg>';
  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
 }
-/* Contenido de muestra de una empresa NUEVA: plantilla con SU nombre, 3 productos
-   demo y sin banners de Tarjetería Jhon. Todo editable/borrable después.
-   Solo usa colecciones por empresa ya permitidas (tienda_items, panel). */
+/* Logo cuadrado de demostración con la inicial de la empresa. */
+function empDemoLogo(nombre){
+ var inicial=(nombre||'?').charAt(0).toUpperCase();
+ var svg='<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">'+
+  '<rect width="400" height="400" rx="80" fill="#14161c"/>'+
+  '<text x="200" y="255" font-family="Segoe UI,sans-serif" font-size="190" font-weight="700" fill="#ffffff" text-anchor="middle">'+inicial+'</text></svg>';
+ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+/* Banner panorámico de demostración (1200×600). */
+function empDemoBanner(nombre){
+ var svg='<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="600">'+
+  '<defs><linearGradient id="b" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6366f1"/><stop offset="1" stop-color="#ec4899"/></linearGradient></defs>'+
+  '<rect width="1200" height="600" fill="url(#b)"/>'+
+  '<text x="600" y="300" font-family="Segoe UI,sans-serif" font-size="64" font-weight="700" fill="#ffffff" text-anchor="middle">'+(nombre||'Su empresa')+'</text>'+
+  '<text x="600" y="370" font-family="Segoe UI,sans-serif" font-size="34" fill="rgba(255,255,255,.85)" text-anchor="middle">Banner de ejemplo · cámbielo en Configuración → Plantilla de la web</text></svg>';
+ return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+}
+/* Contenido de muestra de una empresa NUEVA: plantilla con SU nombre, banner y
+   logo demo, 3 productos de ejemplo y SIN nada de Tarjetería Jhon. Todo
+   editable/borrable después. Solo usa colecciones por empresa ya permitidas. */
 function empCrearDemo(d){
  try{
   if(typeof fbCol!=='function'||!fbCol)return;
   var ts=Date.now();
-  fbCol('tienda_items').doc('__cfg').set({__cfg:true,heroTitle:d.nombre,
-   heroSub:'Bienvenido a '+d.nombre+' · Tienda de muestra: personalícela desde el panel',
-   banners:[],btnRadio:999,demo:1,ts:ts},{merge:true}).catch(function(){});
+  fbCol('tienda_items').doc('__cfg').set({__cfg:true,empresaNombre:d.nombre,
+   heroTitle:d.nombre,
+   heroSub:'Bienvenido a '+d.nombre+' · Coloque aquí su eslogan en Configuración → Plantilla de la web',
+   heroBgType:'photo',heroPhotoUrl:empDemoBanner(d.nombre),
+   wordmark:d.nombre.slice(0,14),
+   banners:[{id:'demo_b1',src:empDemoBanner(d.nombre)}],
+   btnRadio:999,demo:1,ts:ts},{merge:true}).catch(function(){});
   for(var i=0;i<3;i++){
    fbCol('tienda_items').doc('demo_'+(i+1)).set({id:'demo_'+(i+1),
     name:'Producto de ejemplo '+(i+1),cat:'Demo',price:0,
     desc:'Producto de demostración de '+d.nombre+'. Edítelo o publíquelo cuando tenga el suyo.',
     img:empDemoImg(d.nombre,i),tags:[],stock:'ok',badges:[],ts:ts+i,demo:1}).catch(function(){});
   }
-  fbCol('panel').doc('data').set({cfg:{nombre:d.nombre},demo:1},{merge:true}).catch(function(){});
+  fbCol('panel').doc('data').set({cfg:{nombre:d.nombre,
+   loginTitulo:d.nombre,loginDesc:'Coloque la descripción de su empresa (Configuración → Inicio de sesión)',
+   loginLogoSrc:empDemoLogo(d.nombre),loginLogoKind:'image'},demo:1},{merge:true}).catch(function(){});
  }catch(e){window._tjw&&window._tjw(e)}
 }
 
