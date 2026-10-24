@@ -3353,8 +3353,8 @@ function xmasCard(){
  </div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🎠 Banners promocionales de la portada</h3>
- <p style="font-size:12.5px;color:var(--gris)">Se numeran en orden: <b>Banner 1</b>, <b>banner 2</b>… hasta 6, y rotan en el inicio de la tienda. Puede subir imágenes (JPG/PNG/GIF ≤250 KB) o pegar enlaces; el primero de la lista es el Banner 1. Sin banners propios se usan los que trae el panel.</p>
- <small style="display:block;color:var(--gris);font-size:11.5px;margin-bottom:8px">Dimensiones por banner: panorámico, recomendado <b>1200×600 px</b> (mínimo 600 de ancho).</small>
+ <p style="font-size:12.5px;color:var(--gris)">Se numeran en orden: <b>Banner 1</b>, <b>banner 2</b>… hasta 6, y rotan en el inicio de la tienda. Puede subir imágenes (JPG/PNG ≤120 KB, se comprimen solas) o pegar enlaces; el primero de la lista es el Banner 1. Sin banners propios se usan los que trae el panel.</p>
+ <small style="display:block;color:var(--gris);font-size:11.5px;margin-bottom:8px">Dimensiones por banner: panorámico, recomendado <b>1200×600 px</b> (mínimo 600 de ancho). Los 6 juntos no pueden pesar más de ~780 KB: para imágenes muy pesadas use el enlace (URL).</small>
  <div id="banList" style="margin:10px 0">
  ${(TD.banners||[]).length?(TD.banners||[]).map((b,i)=>`<div class="dl"><span style="display:flex;gap:10px;align-items:center"><img src="${esc(b.src)}" alt="" style="width:86px;height:44px;object-fit:cover;border-radius:8px;border:1px solid var(--linea)"><small style="color:var(--gris)">Banner ${i+1}</small></span><span style="display:flex;gap:6px"><button class="btn s" data-h-click="call" data-a-click="${_ha('banMover',i+'|-1')}" ${i===0?'disabled':''}>↑</button><button class="btn s" data-h-click="call" data-a-click="${_ha('banMover',i+'|1')}" ${i===(TD.banners||[]).length-1?'disabled':''}>↓</button><button class="btn s d" data-h-click="call" data-a-click="${_ha('banQuitar',i)}">🗑</button></span></div>`).join(''):'<div class="vacio" style="padding:14px">Usando los banners predeterminados del panel. Agregue los suyos para reemplazarlos.</div>'}
  </div>
@@ -4033,11 +4033,30 @@ function nombreNegocio(){
  try{if(typeof empNombreActiva==='function'){var n=empNombreActiva();if(n)return n}}catch(e){}
  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon';
 }
-/* Logo del inicio de sesión: foto, GIF animado o video corto por empresa. */
+/* Logo del inicio de sesión: foto, GIF animado o video corto por empresa.
+   Se guarda en cfg (sincroniza) Y en este navegador (tj_lg): la pantalla de
+   entrada aparece ANTES de cargar la configuración de la nube, así que sin la
+   copia local el logo "desaparecería" al recargar. */
+function loginIdentLocal(){try{return JSON.parse(localStorage.getItem(lsk('tj_lg'))||'null')||{}}catch(e){return{}}}
+function loginIdentGuardarLocal(o){
+ var n=Object.assign(loginIdentLocal(),o,{ts:Date.now()});
+ try{localStorage.setItem(lsk('tj_lg'),JSON.stringify(n))}catch(e){window._tjw&&window._tjw(e)}
+ return n;
+}
+/* Tras sincronizar con la nube: si la cfg trae algo más nuevo, se copia al local. */
+function loginIdentPull(){
+ try{
+  var c=DB.cfg||{},loc=loginIdentLocal();
+  if(c.loginTs&&+c.loginTs>+(loc.ts||0)){
+   loginIdentGuardarLocal({src:c.loginLogoSrc||'',kind:c.loginLogoKind||'',titulo:c.loginTitulo||'',desc:c.loginDesc||'',ts:c.loginTs});
+   if(!SES)authLogin();
+  }
+ }catch(e){}
+}
 function loginLogoHTML(){
- const c=(typeof DB!=='undefined'&&DB.cfg)||{};
- const src=c.loginLogoSrc||c.logoFac||'';
- const esVid=c.loginLogoKind==='video';
+ const L=loginIdentLocal(),c=(typeof DB!=='undefined'&&DB.cfg)||{};
+ const src=L.src||c.loginLogoSrc||c.logoFac||'';
+ const esVid=(L.kind||c.loginLogoKind)==='video';
  if(!src)return '';
  if(esVid)return '<div class="alogo"><video src="'+esc(src)+'" autoplay muted loop playsinline style="max-height:120px;border-radius:16px"></video></div>';
  return '<div class="alogo"><img src="'+esc(src)+'" alt="'+esc(nombreNegocio())+'"></div>';
@@ -4072,7 +4091,7 @@ function authInit(){
   const r=d.data();SES={id:r.rol==='admin'?'admin':u.uid,u:r};
   try{entrar()}catch(e){window._tjw&&_tjw(e);authUI('<h2>Acceso aceptado</h2><p>Su sesión está activa, pero una sección del panel no pudo cargarse. Actualice la página.</p><button class="btn p" data-h-click="h24">Actualizar</button>')}
  })}
-function authLogin(){authUI(`<h2>${esc((DB.cfg&&DB.cfg.loginTitulo)||nombreNegocio())}</h2><p>${esc((DB.cfg&&DB.cfg.loginDesc)||'Inicie sesión para continuar.')}</p><label>Correo</label><input id="au_e" type="email" autocomplete="username"><label>Contraseña</label><input id="au_p" type="password" autocomplete="current-password" data-h-keydown="h23"><label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0"><input type="checkbox" style="width:auto" data-h-change="h22"> Mostrar contraseña</label><div id="au_m"></div><button class="btn p" data-h-click="h21">Entrar</button><a href="#" data-h-click="h20" style="display:block;text-align:center;margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.85);text-decoration:underline">¿Olvidó su contraseña?</a>`);if(_note){authMsg(_note);_note=''}}
+function authLogin(){const L=loginIdentLocal();authUI(`<h2>${esc(L.titulo||(DB.cfg&&DB.cfg.loginTitulo)||nombreNegocio())}</h2><p>${esc(L.desc||(DB.cfg&&DB.cfg.loginDesc)||'Inicie sesión para continuar.')}</p><label>Correo</label><input id="au_e" type="email" autocomplete="username"><label>Contraseña</label><input id="au_p" type="password" autocomplete="current-password" data-h-keydown="h23"><label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin:8px 0"><input type="checkbox" style="width:auto" data-h-change="h22"> Mostrar contraseña</label><div id="au_m"></div><button class="btn p" data-h-click="h21">Entrar</button><a href="#" data-h-click="h20" style="display:block;text-align:center;margin-top:14px;font-size:12.5px;color:rgba(255,255,255,.85);text-decoration:underline">¿Olvidó su contraseña?</a>`);if(_note){authMsg(_note);_note=''}}
 async function authGo(){const e=$('au_e').value.trim(),p=$('au_p').value;if(!e||!p)return authMsg('Escriba correo y contraseña.');authMsg('Verificando…');
  try{idleStamp();await firebase.auth().signInWithEmailAndPassword(e,p)}catch(x){const c=x.code||String(x.message||x);const m={'auth/invalid-credential':'Correo o contraseña incorrectos','auth/wrong-password':'Contraseña incorrecta','auth/user-not-found':'No existe ese usuario','auth/invalid-email':'Correo no válido','auth/too-many-requests':'Demasiados intentos, espere unos minutos','auth/network-request-failed':'Sin conexión o bloqueado por la red','auth/operation-not-allowed':'Correo/contraseña no está habilitado en Firebase'};authMsg((m[c]||'No se pudo entrar')+' ['+c+']')}}
 async function authReset(){const e=($('au_e')&&$('au_e').value||'').trim();if(!e)return authMsg('Escriba su correo arriba y toque el enlace otra vez.');
@@ -4081,7 +4100,7 @@ function authLimpia(){if(!esAdmin())return;if(DB.cfg.admin||usuarios().some(u=>u
 function entrar(){const f=navOrd().find(x=>puede(x[0]));topUser();if(!f){authUI('<h2>Sin accesos</h2><p>Su usuario aún no tiene paneles asignados. Pídale al administrador que se los active.</p><button class="btn" data-h-click="h19">Salir</button>');return}
  if(!window._syncOn){window._syncOn=1;iniciarSincronizacionNube()}
  if(!window._catSync){window._catSync=1;sincronizarCatalogoNube()}
- setTimeout(authLimpia,4000);authOff();nav();galListen();chatListen();llamListen();perfListen();presListen();presStart();tiendaListen();setTimeout(cobroVoz,3500);ir(f[0])}
+ setTimeout(authLimpia,4000);panelLogoApply();authOff();nav();galListen();chatListen();llamListen();perfListen();presListen();presStart();tiendaListen();setTimeout(cobroVoz,3500);ir(f[0])}
 function authRefresh(){if(!SES)return;topUser();nav();if(!puede(vista))ir(vista)}
 function salir(){try{presBeat(true)}catch(e){window._tjw&&_tjw(e)}try{if(LL.id)llamCuelga();else if(LL.incoming)llamRechazar()}catch(e){window._tjw&&_tjw(e)}if(CH.unsub){CH.unsub();CH.unsub=null}firebase.auth().signOut().finally(()=>location.reload())}
 // --- Administración de vendedores (solo admin, en Configuración) ---
@@ -4194,33 +4213,54 @@ async function loginLogoFile(ev){
   if(esVid){
    const url=await loginLogoCloud(file);
    if(!url)return alert('❌ El video no pudo subirse a la nube. Use la opción de enlace o un archivo más liviano (MP4/WebM corto).');
-   DB.cfg.loginLogoSrc=url;DB.cfg.loginLogoKind='video';save();R.config();if(!SES)authLogin();
+   DB.cfg.loginLogoSrc=url;DB.cfg.loginLogoKind='video';DB.cfg.loginTs=Date.now();
+   loginIdentGuardarLocal({src:url,kind:'video'});save();R.config();if(!SES)authLogin();
    return alert('✔ Video del inicio de sesión subido con éxito ('+fmtKB(file.size)+').');
   }
   if(!/^image\//.test(file.type||''))return alert('❌ Archivo no válido: use imagen, GIF o video MP4/WebM.');
   const dim=await medirImagen(file);
   if(dim&&dim.w<160)return alert('❌ La imagen es muy pequeña: '+dim.w+'×'+dim.h+' px.\nMínimo 160 px · Recomendado: 400×400 px cuadrado (se ve arriba del formulario).');
-  DB.cfg.loginLogoSrc=await logoCompress(file,300,800);DB.cfg.loginLogoKind='image';save();R.config();if(!SES)authLogin();
+  DB.cfg.loginLogoSrc=await logoCompress(file,300,800);DB.cfg.loginLogoKind='image';DB.cfg.loginTs=Date.now();
+  loginIdentGuardarLocal({src:DB.cfg.loginLogoSrc,kind:'image'});save();R.config();if(!SES)authLogin();
   alert('✔ Logo del inicio de sesión subido con éxito'+(dim?(' ('+dim.w+'×'+dim.h+' px · '+fmtKB(file.size)+')'):'')+'.');
  }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~900 KB: suba uno más liviano o use un enlace.':'❌ No se pudo procesar el archivo ('+((e&&e.message)||e)+').')}
 }
+/* Logo del menú lateral del panel (la marca de la barra izquierda). */
+function panelLogoApply(){try{const im=document.querySelector('.brand .logo img');if(im)im.src=(DB.cfg&&DB.cfg.panelLogoSrc)||'assets/logo.png'}catch(e){}}
+async function panelLogoFile(ev){
+ const file=archivoDe.call(this,ev);if(!file)return;
+ if(!/^image\//.test(file.type||''))return alert('❌ Ese archivo no es una imagen (use PNG o JPG).');
+ try{
+  const dim=await medirImagen(file);
+  if(dim&&dim.w<100)return alert('❌ La imagen es muy pequeña: '+dim.w+'×'+dim.h+' px.\nMínimo 100 px · Recomendado: 200×200 px cuadrado.');
+  DB.cfg.panelLogoSrc=await logoCompress(file,150,500);save();panelLogoApply();R.config();
+  alert('✔ Logo del panel subido con éxito'+(dim&&dim.w?' ('+dim.w+'×'+dim.h+' px · '+fmtKB(file.size)+')':'')+'.');
+ }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~450 KB.':'❌ No se pudo procesar la imagen.')}
+}
+function panelLogoQuitar(){if(!confirm('¿Quitar el logo del panel? Volverá el logo original.'))return;delete DB.cfg.panelLogoSrc;save();panelLogoApply();R.config();alert('✔ Logo del panel eliminado.')}
 function loginLogoUrl(){
  const u=($('lg_url')||{value:''}).value.trim();if(!u)return;
- DB.cfg.loginLogoSrc=u;DB.cfg.loginLogoKind=(/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)?'video':'image');save();R.config();if(!SES)authLogin();alert('✔ Logo por enlace guardado.');
+ DB.cfg.loginLogoSrc=u;DB.cfg.loginLogoKind=(/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)?'video':'image');DB.cfg.loginTs=Date.now();
+ loginIdentGuardarLocal({src:u,kind:DB.cfg.loginLogoKind});save();R.config();if(!SES)authLogin();alert('✔ Logo por enlace guardado.');
 }
-function loginLogoQuitar(){if(!confirm('¿Quitar el logo del inicio de sesión?'))return;DB.cfg.loginLogoSrc='';DB.cfg.loginLogoKind='';save();R.config();if(!SES)authLogin();alert('✔ Logo del inicio de sesión eliminado.')}
+function loginLogoQuitar(){if(!confirm('¿Quitar el logo del inicio de sesión?'))return;DB.cfg.loginLogoSrc='';DB.cfg.loginLogoKind='';DB.cfg.loginTs=Date.now();loginIdentGuardarLocal({src:'',kind:''});save();R.config();if(!SES)authLogin();alert('✔ Logo del inicio de sesión eliminado.')}
 function loginIdentGuardar(){
  const t=($('lg_t')||{value:''}).value.trim(),d=($('lg_d')||{value:''}).value.trim();
- DB.cfg.loginTitulo=t;DB.cfg.loginDesc=d;save();R.config();if(!SES)authLogin();
+ DB.cfg.loginTitulo=t;DB.cfg.loginDesc=d;DB.cfg.loginTs=Date.now();
+ loginIdentGuardarLocal({titulo:t,desc:d});save();R.config();if(!SES)authLogin();
  alert('✔ Textos del inicio de sesión guardados.');
 }
 /* Banners promocionales de la tienda (por empresa, en tienda_items/__cfg.banners).
-   Recomendado 1200×600 px panorámico por banner. */
+   Recomendado 1200×600 px. Viven dentro del documento __cfg de Firestore, que
+   tiene límite de 1 MB: por eso se comprimen a ≤120 KB y se vigila el total. */
+function banPeso(B){return (B||[]).reduce(function(a,b){return a+(b&&b.src?b.src.length*0.75:0)},0)}
 function banGuardar(banners){
  banners=(banners||[]).slice(0,6);
+ var kb=Math.round(banPeso(banners)/1024);
+ if(kb>780)return alert('❌ Los banners juntos pesarían ~'+kb+' KB y el documento de la tienda no admite más de ~780 KB.\nUse enlaces (URL) para las imágenes pesadas o quite alguno.');
  fbCol('tienda_items').doc('__cfg').set({__cfg:true,banners,ts:Date.now()},{merge:true})
-  .then(()=>{TD.banners=banners;R.config();alert('✔ Banners guardados ('+banners.length+' de 6). Ya se ven en la tienda.')})
-  .catch(e=>alert('❌ No se pudo guardar los banners: '+((e&&e.message)||e)));
+  .then(()=>{TD.banners=banners;R.config();alert('✔ Banners guardados ('+banners.length+' de 6 · ~'+kb+' KB). Ya se ven en la tienda.')})
+  .catch(e=>{const m=String((e&&e.message)||e);alert((/exceeds the maximum|resource-exhausted/i.test(m)?'❌ Los banners juntos pesan demasiado para el documento de la tienda (límite 1 MB).\nUse enlaces (URL) para banners pesados o quite alguno.':'❌ No se pudo guardar los banners: '+m))});
 }
 async function banSubir(ev){
  const file=archivoDe.call(this,ev);if(!file)return;
@@ -4229,9 +4269,11 @@ async function banSubir(ev){
  try{
   const dim=await medirImagen(file);
   if(dim&&dim.w<600)return alert('❌ El banner es muy pequeño: '+dim.w+'×'+dim.h+' px.\nMínimo 600 px de ancho · Recomendado: 1200×600 px panorámico.');
-  const du=await logoCompress(file,250,1400);
-  B.push({id:uid(),src:du});banGuardar(B);
- }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~750 KB.':'❌ No se pudo procesar la imagen.')}
+  const du=await logoCompress(file,120,1200);
+  B.push({id:uid(),src:du});
+  if(Math.round(banPeso(B)/1024)>780)return alert('❌ Con este banner se pasarían del espacio (~'+Math.round(banPeso(B)/1024)+' KB de ~780).\nUse un enlace (URL) para esa imagen o quite otro banner.');
+  banGuardar(B);
+ }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~360 KB: use un enlace (URL).':'❌ No se pudo procesar la imagen.')}
 }
 function banUrl(){
  const u=($('ban_url')||{value:''}).value.trim();if(!u)return;
@@ -4262,6 +4304,14 @@ function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
    </div>
   </div>
   <small style="display:block;color:var(--gris);font-size:11.5px;margin:-4px 0 8px">Dimensiones: imagen/GIF cuadrado, recomendado <b>400×400 px</b> (mínimo 160) · video corto MP4/WebM.</small>
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:4px 0 6px;padding-top:10px;border-top:1px dashed var(--linea)">
+   ${DB.cfg.panelLogoSrc?`<img src="${DB.cfg.panelLogoSrc}" alt="logo panel" style="height:44px;border-radius:10px;background:#fff;padding:3px 6px;border:1px solid var(--linea)">`:'<small style="color:var(--gris)">Logo del menú lateral (el de la barra izquierda): usa el original del panel.</small>'}
+   <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">📁 Subir logo del panel<input type="file" accept="image/*,.gif" hidden data-h-change="call" data-a-change="${_ha('panelLogoFile')}"></label>
+    ${DB.cfg.panelLogoSrc?`<button class="btn s d" data-h-click="call" data-a-click="${_ha('panelLogoQuitar')}">Quitar</button>`:''}
+   </div>
+  </div>
+  <small style="display:block;color:var(--gris);font-size:11.5px;margin:0 0 8px">Recomendado <b>200×200 px</b> cuadrado (mínimo 100) · aparece en el menú de todos sus dispositivos.</small>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
    <input id="lg_url" placeholder="…o enlace (URL) de imagen/GIF/video" style="flex:1;min-width:200px"><button class="btn s" data-h-click="call" data-a-click="${_ha('loginLogoUrl')}">Usar enlace</button>
   </div>
@@ -4310,7 +4360,7 @@ async function lbgPull(force){if(LBG.pulling||typeof fbDb==='undefined'||!fbDb)r
   lbgSave(n);LBG.sig='';lbgApply();lbgRef()}catch(e){LBG.pulled=0}finally{LBG.pulling=0}}
 let _lbgPl=0;function lbgPullSoon(){if(Date.now()-_lbgPl<30000)return;_lbgPl=Date.now();lbgPull()}
 const _au1=authUI;authUI=function(){const r=_au1.apply(this,arguments);try{if(!LBG.pulled)lbgPull()}catch(e){window._tjw&&_tjw(e)}return r};
-const _mrl=mergeRemote;mergeRemote=function(){const r=_mrl.apply(this,arguments);try{lbgPullSoon()}catch(e){window._tjw&&_tjw(e)}return r};
+const _mrl=mergeRemote;mergeRemote=function(){const r=_mrl.apply(this,arguments);try{lbgPullSoon();loginIdentPull();panelLogoApply()}catch(e){window._tjw&&_tjw(e)}return r};
 
 const lbgSz=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB';
 function lbgRef(){const c=$('lbgCard');if(!c)return;c.innerHTML=lbgCard();lbgFill($('lbgPrev'),lbgMeta())}
