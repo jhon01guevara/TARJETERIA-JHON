@@ -26,3 +26,4 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | `axe-completo.js` | Fase 18: axe-core con todas las reglas WCAG A/AA + mejores prácticas + `target-size` en panel (admin/vendedor) y tienda; `VP=390x844` para móvil real. |
 | `axe-detalle.js` | Como el anterior pero imprime pantalla y HTML de cada nodo de las reglas pedidas (`RULES=label,region`). |
 | `tamano-zonas.js` | Fase 18: lista los controles de menos de 24×24 px (WCAG 2.2 · 2.5.8) por pantalla y selector. `VP=390x844` por defecto. |
+| `funcional-fase19.js` | Fase 19: ejecuta en la página, con entradas fijas, las funciones movidas a `gif.js`, `promo.js`, `transportistas.js` y `etiquetas.js` (PDF de etiquetas incluido) y imprime huellas; deben ser idénticas entre `main` y la rama. `ROL=vendedor.prueba@example.com` para el vendedor. |

@@ -130,3 +130,41 @@ Textos legales y registro de consentimientos: `TJ_POLITICAS` (con getters que se
 ### Líneas de `app.js`
 
 5.040 (antes de la Fase 11) → 4.662 (−378): −25 (sanear) −34 (redes) −315 (políticas) −4 (utils). `js/utils.js` pasa de 12 a 19 líneas; nuevos: `sanear.js` (31), `redes.js` (41), `politicas.js` (324).
+
+## 8. Fase 19: extracciones 6a, 7a, 12a y 13 (un commit por extracción)
+
+Misma regla de siempre: se mueven líneas completas, **literalmente**, a scripts clásicos (sin ES modules, sin `defer`/`async`) cargados justo **antes de `js/app.js`**. Las `const` siguen siendo globales de script y las `function` siguen siendo propiedades de `window`. Criterio de esta fase: solo se mueve un bloque si se puede **demostrar** que es equivalente. Se eligieron los 4 bloques que **no usan nada de `app.js` al cargarse** (no leen `DB`, `SES`, `TD`, ni ningún `let` de `app.js`; lo que usan lo usan dentro de funciones que se ejecutan después de cargar todo).
+
+| Extracción | Archivo | Qué se movió | Líneas movidas |
+|---|---|---|---|
+| 7a | `js/gif.js` | Compresor de GIF animados del perfil: `_gifMedianCut`, `_gifLZW`, `_gifEncode`, `_u8b64` (`const`), `gifComprimir` | 43 |
+| 13 | `js/promo.js` | Carrusel promocional de la tienda: `PROMO_IMG`, `PROMO` (`const`) y `promoSlide` | 5 |
+| 6a | `js/transportistas.js` | Directorio de transportistas (datos `FLE_DEF` y utilidades puras: `fleSanCfg`, `fleBuscar`, `fleLogo`, `fleMono`…), con las marcas `/*FLE-INI*/ … /*FLE-FIN*/` | 60 |
+| 12a | `js/etiquetas.js` | Motor de etiquetas de envío: `ETQ_TAM`, `C128`, `code128B`, `etqTxt`, `etqBarras`, `etqFlow`, `etqDibujar`, `etqPDF`, con las marcas `/*ETQ-INI*/ … /*ETQ-FIN*/` | 80 |
+
+Cada archivo empieza con un comentario de 3 líneas (fase, qué contiene, por qué es seguro); el resto es idéntico al original.
+
+### Cómo se comprobó que es equivalente
+1. **Movimiento literal:** un script compara `main` con la rama: cada bloque aparece **contiguo y una sola vez** en el `app.js` de `main`, y `app.js` nuevo es exactamente `app.js` de `main` menos esos 4 bloques (188 líneas). Nada se reescribió.
+2. **Carga en vacío:** cada archivo nuevo se ejecuta en un contexto `vm` vacío sin error (no depende de `app.js` al cargar).
+3. **Tests (`npm test`):** `tests/modularizacion-fase11.test.js` ahora cubre los 8 archivos extraídos (existen, compilan, solo declaraciones, ningún símbolo declarado dos veces, orden de carga en `index.html`, precaché del SW, resolución desde otro script); `tests/carga.test.js` carga todos los archivos extraídos antes de `app.js`; `tests/modularizacion-fase19.test.js` añade las comprobaciones propias de esta fase (marcas, orden, PRE, cabeceras, líneas).
+4. **Chrome real, funciones:** `tests/navegador/funcional-fase19.js` ejecuta en la página, con entradas fijas, `promoSlide`, `fleSanCfg`, `fleBuscar`, `fleLogo`, `etqDatos`+`etqPDF` (los 6 tamaños de rollo/hoja, comparando el contenido del PDF byte a byte salvo fecha e ID), `code128B`, `_gifEncode` y `gifComprimir` (con un GIF real y `ImageDecoder`). Las huellas son **idénticas** entre `main` y la rama, como administrador y como vendedor.
+5. **Chrome real, recorrido:** `recorrido.js` + `comparar.py` (todas las pantallas de administrador y vendedor, escritorio y móvil 390×844, y tienda pública): sin consola, CSP ni errores de página nuevos.
+
+### Líneas de `app.js`
+| | Líneas | Bytes |
+|---|---|---|
+| `main` antes de la Fase 19 | 4.647 | 578.060 |
+| Después de la Fase 19 | 4.459 (−188) | 556.932 (−21.128) |
+
+Archivos nuevos: `gif.js` (46 líneas), `promo.js` (8), `transportistas.js` (63), `etiquetas.js` (83).
+
+### Qué NO se movió en la Fase 19 (a propósito) y por qué
+- **Perfil y emojis (`PERF`, `PF`, `EMO` y su pantalla):** son `let` mutables compartidos con la pantalla y con el código de GIF (`_perfLeer` escribe en `PF`). Moverlos cambiaría quién declara esos `let`; se deja para cuando se mueva toda la pantalla de perfil junta.
+- **Llamadas de voz (WebRTC, estado `LL`, Firestore):** necesitan una prueba manual con dos usuarios reales que aquí no se puede hacer.
+- **Interfaz de transportistas (`/*FLE-UI-INI*/`) e interfaz de etiquetas (`/*ETQ-UI-INI*/`):** leen y escriben `DB`, `TD` y el DOM al ejecutarse y usan `let` de pantalla; se moverán con la tienda.
+- **`etqDatos`, `etqEnvio`, `etqNum`, `fleNotaEnv`:** dependen de `DB`/`TD` (se quedan en `app.js`).
+- **Tienda, chat, mapa, vistas del panel, sincronización:** riesgo alto o muy alto (estado central); no se tocan sin pruebas manuales.
+
+### Cómo revertir
+Revertir el PR (devuelve las 188 líneas a `app.js`, quita los 4 archivos y sus `<script>`, y vuelve la caché del SW a `tj-net-first-14`). Para revertir una sola extracción, `git revert` de su commit.
