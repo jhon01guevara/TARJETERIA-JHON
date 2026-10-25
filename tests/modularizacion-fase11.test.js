@@ -18,6 +18,8 @@ const EXTR={
  // Textos legales: las funciones de dibujo usan document/navigator/window al EJECUTARSE (no al cargar), por eso 'efectos:true'
  // Fase 19 (7a): compresor de GIF (usa document/ImageDecoder/btoa al EJECUTARSE, no al cargar)
  'js/gif.js':{consts:['_u8b64'],funcs:['_gifMedianCut','_gifLZW','_gifEncode','gifComprimir'],efectos:true},
+ // Fase 19 (13): datos del carrusel promocional; promoSlide usa esc/_ha al ejecutarse
+ 'js/promo.js':{consts:['PROMO_IMG','PROMO'],funcs:['promoSlide'],efectos:true},
  'js/politicas.js':{consts:['TJ_POLITICAS'],funcs:['shopPoliticas','poliVerEvidencia','poliImprimirEvidencia','poliCopiarEvidencia','poliVerRegistroAuditoria','poliExportarCSV','poliCopiar','poliAdmCard'],efectos:true},
 };
 const TODOS=Object.entries(EXTR).flatMap(([f,o])=>[...o.consts.map(n=>[f,n,'const']),...o.funcs.map(n=>[f,n,'function'])]);
