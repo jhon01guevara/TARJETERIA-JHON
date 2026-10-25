@@ -35,3 +35,4 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | Script | Qué hace |
 |---|---|
 | `hallazgos-fase20.js` | Tienda pública: la copia local `tj_cached_items` ya no supera la cuota, no avisa en consola, se guarda dentro de un presupuesto, pinta sin Firestore y se limpia sola bajo presión de memoria (incluye un fallo de `setItem` simulado). Puntos del carrusel ≥24×24, `#k_wa` dentro de un landmark (axe `region`), y la barra «Modelos» del vendedor (sin permiso a Check/Catálogo el toque no hace nada; con el permiso, navega). `BASE=… [VP=390x844] node hallazgos-fase20.js` |
+| `tienda-fase23.js` | Fase 23: geometría de la tienda pública (alto de `#shop .kwrap`, redes y pie al final, WhatsApp fijo, filtros, carrito sin enviar pedido) en escritorio y móvil. Ver `docs/GUIA-PRUEBAS-TIENDA.md` | `DIR=/ruta/copia PUERTO=8941 node tienda-fase23.js` |
