@@ -10,3 +10,10 @@ function b64ToUtf8(b64){const bin=atob(b64);const bytes=new Uint8Array(bin.lengt
 const $$=n=>'$'+(+n).toFixed(2);const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fdate=d=>d.split('-').reverse().join('/');const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const hoy=()=>ymd(new Date());
+/* Fase 11 (extracción 4): formato de tamaños y normalización de texto, movidos TAL CUAL desde js/app.js.
+   ext (extensión visible de un archivo del catálogo), tam y fmtKB (tamaño en KB/MB), shopN (texto sin tildes y en minúsculas).
+   ext, tam y shopN son const (globales de script); fmtKB es function (propiedad de window), como antes. */
+const ext=f=>(f.ext||'').toUpperCase()||'ARCHIVO';
+const tam=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
+const shopN=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+function fmtKB(b){return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB'}

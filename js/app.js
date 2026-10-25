@@ -392,44 +392,10 @@ async function sincronizarCatalogoNube(){
 }
 
 /* ===== Redes sociales y contacto de la tienda virtual ===== */
-const RED_DEF=[['tiktok','TikTok'],['instagram','Instagram'],['facebook','Facebook']];
-const RED_HOST={tiktok:/^(?:[a-z0-9-]+\.)*tiktok\.com$/i,instagram:/^(?:[a-z0-9-]+\.)*instagram\.com$/i,facebook:/^(?:[a-z0-9-]+\.)*(?:facebook\.com|fb\.com)$/i};
-const RED_SVG={
- tiktok:'<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.1 4.2 5 4.5"/>',
- instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>',
- facebook:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'};
-const CONT_DEF=[['tel','Teléfono','+507 6074-1150'],['wa','WhatsApp (botón flotante)','60741150'],['email','Correo','ventas@ejemplo.com'],['dir','Dirección','Calle principal, Panamá Oeste'],['horario','Horario','Lunes a sábado, 9:00 a.m. a 6:00 p.m.']];
 let RS_DRAFT={},RS_MSG=null;
-// Acepta @usuario, usuario o un link de la red; devuelve un link https seguro o '' si no es válido.
-function redUrl(red,txt){
- let t=String(txt==null?'':txt).trim();if(!t||t.length>300||!RED_HOST[red])return'';
- if(/^[a-z][a-z0-9+.-]*:/i.test(t)){if(!/^https?:\/\//i.test(t))return''}
- else if(/^(?:[a-z0-9-]+\.)+[a-z]{2,}(?:[\/?#]|$)/i.test(t))t='https://'+t;
- if(/^https?:\/\//i.test(t)){
-  let u;try{u=new URL(t)}catch(e){return''}
-  if(u.username||u.password||!RED_HOST[red].test(u.hostname))return'';
-  u.protocol='https:';u.hash='';
-  const id=u.searchParams.get('id');
-  u.search=(/\/profile\.php$/i.test(u.pathname)&&/^\d{5,25}$/.test(id||''))?'?id='+id:'';
-  return u.href
- }
- t=t.replace(/^@/,'');if(!/^[A-Za-z0-9._-]{1,60}$/.test(t))return'';
- return red==='tiktok'?'https://www.tiktok.com/@'+t:red==='instagram'?'https://www.instagram.com/'+t+'/':'https://www.facebook.com/'+t
-}
-// Datos de contacto: lo que no sea válido queda vacío (se vuelve a limpiar al leerlo en la tienda pública).
-function contLimpio(c){
- c=c&&typeof c==='object'?c:{};
- const tx=(v,m)=>String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,m),o={};
- const tel=tx(c.tel,25);o.tel=/^[+\d][\d\s().-]{5,24}$/.test(tel)?tel:'';
- let w=String(c.wa==null?'':c.wa).replace(/\D/g,'');if(w.length===8)w='507'+w;o.wa=/^\d{10,15}$/.test(w)?w:'';
- const em=tx(c.email,120);o.email=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)?em:'';
- o.dir=tx(c.dir,200);o.horario=tx(c.horario,150);
- return o
-}
 (function(){if(document.getElementById('redCss'))return;const st=document.createElement('style');st.id='redCss';
  st.textContent='.kredes{max-width:1100px;margin:28px auto 96px;padding:0 16px;text-align:center}.kredes h3{margin:0 0 12px}.kred-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}.kred{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:999px;font-weight:600;font-size:14px;text-decoration:none;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18)}.kred:hover{filter:brightness(1.08)}.kred svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}.kred-tiktok{background:#111}.kred-instagram{background:linear-gradient(45deg,#f09433,#dc2743 55%,#bc1888)}.kred-facebook{background:#1877f2}.kredh{display:inline-flex;gap:8px;align-items:center;margin-left:auto}.kredh:empty{display:none}.kredh .kred{width:34px;height:34px;padding:0;justify-content:center;box-shadow:none}.kmobile-menu .kredh{grid-column:1/-1;justify-content:center;margin:4px 0 8px}.kcont{margin:8px 0 14px}.kcr{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-bottom:1px solid rgba(127,127,127,.25)}.kcr>span{font-size:20px;line-height:1.3}.kcr small{opacity:.7}.kcr a{color:inherit;font-weight:600;word-break:break-word}.kwa{position:fixed;right:16px;bottom:calc(24px + env(safe-area-inset-bottom));z-index:24;width:58px;height:58px;border-radius:50%;background:#25d366;color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 20px -6px rgba(0,0,0,.45);text-decoration:none}.kwa[hidden]{display:none}.kwa:hover{filter:brightness(1.07)}.kwa svg{width:30px;height:30px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}@media (max-width:820px){.kwa{bottom:calc(124px + env(safe-area-inset-bottom))}}';
  document.head.appendChild(st)})();
-const redesLista=r=>{r=r&&typeof r==='object'?r:{};return RED_DEF.map(([k,n])=>[k,n,redUrl(k,r[k])]).filter(x=>x[2])};
 const redLink=(k,n,u,mini)=>`<a class="kred kred-${k}" href="${esc(u)}" target="_blank" rel="noopener noreferrer" aria-label="${n}" title="${n}"><svg viewBox="0 0 24 24" aria-hidden="true">${RED_SVG[k]}</svg>${mini?'':`<span>${n}</span>`}</a>`;
 // Tienda pública: iconos junto al menú y botones al final de la página.
 function shopFooterRender(){
@@ -466,321 +432,6 @@ function shopContacto(){
  shopM(`<h2 style="margin:6px 0">Contacto</h2><div class="kcont">${f.map(([i,l,h])=>`<div class="kcr"><span>${i}</span><div><small>${l}</small><br>${h}</div></div>`).join('')}</div>${L.length?`<h3 style="margin:6px 0 10px">Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>redLink(k,n,u)).join('')}</div>`:''}<div class="kact2" style="margin-top:14px"><button class="sbtn g" data-h-click="h31">Cerrar</button></div>`,'contact')
 }
 // Configuración (administrador). Lo escrito sin guardar y el aviso sobreviven a los redibujados de la pantalla.
-/* ===== POLÍTICAS DE PRIVACIDAD, USO Y PROTECCIÓN LEGAL (LEY 81 DE PANAMÁ) ===== */
-const TJ_POLITICAS = {
- /* Getters: se evalúan al usarse — reflejan la empresa activa (panel) o los
-    datos publicados de la tienda (__cfg.empresaNombre / contacto) en la web. */
- get nombre(){return nombreNegocio()},
- get web(){return location.origin+location.pathname+'?tienda=1'},
- get correo(){
-  try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.email)return SH.contacto.email}catch(e){}
-  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com';
- },
- get tel(){
-  try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.tel)return SH.contacto.tel}catch(e){}
-  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.tel)||'6074-1150';
- },
- estado: "Etapa preparatoria. La tienda todavía no recibe pedidos ni pagos comerciales.",
-};
-
-function shopPoliticas(tabSel){
- const t = tabSel || "1";
- const tabs = [
-   ["1", "⚠️ 1. Aviso Preparatorio"],
-   ["2", "📜 2. Términos de Uso"],
-   ["3", "🔒 3. Privacidad (Ley 81)"],
-   ["4", "🚚 4. Entregas y Retiros"],
-   ["5", "💬 5. Reclamaciones"],
-   ["6", "✅ 6. Lista de Verificación"]
- ];
- 
- let body = "";
- if(t === "1"){
-   body = `<div style="background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:12px 14px;margin-bottom:14px;color:#92400e;font-size:12.5px;line-height:1.5">
-     <b style="display:block;font-size:13.5px;margin-bottom:4px">⚠️ Estado: Etapa preparatoria informativa</b>
-     Actualmente, <b>${esc(nombreNegocio())}</b> se encuentra preparando su tienda en línea para una posible apertura comercial futura.<br><br>
-     <b>Durante esta etapa:</b>
-     <ul style="margin:6px 0 6px 18px;padding:0">
-       <li>No se reciben pedidos comerciales.</li>
-       <li>No se solicitan ni aceptan pagos por medio de la tienda.</li>
-       <li>Las publicaciones de productos y sus precios son informativas y pueden modificarse antes de la apertura.</li>
-       <li>Los métodos de entrega y pago descritos son opciones previstas, sujetas a confirmación.</li>
-       <li>El envío de un mensaje de consulta no equivale a una compra confirmada.</li>
-     </ul>
-     <b>🛡️ Importante para su seguridad:</b> No envíes dinero ni compartas información bancaria confidencial con motivo de una publicación o prueba de esta tienda. No se solicitarán contraseñas, códigos de verificación, PIN ni claves de banca en línea.
-   </div>`;
- } else if(t === "2"){
-   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
-     <h3 style="margin:0 0 6px;font-size:14.5px">2. Términos y condiciones de uso</h3>
-     <p><b>2.1. Objeto:</b> Estos términos establecen las reglas preliminares de acceso y uso del sitio web de ${esc(nombreNegocio())}, destinado a presentar productos de la categoría de accesorios y ofrecer información sobre una futura tienda en línea.</p>
-     <p><b>2.2. Uso permitido:</b> El usuario se compromete a utilizar el sitio de forma lícita, respetar los derechos de terceros y no intentar alterar, interrumpir o acceder sin autorización a sus sistemas, cuentas, bases de datos o funciones administrativas. Queda prohibido enviar información falsa, realizar pruebas abusivas o suplantar a otras personas.</p>
-     <p><b>2.3. Productos, fotografías y precios:</b> Las fotografías, descripciones, existencias y precios publicados durante la etapa preparatoria son informativos. Pueden existir diferencias de color, presentación o disponibilidad.</p>
-     <p><b>2.4. Pedidos y contratación:</b> La tienda no está recibiendo pedidos comerciales durante esta etapa para evitar que una prueba técnica se interprete como una compra real.</p>
-     <p><b>2.5. Precios y pagos futuros:</b> Los métodos previstos son transferencia bancaria y Yappy, sujetos a habilitación y verificación antes de la apertura. El usuario no debe transferir dinero actualmente.</p>
-     <p><b>2.6. Entregas y retiros futuros:</b> Se prevé ofrecer entrega a domicilio y retiro en un punto acordado. Las zonas disponibles, costos y horarios se publicarán antes de iniciar ventas.</p>
-     <p><b>2.7. Cambios, devoluciones y garantías:</b> Las condiciones definitivas se publicarán antes de iniciar ventas, respetando plenamente la legislación de protección al consumidor de la República de Panamá.</p>
-   </div>`;
- } else if(t === "3"){
-   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
-     <h3 style="margin:0 0 6px;font-size:14.5px">3. Política preliminar de privacidad y protección de datos</h3>
-     <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 14px;margin-bottom:12px;color:#166534;font-size:12px">
-       ✔ <b>Marco Legal:</b> Esta política se rige bajo la legislación panameña aplicable, incluida la <b>Ley 81 de 2019</b> de Protección de Datos Personales y su reglamentación, el <b>Decreto Ejecutivo 285 de 2021</b>.
-     </div>
-     <p><b>3.1. Finalidad:</b> Esta política explica cómo se prevé tratar la información personal relacionada con el uso de la tienda.</p>
-     <p><b>3.2. Qué información podría recopilarse:</b> Nombre y apellidos, teléfono, correo electrónico, dirección para coordinar entrega, datos de consultas y datos técnicos de navegación estrictamente necesarios. <b>Nunca se solicitarán contraseñas bancarias, PIN ni códigos de autenticación.</b></p>
-     <p><b>3.3. Finalidades previstas:</b> Responder consultas, coordinar pedidos/entregas futuras, confirmar operaciones legítimas, gestionar incidencias y cumplir con obligaciones legales aplicables.</p>
-     <p><b>3.4. Destinatarios:</b> La información personal no se comparte con terceros para fines incompatibles ni se comercializa.</p>
-     <p><b>3.5. Seguridad:</b> Se aplican medidas de restricción de acceso, reglas de seguridad en bases de datos y cifrado SSL/HTTPS en tránsito.</p>
-     <p><b>3.6. Derechos ARCO:</b> Las personas pueden ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición enviando una solicitud formal a <b><a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a></b>.</p>
-   </div>`;
- } else if(t === "4"){
-   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
-     <h3 style="margin:0 0 6px;font-size:14.5px">4. Política preliminar de entregas y retiros</h3>
-     <p><b>4.1. Modalidades previstas:</b> Entrega a domicilio (sujeta a cobertura) y retiro en punto acordado previamente con el cliente.</p>
-     <p><b>4.2. Cobertura y costos:</b> Las tarifas, zonas y horarios definitivos se anunciarán formalmente antes del inicio comercial.</p>
-     <p><b>4.3. Datos para entrega:</b> Se solicitarán únicamente los datos estrictamente necesarios (dirección y teléfono) para asegurar la llegada del paquete.</p>
-     <p><b>4.4. Incidencias:</b> Se dispondrá de un canal directo para resolver retrasos, entregas fallidas o daños en tránsito.</p>
-   </div>`;
- } else if(t === "5"){
-   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
-     <h3 style="margin:0 0 6px;font-size:14.5px">5. Atención al cliente y reclamaciones</h3>
-     <div style="background:var(--sf);border:1px solid var(--linea);border-radius:10px;padding:12px;margin-bottom:12px">
-       <b>Canales Oficiales:</b><br>
-       ✉️ Correo: <a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a><br>
-       📞 Teléfono: <a href="tel:60741150">6074-1150</a>
-     </div>
-     <p><b>5.1. Revisión y respuesta:</b> Las consultas y reclamaciones se atienden de forma individual y oportuna.</p>
-     <p><b>5.2. Derechos del consumidor:</b> Estas políticas no pretenden excluir ni reducir los derechos que reconoce la legislación panameña (ACODECO).</p>
-   </div>`;
- } else if(t === "6"){
-   body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
-     <h3 style="margin:0 0 6px;font-size:14.5px">6. Lista de verificación antes de la apertura comercial</h3>
-     <p style="color:var(--gris);font-size:12px">Tareas indispensables antes de activar pedidos y pagos reales:</p>
-     <ul style="margin:6px 0 6px 18px;padding:0">
-       <li>Completar y verificar la identidad legal del titular, RUC, Aviso de Operación y dirección física aplicable.</li>
-       <li>Confirmar la disponibilidad y registro del nombre comercial.</li>
-       <li>Definir productos, existencias, precios y condiciones de venta finales.</li>
-       <li>Validar transferencias bancarias y Yappy con procedimiento seguro de verificación.</li>
-       <li>Definir cobertura, tarifas, horarios y condiciones de entrega y retiro.</li>
-       <li>Publicar la política definitiva de cambios, devoluciones y garantías.</li>
-       <li>Auditar formularios, bases de datos y permisos de acceso técnico.</li>
-       <li>Verificar el procedimiento de atención a solicitudes de privacidad.</li>
-     </ul>
-   </div>`;
- }
- 
- const html = `<div style="max-width:620px;margin-inline:auto">
-   <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;gap:10px">
-     <div>
-       <h2 style="margin:0 0 2px;font-size:18px">🛡️ Políticas y Privacidad</h2>
-       <small style="color:var(--gris)">${esc(nombreNegocio())} (Ley 81 de Panamá)</small>
-     </div>
-   </div>
-   <div style="display:flex;gap:4px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;border-bottom:1px solid var(--linea)">
-     ${tabs.map(([k, l]) => `<button class="btn s ${k === t ? "p" : ""}" style="font-size:11.5px;padding:5px 10px;white-space:nowrap" data-h-click="call" data-a-click="${_ha('shopPoliticas', k)}">${l}</button>`).join("")}
-   </div>
-   <div style="max-height:55vh;overflow-y:auto;padding-right:6px">
-     ${body}
-   </div>
-   <div style="display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--linea);flex-wrap:wrap;gap:8px">
-     <button class="btn s" data-h-click="call" data-a-click="${_ha('poliCopiar')}" style="font-size:12px">📋 Copiar documento</button>
-     <button class="btn p" data-h-click="h31">Cerrar</button>
-   </div>
- </div>`;
- 
- if(document.getElementById("shopm"))shopM(html, "politicas"); else if(document.getElementById("md")){ document.getElementById("mb").innerHTML=html; document.getElementById("md").classList.add("on"); }
-}
-
-
-function poliVerEvidencia(id){
- const p=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]).find(x=>x.id===id);
- if(!p)return alert('Pedido no encontrado');
- const l=p.lead||{};
- const t=l.terminos||{};
- const hasOk=t.ok||(p.nota&&p.nota.includes('Aceptó Términos'));
- const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
- const fechaIso=t.fecha||new Date(p.ts).toISOString();
- const ua=t.ua||(navigator.userAgent||'No registrado');
- const ver=t.ver||'1.0 - Etapa Preparatoria (Ley 81 de 2019 de Panamá)';
- 
- const html=`<div style="max-width:580px;margin-inline:auto;text-align:left">
-   <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;border-bottom:1px solid var(--linea);padding-bottom:10px">
-     <div style="font-size:32px">🛡️</div>
-     <div style="flex:1">
-       <h3 style="margin:0;font-size:17px">Evidencia de Consentimiento y Términos</h3>
-       <small style="color:var(--gris)">Auditoría legal según Ley 81 de 2019 (Protección de Datos - Panamá)</small>
-     </div>
-     <span style="padding:4px 9px;border-radius:12px;background:#dcfce7;color:#15803d;font-weight:700;font-size:12px">✔ Aceptado</span>
-   </div>
-   
-   <div style="background:var(--sf);border:1px solid var(--linea);border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:12.5px;line-height:1.5">
-     <div style="display:grid;grid-template-columns:140px 1fr;gap:6px 10px;margin-bottom:6px">
-       <b style="color:var(--gris)">Cliente:</b> <span><b>${esc(l.name||'Sin nombre')}</b></span>
-       <b style="color:var(--gris)">Teléfono / WhatsApp:</b> <span>${esc(l.tel||'—')}</span>
-       <b style="color:var(--gris)">Correo electrónico:</b> <span>${esc(l.email||'—')}</span>
-       ${l.empresa?`<b style="color:var(--gris)">Empresa:</b> <span>${esc(l.empresa)}</span>`:''}
-       ${l.dir?`<b style="color:var(--gris)">Dirección:</b> <span>${esc(l.dir)}</span>`:''}
-       <b style="color:var(--gris)">ID Pedido / Transacción:</b> <span style="font-family:monospace;font-size:11px">${esc(p.id)}</span>
-       <b style="color:var(--gris)">Fecha de aceptación:</b> <span><b>${esc(fechaAcep)}</b></span>
-       <b style="color:var(--gris)">Marca de tiempo UTC:</b> <span style="font-family:monospace;font-size:11px">${esc(fechaIso)}</span>
-       <b style="color:var(--gris)">Versión de políticas:</b> <span>${esc(ver)}</span>
-     </div>
-     <div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--linea)">
-       <b style="color:var(--gris);display:block;margin-bottom:2px">Dispositivo / Agente técnico:</b>
-       <div style="font-family:monospace;font-size:10.5px;color:var(--txt);word-break:break-all;background:rgba(0,0,0,0.03);padding:6px 8px;border-radius:6px">${esc(ua)}</div>
-     </div>
-     ${p.nota?`<div style="margin-top:8px;padding-top:8px;border-top:1px dashed var(--linea)"><b style="color:var(--gris);display:block;margin-bottom:2px">Constancia en nota:</b><span style="font-size:11.5px;color:var(--txt)">${esc(p.nota)}</span></div>`:''}
-   </div>
-   
-   <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:10px 12px;margin-bottom:14px;color:#166534;font-size:11.5px;line-height:1.45">
-     <b>⚖️ Declaración de Consentimiento Expreso:</b><br>
-     El cliente marcó formalmente la casilla de verificación obligatoria en la tienda web antes de enviar su pedido, declarando haber leído y aceptado los Términos de Uso y la Política de Privacidad de <b>${esc(nombreNegocio())}</b>, reconociendo la etapa preparatoria informativa conforme a la <b>Ley 81 de 2019</b>.
-   </div>
-   
-   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-     <div style="display:flex;gap:6px;flex-wrap:wrap">
-       <button class="btn s" data-h-click="call" data-a-click="${_ha('poliImprimirEvidencia',p.id)}">🖨️ Imprimir constancia</button>
-       <button class="btn s" data-h-click="call" data-a-click="${_ha('poliCopiarEvidencia',p.id)}">📋 Copiar datos</button>
-     </div>
-     <button class="btn p" data-h-click="${document.getElementById('shopm')?'h31':'hs4'}">Cerrar</button>
-   </div>
- </div>`;
- 
- if(document.getElementById('shopm'))shopM(html, "evidencia");
- else if(document.getElementById('md')){ document.getElementById('mb').innerHTML=html; document.getElementById('md').classList.add('on'); }
-}
-
-function poliImprimirEvidencia(id){
- const p=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]).find(x=>x.id===id);if(!p)return;
- const l=p.lead||{},t=l.terminos||{};
- const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
- const w=window.open('','_blank');if(!w)return alert('Permita ventanas emergentes para imprimir.');
- w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Constancia Legal - ${esc(l.name||'Cliente')}</title><style>body{font-family:system-ui,sans-serif;padding:32px;color:#1e293b;max-width:700px;margin:auto;font-size:14px;line-height:1.6}h1{font-size:20px;margin-bottom:4px;color:#0f172a}table{width:100%;border-collapse:collapse;margin:18px 0}td,th{padding:8px 12px;border:1px solid #cbd5e1;text-align:left}.box{background:#f8fafc;border:1px solid #e2e8f0;padding:14px;border-radius:8px;margin:16px 0}@media print{button{display:none}}</style></head><body><h1>🛡️ CONSTANCIA DE CONSENTIMIENTO Y AUDITORÍA LEGAL</h1><p style="color:#64748b;margin:0 0 16px">${esc(nombreNegocio())} · Marco legal: Ley 81 de 2019 de la República de Panamá</p><div class="box"><b>Estado:</b> Consentimiento libre, previo, expreso e informado registrado en sistema.</div><table><tr><th>Identificador del Pedido</th><td>${esc(p.id)}</td></tr><tr><th>Nombre del Cliente</th><td>${esc(l.name||'—')}</td></tr><tr><th>Teléfono</th><td>${esc(l.tel||'—')}</td></tr><tr><th>Correo electrónico</th><td>${esc(l.email||'—')}</td></tr><tr><th>Empresa</th><td>${esc(l.empresa||'—')}</td></tr><tr><th>Dirección</th><td>${esc(l.dir||'—')}</td></tr><tr><th>Fecha y Hora de Aceptación</th><td><b>${esc(fechaAcep)}</b></td></tr><tr><th>Versión de Políticas</th><td>${esc(t.ver||'1.0 - Etapa preparatoria (Ley 81 Panamá)')}</td></tr><tr><th>Firma Técnica / Dispositivo</th><td style="font-family:monospace;font-size:11px">${esc(t.ua||'—')}</td></tr><tr><th>Registro en pedido</th><td>${esc(p.nota||'—')}</td></tr></table><div class="box" style="background:#f0fdf4;border-color:#bbf7d0;color:#166534"><b>Certificación:</b> El cliente aceptó formalmente mediante casilla de verificación los Términos de Uso y la Política de Privacidad vigentes al momento de la orden.</div><br><button onclick="window.print()" style="padding:8px 16px;cursor:pointer">🖨️ Imprimir</button></body></html>`);
- w.document.close();
-}
-
-function poliCopiarEvidencia(id){
- const p=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]).find(x=>x.id===id);if(!p)return;
- const l=p.lead||{},t=l.terminos||{};
- const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
- const str=`EVIDENCIA DE ACEPTACIÓN DE TÉRMINOS Y PRIVACIDAD (LEY 81 PANAMÁ)\nCliente: ${l.name||''}\nTeléfono: ${l.tel||''}\nCorreo: ${l.email||''}\nPedido ID: ${p.id}\nFecha y hora: ${fechaAcep}\nVersión: ${t.ver||'1.0'}\nAgente técnico: ${t.ua||''}\nNota: ${p.nota||''}`;
- try{navigator.clipboard.writeText(str);alert('Copiado al portapapeles ✔')}catch(e){prompt('Copie la evidencia:',str)}
-}
-
-function poliVerRegistroAuditoria(){
- const peds=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]);
- const conEvidencia=peds.filter(p=>(p.lead&&p.lead.terminos&&p.lead.terminos.ok)||(p.nota&&p.nota.includes('Aceptó Términos')));
- 
- const rows=conEvidencia.map(p=>{
-   const l=p.lead||{},t=l.terminos||{};
-   const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
-   return `<tr style="border-bottom:1px solid var(--linea)">
-     <td style="padding:8px"><b>${esc(l.name||'Cliente')}</b><br><small style="color:var(--gris)">${esc(l.tel||'')}${l.email?' · '+esc(l.email):''}</small></td>
-     <td style="padding:8px;font-size:12px;white-space:nowrap">${esc(fechaAcep)}</td>
-     <td style="padding:8px;font-size:11px;color:var(--gris)">${esc(t.ver||'1.0 Ley 81')}</td>
-     <td style="padding:8px;text-align:right">
-       <button class="btn s p" data-h-click="call" data-a-click="${_ha('poliVerEvidencia',p.id)}" style="font-size:11px;padding:3px 8px">👁️ Ver evidencia</button>
-     </td>
-   </tr>`;
- }).join('');
- 
- const html=`<div style="max-width:680px;margin-inline:auto;text-align:left">
-   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;border-bottom:1px solid var(--linea);padding-bottom:10px;flex-wrap:wrap;gap:8px">
-     <div>
-       <h3 style="margin:0;font-size:17px">📋 Registro General de Aceptaciones (Ley 81)</h3>
-       <small style="color:var(--gris)">Total: <b>${conEvidencia.length}</b> aceptaciones registradas con evidencia legal</small>
-     </div>
-     <button class="btn s" data-h-click="call" data-a-click="${_ha('poliExportarCSV')}" style="font-size:11.5px">📥 Exportar CSV</button>
-   </div>
-   
-   <div style="max-height:55vh;overflow-y:auto">
-     <table style="width:100%;border-collapse:collapse;font-size:12.5px">
-       <thead>
-         <tr style="border-bottom:2px solid var(--linea);color:var(--gris);font-size:11.5px">
-           <th style="padding:6px 8px;text-align:left">Cliente</th>
-           <th style="padding:6px 8px;text-align:left">Fecha de aceptación</th>
-           <th style="padding:6px 8px;text-align:left">Versión</th>
-           <th style="padding:6px 8px;text-align:right">Acción</th>
-         </tr>
-       </thead>
-       <tbody>
-         ${rows || '<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gris)">No hay pedidos registrados con consentimiento aún.</td></tr>'}
-       </tbody>
-     </table>
-   </div>
-   
-   <div style="display:flex;justify-content:flex-end;margin-top:14px;padding-top:10px;border-top:1px solid var(--linea)">
-     <button class="btn p" data-h-click="${document.getElementById('shopm')?'h31':'hs4'}">Cerrar</button>
-   </div>
- </div>`;
- 
- if(document.getElementById('shopm'))shopM(html, "auditoria");
- else if(document.getElementById('md')){ document.getElementById('mb').innerHTML=html; document.getElementById('md').classList.add('on'); }
-}
-
-function poliExportarCSV(){
- const peds=(typeof TD!=='undefined'&&TD.peds?TD.peds:[]);
- const conEvidencia=peds.filter(p=>(p.lead&&p.lead.terminos&&p.lead.terminos.ok)||(p.nota&&p.nota.includes('Aceptó Términos')));
- if(!conEvidencia.length)return alert('No hay registros de evidencias para exportar.');
- let csv='ID Pedido,Cliente,Telefono,Correo,Empresa,Direccion,Fecha Aceptacion,Version Ley,Dispositivo (User Agent),Nota\n';
- conEvidencia.forEach(p=>{
-   const l=p.lead||{},t=l.terminos||{};
-   const fechaAcep=t.fmt||(t.fecha?new Date(t.fecha).toLocaleString('es-PA'):new Date(p.ts).toLocaleString('es-PA'));
-   const clean=s=>'"'+String(s||'').replace(/"/g,'""')+'"';
-   csv+=[clean(p.id),clean(l.name),clean(l.tel),clean(l.email),clean(l.empresa),clean(l.dir),clean(fechaAcep),clean(t.ver||'1.0 Ley 81'),clean(t.ua),clean(p.nota)].join(',')+'\n';
- });
- const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');
- a.href=url;a.download='evidencias_terminos_ley81_'+hoy()+'.csv';a.click();URL.revokeObjectURL(url);
-}
-
-function poliCopiar(){
- const NN=nombreNegocio(),CORREO=(DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com',TEL=(DB.cfg&&DB.cfg.tel)||'6074-1150',SITIO=location.origin+location.pathname+'?tienda=1';
- const txt = `${NN}\nPolíticas preliminares de uso, privacidad y protección del cliente\nEstado: etapa preparatoria. La tienda todavía no recibe pedidos ni pagos.\nNombre comercial: ${NN}\nSitio web: ${SITIO}\nCorreo de contacto: ${CORREO}\nTeléfono: ${TEL}\n\n1. Aviso de etapa preparatoria\nNo se reciben pedidos comerciales ni pagos por la tienda. No envíes dinero ni compartas claves.\n\n2. Términos y condiciones de uso\nUso lícito, productos y precios informativos.\n\n3. Política preliminar de privacidad y protección de datos\nProtección conforme a la Ley 81 de 2019 de la República de Panamá y Decreto Ejecutivo 285 de 2021.\n\n4. Entregas y retiros\nModalidades a domicilio y retiro en punto acordado.\n\n5. Atención al cliente y reclamaciones\n${CORREO} · ${TEL}\n\n6. Lista de verificación antes de la apertura\nRUC, Aviso de Operación y formalización comercial.`;
- navigator.clipboard&&navigator.clipboard.writeText(txt).then(()=>alert("Copiado al portapapeles.")).catch(()=>alert(txt));
-}
-
-function poliAdmCard(){
- return `<h3 style="margin:0">🛡️ Políticas de uso, privacidad y protección legal</h3>
- <p style="font-size:12.5px;color:var(--gris);margin-top:2px">Políticas preliminares y marco de protección del cliente y administración bajo la <b>Ley 81 de 2019</b> (Protección de Datos de Panamá).</p>
- <div style="background:var(--sf);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:14px">
-   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-     <div>
-       <b style="font-size:14px">${esc(nombreNegocio())}</b><br>
-       <small style="color:var(--gris)">Estado: Etapa preparatoria informativa activa</small>
-     </div>
-     <span style="padding:4px 10px;border-radius:12px;background:#fef3c7;color:#b45309;font-weight:700;font-size:11.5px">⚠️ Etapa Preparatoria</span>
-   </div>
-   <div style="font-size:12.5px;color:var(--txt);line-height:1.5;margin-bottom:12px">
-     Estas políticas protegen tanto a los clientes como al negocio al declarar formalmente que la tienda web está en fase informativa preliminar, evitando fraudes, suplantaciones o pedidos no autorizados mientras se completa el registro oficial (RUC y Aviso de Operación).
-   </div>
-   <div style="display:flex;gap:8px;flex-wrap:wrap">
-     <button class="btn p" data-h-click="call" data-a-click="${_ha('shopPoliticas')}">👁️ Ver políticas completas</button>
-     <button class="btn s" data-h-click="call" data-a-click="${_ha('poliCopiar')}">📋 Copiar texto legal</button>
-   </div>
- </div>
- <div style="background:var(--sf);border:1px solid var(--linea);border-radius:12px;padding:14px;margin-bottom:14px">
-   <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
-     <div>
-       <b style="font-size:13.5px">🛡️ Registro y Evidencias de Aceptación (Auditoría Ley 81)</b><br>
-       <small style="color:var(--gris)">Cada pedido registra la marca de tiempo, versión legal aceptada y firma técnica del cliente.</small>
-     </div>
-     <span style="padding:3px 10px;border-radius:12px;background:#dcfce7;color:#15803d;font-weight:700;font-size:12px">✔ ${(typeof TD!=='undefined'&&TD.peds?TD.peds:[]).filter(p=>(p.lead&&p.lead.terminos&&p.lead.terminos.ok)||(p.nota&&p.nota.includes('Aceptó Términos'))).length} evidencias registradas</span>
-   </div>
-   <p style="font-size:12px;color:var(--gris);margin:0 0 10px">El cliente debe marcar obligatoriamente la casilla antes de enviar el pedido. La administración conserva constancia digital inalterable de cada consentimiento.</p>
-   <div style="display:flex;gap:8px;flex-wrap:wrap">
-     <button class="btn s p" data-h-click="call" data-a-click="${_ha('poliVerRegistroAuditoria')}">📋 Ver tabla general de evidencias</button>
-     <button class="btn s" data-h-click="call" data-a-click="${_ha('poliExportarCSV')}">📥 Exportar reporte CSV</button>
-   </div>
- </div>
- <div style="border:1px solid var(--linea);border-radius:10px;padding:12px;font-size:12px">
-   <b>✅ Lista de verificación previa a la apertura comercial:</b>
-   <ul style="margin:6px 0 0 16px;padding:0;color:var(--gris)">
-     <li>Completar y verificar identidad del titular, RUC y Aviso de Operación.</li>
-     <li>Confirmar cuentas oficiales de Yappy y Banco.</li>
-     <li>Auditar formularios y reglas de privacidad (Ley 81).</li>
-   </ul>
- </div>`;
-}
 
 function redesCard(){
 
@@ -839,24 +490,6 @@ function shopDestAuto(){
  const hold=ev=>{if(ev.target&&ev.target.closest&&ev.target.closest('#k_dest'))SH._dh=Date.now()+8000};
  ['pointerdown','touchstart','wheel','keydown'].forEach(t=>document.addEventListener(t,hold,{passive:true}))
 }
-// --- Saneo de documentos públicos (tienda_leads, tienda_pedidos, galería) ---
-// Cualquiera puede crear un registro o un pedido sin iniciar sesión (y cualquier vendedor puede
-// subir a la galería). Antes de dibujar esos datos en el panel se limpian aquí: el id solo puede
-// tener el formato que genera nuestro propio código (uid()); los documentos con un id "raro" se
-// descartan en vez de mostrarse (ese id se inserta directo en atributos onclick="...('ID')", y un
-// id fabricado con comillas podría ejecutar código en la sesión de quien lo vea). Los textos se
-// recortan a un largo razonable y los números se fuerzan a ser números de verdad.
-const SAFE_ID=/^[A-Za-z0-9_-]{1,60}$/;
-const sTxt=(v,n)=>String(v??'').slice(0,n||200);
-const sNum=v=>{const n=+v;return Number.isFinite(n)?n:0};
-function sanLead(d){if(!d||typeof d!=='object')return null;const id=String(d.id||'');if(!SAFE_ID.test(id))return null;
- return{id,name:sTxt(d.name,120),tel:sTxt(d.tel,40),email:sTxt(d.email,120),empresa:sTxt(d.empresa,120),dir:sTxt(d.dir,200),ref:sTxt(d.ref||'admin',60),ts:sNum(d.ts),imp:!!d.imp}}
-function sanPed(d){if(!d||typeof d!=='object')return null;const id=String(d.id||'');if(!SAFE_ID.test(id))return null;const l=d.lead||{};
- const items=Array.isArray(d.items)?d.items.slice(0,200).map(i=>({id:sTxt(i&&i.id,80),n:sTxt(i&&i.n,200),p:sNum(i&&i.p),q:Math.max(0,Math.round(sNum(i&&i.q)))})):[];
- return{id,cid:sTxt(d.cid,80),lead:{name:sTxt(l.name,120),tel:sTxt(l.tel,40),email:sTxt(l.email,120),empresa:sTxt(l.empresa,120),dir:sTxt(l.dir,200)},items,total:sNum(d.total),nota:sTxt(d.nota,500),ref:sTxt(d.ref||'admin',60),ts:sNum(d.ts),estado:d.estado==='atendido'?'atendido':'nuevo',envio:sanEnv(d.envio)}}
-function sanGal(d){if(!d||typeof d!=='object')return null;const id=String(d.id||'');if(!SAFE_ID.test(id))return null;
- const img=String(d.img||'');if(!/^data:image\/(png|jpe?g|webp|gif);base64,/i.test(img))return null;
- return Object.assign({},d,{id,img,t:sTxt(d.t,160),by:sTxt(d.by,80)})}
 const V=[['home','🏠','Inicio'],['nueva','🧾','Nueva factura'],['fac','📚','Facturas'],['prod','🎴','Productos'],['cat','📖','Catálogo'],['cli','👥','Clientes'],['ubi','📍','Ubicación'],['check','✅','Check'],['agenda','📅','Agenda'],['config','⚙️','Configuración']];
 let vista='home',items=[],perVentasSel='dia';
 function perVentas(p){perVentasSel=p;R.home()}
@@ -1545,8 +1178,6 @@ const tx=(m,fn)=>idb().then(db=>new Promise((a,b)=>{const t=db.transaction('f',m
 const CATS=['Cumpleaños','Quinceaños','Graduación','Boda','Amor','Baby shower','Revelación de sexo','Pésame','Agradecimiento','Aniversario','Felicidades','Día de la Madre','Día del Padre','Navidad','Otros'];
 let CL=[],CU={},cq='',cc='',catCl=new Set();function catTg(d){d.open?catCl.add(d.dataset.k):catCl.delete(d.dataset.k)}
 const cu=f=>CU[f.id]||(CU[f.id]=URL.createObjectURL(f.blob));
-const ext=f=>(f.ext||'').toUpperCase()||'ARCHIVO';
-const tam=b=>b>1048576?(b/1048576).toFixed(1)+' MB':Math.max(1,Math.round(b/1024))+' KB';
 const IMG_KB_MIN=500,IMG_KB_MAX=700,IMG_KB_DEF=500;
 function imgKBClamp(v){const n=Math.round(+v||IMG_KB_DEF);return Math.max(IMG_KB_MIN,Math.min(IMG_KB_MAX,n))}
 function imgKBPreference(){try{return imgKBClamp(localStorage.getItem(lsk('tj_img_kb'))||IMG_KB_DEF)}catch(e){return IMG_KB_DEF}}
@@ -3004,13 +2635,6 @@ let ETQ_SEL=new Set();
 const etqCfg=()=>{try{return JSON.parse(localStorage.getItem(lsk('tj_etq_cfg'))||'{}')||{}}catch(e){return{}}};
 const etqCfgSet=o=>{try{localStorage.setItem(lsk('tj_etq_cfg'),JSON.stringify(Object.assign(etqCfg(),o)))}catch(e){window._tjw&&_tjw(e)}};
 const etqLocal=()=>{try{return JSON.parse(localStorage.getItem(lsk('tj_etq_env'))||'{}')||{}}catch(e){return{}}};
-function sanEnv(v){if(!v||typeof v!=='object')return null;const o={};
- if(v.tipo)o.tipo=v.tipo==='internacional'?'internacional':'nacional';
- [['agencia',80],['fid',30],['rec',120],['rtel',40],['rced',30],['suc',100],['ref',200],['pais',60],['prov',80],['ciudad',80],['dir',200],['guia',60],['cont',300],['obs',200]].forEach(([k,n])=>{if(v[k]!=null&&String(v[k])!=='')o[k]=sTxt(v[k],n)});
- if(v.bultos!=null)o.bultos=Math.min(99,Math.max(1,Math.round(sNum(v.bultos))||1));
- if(sNum(v.peso)>0)o.peso=sNum(v.peso);
- if(sNum(v.etq)>0)o.etq=sNum(v.etq);
- return o}
 const etqNum=p=>String(p.id||'').slice(-6).toUpperCase();
 const etqEnvio=p=>Object.assign({},etqLocal()[p.id]||{},p.envio||{});
 const etqImpresa=p=>!!(etqEnvio(p).etq);
@@ -3479,7 +3103,6 @@ const TEMAS=[
  {id:'gracias',n:'Gracias',e:'💌',re:/gracias|agradec/},
  {id:'personal',n:'Personalizado',e:'✨',re:/personaliz|a tu medida|a su medida/},
  {id:'otros',n:'Otros',e:'📦',re:/$^/}];
-const shopN=s=>String(s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
 const temaOf=i=>{let r;if(Array.isArray(i.tags))r=i.tags;else{const t=shopN((i.name||'')+' '+(i.cat||'')+' '+(i.desc||''));r=TEMAS.filter(x=>x.re.test(t)).map(x=>x.id)}return r.length?r:['otros']};
 const temaMeta=id=>TEMAS.find(x=>x.id===id)||{id,n:id,e:'🏷️'};
 const KI={user:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',home:'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',heart:'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',heartO:'M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z',cart:'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0020 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z',search:'M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',plus:'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'};
@@ -4158,7 +3781,6 @@ const _au0=authUI;authUI=function(){const r=_au0.apply(this,arguments);try{lbgAp
 /* La delegación de eventos (data-h-change="call") llama al manejador con this=INPUT
    y sin evento: los archivos se leen de this.files (con respaldo por ev.target). */
 function archivoDe(ev){var el=(this&&this.files)?this:(ev&&ev.target&&ev.target.files?ev.target:null);return el&&el.files&&el.files[0]||null}
-function fmtKB(b){return b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB'}
 /* Mide una imagen para informar resolución al subir (4 s de margen). */
 function medirImagen(file){return new Promise(function(res){var im=new Image(),ok=0;im.onload=function(){ok=1;res({w:im.naturalWidth,h:im.naturalHeight})};im.onerror=function(){ok=1;res(null)};im.src=URL.createObjectURL(file);setTimeout(function(){if(!ok)res(null)},4000)})}
 /* Comprime una imagen a dataURL (los GIF se conservan intactos para no perder la

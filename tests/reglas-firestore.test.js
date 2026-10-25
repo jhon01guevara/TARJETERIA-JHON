@@ -17,7 +17,7 @@ test('firestore.rules es el texto publicado en producción (2026-10-24) y el res
 });
 
 test('Reglas: chat (equivalente a «Chat consulta solo conversaciones propias»)',()=>{
- const app=leer('js/app.js'),r=leer('firestore.rules');
+ const app=require('./helpers/app-fuentes').appTodo(),r=leer('firestore.rules');
  assert.match(app,/\.where\('members','array-contains',chatMe\(\)\)\.onSnapshot/);
  assert.match(r,/function chatMember\(data\)/);
  /* La lectura de chats exige ser admin o participante (hasAny sobre resource.data). */
@@ -63,7 +63,7 @@ test('Reglas: metadatos de empresa y dominios',()=>{
 });
 
 test('Reglas: los límites de tamaño de la tienda cuadran con los inputs de la app',()=>{
- const r=leer('firestore.rules'),app=leer('js/app.js');
+ const r=leer('firestore.rules'),app=require('./helpers/app-fuentes').appTodo();
  assert.match(r,/data\.empresa is string && request\.resource\.data\.empresa\.size\(\) <= 120/);
  assert.match(r,/data\.dir is string && request\.resource\.data\.dir\.size\(\) <= 200/);
  assert.match(app,/<input id="sh_c" autocomplete="organization" maxlength="120">/);
@@ -71,7 +71,7 @@ test('Reglas: los límites de tamaño de la tienda cuadran con los inputs de la 
 });
 
 test('Fondo de login: lbgPull falla en silencio si no hay permiso (la propuesta lo deja solo para admin)',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  const i=app.indexOf('async function lbgPull(');
  const f=app.slice(i,i+1400);
  assert.match(f,/catch\(e\)\{LBG\.pulled=0\}finally\{LBG\.pulling=0\}/,'sin alert ni relanzar el error');
@@ -79,7 +79,7 @@ test('Fondo de login: lbgPull falla en silencio si no hay permiso (la propuesta 
 });
 
 test('vendDel borra roles/{uid} y también miembros/{uid} (MULTIEMP) sin romper si falla',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  const i=app.indexOf('async function vendDel(');
  const f=app.slice(i,app.indexOf('\n',i));
  assert.match(f,/collection\('roles'\)\.doc\(id\)\.delete\(\)\}catch\(e\)\{window\._tjw&&_tjw\(e\)\}/);
@@ -88,7 +88,7 @@ test('vendDel borra roles/{uid} y también miembros/{uid} (MULTIEMP) sin romper 
 });
 
 test('Alta de vendedor crea empresas/{eid}/miembros/{uid} en su propio try/catch y con el mismo formato que mktMiembros',()=>{
- const app=leer('js/app.js'),mk=leer('js/marketing.js');
+ const app=require('./helpers/app-fuentes').appTodo(),mk=leer('js/marketing.js');
  /* Formato único {uid,ts} en mktMiembroSet; mktMiembros lo reutiliza. */
  const j=mk.indexOf('async function mktMiembroSet(');
  const fset=mk.slice(j,mk.indexOf('\nasync function mktMiembros(',j));

@@ -44,7 +44,7 @@ test('La bandera se lee en cada llamada: apagarla (reversión) es cambiar la var
 });
 
 test('app.js enruta TODO el negocio por fbCol y la identidad sigue directa',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.match(app,/const fbCol=n=>fbDb&&fbDb\.collection\(TJEmpresa\.empColPath\(n\)\)/);
  assert.match(app,/const lsk=k=>TJEmpresa\.empLSKey\(k\)/);
  for(const n of ['panel','panel_public','vendedores','catalogo','tienda_items','tienda_leads',
@@ -105,7 +105,7 @@ test('fbCol en app.js funciona en VM: rutas actuales hoy, enrutadas con la bande
 });
 
 test('Las claves locales de negocio pasan por lsk; las de persona no se particionan',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.match(app,/localStorage\.getItem\(lsk\('tj_db'\)\)/);
  assert.match(app,/localStorage\.setItem\(lsk\('tj_db'\),/);
  assert.match(app,/indexedDB\.open\(TJEmpresa\.empLSKey\('tj_cat'\),1\)/);
@@ -123,7 +123,7 @@ test('Las claves locales de negocio pasan por lsk; las de persona no se particio
 });
 
 test('El puente para apps externas (investigación) enruta .collection sin tocar su código',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.match(app,/window\.__panelBridge=\(\)=>\(\{db:fbDb\?new Proxy\(fbDb,\{get\(t,p\)\{if\(p==='collection'\)return n=>fbCol\(n\)/);
  assert.match(app,/col:fbCol\}\);/);
 });

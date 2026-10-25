@@ -100,3 +100,33 @@ Después de los primeros cuatro, `app.js` bajaría a ~4.500 líneas sin tocar na
 - `node --check` en todos los `.js`.
 - Prueba de humo con Chrome headless: sin `pageerror` ni `ReferenceError`, login visible, tienda `?tienda=1` visible, capturas antes/después idénticas (escritorio y móvil).
 - Panel de prueba (`tarjeteria-jhon-prueba`) con admin y vendedor: entra y carga sin errores.
+
+## 7. Fase 11: extracciones 1 a 4 (un commit por extracción)
+
+Misma regla de la Fase 10: se mueven líneas completas, literalmente, a scripts clásicos que se cargan **después de `js/utils.js` y antes de `js/app.js`**; las `const` siguen siendo globales de script y las `function` siguen siendo propiedades de `window`. La caché del service worker sube a `tj-net-first-8` y `app.js` pasa a `?v=modulos-fase-11x`. `tests/helpers/app-fuentes.js` hace que los tests que buscan texto del panel lean `app.js` más los archivos extraídos. `tests/modularizacion-fase11.test.js` es una tabla única (existencia, compilación, declaraciones, sin duplicados, orden en `index.html`, precaché, resolución por nombre y comportamiento).
+
+### Extracción 1: `js/sanear.js` (hecha)
+
+`SAFE_ID`, `sTxt`, `sNum`, `sanLead`, `sanPed`, `sanGal` y `sanEnv` (esta última estaba ~2.100 líneas más abajo, junto a las etiquetas de envío). Solo dependen entre sí; no tocan `DB`, `SES` ni Firebase. `sanPed` llama a `sanEnv` al ejecutarse (no al cargar), y ambas viven ahora en el mismo archivo. 25 líneas movidas.
+
+### Extracción 2: `js/redes.js` (hecha)
+
+`RED_DEF`, `RED_HOST`, `RED_SVG`, `CONT_DEF`, `redUrl`, `contLimpio` y `redesLista`: la validación y limpieza de las redes sociales y los datos de contacto (solo reglas y datos). Se **quedó en `app.js`** el estado de la pantalla (`RS_DRAFT`, `RS_MSG`, que es un `let` mutable), el CSS, `redLink` y todo lo que dibuja (`shopRedes`, `shopContacto`, `redesCard`, `redesFill`, `redesGuardar`). 34 líneas movidas.
+
+### Extracción 3: `js/politicas.js` (hecha)
+
+Textos legales y registro de consentimientos: `TJ_POLITICAS` (con getters que se evalúan al usarse) y las 8 funciones `shopPoliticas`, `poliVerEvidencia`, `poliImprimirEvidencia`, `poliCopiarEvidencia`, `poliVerRegistroAuditoria`, `poliExportarCSV`, `poliCopiar` y `poliAdmCard`. 315 líneas (el bloque completo, de comentario a comentario). Por qué es seguro mover también las funciones: a nivel superior solo hay declaraciones (un test lo comprueba línea por línea); usan `DB`, `SES`, `nombreNegocio`, `shopM`, `_ha` y `esc`, pero **solo al ejecutarse**, y los botones las llaman con `data-h-click="call"` → `window[nombre]`, que sigue funcionando porque siguen siendo `function` globales. Nota: `TJ_POLITICAS` hoy no tiene ningún uso en el código (solo se declara); se movió igual, sin borrarla.
+
+### Extracción 4: ampliar `js/utils.js` (hecha)
+
+`ext`, `tam`, `shopN` (`const`) y `fmtKB` (`function`), 4 líneas movidas al final de `js/utils.js` (`?v=modulos-fase-11d`). Comprobado: ningún otro script declara esos nombres a nivel superior (hay un `const tam` local dentro de `etqGenerar` y un `var tam` dentro de una función de la migración; son variables locales y no chocan con la global). `tam` y `fmtKB` se parecen pero redondean distinto (mínimo 1 KB en `tam`); se conservan las dos tal cual, sin unificarlas.
+
+### Qué NO se movió en la Fase 11 (a propósito)
+
+- `RS_DRAFT` y `RS_MSG` (`let` mutables, estado de la pantalla de redes): se quedan en `app.js`.
+- `redLink`, `shopRedes`, `shopContacto`, `redesCard`, `redesFill`, `redesGuardar` y el CSS `redCss`: dibujan y escriben en `DB`/`TD`; pertenecen a la futura extracción de la tienda.
+- `etqNum`, `etqEnvio` y el resto de las etiquetas de envío: siguen para la extracción 5.
+
+### Líneas de `app.js`
+
+5.040 (antes de la Fase 11) → 4.662 (−378): −25 (sanear) −34 (redes) −315 (políticas) −4 (utils). `js/utils.js` pasa de 12 a 19 líneas; nuevos: `sanear.js` (31), `redes.js` (41), `politicas.js` (324).
