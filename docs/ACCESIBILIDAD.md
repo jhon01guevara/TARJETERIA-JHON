@@ -165,7 +165,7 @@ Cierra tres de los pendientes de la Fase 18 (los números son de `tests/navegado
 
 - **Escritorio:** las reglas de móvil de la Fase 18 (`summary`, `h3[data-h-click]`, «¿Olvidó su contraseña?», casillas de etiquetas, `input.etqcb`) se repiten dentro de `@media(min-width:821px)`. Las casillas con etiqueta de bloque o flex usan `min-height:24px`; las de `display:inline` usan `padding-block` (no mueve el texto). Los botones `.btn.s` pequeños suben a 24 px con `:where(.btn.s)` (especificidad 0), así no pisa el `min-height:36px` que `panel.css` ya les da en móvil.
 - **Puntos del carrusel (`.khero-dots button`):** el botón mide 24×24 px (el activo 38×24) y el punto visible sigue midiendo 8 px (22×8 el activo), porque se dibuja con `background-clip:content-box` sobre un `padding` de 8 px. Se quitó el `gap` y se corrió el contenedor 8 px hacia dentro para que el último punto quede donde estaba. Los puntos quedan más separados (24 px entre centros en vez de 14).
-- **`#k_wa`:** el botón sigue siendo `position:fixed`, pero ahora vive dentro de `<div class="kwrap" role="complementary" aria-label="Contacto por WhatsApp">` (alto 0, no ocupa lugar), que se oculta junto con el botón cuando la empresa no tiene número.
+- **`#k_wa`:** el botón sigue siendo `position:fixed`, pero ahora vive dentro de `<div class="kwa-wrap" role="complementary" aria-label="Contacto por WhatsApp">` (alto 0, no ocupa lugar), que se oculta junto con el botón cuando la empresa no tiene número.
 
 ## Cómo revertir
 

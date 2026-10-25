@@ -130,5 +130,5 @@ html[data-paleta=dark] #shop .kha.pri{background:#6a54f0}
 #shop .khero-dots button{background-clip:content-box}
 .khero-dots button.on{width:38px}
 /* Contenedor del botón flotante de WhatsApp (landmark «complementary»): no ocupa espacio, el botón sigue siendo fixed. */
-.kwrap{margin:0;padding:0;border:0;height:0}
-.kwrap[hidden]{display:none}
+.kwa-wrap{margin:0;padding:0;border:0;height:0}
+.kwa-wrap[hidden]{display:none}
