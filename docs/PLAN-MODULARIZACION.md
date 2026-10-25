@@ -213,3 +213,36 @@ Se respetó el máximo de 4 extracciones por fase. El análisis encontró solo b
 
 ### Cómo revertir (Fase 21)
 Revertir el PR (devuelve las 256 líneas a `app.js`, quita los 4 archivos y sus `<script>`, y vuelve la caché del SW a `tj-net-first-16`). Para revertir una sola extracción, `git revert` de su commit (empezando por la última: las 4 tocan `index.html` y `sw.js` en líneas contiguas).
+
+## 10. Fase 23: extracciones 1 a 5 (un archivo por bloque)
+
+Misma regla de las fases 11, 19 y 21: líneas completas movidas **literalmente** a scripts clásicos (sin ES modules, sin `defer`/`async`) cargados justo **antes de `js/app.js`**, después de `plantillas-factura.js`, con `?v=modulos-fase-23a`. Caché del service worker `tj-net-first-19` → `tj-net-first-20`. Los 5 se eligieron con un análisis del árbol sintáctico (`acorn`): son solo declaraciones (`function`, `const` y los `window.x=x` que las publican) cuyas referencias al cargarse son únicamente a navegadores/otros scripts previos o a ellas mismas, y cuyo nombre no está declarado en ningún otro sitio. Se **evitaron** WebRTC, chat, TJ LIVE y presencia.
+
+| # | Archivo | Qué se movió | Líneas |
+|---|---|---|---|
+| 1 | `js/agenda-alertas.js` | Avisos de la Agenda: `AGSND` (const), `agSound`, `cfgSnd`, `agPerm`, `agToast`, `agAlert`, `agTest`, `agCheck` | 14 |
+| 2 | `js/tienda-config-medios.js` | Controles de la configuración de la tienda: `shopCfgBgTypeSet`, `shopCfgColorSet`, `shopCfgMotionSet`, `shopCfgWmSet`, `shopPhoto*`, `shopVideo*`, `shopPresetVideo`, `shopLogo*` (con su `window.x=x`) | 98 |
+| 3 | `js/tienda-copia-local.js` | Copia local del catálogo de la tienda: `shopCacheItems` (+ su comentario de la Fase 20 y `window.shopCacheItems`) | 30 |
+| 4 | `js/tienda-temas.js` | `TEMAS`, `temaOf`, `temaMeta`, `KI`, `kico` (const) y el `Object.assign(KI,…)` que completa los iconos | 23 |
+| 5 | `js/comprobante-pedido.js` | Comprobante del pedido: `shopPdfPrint`, `shopPdf`, `shopPdfVer` y `shopRecCanvas`, `shopImgVer` (dos bloques separados en `app.js`, marcados con `---- bloque 2` en el archivo) | 68 |
+
+Los archivos nuevos empiezan con una cabecera de 3 líneas (fase, contenido, por qué es seguro). `js/agenda-alertas.js` no incluye los `setInterval(agCheck…)`/`setTimeout(agCheck…)` que lo ponen en marcha: siguen en `app.js`.
+
+### Cómo se comprobó que es equivalente
+1. **Movimiento literal:** `node tests/navegador/verificar-movimiento-literal-23.js <rama-base>`: cada bloque aparece contiguo y una sola vez en el `app.js` de la base y el `app.js` nuevo es exactamente el de la base menos esas 233 líneas.
+2. **Carga en vacío y resolución:** `tests/modularizacion-fase23.test.js` (cabeceras, orden en `index.html`, precaché del SW, nada declarado dos veces, `window.x` publicadas, comportamiento de `temaOf`/`temaMeta`/`kico`, `shopCacheItems`, `agCheck`). Se actualizaron los tests que cargaban una lista fija de scripts (`fase7-routing`) o leían `app.js` como texto (`hallazgos-fase20`, `onclick-fase15`, `arreglos-fase14`).
+3. **Chrome real, funciones:** `tests/navegador/funcional-fase23.js` ejecuta en la página (copia de prueba, usuario administrador, datos solo en memoria, `AudioContext`/`Notification`/`window.open` sustituidos por dobles) todas las funciones movidas: temas, iconos, copia local con 63 fotos, sonidos y avisos de la Agenda, controles de la configuración con un DOM de ejemplo y subidas de archivos reales (foto, video, logo, con sus avisos de tamaño y tipo), comprobante (ventana de impresión, PDF con visor, imagen). Las huellas SHA-256 son **idénticas entre `main` y la rama** servidas desde el mismo origen (`node tests/navegador/copia-prueba.js` prepara cada copia).
+4. **Chrome real, recorrido:** `recorrido.js` + `comparar.py` (18 pantallas de administrador y 7 de vendedor y la tienda): mismos textos, sin errores de página ni CSP nuevos.
+5. **Tienda y pedido:** `tienda-fase23.js` (geometría de la tienda: contenedor alto, pie al final) y `tienda-pedido-fase23.js` en escritorio y móvil.
+
+### Líneas de `app.js`
+| | Líneas | Bytes |
+|---|---|---|
+| `main` antes de la Fase 23 | 4.233 | 524.368 |
+| Después | 4.000 (−233) | 501.208 (−23.160) |
+
+### Qué NO se movió y por qué
+Llamadas de voz (WebRTC, `LL`), chat, presencia (`PRES`), TJ LIVE, perfiles/emojis (`PERF`/`PF`/`EMO`), el estado `SH`/`TD` de la tienda y las vistas `R.*`: comparten estado mutable central o dependen de dos usuarios reales. Siguen necesitando prueba manual antes de moverse.
+
+### Cómo revertir
+Revertir el PR (devuelve las 233 líneas a `app.js`, quita los 5 archivos y sus `<script>`, y vuelve la caché del SW a `tj-net-first-19`).

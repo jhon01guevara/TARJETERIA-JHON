@@ -757,20 +757,6 @@ let _ac=null,AGN={},AGSN={};try{AGN=JSON.parse(localStorage.getItem(lsk('tj_ag_n
 const agNSave=()=>{try{localStorage.setItem(lsk('tj_ag_n'),JSON.stringify(AGN))}catch(e){window._tjw&&_tjw(e)}};
 function agAc(){try{if(!_ac)_ac=new(window.AudioContext||window.webkitAudioContext)();if(_ac.state==='suspended')_ac.resume()}catch(e){window._tjw&&_tjw(e)}return _ac}
 ['pointerdown','keydown','touchstart'].forEach(ev=>document.addEventListener(ev,agAc,{passive:true}));
-const AGSND={campana:[[880,0,1.3,'sine'],[1320,.1,1.3,'sine'],[880,.8,1.3,'sine'],[1320,.9,1.3,'sine']],alerta:[[1000,0,.18,'square'],[1000,.28,.18,'square'],[1000,.56,.18,'square'],[1000,.84,.18,'square']],suave:[[523,0,.7,'triangle'],[659,.22,.7,'triangle'],[784,.44,1,'triangle']],digital:[[1500,0,.1,'sawtooth'],[1800,.14,.1,'sawtooth'],[1500,.5,.1,'sawtooth'],[1800,.64,.1,'sawtooth']]};
-function agSound(force,tono){const c=DB.cfg;if(!force&&!c.snd)return;const ac=agAc();if(!ac)return;const v=(c.vol||70)/100*.5;
- (AGSND[tono||c.tono]||AGSND.campana).forEach(([f,t0,d,ty])=>{const o=ac.createOscillator(),g=ac.createGain(),st=ac.currentTime+t0,pk=ty=='sine'||ty=='triangle'?v:v*.4;o.type=ty;o.frequency.value=f;g.gain.setValueAtTime(0,st);g.gain.linearRampToValueAtTime(pk,st+.02);g.gain.exponentialRampToValueAtTime(.0001,st+d);o.connect(g);g.connect(ac.destination);o.start(st);o.stop(st+d+.05)})}
-function cfgSnd(k,v){DB.cfg[k]=v;save();if(k==='snd'&&v||k==='tono')agSound(true)}
-async function agPerm(){if(!('Notification' in window))return alert('Este navegador no permite avisos del sistema.');const r=await Notification.requestPermission();DB.cfg.nsys=r==='granted'?1:0;save();const e=$('permSt');if(e)e.textContent=r==='granted'?'✔ Activados':'✖ Bloqueados en el navegador'}
-function agToast(o,key){let c=$('agToast');if(!c){c=document.createElement('div');c.id='agToast';document.body.appendChild(c)}const e=o.e,x=AGT[e.t]||AGT.otro,el=document.createElement('div');el.className='agt';el.style.setProperty('--c',x[2]);
- el.innerHTML=`<b>${x[0]}</b><div><strong>${esc(e.ti)}</strong><small>${o.d==hoy()?'Hoy':fdate(o.d)}${e.h?' · '+esc(e.h):''}${e.cn?' · '+esc(e.cn):''}</small><div class="aga"><button class="btn s" data-a="d">✔ Hecho</button><button class="btn s" data-a="s">⏰ +10 min</button><button class="btn s" data-a="c">Cerrar</button></div></div>`;
- el.onclick=ev=>{const a=ev.target.dataset&&ev.target.dataset.a;if(!a)return;if(a==='d')agDone(e.id,o.d);if(a==='s'){delete AGN[key];AGSN[key]=Date.now()+6e5;agNSave()}el.remove()};c.appendChild(el)}
-function agAlert(o,key){const e=o.e;agSound();agToast(o,key);try{navigator.vibrate&&navigator.vibrate([200,100,200])}catch(x){window._tjw&&_tjw(x)}
- try{if(DB.cfg.nsys&&window.Notification&&Notification.permission==='granted')new Notification('📅 '+e.ti,{body:(o.d==hoy()?'Hoy':fdate(o.d))+(e.h?' · '+e.h:'')+(e.cn?' · '+e.cn:''),tag:key})}catch(x){window._tjw&&_tjw(x)}}
-function agTest(){agAlert({e:{id:'test',ti:'Notificación de prueba',t:'rec',h:'',cn:''},d:hoy()},'test'+Date.now())}
-function agCheck(){if(!DB.agenda||!DB.agenda.length)return;const now=Date.now(),t=hoy(),q0=AG.q,c0=AG.c;AG.q='';AG.c='';const l=agOcc(addD(t,-1),addD(t,1));AG.q=q0;AG.c=c0;
- l.forEach(o=>{const e=o.e;if(e.av===undefined||e.av===''||agDn(o))return;const st=new Date(o.d+'T'+(e.h||'08:00')+':00').getTime(),key=e.id+'|'+o.d+'|'+e.av;
-  if(now<st-(+e.av)*6e4||now>st+72e5||AGN[key]||now<(AGSN[key]||0))return;AGN[key]=now;delete AGSN[key];agNSave();agAlert(o,key)})}
 setInterval(agCheck,15000);setTimeout(agCheck,2500);
 
 const REPP=[['hoy','Hoy'],['sem','Esta semana'],['mes','Este mes'],['anio','Este año'],['todo','Todo el historial']];
@@ -2108,104 +2094,6 @@ const _nvi=nav;nav=function(){_nvi.apply(this,arguments);try{navIcons()}catch(e)
 const SHOP=/[?&]tienda(=|&|$)/.test(location.search);
 const TD={items:[],leads:[],peds:[],cat:[]},SH={items:[],cart:{},cli:null,ref:'admin',cat:'',q:'',err:0};
 
-function shopCfgBgTypeSet(t){
- TD._curBgType=t;
- const c=$('sh_cfg_bgtype_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-bgtype')===t));
- const sp=$('sh_cfg_sec_photo'),sv=$('sh_cfg_sec_video'),sc=$('sh_cfg_sec_colors'),ss=$('sh_cfg_sec_solid');
- if(sp)sp.style.display=t==='photo'?'block':'none';
- if(sv)sv.style.display=t==='video'?'block':'none';
- if(sc)sc.style.display=t==='colors'?'block':'none';
- if(ss)ss.style.display=t==='solid'?'block':'none';
-}
-window.shopCfgBgTypeSet=shopCfgBgTypeSet;
-
-function shopCfgColorSet(cId){
- TD._curHeroBgColor=cId;
- const c=$('sh_cfg_color_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-color')===cId));
-}
-window.shopCfgColorSet=shopCfgColorSet;
-
-function shopCfgMotionSet(m){
- TD._curMotion=m;
- const c=$('sh_cfg_motion_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-motion')===m));
-}
-window.shopCfgMotionSet=shopCfgMotionSet;
-
-function shopCfgWmSet(w){
- TD._curWmStyle=w;
- const c=$('sh_cfg_wm_btns');if(c)c.querySelectorAll('button').forEach(b=>b.classList.toggle('p',b.getAttribute('data-wm')===w));
-}
-window.shopCfgWmSet=shopCfgWmSet;
-
-function shopPhotoUpload(e){
- const inpFile=(e&&e.target&&e.target.files)?e.target:$('sh_cfg_photo_file');
- const file=inpFile&&inpFile.files&&inpFile.files[0];if(!file)return;
- if(!file.type.startsWith('image/')){alert('Por favor elija un archivo de imagen válido.');return}
- if(file.size>3.5*1024*1024){alert('La imagen no debe pesar más de 3.5 MB.');return}
- const reader=new FileReader();
- reader.onload=ev=>{
-   const dataUrl=ev.target.result;
-   const inp=$('sh_cfg_hero_photo');if(inp)inp.value=dataUrl;
-   const prev=$('sh_cfg_photo_prev');if(prev){prev.style.display='block';const img=prev.querySelector('img');if(img)img.src=dataUrl}
- };
- reader.readAsDataURL(file);
-}
-window.shopPhotoUpload=shopPhotoUpload;
-
-function shopPhotoClear(){
- const inp=$('sh_cfg_hero_photo');if(inp)inp.value='';
- const prev=$('sh_cfg_photo_prev');if(prev)prev.style.display='none';
- const inpFile=$('sh_cfg_photo_file');if(inpFile)inpFile.value='';
-}
-window.shopPhotoClear=shopPhotoClear;
-
-function shopVideoUpload(e){
- const inpFile=(e&&e.target&&e.target.files)?e.target:$('sh_cfg_video_file');
- const file=inpFile&&inpFile.files&&inpFile.files[0];if(!file)return;
- if(file.size>8*1024*1024){alert('Aviso: Para videos mayores a 8 MB se recomienda usar una URL directa de video para que la tienda cargue rápido.')}
- const reader=new FileReader();
- reader.onload=ev=>{
-   const dataUrl=ev.target.result;
-   const inp=$('sh_cfg_hero_video');if(inp)inp.value=dataUrl;
-   alert('✅ Video de movimiento cargado con éxito. Recuerde pulsar Guardar para aplicarlo a la tienda.');
- };
- reader.readAsDataURL(file);
-}
-window.shopVideoUpload=shopVideoUpload;
-
-function shopVideoClear(){
- const inp=$('sh_cfg_hero_video');if(inp)inp.value='';
- const inpFile=$('sh_cfg_video_file');if(inpFile)inpFile.value='';
-}
-window.shopVideoClear=shopVideoClear;
-
-function shopPresetVideo(u){
- const inp=$('sh_cfg_hero_video');if(inp)inp.value=u;
- alert('✅ Video asignado. Recuerde pulsar Guardar para aplicarlo a la tienda.');
-}
-window.shopPresetVideo=shopPresetVideo;
-
-function shopLogoUpload(e){
- const inpFile=(e&&e.target&&e.target.files)?e.target:$('sh_cfg_logo_file');
- const file=inpFile&&inpFile.files&&inpFile.files[0];if(!file)return;
- if(!file.type.startsWith('image/')){alert('Por favor elija un archivo de imagen válido.');return}
- if(file.size>2.5*1024*1024){alert('El logo no debe pesar más de 2.5 MB.');return}
- const reader=new FileReader();
- reader.onload=ev=>{
-   const dataUrl=ev.target.result;
-   const inp=$('sh_cfg_logo');if(inp)inp.value=dataUrl;
-   const prev=$('sh_cfg_logo_prev');if(prev){prev.style.display='block';const img=prev.querySelector('img');if(img)img.src=dataUrl}
- };
- reader.readAsDataURL(file);
-}
-window.shopLogoUpload=shopLogoUpload;
-
-function shopLogoClear(){
- const inp=$('sh_cfg_logo');if(inp)inp.value='';
- const prev=$('sh_cfg_logo_prev');if(prev)prev.style.display='none';
- const inpFile=$('sh_cfg_logo_file');if(inpFile)inpFile.value='';
-}
-window.shopLogoClear=shopLogoClear;
 
 const PALETAS=[['shop','🟣 Shop Mist (Original)','#5433eb','#f2f4f5'],['lino','🌾 Lino Cálido & Ámbar','#8a5a12','#f7f4ed'],['rosa','💌 Rosa Blush (Amor)','#c8183c','#faf1f4'],['esmeralda','💍 Eucalipto & Esmeralda','#0e3c30','#f0f5f2'],['violeta','🎈 Lavanda & Púrpura','#6b32b8','#f4f0fa'],['oceano','🌊 Hielo Nórdico & Océano','#0e6b78','#eef4f7'],['borgona','🎓 Marino & Oro Real','#121e42','#f0f2f7'],['clasico','⚫ Clásico Blanco Puro','#1D1D1F','#ffffff'],['carbon','🪨 Carbón & Piedra','#30363D','#f0f1f3'],['dark','🌙 Dark Obsidian Pro','#7c66ff','#0c0c0e']];
 const tdBase=()=>location.href.split(/[?#]/)[0];
@@ -2781,36 +2669,6 @@ function shopThemeSyncUI(){const cur=shopThemeGet(),icon=cur==='dark'?'🌙':cur
 function shopThemeCycle(){const cur=shopThemeGet(),next=cur==='auto'?'light':cur==='light'?'dark':'auto';shopThemeSet(next)}
 function shopThemeSet(mode){try{localStorage.setItem(lsk('tj_shop_theme'),mode)}catch(e){}if(typeof shopThemeApply==="function")shopThemeApply();const msg=mode==='dark'?'🌙 Modo Oscuro activado':mode==='light'?'☀️ Modo Día activado':'⚙️ Modo Automático activado (se adapta a la hora y a tu dispositivo)';if(typeof shopSnack==='function')shopSnack(msg)}
 window.shopThemeGet=shopThemeGet;window.shopThemeApply=shopThemeApply;window.shopThemeCycle=shopThemeCycle;window.shopThemeSet=shopThemeSet;
-/* Fase 20: copia local del catálogo de la tienda (tj_cached_items) con presupuesto.
-   Antes se guardaban los 180 primeros artículos enteros, pero cada foto va dentro del artículo como data: (~120 000 caracteres),
-   así que el JSON (~7 MB con 63 artículos) superaba la cuota de localStorage (~5 M caracteres) y setItem fallaba SIEMPRE
-   ('exceeded the quota'): nunca hubo copia y la consola avisaba en cada carga. Ahora se guarda un prefijo de los artículos MÁS
-   NUEVOS, completos (con su foto), que quepa en un presupuesto: como máximo 2 M caracteres y sin llenar la memoria que usan las
-   demás claves (tj_db del panel, etc.: el total no pasa de ~3,8 M). Si aun así falla, se borran las copias de otras empresas
-   (se regeneran solas), se reintenta con la mitad y, si no cabe, se quita la copia: es opcional, la nube manda y no se avisa. Una lista vacía no pisa la última copia buena.
-   Nota: la línea que guardaba tj_cached_cfg usaba 'cf', que solo existe dentro del bloque de arriba (ReferenceError atrapado), así que esa copia
-   nunca se escribió. No se activa aquí a propósito (cambiaría el primer pintado de la tienda); se deja documentado en docs/GUIA-PRUEBAS-FASE-20.md. */
-function shopCacheItems(items){
-  let K;try{K=lsk('tj_cached_items')}catch(e){return}
-  try{
-    let otros=0;
-    for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i);if(k!==K)otros+=k.length+(localStorage.getItem(k)||'').length}
-    let tope=Math.min(2000000,3800000-otros);
-    const L=(Array.isArray(items)?items:[]).slice(0,180);
-    if(!L.length)return; // lista vacía (p.ej. snapshot sin red): se conserva la última copia buena
-    for(let intento=0;intento<4&&tope>=100000;intento++,tope=Math.floor(tope/2)){
-      const sel=[];let n=2;
-      for(const it of L){const s=JSON.stringify(it);if(n+s.length+1>tope)break;sel.push(s);n+=s.length+1}
-      if(!sel.length)continue;
-      try{localStorage.setItem(K,'['+sel.join(',')+']');return}
-      catch(e){
-        for(let i=localStorage.length-1;i>=0;i--){const k=localStorage.key(i);if(k&&k!==K&&k.indexOf('tj_cached_items_')===0)localStorage.removeItem(k)}
-      }
-    }
-    localStorage.removeItem(K);
-  }catch(e){}
-}
-window.shopCacheItems=shopCacheItems;
 
 function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{
@@ -2835,29 +2693,6 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem(lsk('tj_shop_fav'))||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
  if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.heroTitle=cd.heroTitle||nombreNegocio();SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.banners=Array.isArray(cd.banners)?cd.banners:undefined;SH.btnRadio=cd.btnRadio||999;SH.empresaNombre=cd.empresaNombre||'';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.style.setProperty('--kbtn-r',SH.btnRadio+'px');H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;shopCacheItems(SH.items);{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
-const TEMAS=[
- {id:'quince',n:'Quinceañero',e:'👑',re:/quince|\bxv\b|15 anos/},
- {id:'cumple',n:'Cumpleaños',e:'🎂',re:/cumple|birthday|aniversario de vida/},
- {id:'boda',n:'Boda',e:'💍',re:/boda|matrimonio|novios|save the date|wedding/},
- {id:'baby',n:'Baby shower',e:'🍼',re:/baby|bebe|nacimiento/},
- {id:'revela',n:'Revelación de sexo',e:'💙',re:/revelacion|gender|sexo|nino o nina/},
- {id:'bautizo',n:'Bautizo / Comunión',e:'⛪',re:/bautizo|bautismo|comunion|confirmacion/},
- {id:'grad',n:'Graduación',e:'🎓',re:/gradua/},
- {id:'aniv',n:'Aniversario',e:'❤️',re:/aniversario/},
- {id:'amor',n:'Amor',e:'💕',re:/\bamor\b|enamor|valentin|te quiero|te amo/},
- {id:'felic',n:'Felicidades',e:'🎉',re:/felicid|enhorabuena|congrat|logro/},
- {id:'pesame',n:'Pésame',e:'🕊️',re:/pesame|condolenc|descanse|luto|q\.?e\.?p\.?d/},
- {id:'infantil',n:'Infantil',e:'🧸',re:/infantil|unicornio|princesa|superheroe|dinosaurio|nino|nina/},
- {id:'patrio',n:'Mes patrio',e:'⭐',re:/patri|panama|independ|separacion|bandera|himno|(3|10|28) de noviembre/},
- {id:'navidad',n:'Navidad',e:'🎄',re:/navid|ano nuevo|fin de ano/},
- {id:'gracias',n:'Gracias',e:'💌',re:/gracias|agradec/},
- {id:'personal',n:'Personalizado',e:'✨',re:/personaliz|a tu medida|a su medida/},
- {id:'otros',n:'Otros',e:'📦',re:/$^/}];
-const temaOf=i=>{let r;if(Array.isArray(i.tags))r=i.tags;else{const t=shopN((i.name||'')+' '+(i.cat||'')+' '+(i.desc||''));r=TEMAS.filter(x=>x.re.test(t)).map(x=>x.id)}return r.length?r:['otros']};
-const temaMeta=id=>TEMAS.find(x=>x.id===id)||{id,n:id,e:'🏷️'};
-const KI={user:'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z',home:'M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z',heart:'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z',heartO:'M16.5 3c-1.74 0-3.41.81-4.5 2.09C10.91 3.81 9.24 3 7.5 3 4.42 3 2 5.42 2 8.5c0 3.78 3.4 6.86 8.55 11.54L12 21.35l1.45-1.32C18.6 15.36 22 12.28 22 8.5 22 5.42 19.58 3 16.5 3zm-4.4 15.55l-.1.1-.1-.1C7.14 14.24 4 11.39 4 8.5 4 6.5 5.5 5 7.5 5c1.54 0 3.04.99 3.57 2.36h1.87C13.46 5.99 14.96 5 16.5 5c2 0 3.5 1.5 3.5 3.5 0 2.89-3.14 5.74-7.9 10.05z',cart:'M7 18c-1.1 0-1.99.9-1.99 2S5.9 22 7 22s2-.9 2-2-.9-2-2-2zM1 2v2h2l3.6 7.59-1.35 2.45c-.16.28-.25.61-.25.96 0 1.1.9 2 2 2h12v-2H7.42c-.14 0-.25-.11-.25-.25l.03-.12.9-1.63h7.45c.75 0 1.41-.41 1.75-1.03l3.58-6.49A1.003 1.003 0 0020 4H5.21l-.94-2H1zm16 16c-1.1 0-1.99.9-1.99 2s.89 2 1.99 2 2-.9 2-2-.9-2-2-2z',search:'M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z',plus:'M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'};
-const kico=(d,s)=>`<svg viewBox="0 0 24 24" width="${s||24}" height="${s||24}" fill="currentColor" aria-hidden="true"><path d="${d}"/></svg>`;
-Object.assign(KI,{menu:'M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z',filter:'M3 5h18v2H3V5zm4 6h10v2H7v-2zm3 6h4v2h-4v-2z',grid:'M3 3h7v7H3V3zm11 0h7v7h-7V3zM3 14h7v7H3v-7zm11 0h7v7h-7v-7z',list:'M4 6h3v3H4V6zm5 1h11v1H9V7zM4 11h3v3H4v-3zm5 1h11v1H9v-1zM4 16h3v3H4v-3zm5 1h11v1H9v-1z',star:'M12 2l2.9 5.9 6.5.9-4.7 4.6 1.1 6.5-5.8-3.1-5.8 3.1 1.1-6.5-4.7-4.6 6.5-.9L12 2z'});
 const shopLogo=()=>{const custom=(typeof SH!=='undefined'&&SH.logoUrl)||(typeof TD!=='undefined'&&TD.logoUrl);if(custom)return '<img src="'+esc(custom)+'" alt="Logo" class="klogo-custom">';if(SH.logo!==undefined)return SH.logo;const g=document.querySelector('.logo img');return SH.logo=g?'<img src="'+g.src+'" alt="">':''};
 const shopSaveCart=()=>{try{localStorage.setItem(lsk('tj_shop_cart'),JSON.stringify(SH.cart))}catch(e){window._tjw&&_tjw(e)}};
 function shopRender(){const o=$('shop');if(!o)return;
@@ -3102,42 +2937,6 @@ function shopCart(){const L=shopLines();if(!L.length)return shopM('<h2 style="ma
  shopM(`<h2 style="margin:6px 0">🛒 Su pedido</h2>${L.map(l=>`<div class="kln"><img src="${l.img}" alt=""><div><b>${esc(l.n)}</b><small>${tdMoney(l.p)} c/u</small><button class="kdel" data-h-click="h46" data-a-click="${_ha(l.id)}">${kico(KTRASH,15)} Quitar</button></div><div class="kst"><button data-h-click="h45" data-a-click="${_ha(l.id)}" aria-label="Quitar uno">−</button><button class="kqn" data-h-click="h44" data-a-click="${_ha(l.id)}" aria-label="Cambiar cantidad">${l.q}</button><button data-h-click="h43" data-a-click="${_ha(l.id)}" aria-label="Agregar uno">+</button></div></div>`).join('')}<div style="display:flex;justify-content:space-between;font-size:19px;font-weight:800;margin:14px 0 4px"><span>Total</span><span>${t>0?$$(t):'Consultar'}</span></div><small style="color:var(--tx2)">Precios sin ITBMS. Le confirmaremos disponibilidad y forma de pago.</small>${shopFleHTML()}<textarea id="sh_nt" rows="2" placeholder="Notas para el pedido (opcional)">${esc(nt)}</textarea>${shopHP()}${poliConsent}<div class="serr" id="sh_m2" style="margin:6px 0"></div><div class="kact2"><button class="sbtn" id="sh_sb" data-h-click="h42">Enviar pedido</button><button class="sbtn g" data-h-click="h31">Seguir viendo</button></div>`,'cart')}
 function shopVoz(txt){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{ss.cancel();const u=new SpeechSynthesisUtterance(txt),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-MX';u.rate=.96;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){window._tjw&&_tjw(e)}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,900)}}
-function shopPdfPrint(p){const l=p.lead||{},w=window.open('','_blank');if(!w)return alert('Permita las ventanas emergentes para descargar el comprobante.');
- try{w.opener=null}catch(e){window._tjw&&_tjw(e)}
- const emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',num=String(p.id||'').slice(-6).toUpperCase();
- const d=w.document;d.open();d.write('<!DOCTYPE html><meta charset="utf-8"><title></title>');d.close();
- if(!d.body)d.documentElement.appendChild(d.createElement('body'));
- d.title='Pedido '+num;d.body.style.cssText='font-family:Arial,sans-serif;max-width:720px;margin:24px auto;color:#222';
- /* Todo el contenido entra como texto (textContent): nada de lo que escriba un cliente se interpreta como HTML. */
- const E=(t,st,tx,at)=>{const e=d.createElement(t);if(st)e.style.cssText=st;if(tx!=null)e.textContent=tx;if(at)for(const k in at)e.setAttribute(k,at[k]);return e};
- const B=d.body,hd=E('p');hd.append(new Date(p.ts).toLocaleString('es-PA'),E('br'),E('b',null,l.name||''),' · '+(l.tel||'')+' · '+(l.email||''));
- const tb=E('table','width:100%;border-collapse:collapse'),h=E('tr','background:#f3f3f3');
- [['Cant.','left'],['Descripción','left'],['P. unit.','right'],['Subtotal','right']].forEach(c=>h.appendChild(E('th',null,c[0],{align:c[1]})));tb.appendChild(h);
- (p.items||[]).forEach(i=>{const r=E('tr');r.appendChild(E('td',null,String(i.q)));r.appendChild(E('td',null,i.n));r.appendChild(E('td',null,i.p>0?$$(i.p):'Consultar',{align:'right'}));r.appendChild(E('td',null,i.p>0?$$(i.q*i.p):'—',{align:'right'}));tb.appendChild(r)});
- B.append(E('h2','color:#E0457B;margin:0',emp),E('h3','margin:4px 0 14px','Comprobante de pedido N° '+num),hd,tb,E('h3',null,'Total: '+(p.total>0?$$(p.total):'Consultar'),{align:'right'}));
- if(p.nota)B.appendChild(E('p',null,'Nota: '+p.nota));
- B.appendChild(E('p','font-size:12px;color:#666','Precios sin ITBMS. Pedido sujeto a confirmación de disponibilidad.'));
- setTimeout(()=>{try{w.focus();w.print()}catch(e){window._tjw&&_tjw(e)}},250)}
-function shopPdf(p,modo){if(!p)return;const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return shopPdfPrint(p);
- try{const d=new J({unit:'mm',format:'a4'}),W=210,M=16,l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',cl=t=>String(t||'').replace(/[^\u0000-\u00FF]/g,'').trim();let y=20;
-  try{const g=document.querySelector('.logo img');if(g&&/^data:image\/(png|jpe?g)/i.test(g.src))d.addImage(g.src,/png/i.test(g.src)?'PNG':'JPEG',M,8,0,18)}catch(e){window._tjw&&_tjw(e)}
-  d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(224,69,123);d.text('COMPROBANTE DE PEDIDO',W-M,16,{align:'right'});
-  d.setFontSize(10);d.setTextColor(90);d.setFont('helvetica','normal');d.text(cl(emp),W-M,22,{align:'right'});
-  d.setDrawColor(224,69,123);d.setLineWidth(.8);d.line(M,30,W-M,30);y=40;
-  d.setTextColor(30);d.setFont('helvetica','bold');d.setFontSize(11);d.text('Pedido N° '+num,M,y);d.setFont('helvetica','normal');d.setFontSize(10);d.text(new Date(p.ts).toLocaleString('es-PA'),W-M,y,{align:'right'});y+=8;
-  d.setFont('helvetica','bold');d.text('Cliente',M,y);d.setFont('helvetica','normal');y+=5.5;
-  [cl(l.name),l.empresa&&cl(l.empresa),l.tel&&'Tel.: '+l.tel,l.email,l.dir&&cl(l.dir)].filter(Boolean).forEach(t=>{d.text(String(t),M,y);y+=5});y+=5;
-  const head=()=>{d.setFillColor(245,235,239);d.rect(M,y-5,W-2*M,8,'F');d.setFont('helvetica','bold');d.setFontSize(9.5);d.text('Cant.',M+2,y);d.text('Descripción',M+20,y);d.text('P. unit.',W-M-34,y,{align:'right'});d.text('Subtotal',W-M-2,y,{align:'right'});d.setFont('helvetica','normal');y+=8};head();
-  (p.items||[]).forEach(i=>{const ln=d.splitTextToSize(cl(i.n),100),h=Math.max(1,ln.length)*5+2;if(y+h>262){d.addPage();y=20;head()}
-   d.text(String(i.q),M+2,y);d.text(ln,M+20,y);d.text(i.p>0?$$(i.p):'Consultar',W-M-34,y,{align:'right'});d.text(i.p>0?$$(i.q*i.p):'—',W-M-2,y,{align:'right'});y+=h;d.setDrawColor(228);d.setLineWidth(.2);d.line(M,y-3.5,W-M,y-3.5)});
-  if(y>250){d.addPage();y=20}y+=4;d.setFont('helvetica','bold');d.setFontSize(13);d.setTextColor(224,69,123);d.text('TOTAL: '+(p.total>0?$$(p.total):'Consultar'),W-M,y,{align:'right'});y+=9;
-  d.setTextColor(60);d.setFont('helvetica','normal');d.setFontSize(9.5);if(p.nota){d.text(d.splitTextToSize('Nota: '+cl(p.nota),W-2*M),M,y);y+=12}
-  d.setTextColor(110);d.setFontSize(8.5);d.text('Precios sin ITBMS. Pedido sujeto a confirmación de disponibilidad y forma de pago.',M,285);d.text('Gracias por su confianza en '+cl(emp)+'.'+(document.documentElement.classList.contains('xmas')?' ¡Feliz Navidad y próspero Año Nuevo!':''),M,290);
-  if(modo==='ver')shopPdfVer(d.output('blob'),'Pedido-'+num+'.pdf');else d.save('Pedido-'+num+'.pdf')}catch(e){shopPdfPrint(p)}}
-function shopPdfVer(blob,name){const old=document.getElementById('pdfv');if(old)old.remove();const u=URL.createObjectURL(blob),v=document.createElement('div');v.id='pdfv';
- v.innerHTML=`<div class="pdfvb"><b>${esc(name)}</b><span><a class="btn s" href="${u}" download="${esc(name)}">⬇ Descargar</a> <a class="btn s" href="${u}" target="_blank" rel="noopener">↗ Pestaña nueva</a> <button class="btn s d" id="pdfvx">✕ Cerrar</button></span></div><iframe src="${u}" title="Comprobante"></iframe>`;
- document.body.appendChild(v);const cl=()=>{v.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)};document.getElementById('pdfvx').onclick=cl;
- const k=e=>{if(e.key==='Escape'){cl();removeEventListener('keydown',k)}};addEventListener('keydown',k)}
 function tdPedDel(id){const p=TD.peds.find(x=>x.id===id);if(!p||!fbDb)return;const l=p.lead||{};if(!confirm('¿Eliminar el pedido de '+(l.name||'este cliente')+(p.total>0?' por '+$$(p.total):'')+'?\nEsta acción no se puede deshacer.'))return;
  fbCol('tienda_pedidos').doc(id).delete().catch(()=>alert('No se pudo eliminar el pedido. Revise su conexión o sus permisos.'))}
 // Solo el administrador puede borrar registros de la tienda (así lo exigen las reglas de Firestore).
@@ -3202,38 +3001,6 @@ async function shopOrdSync(){const c=SH.cli;if(!c||SH.guest||!fbDb)return;let ch
  const m=$('shopm');if(ch&&m&&m.dataset.k==='acc')shopAcc(1)}
 const shopEst=e=>e==='atendido'?['Atendido','#2bb673']:['Recibido','#E8870A'];
 function shopOrdAct(id,modo){const p=shopOrdLoad().find(x=>x.id===id);if(!p)return;if(modo==='img')shopImgVer(p);else shopPdf(p,modo)}
-// ---------- Comprobante como imagen (vista inmediata) ----------
-function shopRecCanvas(p,cb){const l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',W=600,S=2,M=36,F="-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Arial,sans-serif",PK='#E0457B';
- const c=document.createElement('canvas');c.width=W*S;c.height=40*S;const x=c.getContext('2d');
- const wrap=(t,w,font)=>{x.font=font;const out=[];String(t||'').split(/\n/).forEach(par=>{let ln='';par.split(/\s+/).filter(Boolean).forEach(wd=>{const tt=ln?ln+' '+wd:wd;if(x.measureText(tt).width>w&&ln){out.push(ln);ln=wd}else ln=tt});out.push(ln)});return out};
- const rows=(p.items||[]).map(i=>({q:i.q,ln:wrap(i.n,290,'500 14px '+F),pu:i.p>0?$$(i.p):'Consultar',st:i.p>0?$$(i.q*i.p):'—'}));
- const cli=[l.name,l.empresa,l.tel&&'Tel.: '+l.tel,l.email,l.dir].filter(Boolean),nota=p.nota?wrap('Nota: '+p.nota,W-2*M,'13px '+F):[],foot=wrap('Precios sin ITBMS. Pedido sujeto a confirmación de disponibilidad y forma de pago.',W-2*M,'11.5px '+F);
- const est=p.estado==='atendido'?['Atendido','#2bb673']:['Recibido','#E8870A'];
- let logo=null;
- const lay=d=>{let y=0;if(d){x.fillStyle='#fff';x.fillRect(0,0,W,c.height/S);x.fillStyle=PK;x.fillRect(0,0,W,8)}
-  const T=(t,px,py,font,col,al)=>{if(!d)return;x.font=font;x.fillStyle=col;x.textAlign=al||'left';x.fillText(t,px,py)};
-  y=30;if(d&&logo){const h=46,w=Math.min(150,logo.width*h/logo.height);x.drawImage(logo,M,y,w,h)}
-  T('COMPROBANTE DE PEDIDO',W-M,y+20,'700 17px '+F,PK,'right');T(emp,W-M,y+40,'500 12.5px '+F,'#6E6E73','right');
-  y+=68;if(d){x.fillStyle=PK;x.fillRect(M,y,W-2*M,2)}y+=30;
-  T('Pedido N° '+num,M,y,'700 17px '+F,'#1D1D1F');T(new Date(p.ts).toLocaleString('es-PA'),W-M,y,'13px '+F,'#6E6E73','right');y+=14;
-  if(d){x.font='600 12px '+F;const tw=x.measureText(est[0]).width+20;x.fillStyle=est[1]+'22';x.beginPath();x.roundRect(M,y+2,tw,22,11);x.fill();T(est[0],M+10,y+17,'600 12px '+F,est[1])}y+=42;
-  T('CLIENTE',M,y,'700 11px '+F,'#8E8E93');y+=20;cli.forEach((t,k)=>{T(String(t),M,y,(k?'400':'600')+' 14px '+F,'#1D1D1F');y+=20});y+=12;
-  if(d){x.fillStyle='#FBEAF0';x.beginPath();x.roundRect(M,y,W-2*M,30,8);x.fill()}
-  T('CANT.',M+12,y+20,'700 11px '+F,'#6E6E73');T('DESCRIPCIÓN',M+64,y+20,'700 11px '+F,'#6E6E73');T('P. UNIT.',W-M-110,y+20,'700 11px '+F,'#6E6E73','right');T('SUBTOTAL',W-M-12,y+20,'700 11px '+F,'#6E6E73','right');y+=30;
-  rows.forEach(r=>{const h=r.ln.length*19+16;T(String(r.q),M+12,y+22,'600 14px '+F,'#1D1D1F');r.ln.forEach((t,k)=>T(t,M+64,y+22+k*19,'500 14px '+F,'#1D1D1F'));T(r.pu,W-M-110,y+22,'14px '+F,'#3A3A3C','right');T(r.st,W-M-12,y+22,'600 14px '+F,'#1D1D1F','right');y+=h;if(d){x.fillStyle='#E5E5EA';x.fillRect(M,y-1,W-2*M,1)}});
-  y+=26;T('Total',W-M-190,y,'500 15px '+F,'#6E6E73','right');T(p.total>0?$$(p.total):'Consultar',W-M-12,y+4,'800 30px '+F,'#1D1D1F','right');y+=34;
-  nota.forEach(t=>{T(t,M,y,'13px '+F,'#6E6E73');y+=18});y+=14;
-  foot.forEach(t=>{T(t,M,y,'11.5px '+F,'#8E8E93');y+=16});T('Gracias por su confianza en '+emp+'.',M,y+4,'500 11.5px '+F,'#8E8E93');y+=30;
-  if(d){x.fillStyle=PK;x.fillRect(0,y-8,W,8)}return y};
- const go=()=>{const H=lay(false);c.width=W*S;c.height=H*S;x.setTransform(S,0,0,S,0,0);lay(true);cb(c)};
- const g=document.querySelector('.logo img');if(g&&g.src){const im=new Image();im.onload=()=>{logo=im;go()};im.onerror=go;im.src=g.src}else go()}
-function shopImgVer(p){if(!p)return;const old=$('imgv');if(old)old.remove();
- shopRecCanvas(p,c=>{const num=String(p.id||'').slice(-6).toUpperCase(),u=c.toDataURL('image/png'),v=document.createElement('div');v.id='imgv';
-  const cs=!!(navigator.canShare&&navigator.share);
-  v.innerHTML=`<div class="ivb"><b>Pedido N° ${num}</b><span><a class="ivbt p" href="${u}" download="Pedido-${num}.png">⬇ Imagen</a><button class="ivbt" id="ivpdf">📄 PDF</button>${cs?'<button class="ivbt" id="ivsh">↗ Compartir</button>':''}<button class="ivbt" id="ivx" aria-label="Cerrar">✕</button></span></div><div class="ivs"><img src="${u}" alt="Comprobante del pedido ${num}"></div>`;
-  document.body.appendChild(v);const cl=()=>{v.remove();document.removeEventListener('keydown',kd)},kd=e=>{if(e.key==='Escape')cl()};document.addEventListener('keydown',kd);
-  $('ivx').onclick=cl;v.onclick=e=>{if(e.target===v||e.target.className==='ivs')cl()};$('ivpdf').onclick=()=>shopPdf(p);
-  const sh=$('ivsh');if(sh)sh.onclick=()=>c.toBlob(b=>{const f=new File([b],'Pedido-'+num+'.png',{type:'image/png'});if(navigator.canShare({files:[f]}))navigator.share({files:[f],title:'Pedido '+num}).catch(()=>{});else navigator.share({title:'Pedido '+num,text:'Comprobante de pedido '+num}).catch(()=>{})})})}
 
 function shopAcc(quiet){const c=SH.cli,L=shopOrdMine(),n=L.length,tot=L.reduce((s,p)=>s+(+p.total||0),0),fd=t=>new Date(t).toLocaleDateString('es-PA',{day:'numeric',month:'short',year:'numeric'}),last=L[0];
  const head=c?`<div class="kacH"><div class="kacA">${esc((c.name||'?').trim().charAt(0).toUpperCase())}</div><div><b>${esc(c.name||'')}</b><small>${esc(c.tel||'')}${c.email?' · '+esc(c.email):''}</small></div></div>`:'';

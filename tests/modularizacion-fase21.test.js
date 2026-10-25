@@ -22,7 +22,7 @@ test('index.html carga los 4 archivos nuevos, clásicos, después de etiquetas.j
   assert.ok(m,f+' sin <script> con ?v=');assert.ok(m.index>prev,f+' fuera de orden');assert.ok(m.index<app,f+' debe ir antes de app.js');
   assert.equal(cuenta(h,f+'?v='),1,f+' cargado dos veces');prev=m.index;
  });
- assert.match(h,/js\/app\.js\?v=(modulos-fase-21d|hallazgos-fase-20-kwrap)/);
+ assert.match(h,/js\/app\.js\?v=(modulos-fase-21d|modulos-fase-23[a-z]|hallazgos-fase-20-kwrap)/);
 });
 test('sw.js precachea los 4 archivos antes de app.js y la caché es tj-net-first-18 o posterior',()=>{
  const s=leer('sw.js'),pre=/const PRE=\[([^\]]*)\]/.exec(s)[1];

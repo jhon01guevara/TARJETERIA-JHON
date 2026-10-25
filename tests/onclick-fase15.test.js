@@ -31,7 +31,7 @@ test('Fase 15: cada data-h-click/-change="call" apunta a una función global que
 });
 
 test('Fase 15: los botones de la portada de la tienda conservan su delegador (data-h-click=call) tras quitar onclick=',()=>{
- const s=leer('js/app.js');
+ const s=appTodo();   // Fase 23: parte de estas funciones vive ahora en js/tienda-config-medios.js
  for(const fn of ['shopBrandSave','shopLogoClear','shopCfgBgTypeSet','shopPhotoClear','shopVideoClear','shopPresetVideo','shopCfgColorSet','shopCfgMotionSet','shopCfgWmSet']){
   assert.match(s,new RegExp('data-h-click="call" data-a-click="\\$\\{_ha\\(\''+fn+'\''),fn+' sigue con su delegador');
   assert.match(s,new RegExp('window\\.'+fn+'='),fn+' sigue exportada a window (la usa el delegador «call»)');

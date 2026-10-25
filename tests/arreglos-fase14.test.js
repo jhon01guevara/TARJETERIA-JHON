@@ -19,10 +19,11 @@ test('A: const lsk se define una sola vez y ANTES de su primer uso en app.js',()
 test('A: ningún script cargado antes de app.js usa lsk antes de que exista',()=>{
  /* Fase 21: js/fondo-login.js usa lsk() SOLO dentro de funciones flecha (lbgMeta, lbgSave), que se ejecutan después de cargar app.js.
     Se permite porque carga en un contexto vacío sin ReferenceError (si usara lsk al cargarse, fallaría aquí). */
- const DIFERIDO=['js/fondo-login.js'];
+ /* Fase 23: js/tienda-copia-local.js usa lsk() solo dentro de shopCacheItems (se llama después de cargar todo); también carga en un contexto vacío (con window). */
+ const DIFERIDO=['js/fondo-login.js','js/tienda-copia-local.js'];
  for(const f of EXTRAIDOS){
   const s=leer(f);
-  if(DIFERIDO.includes(f)){assert.doesNotThrow(()=>vm.runInContext(s,vm.createContext({})),f+' usa lsk() al cargarse');continue}
+  if(DIFERIDO.includes(f)){assert.doesNotThrow(()=>vm.runInContext(s,vm.createContext({window:{}})),f+' usa lsk() al cargarse');continue}
   assert.ok(!/[^\w.]lsk\(/.test(s),f+' usa lsk(), que solo existe desde app.js')}
 });
 test('A: la lectura local de tj_cards y tj_db está dentro de try/catch y usa lsk (clave por empresa)',()=>{
