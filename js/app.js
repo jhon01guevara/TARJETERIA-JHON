@@ -711,8 +711,11 @@ function agIcs(){if(!DB.agenda.length)return alert('La agenda está vacía.');co
 
 let _cintSig='',_chk=null;
 function cintGo(k,a,b){if(k=='ag'){AG.sel=b;AG.d=b;ir('agenda')}else ir(k)}
-async function cintChk(){if(_chk)return _chk;let h;try{h=await appHtml('modelos')}catch(e){window._tjw&&_tjw(e);return []}if(_chk)return _chk;_chk=[];try{const i=h.indexOf('const IMGS = '),j=h.indexOf('\n',i),I=JSON.parse(h.slice(i+13,j).replace(/;\s*$/,'')),k=h.indexOf('const DATA = `')+14,D=h.slice(k,h.indexOf('`',k)).split('\n');
- D.forEach(l=>{const [c,cat,d]=l.split('|');if(c&&I[c.trim()])_chk.push({n:c.trim(),s:(d||cat||'').trim(),i:I[c.trim()]})})}catch(e){window._tjw&&_tjw(e)}return _chk}
+/* Fase 17: antes leía IMGS/DATA de apps/modelos.html; desde SEG-04 etapa 3B viven en apps/modelos.js (1,6 MB) y esa lectura fallaba en silencio
+   (aviso «Unexpected token 'm'»). Ahora usa apps/modelos-cintillo.json (95 KB: los 30 primeros modelos con miniatura de 88 px, generado por
+   tests/herramientas/generar-cintillo.py) y solo se pide si la barra de Inicio no tiene agenda ni catálogo propio que mostrar. */
+async function cintChk(){if(_chk)return _chk;let a;try{const r=await fetch('apps/modelos-cintillo.json',{cache:'no-cache'});if(!r.ok)throw new Error('apps/modelos-cintillo '+r.status);a=await r.json()}catch(e){window._tjw&&_tjw(e);return []}
+ if(_chk)return _chk;_chk=Array.isArray(a)?a.filter(f=>f&&f.n&&/^data:image\/jpeg;base64,/.test(f.i)).map(f=>({n:String(f.n),s:String(f.s||''),i:f.i})):[];return _chk}
 const cintCfg=()=>({on:DB.cfg.cintOn!==0,seg:Math.min(20,Math.max(2,+DB.cfg.cintSeg||5)),cr:DB.cfg.cintCr!==0,ot:DB.cfg.cintOt!==0,ve:DB.cfg.cintVe!==0,ho:DB.cfg.cintHo!==0,pr:DB.cfg.cintPr!==0,dias:+DB.cfg.cintDias||14,mod:DB.cfg.cintMod!==0});
 let _cintPause=0,_cintHover=0,_cintTm=null;
 const _cintRM=()=>window.matchMedia&&matchMedia('(prefers-reduced-motion:reduce)').matches;
