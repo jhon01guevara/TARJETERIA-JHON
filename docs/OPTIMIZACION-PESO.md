@@ -57,12 +57,49 @@ Quitar `apps/modelos.js` de la lista `PRE` de `sw.js` reduciría la descarga en 
 
 | Propuesta | Ahorro estimado | Riesgo | Notas |
 |---|---|---|---|
-| Quitar `apps/modelos.js` de `PRE` en `sw.js` (y subir la caché a `tj-net-first-9`) | −1,6 MB en la instalación del service worker | Bajo/medio: pérdida de uso offline del módulo Check la primera vez | Probar abriendo Check con internet, luego sin conexión. |
+| ~~Quitar `apps/modelos.js` de `PRE` en `sw.js`~~ | −1,6 MB en la instalación del service worker | Bajo/medio | **Aplicado en la fase 16** (ver abajo, con precalentamiento en momento libre para no perder el uso offline). |
 | Sacar las 63 fotos de `modelos.js` a archivos `.jpg` y que `modelos.html` las cargue bajo demanda | ~1,6 MB menos en un solo archivo; carga progresiva | Medio: cambia la lógica de `modelos.html` y de `cintChk` | Requiere pruebas del módulo Check y de `js/app.js` L1085 (lee `const IMGS` del HTML). |
 | Quitar miniaturas duplicadas del `manifest.json` (67 únicas de 88; ~1,1 MB sin comprimir) | ~0,8 MB | Medio: cambia el formato del manifest y la lógica de importación | Requiere tocar `precargarCatalogoDeFabrica` y el exportador del catálogo. |
 | Banners en WebP/AVIF con `<source type>` y JPEG de reserva | 25–35 % en banners | Medio: cambia el HTML generado; hay que mantener las rutas JPEG | Se debe comprobar el aspecto con SSIM sobre la versión decodificada. |
 | Catálogo de fábrica en Firebase Storage / carga por partes | hasta −12 MB en el primer arranque | Alto: toca Firebase, reglas y la lógica de carga | Solo con confirmación expresa. |
 | Recompresión de banners con calidad ~80 | ~25 % | Medio: pérdida visible en banners con degradados (SSIM 0,94–0,97) | Solo si John acepta una pérdida mínima. |
+
+## Fase 16: `apps/modelos.js` fuera de la instalación del service worker
+
+### Qué se encontró (y qué no)
+- **No existe `js/modelos.js`.** El archivo es `apps/modelos.js` (1.592.163 bytes; **1.170.834 bytes con gzip**, ≈1,1 MiB; las 63 fotos JPEG en base64 de `const IMGS`, el logo, `DATA`, `CATS`…).
+- **`index.html` nunca lo ha cargado.** Solo lo carga `apps/modelos.html` (`<script src="apps/modelos.js?v=…">`), que `js/app.js` abre en el iframe del módulo **Check** (`check()`, ~L666, vía `appHtml('modelos')`) y lee `cintChk()` (~L714). Es decir, ya era «bajo demanda» **para el navegador**: la ventana de inicio (`load`) no lo descarga ni lo ejecuta, ni en el panel ni en la tienda pública.
+- Lo que sí lo traía «de forma temprana» era el **service worker**: `sw.js` lo tenía en la lista `PRE`, y por eso se descargaba en cuanto el service worker se instalaba (≈0,9 s después del `load` en la medición), compitiendo con el resto del precache, **cada vez que se sube la versión de la caché**. En la tienda pública (`?tienda`) no se registra el service worker, así que allí nunca se descargaba (antes ni después).
+- Por eso **no hizo falta un cargador `cargarModelos()` con inyección de `<script>`**: no hay ningún consumidor síncrono ni ninguna otra pieza que lea sus variables globales (`IMGS`, `LOGO`, `DATA`, `CATS`…). Solo las lee el propio `apps/modelos.js`/`modelos.html` dentro de su iframe. Añadir una capa de promesas habría sido riesgo sin beneficio.
+
+### Qué se cambió
+| Archivo | Cambio |
+|---|---|
+| `sw.js` | `apps/modelos.js` sale de `PRE` (ya no se descarga al instalar). Nueva constante `MODELOS='apps/modelos.js?v=rendimiento-fase-16'` y un manejador `message`: ante `'precalentar-modelos'` descarga y guarda ese archivo en la caché **solo si aún no está**. Caché `tj-net-first-12`. |
+| `js/app.js` | `precalentarModelos()` (tras registrar el service worker): 5 s después del `load`, y en un momento libre del navegador (`requestIdleCallback`, máximo 10 s más), pide al service worker que guarde `modelos.js`. **No lo pide** en la tienda pública, sin conexión, con «ahorro de datos» activado ni con conexión 2G. También lo pide 8 s después de un cambio de service worker (usuarios que se actualizan desde la fase anterior). |
+| `apps/modelos.html` | `<script src="apps/modelos.js?v=rendimiento-fase-16">`. Misma ruta propia (`'self'`), la CSP no cambia. |
+| `index.html` | `js/app.js?v=rendimiento-fase-16`. |
+
+### Offline
+- Si el precalentamiento llega a ejecutarse (lo normal), `modelos.js` queda en la caché sin conexión como antes, pero **después** de pintar el panel y fuera de la instalación.
+- Si no llega (ahorro de datos, 2G, el usuario cerró la pestaña antes), se guarda **la primera vez que se abre Check con conexión** (el manejador `fetch` del service worker ya guardaba todo lo que descargaba). Solo en ese caso concreto —nunca abrió Check y está sin conexión— Check no tendría datos, igual que ya pasaba con otros archivos fuera de `PRE`.
+- Para quitar el precalentamiento y dejarlo 100 % bajo demanda basta borrar `.then(precalentarModelos)` en `js/app.js` (el resto sigue valiendo).
+
+### Medidas (Chrome real 1.ª visita con contexto limpio, panel de prueba en local con servidor que aplica gzip, como GitHub Pages)
+| Medida | Antes (main) | Después (fase 16) |
+|---|---:|---:|
+| Tamaño `apps/modelos.js` sin comprimir / gzip | 1.592.163 / 1.170.834 | igual (no se tocó el archivo) |
+| ¿Se pide en la carga inicial (hasta el evento `load`)? | No | No |
+| Cuándo lo pide el service worker (sin límite de ancho de banda) | 1,0 s tras empezar | 5,9 s |
+| Bytes servidos hasta 4 s después del `load` | 3.086.436 | 1.915.278 (**−1.171.158, −38 %**) |
+| Bytes servidos en los primeros 30 s | 3.155.372 | 3.156.536 (el precalentamiento sigue ocurriendo, más tarde) |
+| Evento `load` (sin límite / 200 KB/s) | 0,82 s / 4,12 s | 0,84 s / 4,07 s (sin cambio: nunca estuvo en el camino) |
+| Tienda pública (`?tienda`) | 0 bytes de `modelos.js`, sin service worker | igual |
+
+**Lectura honesta:** el `load` no mejora, porque `modelos.js` no estaba en el camino de la primera pantalla. Lo que mejora es la ventana inmediata posterior (≈1,1 MiB menos compitiendo con el resto del precache, las llamadas a Firebase y la navegación del usuario), y se evita el gasto con «ahorro de datos» o 2G. A los 30 s el total descargado es el mismo, a menos que se quite el precalentamiento (alternativa 100 % bajo demanda, arriba).
+
+### Hallazgo aparte (no corregido; ya existía)
+`cintChk()` (`js/app.js` ~L714, tarjeta «Modelos» de la franja de Inicio) busca `const IMGS = ` **dentro de `apps/modelos.html`**, pero desde la fase SEG-04 etapa 3B ese dato vive en `apps/modelos.js`; por eso `indexOf` devuelve −1, el `JSON.parse` falla y se queda en el aviso silencioso «error ignorado … Unexpected token 'm', "ml>" is not valid JSON». El resultado es la franja de reserva. Arreglarlo exigiría que Inicio descargue `modelos.js` (1,1 MiB) o separar el dato; se deja como propuesta porque contradice el objetivo de esta fase.
 
 ## Respaldo y cómo revertir
 

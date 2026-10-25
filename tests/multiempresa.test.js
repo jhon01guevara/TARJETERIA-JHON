@@ -141,7 +141,7 @@ test('index.html carga los módulos multiempresa antes que app.js',()=>{
   html.indexOf('migraciones/migracion-multiempresa.js?v='),html.indexOf('js/app.js?v=')];
  assert.ok(pos.every(p=>p>0),'faltan script tags: '+pos.join(','));
  assert.ok(pos[3]>Math.max(pos[0],pos[1],pos[2]),'app.js debe cargarse después');
- assert.match(html,/js\/app\.js\?v=(tiktok-live-20\d{6}[a-z]|modulos-fase-\d+[a-z]|csp-fase-\d+|arreglos-fase-\d+|a11y-fase-\d+)/);
+ assert.match(html,/js\/app\.js\?v=(tiktok-live-20\d{6}[a-z]|modulos-fase-\d+[a-z]|csp-fase-\d+|arreglos-fase-\d+|a11y-fase-\d+|rendimiento-fase-\d+)/);
 });
 
 test('El panel integra la vista Empresas solo para administración',()=>{

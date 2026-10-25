@@ -11,4 +11,8 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | `modales.js` | Comprueba role/nombre, foco, Tab atrapado, Esc y devolución del foco en login, `#md`, Investigación, visor PDF, detalle/carrito/zoom de la tienda | `BASE=… node modales.js` |
 | `imprimir-constancia.js` | Abre la constancia legal y comprueba que «Imprimir» llama a `print()` | `BASE=… node imprimir-constancia.js` |
 
+| `modelos-fase16.js` | Fase 16: `modelos.js` no se pide en la carga inicial, el SW lo guarda en un momento libre o al primer uso, Check abre (admin), funciona sin conexión, vendedor, tienda pública, 0 violaciones CSP | `PW=… BASE=https://tarjeteria-jhon-prueba.web.app/ node modelos-fase16.js` |
+| `servidor-medicion.js` + `medir-carga.js` | Servidor estático con gzip (y `KBPS=200` opcional) que cuenta bytes por archivo, y medición de la 1.ª visita | `node servidor-medicion.js /ruta/copia 8811` y `BASE=http://localhost:8811/ node medir-carga.js` |
+| `actualizacion-sw.js` | Camino de actualización del SW (versión anterior → nueva): que la caché nueva acabe con `modelos.js` | `ANTES=/copia-main DESPUES=/copia-nueva node actualizacion-sw.js` |
+
 `BASE` es la URL (con `/` al final) de una copia servida en local (`python3 -m http.server`) o `https://tarjeteria-jhon-prueba.web.app/`.
