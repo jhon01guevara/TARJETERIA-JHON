@@ -73,3 +73,23 @@ test('Fase 24 · caché del service worker tj-net-first-22 o posterior y ?v= de 
  assert.match(leer('sw.js'),/const V='tj-net-first-(2[2-9]|[3-9]\d)'/);
  assert.match(leer('index.html'),/js\/app\.js\?v=modulos-fase-24[b-z]/);
 });
+
+/* ---- Respaldo del transportista (la escritura con `envio` es rechazada y se reintenta sin él) ---- */
+test('Fase 24 · respaldo del transportista: la nota nunca supera 500 (límite de las reglas), el transportista va primero y la constancia Ley 81 al final',()=>{
+ const ctx={};vm.createContext(ctx);vm.runInContext(extraer('fleNotaRespaldo'),ctx);
+ const ev='[🛡️ Aceptó Términos y Privacidad Ley 81: 25/10/2026 3:14 p. m.]',txt='🚚 Envío por: Transportes Ferguson\nRecibe: Ana Pérez\nCel. recibe: 6000-0000\nDirección: Calle 50';
+ for(const nota of ['',ev,'Entregar por la tarde · '+ev,'x'.repeat(400)+' · '+ev,'x'.repeat(480)+' · '+ev]){
+  const r=ctx.fleNotaRespaldo(nota,txt);
+  assert.ok(r.length<=500,'≤ 500: '+r.length);assert.ok(r.startsWith('🚚 Envío por: Transportes Ferguson'));
+  if(nota.includes(ev))assert.ok(r.endsWith(ev),'la constancia queda al final');
+ }
+ assert.equal(ctx.fleNotaRespaldo('Entregar por la tarde · '+ev,txt),txt+'\nEntregar por la tarde\n'+ev);
+ assert.equal(ctx.fleNotaRespaldo('',txt),txt);
+ assert.ok(ctx.fleNotaRespaldo('y',txt.repeat(10)+'\n').length<=500,'un texto de transportista enorme también se recorta');
+ assert.match(fn('shopSend','function shopFab('),/p\.nota=fleNotaRespaldo\(p\.nota,fleNotaTxt\(fl,ed\)\);/);
+ assert.doesNotMatch(app,/\.slice\(0,1200\)/,'ya no se recorta a 1200 (más que las reglas)');
+});
+test('Fase 24 · caché del service worker tj-net-first-23 o posterior y ?v= de app.js subido (respaldo)',()=>{
+ assert.match(leer('sw.js'),/const V='tj-net-first-(2[3-9]|[3-9]\d)'/);
+ assert.match(leer('index.html'),/js\/app\.js\?v=modulos-fase-24[c-z]/);
+});

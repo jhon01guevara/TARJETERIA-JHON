@@ -29,8 +29,8 @@ const chk=(n,ok,det)=>{total++;if(!ok)fallos++;console.log((ok?'  ok     ':'  FA
 const CLAVES=['agencia','fid','tipo','rec','rtel','rced','pais','prov','ciudad','suc','dir','ref'];
 const LIM={tipo:13,agencia:80,fid:30,rec:120,rtel:40,rced:30,pais:60,prov:80,ciudad:80,suc:100,dir:200,ref:200};
 
-async function correr(br,base,[W,H],fid){
- const vp=W+'x'+H,intl=fid==='dhlexpress';console.log('\n== '+vp+(W<600?' (móvil)':' (escritorio)')+' · '+(intl?'transportista internacional':'transportista nacional')+' · '+(REAL?'REAL en prueba':'doble local')+' ==');
+async function correr(br,base,[W,H],fid,resp){
+ const vp=W+'x'+H,intl=fid==='dhlexpress';console.log('\n== '+vp+(resp?' · RESPALDO (las reglas rechazan envio)':'')+(W<600?' (móvil)':' (escritorio)')+' · '+(intl?'transportista internacional':'transportista nacional')+' · '+(REAL?'REAL en prueba':'doble local')+' ==');
  const ctx=await br.newContext({viewport:{width:W,height:H},serviceWorkers:'block',reducedMotion:'reduce',isMobile:W<600,hasTouch:W<600});
  const page=await ctx.newPage(),errs=[],bloqueadas=[];page.on('pageerror',e=>errs.push(e.message));
  if(!REAL)await ctx.route(/firestore\.googleapis\.com\/.*\/Write\/channel/,r=>{bloqueadas.push('Firestore Write');r.abort()});
@@ -66,10 +66,11 @@ async function correr(br,base,[W,H],fid){
  if(intl){await page.fill('#ev_pais','Estados Unidos');await page.fill('#ev_ced','E-8-0000')}
  await page.fill('#ev_dir','Dirección de prueba 123');
  if(!intl){const ref=await page.$('#ev_ref');if(ref)await page.fill('#ev_ref','Referencia de prueba')}
- await page.fill('#sh_nt','Pedido de PRUEBA automática (se borra al terminar)');
+ await page.fill('#sh_nt',resp?'Nota larga de prueba. '.repeat(18).trim():'Pedido de PRUEBA automática (se borra al terminar)');
  await page.check('#sh_chk_poli');await page.click('#sh_sb');await page.waitForSelector('#sh_n',{timeout:5000});
  await page.fill('#sh_n','Cliente Prueba Envio');await page.fill('#sh_t','6123-4567');await page.fill('#sh_e','prueba-envio@example.com');await page.fill('#sh_c','Prueba');await page.fill('#sh_d','Panamá');
  await page.check('#sh_chk_poli_reg');
+ if(resp)await page.evaluate(()=>{window.__rechazarEnvio=true});
  await page.click('#sh_b');
  await page.waitForFunction(()=>document.querySelector('#shopm').dataset.k==='ok',null,{timeout:25000}).catch(()=>{});
  await page.waitForTimeout(800);
@@ -77,6 +78,15 @@ async function correr(br,base,[W,H],fid){
  if(fin.k!=='ok'&&process.env.DEPURAR)console.log('  DEPURAR',fin.k,JSON.stringify(fin.m2),fin.ev,fin.poli,JSON.stringify(fin.esc.map(e=>e.col+':'+e.res)));
  const peds=fin.esc.filter(e=>e.col==='tienda_pedidos'),leads=fin.esc.filter(e=>e.col==='tienda_leads');
  chk('termina en «¡Pedido enviado!»',fin.k==='ok'&&/¡Pedido enviado!/.test(fin.txt));
+ if(resp){
+  chk('respaldo: la 1.ª escritura (con envio) fue rechazada y el reintento (sin envio) se guardó: 1 cliente y 2 intentos de pedido',leads.length===1&&peds.length===2&&peds[0].envio===true&&peds[0].res==='rechazada'&&peds[1].envio===false,peds.map(e=>e.res+(e.envio?'+envio':'')).join(' | '));
+  const n=peds[1]&&peds[1].d.nota;
+  chk('respaldo: la nota cumple el límite de las reglas (≤ 500; antes se recortaba a 1200 y el reintento se rechazaba)',typeof n==='string'&&n.length<=500&&n.length>400,n&&String(n.length));
+  chk('respaldo: el transportista va PRIMERO en la nota y el panel puede leerlo (Recibe, Cel., Dirección)',!!n&&/^🚚 Envío por: Transportes Ferguson\nRecibe: Prueba Automatica\nCel\. recibe: 6000-0000/m.test(n)&&/^Dirección: Dirección de prueba 123$/m.test(n),n&&n.slice(0,120));
+  chk('respaldo: la constancia de aceptación Ley 81 sigue AL FINAL de la nota y lead.terminos va completo',!!n&&/\[🛡️ Aceptó Términos y Privacidad Ley 81: [^\]]+\]$/.test(n)&&peds[1].d.lead.terminos&&peds[1].d.lead.terminos.ok===true);
+  chk('respaldo: el panel (fleNotaEnv) recupera los datos de envío desde la nota',await page.evaluate(n=>{const o=fleNotaEnv(n);return o.rec==='Prueba Automatica'&&o.rtel==='6000-0000'&&o.dir==='Dirección de prueba 123'},n));
+  chk('respaldo: el pedido sin envio solo trae claves admitidas por las reglas',!!peds[1]&&Object.keys(peds[1].d).every(k=>['id','cid','lead','items','total','nota','ref','ts','estado'].includes(k)));
+ }else{
  chk('se escribió 1 cliente y 1 pedido, el pedido CON envio en la primera (y única) escritura (sin reintento)',leads.length===1&&peds.length===1&&peds[0].envio===true&&(REAL?peds[0].res==='ok':true),peds.map(e=>e.res+(e.envio?'+envio':'')).join(' | '));
  const d=peds[0]&&peds[0].d,e=d&&d.envio;
  chk('envio: solo claves admitidas, texto y dentro de los límites de las reglas',!!e&&Object.keys(e).every(k=>CLAVES.includes(k))&&Object.entries(e).every(([k,v])=>typeof v==='string'&&v.length<=LIM[k]),e&&Object.keys(e).join(','));
@@ -84,6 +94,7 @@ async function correr(br,base,[W,H],fid){
  chk('envio: datos de quien recibe tal como se escribieron',!!e&&e.rec==='Prueba Automatica'&&e.rtel==='6000-0000'&&e.dir==='Dirección de prueba 123'&&(!intl||(e.pais==='Estados Unidos'&&e.rced==='E-8-0000')));
  chk('el pedido no lleva el transportista duplicado en la nota (va en envio)',!!d&&!/Envío por:/.test(d.nota)&&d.nota.length<=500,d&&String(d.nota.length));
  chk('pedido: sin claves fuera de las que admiten las reglas',!!d&&Object.keys(d).every(k=>['id','cid','lead','items','total','nota','ref','ts','estado','envio'].includes(k)));
+ }
  if(REAL&&d){
   /* lectura y limpieza con el administrador de la copia de prueba */
   const r=await page.evaluate(async({pw,pid,lid})=>{
@@ -106,7 +117,7 @@ async function correr(br,base,[W,H],fid){
  const sv=await servidor();let br,prep=0;
  try{br=await chromium.launch({channel:'chrome',headless:true});
   const vps=REAL?[VPS[0]]:VPS;       // en real basta un tamaño por transportista: se evita escribir de más en la copia de prueba
-  for(const v of vps){for(const f of (REAL&&v===vps[0]?['ferguson','dhlexpress']:['ferguson']))prep=Math.max(prep,await correr(br,sv.base,v,f))}}
+  for(const v of vps){for(const f of (REAL&&v===vps[0]?['ferguson','dhlexpress']:['ferguson']))prep=Math.max(prep,await correr(br,sv.base,v,f));if(!REAL)prep=Math.max(prep,await correr(br,sv.base,v,'ferguson',true))}}
  catch(e){console.log('ERROR: '+e.message);prep=2}
  finally{if(br)await br.close();sv.parar()}
  console.log('\n'+(total-fallos)+' comprobaciones correctas, '+fallos+' fallidas');

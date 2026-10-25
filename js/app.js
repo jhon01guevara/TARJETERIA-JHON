@@ -2225,6 +2225,13 @@ function shopEnvErr(){
 function fleNotaTxt(c,d){
  return ['🚚 Envío por: '+c.n,d.rec&&'Recibe: '+d.rec,d.rtel&&'Cel. recibe: '+d.rtel,d.rced&&'Cédula: '+d.rced,d.pais&&c.t==='i'&&'País: '+d.pais,d.prov&&'Provincia: '+d.prov,d.ciudad&&'Ciudad: '+d.ciudad,d.suc&&'Sucursal: '+d.suc,d.dir&&'Dirección: '+d.dir,d.ref&&'Ref.: '+d.ref].filter(Boolean).join('\n')
 }
+/* Fase 24: nota del respaldo (la escritura con `envio` fue rechazada y se reintenta sin él). Las reglas exigen nota ≤ 500 (antes se recortaba a 1200 y el reintento se rechazaba):
+   primero el transportista, luego la nota del cliente y siempre al final la constancia de aceptación Ley 81. */
+function fleNotaRespaldo(nota,txt){
+ const n=String(nota||''),m=/\[🛡️ Aceptó[^\]]*\]$/.exec(n),ev=m?m[0]:'',cuerpo=ev?n.slice(0,n.length-ev.length).replace(/ · $/,''):n,
+  ini=(txt+(cuerpo?'\n'+cuerpo:'')).slice(0,Math.max(0,500-(ev?ev.length+1:0)));
+ return ev?ini+'\n'+ev:ini.slice(0,500)
+}
 function fleNotaEnv(nota){
  const t=String(nota||''),o={},m=(re,k)=>{const x=re.exec(t);if(x&&x[1].trim())o[k]=x[1].trim()};
  m(/^Recibe: (.+)$/m,'rec');m(/^Cel\. recibe: (.+)$/m,'rtel');m(/^Cédula: (.+)$/m,'rced');m(/^País: (.+)$/m,'pais');m(/^Provincia: (.+)$/m,'prov');m(/^Ciudad: (.+)$/m,'ciudad');m(/^Sucursal: (.+)$/m,'suc');m(/^Dirección: (.+)$/m,'dir');m(/^Ref\.: (.+)$/m,'ref');
@@ -3052,7 +3059,7 @@ const p={id,cid:c.id,lead:{name:c.name,tel:c.tel,email:c.email,empresa:c.empresa
 if(c){c.terminos=auditTerminos;try{localStorage.setItem(lsk('tj_cli_term_'+c.id),JSON.stringify(auditTerminos))}catch(e){}}
  {const fl=shopFleSel();let ed=null;if(fl){ed=shopEnvDatos(fl);p.envio=sanEnv(ed)}
   try{await fbCol('tienda_pedidos').doc(id).set(p)}catch(e){let ok=false;
-   if(fl){/* respaldo: si las reglas no admiten el campo envío, el transportista viaja en la nota */delete p.envio;p.nota=((p.nota?p.nota+'\n':'')+fleNotaTxt(fl,ed)).slice(0,1200);try{await fbCol('tienda_pedidos').doc(id).set(p);ok=true}catch(e2){window._tjw&&_tjw(e2)}}
+   if(fl){/* respaldo: si las reglas no admiten el campo envío, el transportista viaja en la nota */delete p.envio;p.nota=fleNotaRespaldo(p.nota,fleNotaTxt(fl,ed));try{await fbCol('tienda_pedidos').doc(id).set(p);ok=true}catch(e2){window._tjw&&_tjw(e2)}}
    if(!ok){b.disabled=false;b.textContent='Enviar pedido';$('sh_m2').textContent='No se pudo enviar. Intente de nuevo.';return}}}
  SH.last=p;SH.pendNote='';SH.poliOk=false;shopOrdSave(p);try{shopConfetti()}catch(e){window._tjw&&_tjw(e)}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica();if(document.documentElement.classList.contains('panama'))shopPatrio(1)}SH.cart={};try{localStorage.removeItem(lsk('tj_shop_cart'))}catch(e){window._tjw&&_tjw(e)}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
  shopM('<div style="text-align:center;padding:10px 0"><div style="font-size:54px">✅</div><h2 style="margin:6px 0">¡Pedido enviado!</h2><p style="color:var(--tx2);margin:0 0 16px">Gracias, '+esc((c.name||'').split(' ')[0])+'. Nos pondremos en contacto con usted muy pronto para confirmar su pedido.</p>'+(document.documentElement.classList.contains('xmas')?'<div class="kxg">🎄 ¡Le deseamos una <b>feliz Navidad</b> y un <b>próspero Año Nuevo</b>! 🎁</div>':(document.documentElement.classList.contains('summer')?'<div class="kxg ksm">☀️ ¡Que disfrute un <b>verano increíble</b>! 🌴</div>':(document.documentElement.classList.contains('panama')?'<div class="kxg kpa2"><span class="kfl"></span> ¡<b>Viva Panamá</b>! Que disfrute un <b>feliz mes patrio</b></div>':'')))+'<button class="sbtn" data-h-click="h34" style="margin-bottom:8px">👁 Ver comprobante</button><button class="sbtn g" data-h-click="h33" style="margin-bottom:8px">📄 Descargar PDF</button><button class="sbtn g" data-h-click="h32" style="margin-bottom:8px">🧾 Mis pedidos</button>'+shopPedidoWABoton(p,c)+'<button class="sbtn g" data-h-click="h31">Seguir viendo el catálogo</button></div>','ok');}
