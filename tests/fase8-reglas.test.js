@@ -18,7 +18,7 @@ test('Las reglas Fase 8 habilitan el árbol por empresa (publicadas el 2026-10-2
  /* Esquema estricto de leads/pedidos presente en AMBAS rutas (raíz y empresa). */
  const nLeads=(r.match(/keys\(\)\.hasOnly\(\['id','name','tel','email','empresa','dir','ref','ts','imp'\]\)/g)||[]).length;
  assert.equal(nLeads,2,'esquema de leads en raíz y empresa');
- const nPeds=(r.match(/keys\(\)\.hasOnly\(\['id','cid','lead','items','total','nota','ref','ts','estado'\]\)/g)||[]).length;
+ const nPeds=(r.match(/keys\(\)\.hasOnly\(\['id','cid','lead','items','total','nota','ref','ts','estado','envio'\]\)/g)||[]).length;
  assert.equal(nPeds,2,'esquema de pedidos en raíz y empresa');
  assert.match(r,/match \/empresas\/\{eid\}\/chats\/\{chat\} \{[\s\S]{0,700}allow read: if isAdmin\(\) \|\|/);
  assert.match(r,/match \/empresas\/\{eid\}\/llamadas\/\{id\} \{[\s\S]{0,420}allow read, update: if isAdmin\(\)/);

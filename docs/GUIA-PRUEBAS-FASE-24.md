@@ -35,3 +35,19 @@ No se tocaron datos ni precios (son del dueño). Se revisó el código y no se e
 | Panel (`tdPedidos`) | total «Consultar» | estático |
 
 Observación (no es un error con los datos actuales, todos a 0): si algún día hay un pedido con productos con y sin precio, el total mostrado es la suma de los que sí tienen precio, sin aviso de que falta lo «a consultar». No se cambió porque es una decisión de presentación.
+
+## PR «reglas de Firestore: `envio` en `tienda_pedidos`» (hallazgo 5)
+
+Detalle del cambio y de cómo revertir: `docs/DESPLIEGUE-REGLAS.md`, sección 6.
+
+1. **Emulador** (`tests/herramientas/reglas-emulador`, ver su README): 32 pruebas nuevas (`reglas-pedido-envio.test.js`) y las 27 existentes (`reglas-generales.test.js`).
+   - Reglas nuevas: 32/32 y 27/27.
+   - Reglas anteriores (producción al 2026-10-25) con `EXPECT_ENVIO=0`: 32/32 (rechazan `envio`, que es justo el defecto) y 27/27.
+   - Cubre, en `tienda_pedidos` y `empresas/{eid}/tienda_pedidos`: con `envio` válido (nacional, internacional, mínimo, límites exactos) pasa; sin `envio` pasa; `tipo`, `agencia`, tamaños de los 11 campos, tipos de dato, `envio` que no es mapa y claves extra (incluidas `guia, cont, obs, bultos, peso, etq`) fallan; lo demás del pedido no cambia (estado, total, artículos, `ref`, `cid`, `ts`, claves extra, `lead`, id distinto); invitados y cuentas ajenas no leen, actualizan ni borran; el vendedor solo cambia `estado`; la administración sí actualiza la guía.
+2. **Estáticas** (`npm test`): `tests/reglas-envio-fase24.test.js` (límites iguales a `sanEnv`, claves = las que arma `shopEnvDatos`, las únicas diferencias con el respaldo son `envio`).
+3. **Chrome real + copia de prueba** (`tests/navegador/pedido-envio-fase24.js`): con las reglas nuevas publicadas SOLO en `tarjeteria-jhon-prueba`, un pedido real de prueba con transportista nacional (Ferguson) y otro internacional (DHL): la primera escritura con `envio` es aceptada (sin reintento), el administrador de prueba lo lee y los datos de prueba se borran.
+   ```bash
+   node tests/navegador/copia-prueba.js /tmp/copia && (cd /tmp/copia && python3 -m http.server 8948 --bind 127.0.0.1 &)
+   REAL=1 BASE=http://127.0.0.1:8948/ node tests/navegador/pedido-envio-fase24.js    # requiere PRUEBA_PASSWORD
+   PUERTO=8947 node tests/navegador/pedido-envio-fase24.js                           # sin escribir nada (doble local)
+   ```

@@ -39,3 +39,8 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | `tienda-pedido-fase23.js` | Fase 23: flujo del pedido de la tienda (cantidades, totales, validaciones, registro, pedido enviado con escrituras desviadas a un doble y bloqueadas en red; no envía nada). Ver `docs/GUIA-PRUEBAS-FASE-23.md` | `PUERTO=8942 node tienda-pedido-fase23.js` |
 | `panel-fase23.js` + `copia-prueba.js` | Fase 23: panel con administrador, vendedor y «sin permisos» contra la copia de prueba (menú, pantallas, CSP, permisos, formulario de acceso). Requiere `PRUEBA_PASSWORD`. | `node copia-prueba.js /tmp/copia` y `BASE=http://127.0.0.1:8951/ node panel-fase23.js` |
 | `funcional-fase23.js` + `verificar-movimiento-literal-23.js` | Fase 23: equivalencia de lo movido a `agenda-alertas.js`, `tienda-config-medios.js`, `tienda-copia-local.js`, `tienda-temas.js` y `comprobante-pedido.js` (huellas iguales entre `main` y la rama, servidas desde el mismo origen) y comprobación de movimiento literal. Requiere `PRUEBA_PASSWORD`. | `BASE=http://127.0.0.1:8953/ node funcional-fase23.js` y `node verificar-movimiento-literal-23.js main` |
+
+## Fase 24
+| Script | Qué hace |
+|---|---|
+| `pedido-envio-fase24.js` | Pedido de la tienda con transportista (`envio`). Modo doble (local, sin escribir) y modo `REAL=1` contra la copia de PRUEBA (verifica que apunta a `tarjeteria-jhon-prueba`, exige que la primera escritura con `envio` sea aceptada, lee el pedido con el administrador de prueba y borra los datos de prueba). Ver `docs/GUIA-PRUEBAS-FASE-24.md`. |
