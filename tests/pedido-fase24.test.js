@@ -30,3 +30,46 @@ test('Fase 24 · caché del service worker tj-net-first-21 o posterior y ?v= de 
  assert.match(leer('sw.js'),/const V='tj-net-first-(2[1-9]|[3-9]\d)'/);
  assert.match(leer('index.html'),/js\/app\.js\?v=modulos-fase-2[4-9][a-z]/);
 });
+
+/* ---- Hallazgo 2: botón opcional «Enviar también por WhatsApp» tras «¡Pedido enviado!» ---- */
+const vm=require('node:vm');
+const extraer=(nombre)=>{const i=app.indexOf('function '+nombre+'(');assert.ok(i>=0,nombre);const f=app.indexOf('\nfunction ',i+10),g=app.indexOf('\nasync function ',i+10);return app.slice(i,Math.min(...[f,g].filter(x=>x>0)))};
+const redesSrc=leer('js/redes.js'),contSrc=redesSrc.slice(redesSrc.indexOf('function contLimpio('),redesSrc.indexOf('const redesLista'));
+const mundo=(contacto)=>{const ctx={SH:{contacto},$$:n=>'$'+Number(n).toFixed(2),nombreNegocio:()=>'Tarjetería Jhon'};vm.createContext(ctx);vm.runInContext(contSrc+'\n'+extraer('shopPedidoWAurl')+'\n'+extraer('shopPedidoWABoton'),ctx);return ctx};
+const ped=(o={})=>Object.assign({id:'abc123def456',lead:{name:'Ana Pérez',tel:'6123-4567',email:'ana@example.com',dir:'Calle 50',empresa:'ACME'},items:[{id:'a',n:'Tarjeta "Graduación" & más',p:2.5,q:12},{id:'b',n:'Sobre',p:1,q:3}],total:33,nota:'Nota secreta [🛡️ Aceptó ...]',envio:{rec:'Juan',dir:'Calle X'}},o);
+const texto=u=>decodeURIComponent(new URL(u).searchParams.get('text'));
+test('Fase 24 · WhatsApp del pedido: wa.me con el mismo número que #k_wa y el resumen en español (número de pedido, artículos con cantidad, total, nombre)',()=>{
+ const w=mundo({wa:'6330-3495'}),u=w.shopPedidoWAurl(ped(),{name:'Ana Pérez'});
+ assert.match(u,/^https:\/\/wa\.me\/50763303495\?text=/,'mismo número y normalización que #k_wa (contLimpio)');
+ assert.equal(texto(u),['Hola, acabo de hacer un pedido en Tarjetería Jhon.','Pedido N° DEF456','• 12 × Tarjeta "Graduación" & más','• 3 × Sobre','Total: $33.00','Nombre: Ana Pérez'].join('\n'));
+ assert.doesNotMatch(u,/[\s"<>]/,'URL totalmente codificada (encodeURIComponent)');
+});
+test('Fase 24 · WhatsApp del pedido: sin datos sensibles extra (teléfono, correo, dirección, nota, envío, empresa)',()=>{
+ const t=texto(mundo({wa:'50763303495'}).shopPedidoWAurl(ped(),{name:'Ana Pérez',tel:'6123-4567',email:'ana@example.com'}));
+ for(const x of ['6123','ana@example','Calle','Nota secreta','ACME','Juan','Aceptó'])assert.ok(!t.includes(x),'no debe incluir '+x);
+});
+test('Fase 24 · WhatsApp del pedido: total «a consultar» (precio 0), total parcial (mezcla) y límite de líneas',()=>{
+ const w=mundo({wa:'50763303495'});
+ assert.match(texto(w.shopPedidoWAurl(ped({total:0,items:[{id:'a',n:'X',p:0,q:2}]}),{name:'Ana'})),/\nTotal: a consultar\n/);
+ assert.match(texto(w.shopPedidoWAurl(ped({total:5,items:[{id:'a',n:'X',p:0,q:2},{id:'b',n:'Y',p:5,q:1}]}),{name:'Ana'})),/\nTotal parcial: \$5\.00 \(hay artículos a consultar\)\n/);
+ const muchos=Array.from({length:40},(_,k)=>({id:'i'+k,n:'Producto '+k,p:1,q:1})),t=texto(w.shopPedidoWAurl(ped({items:muchos,total:40}),{name:'Ana'}));
+ assert.equal(t.split('\n').filter(l=>l.startsWith('• ')).length,15);assert.match(t,/… y 25 más/);
+});
+test('Fase 24 · WhatsApp del pedido: sin número configurado (o inválido) no hay botón; con número, enlace seguro en pestaña nueva',()=>{
+ for(const c of [null,{},{wa:''},{wa:'abc'},{wa:'123'}])assert.equal(mundo(c).shopPedidoWABoton(ped(),{name:'Ana'}),'','sin botón con '+JSON.stringify(c));
+ const b=mundo({wa:'6330-3495'}).shopPedidoWABoton(ped(),{name:'Ana'});
+ assert.match(b,/^<a class="sbtn g" id="k_pwa" href="https:\/\/wa\.me\/50763303495\?text=[^"]+" target="_blank" rel="noopener noreferrer"/);
+ assert.match(b,/Enviar también por WhatsApp/);assert.match(b,/Opcional: su pedido ya quedó guardado/);
+});
+test('Fase 24 · WhatsApp del pedido: es un añadido a «¡Pedido enviado!»; el guardado en Firestore y el flujo no cambian y shopSend sigue sin usar wa.me ni window.open',()=>{
+ const s=fn('shopSend','function shopFab(');
+ assert.doesNotMatch(s,/wa\.me|window\.open/);
+ assert.match(s,/<button class="sbtn g" data-h-click="h32" style="margin-bottom:8px">🧾 Mis pedidos<\/button>'\+shopPedidoWABoton\(p,c\)\+'<button class="sbtn g" data-h-click="h31">Seguir viendo el catálogo<\/button>/);
+ assert.ok(s.indexOf("fbCol('tienda_pedidos').doc(id).set(p)")<s.indexOf('shopPedidoWABoton(p,c)'),'el botón sale después de guardar el pedido');
+ assert.match(s,/data-h-click="h34"[^]*Ver comprobante[^]*data-h-click="h33"[^]*Descargar PDF[^]*data-h-click="h32"/);
+ assert.match(app,/id="k_wa"/);assert.match(app,/shopRedes[^]*w\.href='https:\/\/wa\.me\/'\+num\+'\?text='\+encodeURIComponent\('Hola, vi su catálogo virtual de Tarjetería Jhon y quisiera más información\.'\)/,'#k_wa no cambió');
+});
+test('Fase 24 · caché del service worker tj-net-first-22 o posterior y ?v= de app.js subido (WhatsApp)',()=>{
+ assert.match(leer('sw.js'),/const V='tj-net-first-(2[2-9]|[3-9]\d)'/);
+ assert.match(leer('index.html'),/js\/app\.js\?v=modulos-fase-24[b-z]/);
+});

@@ -33,6 +33,7 @@ async function correr(br,base,[W,H]){
  /* red de seguridad a nivel de red: ninguna escritura de Firestore ni envío de EmailJS sale del navegador */
  await ctx.route(/firestore\.googleapis\.com\/.*\/Write\/channel/,r=>{bloqueadas.push('Firestore Write');r.abort()});
  await ctx.route(/api\.emailjs\.com/,r=>{bloqueadas.push('EmailJS');r.abort()});
+ await ctx.route(/^https:\/\/wa\.me\//,r=>r.fulfill({status:200,contentType:'text/html',body:'wa.me (simulado)'}));   // Fase 24: el botón «Enviar también por WhatsApp» abre wa.me; aquí se intercepta, no sale nada
  await ctx.addInitScript(()=>{window.__csp=[];document.addEventListener('securitypolicyviolation',e=>window.__csp.push(e.violatedDirective))});
  await page.goto(base+'?tienda=1',{waitUntil:'load'});
  try{await page.waitForFunction(()=>document.querySelectorAll('#sh_g .kc .kadd').length>1&&document.querySelector('#k_footer'),null,{timeout:ESPERA})}
@@ -198,6 +199,26 @@ async function correr(br,base,[W,H]){
   chk('pedido: sin campos extraños (solo los que admiten las reglas)',Object.keys(d).every(k=>['id','cid','lead','items','total','nota','ref','ts','estado','envio'].includes(k)),Object.keys(d).join(','));
  }
  chk('termina en «¡Pedido enviado!» con botones de comprobante',fin.k==='ok'&&/¡Pedido enviado!/.test(fin.txt)&&/Ver comprobante/.test(fin.txt)&&/Descargar PDF/.test(fin.txt)&&/Mis pedidos/.test(fin.txt));
+ /* ---- Fase 24: botón OPCIONAL «Enviar también por WhatsApp» (no sustituye nada: el pedido ya se escribió arriba) ---- */
+ {const antes=await page.evaluate(()=>{const a=document.getElementById('k_wa'),b=document.getElementById('k_pwa');return {kwa:a&&!a.hidden?a.getAttribute('href'):null,pwa:b?b.getAttribute('href'):null}});
+  if(antes.kwa)chk('Fase 24 · con WhatsApp configurado, «Enviar también por WhatsApp» aparece y usa el mismo número que el botón flotante',!!antes.pwa&&new URL(antes.pwa).pathname===new URL(antes.kwa).pathname,antes.pwa&&new URL(antes.pwa).pathname.replace(/\d{4}(?=\d{3}$)/,'····'));
+  else chk('Fase 24 · sin WhatsApp configurado no aparece «Enviar también por WhatsApp»',antes.pwa===null);
+  const sinNum=await page.evaluate(()=>{const c=SH.contacto;SH.contacto=null;const h=shopPedidoWABoton(SH.last,SH.cli);SH.contacto={wa:'abc'};const h2=shopPedidoWABoton(SH.last,SH.cli);SH.contacto=c;return [h,h2]});
+  chk('Fase 24 · sin número (o inválido) la función no devuelve botón',sinNum[0]===''&&sinNum[1]==='');
+  /* con número (el configurado o uno de prueba en memoria): se muestra, se pulsa y abre wa.me con el resumen del pedido recién enviado */
+  await page.evaluate(()=>{if(!document.getElementById('k_pwa')){window.__contAntes=SH.contacto;SH.contacto={wa:'6330-3495'};document.querySelector('#shopm .ksheet > div').insertAdjacentHTML('beforeend',shopPedidoWABoton(SH.last,SH.cli));SH.contacto=window.__contAntes}});
+  const vis=await page.evaluate(()=>{const b=document.getElementById('k_pwa');if(!b)return null;const r=b.getBoundingClientRect();return {ancho:r.width,alto:r.height,txt:b.textContent,rel:b.rel,target:b.target,nota:b.nextElementSibling&&b.nextElementSibling.textContent}});
+  chk('Fase 24 · el botón es visible, con texto, en pestaña nueva y rel noopener',!!vis&&vis.ancho>100&&vis.alto>=40&&/Enviar también por WhatsApp/.test(vis.txt)&&vis.target==='_blank'&&/noopener/.test(vis.rel)&&/Opcional/.test(vis.nota||''),JSON.stringify(vis));
+  const [pop]=await Promise.all([ctx.waitForEvent('page',{timeout:8000}).catch(()=>null),page.click('#k_pwa')]);
+  if(pop)await pop.waitForURL(/wa\.me/,{timeout:6000}).catch(()=>{});const url=pop?pop.url():'';
+  chk('Fase 24 · al pulsarlo se abre https://wa.me/<número>?text=… (interceptado, no sale nada)',/^https:\/\/wa\.me\/\d{10,15}\?text=/.test(url),url.replace(/\d{4}(?=\d{3}\?)/,'····').slice(0,70));
+  const txt=url?decodeURIComponent(new URL(url).searchParams.get('text')):'';
+  const last6=await page.evaluate(()=>String(SH.last.id).slice(-6).toUpperCase());
+  chk('Fase 24 · el mensaje trae número de pedido, artículos con cantidad, total y nombre',txt.includes('Pedido N° '+last6)&&/• 12 × /.test(txt)&&/• 7 × /.test(txt)&&new RegExp('Total: \\$'+esperado.toFixed(2).replace('.','\\.')).test(txt)&&/Nombre: Cliente de Prueba/.test(txt),txt.replace(/\n/g,' | ').slice(0,200));
+  chk('Fase 24 · el mensaje no lleva teléfono, correo, dirección ni la nota',!/6123|prueba@example|Ciudad de Panamá|Nota de prueba|Aceptó/.test(txt));
+  if(pop)await pop.close();
+  chk('Fase 24 · la hoja sigue en «¡Pedido enviado!» con sus otros botones',(await hoja()).k==='ok'&&/Ver comprobante/.test((await hoja()).txt));
+ }
  chk('el carrito queda vacío (memoria, localStorage y botón flotante)',fin.cart===0&&(!fin.ls||fin.ls==='{}')&&fin.fab==='');
  chk('el cliente y su pedido quedan guardados en el navegador',!!fin.cli&&fin.cli.name==='Cliente de Prueba'&&fin.ords===1);
  await page.click('#shopm button:has-text("Mis pedidos")');await page.waitForTimeout(600);
