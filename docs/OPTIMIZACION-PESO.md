@@ -57,7 +57,7 @@ Quitar `apps/modelos.js` de la lista `PRE` de `sw.js` reduciría la descarga en 
 
 | Propuesta | Ahorro estimado | Riesgo | Notas |
 |---|---|---|---|
-| Quitar `apps/modelos.js` de `PRE` en `sw.js` (y subir la caché a `tj-net-first-7`) | −1,6 MB en la instalación del service worker | Bajo/medio: pérdida de uso offline del módulo Check la primera vez | Probar abriendo Check con internet, luego sin conexión. |
+| Quitar `apps/modelos.js` de `PRE` en `sw.js` (y subir la caché a `tj-net-first-8`) | −1,6 MB en la instalación del service worker | Bajo/medio: pérdida de uso offline del módulo Check la primera vez | Probar abriendo Check con internet, luego sin conexión. |
 | Sacar las 63 fotos de `modelos.js` a archivos `.jpg` y que `modelos.html` las cargue bajo demanda | ~1,6 MB menos en un solo archivo; carga progresiva | Medio: cambia la lógica de `modelos.html` y de `cintChk` | Requiere pruebas del módulo Check y de `js/app.js` L1085 (lee `const IMGS` del HTML). |
 | Quitar miniaturas duplicadas del `manifest.json` (67 únicas de 88; ~1,1 MB sin comprimir) | ~0,8 MB | Medio: cambia el formato del manifest y la lógica de importación | Requiere tocar `precargarCatalogoDeFabrica` y el exportador del catálogo. |
 | Banners en WebP/AVIF con `<source type>` y JPEG de reserva | 25–35 % en banners | Medio: cambia el HTML generado; hay que mantener las rutas JPEG | Se debe comprobar el aspecto con SSIM sobre la versión decodificada. |
