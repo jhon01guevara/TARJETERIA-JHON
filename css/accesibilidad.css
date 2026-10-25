@@ -1,0 +1,45 @@
+/* ============================================================
+   ACCESIBILIDAD · Tarjetería Jhon (Fase 9)
+   Capa solo aditiva: no cambia colores, tamaños ni estructura.
+   Todo lo de aquí solo se nota (a) al navegar con teclado
+   (:focus-visible) o (b) si el sistema pide menos movimiento.
+   Revertir: quitar el <link> de index.html.
+   ============================================================ */
+
+/* Enlace «Saltar al contenido»: invisible hasta recibir el foco con Tab. */
+.skip-link{
+  position:fixed;left:8px;top:-80px;z-index:100000;
+  padding:10px 16px;border-radius:8px;
+  background:#000;color:#fff;
+  font:600 14px/1.2 Inter,system-ui,sans-serif;text-decoration:none;
+}
+.skip-link:focus,.skip-link:focus-visible{
+  top:8px;outline:3px solid #fff;outline-offset:0;box-shadow:0 0 0 6px #276EF1;
+}
+
+/* Foco visible solo con teclado, para lo que no es botón nativo.
+   (Botones y .ni ya lo tienen en uber-skin.css; los campos de texto
+   conservan su propio resalte; la tienda pública tiene el suyo.) */
+a:focus-visible,
+select:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+[data-h-click][tabindex]:focus-visible{
+  outline:2px solid var(--info,#276EF1);
+  outline-offset:2px;
+}
+.ni:focus-visible{outline-offset:-2px}
+
+/* Respeta «reducir movimiento» del sistema (no afecta a quien no lo activa). */
+@media (prefers-reduced-motion:reduce){
+  .kwa,.kwa::before{animation:none!important}
+  *,*::before,*::after{
+    animation-duration:.01ms!important;
+    animation-iteration-count:1!important;
+    transition-duration:.01ms!important;
+    scroll-behavior:auto!important;
+  }
+}
+
+/* Destino del enlace «Saltar al contenido»: recibe el foco por código, sin recuadro. */
+#contenido:focus{outline:none}

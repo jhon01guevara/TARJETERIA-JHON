@@ -92,7 +92,7 @@ function mktProysHTML(){
    +'<small style="display:block;color:var(--gris)">'+new Date(p.ts||Date.now()).toLocaleString()+'</small></span>'
    +'<span style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">'
    +'<button class="btn s p" data-h-click="call" data-a-click="'+_ha('mktAbrir',p.id)+'">Abrir</button>'
-   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktBorrar',p.id)+'">🗑</button></span></div>';
+   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktBorrar',p.id)+'" aria-label="Eliminar">🗑</button></span></div>';
  }).join('');
  return (MK.proys.length?filas:'<div class="vacio" style="margin-top:12px">Aún no hay diseños. Cree el primero con «+ Nuevo diseño».</div>')
   +'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn p" data-h-click="call" data-a-click="'+_ha('mktNuevo',1)+'">+ Nuevo diseño</button></div>';
@@ -124,9 +124,9 @@ function mktColsHTML(){
   return '<div class="dl"><span><b>'+esc(c.nombre||'?')+'</b> <small style="color:var(--gris)">· '+items.length+' diseño(s)'+(c.estado==='archivada'?' · ⏸ archivada':'')+'</small>'
    +'<small style="display:block;color:var(--gris)">'+items.map(function(id){var p=pros.find(function(x){return x.id===id});return p?(p.nombre||''):''}).filter(Boolean).join(' · ')+'</small></span>'
    +'<span style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end">'+sel
-   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktColRen',c.id)+'">✏️</button>'
+   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktColRen',c.id)+'" aria-label="Editar">✏️</button>'
    +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktColArc',c.id)+'">'+(c.estado==='archivada'?'▶':'⏸')+'</button>'
-   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktColBor',c.id)+'">🗑</button></span></div>';
+   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktColBor',c.id)+'" aria-label="Eliminar">🗑</button></span></div>';
  }).join('');
  return (MK.cols.length?filas:'<div class="vacio" style="margin-top:12px">Aún no hay colecciones.</div>')
   +'<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn p" data-h-click="call" data-a-click="'+_ha('mktColNueva','')+'">+ Nueva colección</button></div>';
@@ -269,10 +269,10 @@ function mktPintarEditor(){
    var nom=c.tipo==='fondo'?'🎨 Fondo':c.tipo==='img'?'🖼 Imagen':'🔤 '+(String(c.t||'').split('\n')[0]||'Texto').slice(0,22);
    return '<div class="dl" style="padding:5px 8px;cursor:pointer;'+(MK.sel===c.id?'border-left:3px solid var(--az)':'')+'" data-h-click="call" data-a-click="'+_ha('mktSel',c.id)+'">'
     +'<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(nom)+'</span>'
-    +(c.tipo!=='fondo'?'<span><button class="btn s" data-h-click="call" data-a-click="'+_ha('mktSub',c.id)+'">↑</button> '
-     +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktBajar',c.id)+'">↓</button> '
-     +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktDup',c.id)+'">⧉</button> '
-     +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktDel',c.id)+'">🗑</button></span>':'')
+    +(c.tipo!=='fondo'?'<span><button class="btn s" data-h-click="call" data-a-click="'+_ha('mktSub',c.id)+'" aria-label="Subir">↑</button> '
+     +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktBajar',c.id)+'" aria-label="Bajar">↓</button> '
+     +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktDup',c.id)+'" aria-label="Duplicar">⧉</button> '
+     +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktDel',c.id)+'" aria-label="Eliminar">🗑</button></span>':'')
     +'</div>';
   }).join('');
   var props=mktPropsHTML();
@@ -281,8 +281,8 @@ function mktPintarEditor(){
    +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktVolver','')+'">← Volver</button>'
    +'<input id="mkt_nom" value="'+esc(MK.edit.nombre||'')+'" placeholder="Nombre del diseño" style="flex:1;min-width:160px;background:var(--soft);border:1px solid var(--borde);color:var(--txt);border-radius:8px;padding:8px 10px">'
    +ft('cuadrado')+ft('vertical')+ft('story')+ft('banner')
-   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktUndo','')+'">↶</button>'
-   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktRedo','')+'">↷</button>'
+   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktUndo','')+'" aria-label="Deshacer">↶</button>'
+   +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktRedo','')+'" aria-label="Rehacer">↷</button>'
    +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktAdaptar','')+'">🔄 Adaptar todos</button>'
    +'<button class="btn s" data-h-click="call" data-a-click="'+_ha('mktEstado','')+'">'+(MK.edit.estado==='listo'?'✅ Listo':'✏️ Borrador')+'</button>'
    +'<button class="btn p" data-h-click="call" data-a-click="'+_ha('mktGuardar','')+'">💾 Guardar</button>'
