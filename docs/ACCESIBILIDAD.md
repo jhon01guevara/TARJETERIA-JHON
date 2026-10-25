@@ -1,4 +1,4 @@
-# Accesibilidad (Fase 9)
+# Accesibilidad (Fase 9 y Fase 15)
 
 Objetivo: acercar la web a WCAG 2.1 AA **sin cambiar el aspecto ni la lógica**. Todo lo de esta fase es aditivo: atributos ARIA, un poco de CSS que solo se nota al usar el teclado, y un script pequeño (`js/a11y.js`). No se tocó Firebase, ni las reglas, ni los manejadores de `app.js`.
 
@@ -39,14 +39,59 @@ Objetivo: acercar la web a WCAG 2.1 AA **sin cambiar el aspecto ni la lógica**.
 **Cache**
 - `sw.js`: `tj-net-first-5` → `tj-net-first-6` (index.html y app.js están precacheados). `app.js` y `marketing.js` cambian su `?v=` para evitar la caché del navegador.
 
-## Qué queda pendiente
+## Fase 15 · contrastes, ventanas modales, iframes y `onclick=`
+
+### 1. `onclick=` sobrantes y botón «Imprimir» de la constancia legal
+- **Origen de los avisos «Executing inline event handler»:** se midieron en Chrome real (observador de DOM + eventos `securitypolicyviolation`). **Todos** venían de un solo bloque: las tarjetas de **Configuración → Personalización web → portada de la tienda** (`js/app.js`, función de la portada). Eran 15 atributos (12 `onclick=` y 3 `onchange=`) y se repiten en cada pintado de la pantalla, por eso salían cientos de avisos. Ningún otro archivo (`marketing.js`, `empresas.js`, `index.html`, `apps/*`) tiene atributos en línea: lo que hay son asignaciones `el.onclick = …` por código, que la CSP **no** bloquea.
+- **Por qué era seguro quitarlos:** cada uno de esos botones ya tenía al lado su `data-h-click="call"` / `data-h-change="call"` con el mismo nombre de función y los mismos argumentos, y esa función está exportada en `window` (es lo que usa el delegador `call`). La CSP bloqueaba el `onclick=`, así que hoy el único que funcionaba ya era el delegador; quitar el atributo no cambia lo que hace el botón. Se comprobó con un script que, antes de borrar cada atributo, exigía: mismo nombre, mismos argumentos y `window.<función>=`. En los 3 `onchange="…(event)"` la equivalencia es porque esas funciones, si no reciben evento, leen el `<input>` por su id.
+- **Medido:** en un recorrido automático de todas las pantallas del panel (administrador, con las tarjetas de Configuración abiertas) y de la tienda pública: **144 avisos → 0**, y 15 atributos `on…=` distintos en el DOM → 0. En el uso real salían ~360 porque la pantalla de Configuración se repinta muchas veces.
+- **Cierre:** `tests/onclick-fase15.test.js` falla si alguna plantilla vuelve a escribir un atributo `on…=` en línea y comprueba que cada `data-h-click="call"` apunte a una función global que existe.
+- **Botón «Imprimir» de la constancia legal** (`js/politicas.js`): la ventana que se abre (`window.open('')`) hereda la CSP de la página, que bloqueaba su `onclick="window.print()"`; el botón no hacía nada. Ahora el botón no tiene `onclick`, y tras escribir el documento se le añade un `addEventListener('click', …)` que llama a `print()` de esa ventana. **No se tocó la CSP.** El `<style>` de esa ventana ya estaba permitido por hash.
+- **Pendiente de este bloque:** nada en plantillas. Quedan las asignaciones por código (`el.onclick = …`, p. ej. en `apps/investigacion.js`), que no generan avisos y no conviene reescribir sin necesidad.
+
+### 2. Contrastes (WCAG AA, 4.5:1 en texto normal)
+Medido con axe-core en Chrome real sobre el panel de prueba local (administrador y vendedor, todas las pantallas, temas **claro** y **nocturno**) y la tienda pública (claro y oscuro).
+
+| | Antes | Después |
+|---|---|---|
+| Nodos con contraste insuficiente | 64 (25 combinaciones distintas) | **0** |
+
+Lo corregido, con cambios mínimos de color (`css/accesibilidad.css`, bloque «CONTRASTE (Fase 15)»):
+- Textos de estado (verde «✔ Publicado» y «Sincronizado», verde/ámbar/rojo/gris del resumen del mapa, estado de sincronización de la portada): ahora usan variables `--okt`, `--warnt`, `--errt`, `--mutet`, un tono un poco más oscuro en los temas claros y más claro en «Nocturno». En `app.js` llevan color de respaldo (`var(--okt,#15803d)`).
+- Etiqueta del carrusel de la portada (`#cintTag`): `#6b6b6b` → `#5c5c5c`.
+- Agenda: los días de otro mes ya no se atenúan con `opacity:.45` (daba 2.9:1); ahora el número usa el gris del tema y se atenúan solo el fondo y los puntos.
+- Tema Nocturno: gris secundario `--gris` `#9b9b9b` → `#a8a8a8` (`css/uber-skin.css`).
+- Tienda en modo oscuro: botón «Carrito» (blanco sobre `#7c66ff` = 4.04) pasa a `#6a54f0` (5.1:1).
+- Barra de la ventana «Investigación de productos»: su título salía oscuro sobre la barra oscura y el botón «Cerrar» se montaba encima del texto; ahora tiene texto claro y el mismo diseño de barra que el visor de PDF. (Era un fallo visual que ya existía.)
+
+### 3. Ventanas modales (centralizado en `js/a11y.js`)
+Un observador mira las ventanas que ya existen (`#md`/`#mb` del panel, `#shopm` de la tienda, los zooms `#kzoom` `#avzoom` `#tdzoom`, `#pdfv`, `#imgv`, `#investOv` y el login `#auth`) y les añade, sin reescribir ninguna:
+- **Esc cierra** la ventana usando el mismo mecanismo que el ratón (un `click()` sobre el fondo o sobre su botón «Cerrar»), así no se salta lógica de `app.js`. `#imgv` ya se cerraba con Esc por su cuenta y no se duplica. El login no se cierra con Esc.
+- **Excepción deliberada:** si ya escribiste algo en un campo de la ventana, Esc **no** la cierra (para no perder un formulario a medias); se cierra con su botón «Cancelar/Cerrar».
+- **Foco atrapado:** Tab y Mayús+Tab dan la vuelta dentro de la ventana; si el foco se escapa, vuelve a entrar.
+- **Foco al abrir y al cerrar:** al abrir, el foco pasa al primer control (si la app ya puso el foco dentro, se respeta); al cerrar, vuelve al elemento que abrió la ventana (si sigue en pantalla).
+- **Nombre accesible:** `role="dialog"` `aria-modal="true"` y `aria-labelledby` apuntando al título de la ventana (h1–h3 o la barra del visor); si no hay título, queda un `aria-label`.
+- **Visores con iframe (PDF):** el visor del navegador puede quedarse con el foco al cargar y entonces Esc no llega a la página; al terminar de cargar, el foco vuelve a la barra de la ventana.
+
+### 4. Apps en iframes y etiquetas
+- `<iframe id="checkFrame">`: `title="Check"` → `title="Check: modelos de tarjetas"` (el de Investigación y el del visor PDF ya tenían título).
+- `apps/modelos.html` y `apps/investigacion.html` ya declaran `lang="es"`. Se añadió nombre accesible (`aria-label`) al selector de trabajos y a los selectores y el buscador de Investigación.
+- Panel: `aria-label` en las casillas y listas de la tabla de productos de la tienda, en los tres selectores de acciones masivas y en el filtro de tipos de la agenda (axe: 0 `label` y 0 `select-name` en las pantallas recorridas).
+
+### Qué sigue pendiente después de la Fase 15
+- Esc dentro de un iframe (p. ej. escribiendo dentro de Investigación): el teclado del iframe no llega a la página padre; se cierra con el botón «Cerrar» o Tab hasta él.
+- Marcas de región (`region`) y landmarks de la tienda, tablas sin `caption`, zonas táctiles pequeñas (ver tabla de arriba).
+- Pruebas con lector de pantalla reales (NVDA/VoiceOver): aquí solo se comprobaron atributos ARIA y comportamiento de teclado en Chrome.
+- Safari, Firefox e iOS no se probaron.
+
+## Qué quedaba pendiente tras la Fase 9 (ver arriba lo resuelto en la 15)
 
 | Pendiente | Riesgo | Esfuerzo | Nota |
 |---|---|---|---|
-| Contraste: texto blanco del botón «Carrito» (`.kha.pri`) y título del hero sobre fondo amarillo (tienda) | Medio | Bajo | Hay que cambiar colores, así que no se tocó en esta fase. Medir también el panel (no se pudo sin sesión). |
+| ~~Contraste: texto blanco del botón «Carrito» (`.kha.pri`) y título del hero sobre fondo amarillo (tienda)~~ | Medio | Bajo | Hay que cambiar colores, así que no se tocó en esta fase. Medir también el panel (no se pudo sin sesión). **Resuelto en Fase 15 (ver abajo)** |
 | Marcas de región (`region` de axe) en la tienda: no hay `<main>` ni encabezado/pie como landmarks | Medio | Medio | Poner `role="main"` en `#shop` generó otros avisos (header/footer dentro de main). Requiere reestructurar el DOM. |
-| Modales: cerrar con Esc, atrapar el foco dentro y devolverlo al cerrar (`#md`, `#shopm`) | Medio | Medio | Es lógica nueva; un Esc accidental podría perder un formulario a medio llenar. |
-| `apps/investigacion.html` (≈38 campos) y `apps/modelos.html` (≈5) sin `label`/`aria-label` | Bajo | Medio | Van dentro de iframes (`srcdoc`), donde `a11y.js` no corre. Hay que editarlos a mano. |
+| ~~Modales: cerrar con Esc, atrapar el foco dentro y devolverlo al cerrar (`#md`, `#shopm`)~~ | Medio | Medio | Es lógica nueva; un Esc accidental podría perder un formulario a medio llenar. **Resuelto en Fase 15 (ver abajo)** |
+| ~~`apps/investigacion.html` (≈38 campos) y `apps/modelos.html` (≈5) sin `label`/`aria-label`~~ | Bajo | Medio | Van dentro de iframes (`srcdoc`), donde `a11y.js` no corre. Hay que editarlos a mano. **Fase 15: selectores con nombre y title en los iframes; el resto ya tenía etiqueta** |
 | Elementos clicables sin texto ni título: miniaturas de la galería (`.th`), flechas de reordenar menú (`.mv i`, solo en modo edición) | Bajo | Bajo | `a11y.js` no los marca si no pueden tener nombre. Se resuelven añadiendo `aria-label`/`title` en la plantilla. |
 | Título clicable de «Correos predeterminados» (`h3`) | Bajo | Bajo | Ya tiene un botón Maximizar/Minimizar equivalente. |
 | Avisos con `alert()` y el estado de nube (`.cloudSt`) sin `aria-live` | Bajo | Bajo | Anunciar cada cambio de sincronización sería ruidoso. |

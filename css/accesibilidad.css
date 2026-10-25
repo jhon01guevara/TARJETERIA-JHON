@@ -43,3 +43,37 @@ summary:focus-visible,
 
 /* Destino del enlace «Saltar al contenido»: recibe el foco por código, sin recuadro. */
 #contenido:focus{outline:none}
+
+/* ============================================================
+   CONTRASTE (Fase 15) · WCAG AA 4.5:1 para texto normal
+   Cambios mínimos: solo oscurecen/aclaran un poco los colores que axe midió por debajo de 4.5:1.
+   - Textos de estado (verde/ámbar/rojo/gris) como variables propias --okt/--warnt/--errt/--mutet:
+     tono más oscuro en los temas claros y más claro en «Nocturno».
+   - Nocturno: el gris secundario (--gris) pasa de #9b9b9b a #a8a8a8 (en css/uber-skin.css).
+   Revertir: quitar este bloque (y los valores var(--okt…) de app.js dejan de tener efecto sin romper nada,
+   porque llevan un color de respaldo).
+   ============================================================ */
+:root{--okt:#15803d;--warnt:#b45309;--errt:#c4251a;--mutet:#586174}
+:root[data-t="nocturno"]{--okt:#4ade80;--warnt:#fbbf24;--errt:#f87171;--mutet:#94a3b8}
+.okt{color:var(--okt)}.warnt{color:var(--warnt)}.errt{color:var(--errt)}.mutet{color:var(--mutet)}
+
+/* Etiqueta del carrusel de la portada (gris sobre fondo claro #e5e5e5: 4.23 → 5.3) */
+:root:not([data-t="nocturno"]) .cintFt{color:#5c5c5c}
+
+/* Agenda: los días del mes anterior/siguiente se atenuaban con opacity:.45 (contraste 2.9:1).
+   Ahora el número usa el gris secundario del tema y se atenúa solo el fondo y los puntos. */
+.agc.o{opacity:1;background:color-mix(in srgb,var(--soft) 55%,transparent)}
+.agc.o:not(.t)>span{color:var(--gris)}
+.agc.o:hover{background:var(--az-bg)}
+.agc.o .agd{opacity:.5}
+
+/* Tienda en modo oscuro: botón «Carrito» (texto blanco sobre #7c66ff = 4.04 → 5.1) */
+html[data-kt=dark]:not([data-paleta]) #shop .kha.pri,
+html[data-paleta=dark] #shop .kha.pri{background:#6a54f0}
+
+/* Los diálogos reciben el foco por código (js/a11y.js) sin dibujar recuadro en el contenedor. */
+[role="dialog"]:focus{outline:none}
+
+/* Barra de la ventana «Investigación de productos»: su título salía en oscuro sobre la barra oscura (#2b2b2e) y
+   el botón «Cerrar» se montaba sobre el texto. Se le da el mismo diseño de barra que al visor PDF, con texto claro. */
+#investOv .pdfvb{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:calc(10px + env(safe-area-inset-top)) 12px 10px;color:#f5f5f7}

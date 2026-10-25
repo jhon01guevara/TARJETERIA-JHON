@@ -69,12 +69,12 @@ test('index.html: cada archivo extraído se carga una vez, con ?v=, sin defer/as
   assert.ok(p>pm&&p>pu&&p<pa,f+': orden migración → utils.js → '+f+' → app.js');
   assert.ok(!new RegExp('<script[^>]*'+esc(f)+'[^>]*(defer|async|type="module")').test(html),f+': sin defer/async/module');
  }
- assert.match(html,/js\/app\.js\?v=(modulos-fase-11[a-z]|csp-fase-13|arreglos-fase-14)/,"app.js subió su ?v= (Fase 11 o 13)");
+ assert.match(html,/js\/app\.js\?v=(modulos-fase-11[a-z]|csp-fase-13|arreglos-fase-14|a11y-fase-15)/,"app.js subió su ?v= (Fase 11 o 13)");
 });
 
-test('sw.js: la caché es tj-net-first-10 y precachea cada archivo extraído antes de js/app.js',()=>{
+test('sw.js: la caché es tj-net-first-11 y precachea cada archivo extraído antes de js/app.js',()=>{
  const sw=leer('sw.js');
- assert.match(sw,/const V='tj-net-first-10'/);
+ assert.match(sw,/const V='tj-net-first-11'/);
  const pre=/const PRE=\[(.*?)\];/s.exec(sw)[1];
  for(const f of Object.keys(EXTR)){
   assert.ok(pre.includes("'"+f+"'"),f+' debe estar en PRE');

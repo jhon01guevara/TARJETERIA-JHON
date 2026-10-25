@@ -11,6 +11,9 @@
    4) Avisos y ventanas creados por JS (#ksnack, #agToast, #shopm, #auth, zooms):
       aria-live / role="dialog" aria-modal.
    5) Enlace «Saltar al contenido» (el estilo está en css/accesibilidad.css).
+   6) Ventanas modales (Fase 15): Esc para cerrar, foco atrapado dentro con Tab/Mayús+Tab, el foco vuelve
+      al elemento que abrió la ventana y cada ventana tiene nombre accesible. Todo se hace aquí, de forma
+      central, observando las ventanas existentes (#md, #shopm, zooms, vistas previas); no se reescribe ninguna.
    Revertir: quitar <script src="js/a11y.js"> y <link css/accesibilidad.css> de index.html. */
 (function () {
   'use strict';
@@ -113,7 +116,8 @@
     avzoom: { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Imagen ampliada' },
     tdzoom: { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Imagen ampliada' },
     pdfv: { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Vista previa' },
-    imgv: { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Vista previa' }
+    imgv: { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Vista previa' },
+    investOv: { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Investigación de productos' }
   };
   function contenedores() {
     Object.keys(CONT).forEach(function (id) {
@@ -123,6 +127,192 @@
       Object.keys(a).forEach(function (k) { if (!el.hasAttribute(k)) el.setAttribute(k, a[k]); });
     });
   }
+
+
+  /* 6 · Ventanas modales: Esc, foco atrapado, devolución del foco y nombre accesible.
+     Cada definición dice cómo saber si la ventana está abierta, cuál es su caja y cómo cerrarla
+     con el MISMO mecanismo que usa el ratón (un click() sobre el fondo o el botón «Cerrar»),
+     así no se duplica ni se salta ninguna lógica de app.js. */
+  var FOCALIZABLE = 'a[href],button:not([disabled]),input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled]),summary,iframe,[tabindex]:not([tabindex="-1"]),[contenteditable="true"]';
+  var MODALES = [
+    { id: 'md', caja: 'mb', abierto: function (el) { return el.classList.contains('on'); }, cerrar: function (el) { el.click(); } },
+    { id: 'shopm', abierto: function (el) { return el.style.display === 'flex'; }, cerrar: function (el) { el.click(); } },
+    { id: 'kzoom', abierto: vivo, cerrar: function (el) { el.click(); } },
+    { id: 'avzoom', abierto: vivo, cerrar: function (el) { el.click(); } },
+    { id: 'tdzoom', abierto: vivo, cerrar: function (el) { el.click(); } },
+    { id: 'pdfv', abierto: vivo, cerrar: function (el) { var b = el.querySelector('#pdfvx'); if (b) b.click(); } },
+    { id: 'investOv', abierto: vivo, cerrar: function (el) { var b = el.querySelector('#investX'); if (b) b.click(); } },
+    /* imgv ya se cierra con Esc por su cuenta (app.js): aquí solo foco y devolución del foco. */
+    { id: 'imgv', abierto: vivo, cerrar: null },
+    /* #auth es el inicio de sesión: no se cierra, pero sí atrapa el foco. */
+    { id: 'auth', abierto: function (el) { return el.isConnected && el.style.display !== 'none'; }, cerrar: null }
+  ];
+  function vivo(el) { return el.isConnected; }
+  var estado = {};           // id → { opener, sucio }
+  var ultimo = null, anterior = null; // últimos elementos enfocados/clicados (candidatos a «quien abrió»)
+
+  function visible(el) {
+    if (!el.getClientRects().length) return false;
+    var s = getComputedStyle(el);
+    return s.visibility !== 'hidden';
+  }
+  function enfocables(caja) {
+    return [].filter.call(caja.querySelectorAll(FOCALIZABLE), function (e) {
+      return !e.closest('[hidden],[inert]') && visible(e);
+    });
+  }
+  function cajaDe(def, el) { return (def.caja && document.getElementById(def.caja)) || el; }
+
+  /* Nombre accesible: si la ventana trae un título (h1-h3 o la barra .pdfvb/.ivb), se usa; si no, queda el aria-label por defecto. */
+  function nombrar(def, el) {
+    var caja = cajaDe(def, el);
+    if (!caja.hasAttribute('role')) { caja.setAttribute('role', 'dialog'); caja.setAttribute('aria-modal', 'true'); }
+    var t = caja.querySelector('h1,h2,h3,.pdfvb>b,.ivb>b');
+    if (t && (t.textContent || '').trim()) {
+      if (!t.id) t.id = 'a11y-dlg-' + (++seq);
+      caja.setAttribute('aria-labelledby', t.id);
+      caja.removeAttribute('aria-label');
+    } else {
+      caja.removeAttribute('aria-labelledby');
+      if (!caja.hasAttribute('aria-label')) caja.setAttribute('aria-label', 'Ventana de diálogo');
+    }
+  }
+
+  function dentroDeAlguna(n) {
+    for (var i = 0; i < MODALES.length; i++) {
+      var e = document.getElementById(MODALES[i].id);
+      if (e && estado[MODALES[i].id] && e.contains(n)) return true;
+    }
+    return false;
+  }
+
+  function abrir(def, el) {
+    var op = (ultimo && !el.contains(ultimo)) ? ultimo : (anterior && !el.contains(anterior) ? anterior : null);
+    estado[def.id] = { opener: op, sucio: false, el: el };
+    nombrar(def, el);
+    var caja = cajaDe(def, el);
+    if (caja.contains(document.activeElement) && document.activeElement !== caja) return; // la app ya puso el foco dentro
+    var f = enfocables(caja);
+    var meta = f.length ? f[0] : caja;
+    if (meta === caja && !caja.hasAttribute('tabindex')) caja.setAttribute('tabindex', '-1');
+    try { meta.focus({ preventScroll: true }); } catch (e) { warn(e); }
+  }
+
+  function cerrado(def) {
+    var s = estado[def.id];
+    delete estado[def.id];
+    if (!s || !s.opener) return;
+    var o = s.opener;
+    if (!o.isConnected || !visible(o)) return;
+    // Solo se devuelve si el foco quedó "en el aire" (en <body> o dentro de la ventana ya cerrada);
+    // si la app lo puso a propósito en otro sitio, no se le quita.
+    var a = document.activeElement;
+    var enElAire = !a || a === document.body || a === document.documentElement || (s.el && s.el.contains(a)) || !a.isConnected;
+    if (!enElAire) return;
+    try { o.focus({ preventScroll: true }); } catch (e) { warn(e); }
+  }
+
+  function revisar() {
+    MODALES.forEach(function (def) {
+      var el = document.getElementById(def.id);
+      var abierto = !!(el && def.abierto(el));
+      var antes = estado[def.id];
+      if (abierto && !antes) abrir(def, el);
+      else if (abierto && antes && antes.el !== el) { delete estado[def.id]; abrir(def, el); }
+      else if (!abierto && antes) cerrado(def);
+      else if (abierto && antes) {
+        nombrar(def, el); // el contenido cambió mientras seguía abierta
+        // si el foco quedó en el contenedor (aún no tenía controles) y ya aparecieron, pasa al primero
+        var caja = cajaDe(def, el);
+        if (document.activeElement === caja) { var f = enfocables(caja); if (f.length) { try { f[0].focus({ preventScroll: true }); } catch (e) { warn(e); } } }
+      }
+    });
+    // observar atributos de #md y #shopm (se abren cambiando class/style, no añadiendo nodos)
+    ['md', 'shopm'].forEach(function (id) {
+      var e = document.getElementById(id);
+      if (e && !e.__a11yObs && window.MutationObserver) {
+        e.__a11yObs = 1;
+        new MutationObserver(revisar).observe(e, { attributes: true, attributeFilter: ['class', 'style'], childList: true, subtree: id === 'md' });
+      }
+    });
+  }
+
+  /* Ventana abierta más alta: la de mayor z-index; si empatan, la última del documento. */
+  function superior() {
+    var mejor = null, z = -1, orden = -1;
+    MODALES.forEach(function (def, i) {
+      var el = document.getElementById(def.id);
+      if (!el || !estado[def.id]) return;
+      var zi = parseInt(getComputedStyle(el).zIndex, 10); if (isNaN(zi)) zi = 0;
+      var pos = 0, n = el; while (n) { pos++; n = n.previousElementSibling; }
+      if (zi > z || (zi === z && pos >= orden)) { mejor = def; z = zi; orden = pos; }
+    });
+    return mejor;
+  }
+
+  document.addEventListener('focusin', function (e) {
+    var t = e.target;
+    if (t && t !== document.body && t.nodeType === 1) { anterior = ultimo; ultimo = t; }
+    var def = superior();
+    if (!def) return;
+    var el = document.getElementById(def.id), caja = cajaDe(def, el);
+    // el foco se escapó fuera de la ventana abierta (p. ej. con un clic en el fondo o un script): se devuelve
+    if (t && t.nodeType === 1 && !el.contains(t) && !caja.contains(t)) {
+      var f = enfocables(caja);
+      try { (f[0] || caja).focus({ preventScroll: true }); } catch (x) { warn(x); }
+    }
+  });
+  /* Un visor (p. ej. el de PDF) puede quedarse con el foco al terminar de cargar y entonces Esc ya no llega a esta página
+     (los teclados dentro de un iframe no suben al documento padre). Al cargar, el foco vuelve a la barra de la ventana. */
+  function recuperarDeIframe(fr) {
+    var def = superior();
+    if (!def) return;
+    var el = document.getElementById(def.id), caja = cajaDe(def, el);
+    if (!caja.contains(fr) || document.activeElement !== fr) return;
+    var f = enfocables(caja).filter(function (x) { return x.tagName !== 'IFRAME'; });
+    if (f.length) { try { f[0].focus({ preventScroll: true }); } catch (x) { warn(x); } }
+  }
+  document.addEventListener('load', function (e) {
+    var fr = e.target;
+    if (!fr || fr.tagName !== 'IFRAME') return;
+    // el visor puede tomar el foco justo después del evento load: se comprueba varias veces, de forma breve
+    [0, 150, 600].forEach(function (ms) { setTimeout(function () { recuperarDeIframe(fr); }, ms); });
+  }, true);
+  document.addEventListener('click', function (e) {
+    var t = e.target && e.target.closest ? e.target.closest(FOCALIZABLE + ',[role="button"]') : null;
+    if (t && !dentroDeAlguna(t)) { anterior = ultimo; ultimo = t; }
+    else if (!t && !dentroDeAlguna(e.target)) { anterior = ultimo; ultimo = null; }
+  }, true);
+  document.addEventListener('input', function (e) {
+    var def = superior(); if (def && estado[def.id] && e.target && document.getElementById(def.id).contains(e.target)) estado[def.id].sucio = true;
+  }, true);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.defaultPrevented || e.altKey || e.ctrlKey || e.metaKey) return;
+    if (e.key !== 'Tab' && e.key !== 'Escape') return;
+    revisar();
+    var def = superior();
+    if (!def) return;
+    var el = document.getElementById(def.id), caja = cajaDe(def, el);
+    if (e.key === 'Escape') {
+      if (!def.cerrar) return;
+      if (e.target && e.target.tagName === 'SELECT') return;
+      /* Si el usuario ya escribió algo en un campo de la ventana, Esc no la cierra (evita perder un formulario a medias):
+         se cierra con su botón «Cancelar/Cerrar». */
+      if (estado[def.id] && estado[def.id].sucio) return;
+      e.preventDefault();
+      def.cerrar(el);
+      return;
+    }
+    var f = enfocables(caja);
+    if (!f.length) { e.preventDefault(); try { caja.focus(); } catch (x) { warn(x); } return; }
+    var a = document.activeElement, i = f.indexOf(a);
+    if (!caja.contains(a) || i === -1 && a === caja) {
+      e.preventDefault(); (e.shiftKey ? f[f.length - 1] : f[0]).focus(); return;
+    }
+    if (e.shiftKey && i === 0) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && i === f.length - 1) { e.preventDefault(); f[0].focus(); }
+  }, true);
 
   function procesar(root) {
     try { clicables(root); } catch (e) { warn(e); }
@@ -160,12 +350,14 @@
     timer = null;
     var l = pend; pend = [];
     contenedores();
+    try { revisar(); } catch (e) { warn(e); }
     if (l.length > 300) { procesar(document.body); return; }
     l.forEach(function (n) { if (n.isConnected) procesar(n); });
   }
   function inicio() {
     try {
       contenedores();
+      try { revisar(); } catch (e) { warn(e); }
       procesar(document.body);
       if (window.MutationObserver) {
         new MutationObserver(function (ms) {
@@ -173,6 +365,7 @@
             var a = ms[i].addedNodes;
             for (var j = 0; j < a.length; j++) if (a[j].nodeType === 1) pend.push(a[j]);
           }
+          try { revisar(); } catch (e) { warn(e); }
           if (pend.length && !timer) timer = setTimeout(vaciar, 150);
         }).observe(document.body, { childList: true, subtree: true });
       }

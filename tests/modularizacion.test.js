@@ -45,9 +45,9 @@ test('index.html carga js/utils.js con versión, antes de app.js y después de l
  assert.ok(!/<script[^>]*js\/utils\.js[^>]*(defer|async|type="module")/.test(h),'sin defer/async/module: debe ejecutarse en orden');
 });
 
-test('sw.js precachea js/utils.js y la caché está en tj-net-first-10 (Fase 11)',()=>{
+test('sw.js precachea js/utils.js y la caché está en tj-net-first-11 (Fase 11)',()=>{
  const sw=leer('sw.js');
- assert.match(sw,/const V='tj-net-first-10'/);
+ assert.match(sw,/const V='tj-net-first-11'/);
  const pre=/const PRE=\[(.*?)\];/s.exec(sw)[1];
  assert.ok(pre.includes("'js/utils.js'")&&pre.includes("'js/app.js'"));
  assert.ok(pre.indexOf("'js/utils.js'")<pre.indexOf("'js/app.js'"));
