@@ -1,0 +1,22 @@
+// Comprueba en Chrome real que «Imprimir» de la constancia legal llama a print() en la ventana nueva.
+const {chromium}=require('playwright-core');
+(async()=>{const br=await chromium.launch({channel:'chrome',headless:true});
+ const ctx=await br.newContext({viewport:{width:1366,height:900},serviceWorkers:'block'});const page=await ctx.newPage();
+ await page.goto(process.env.BASE,{waitUntil:'load'});await page.waitForTimeout(2500);
+ await page.fill('#au_e','admin.prueba@example.com');await page.fill('#au_p',process.env.PRUEBA_PASSWORD);await page.click('text=Entrar');
+ await page.waitForSelector('.ni',{timeout:25000});await page.waitForTimeout(2500);
+ await page.click('#nav .ni[data-k="tienda"]');await page.waitForTimeout(2500);
+ const real=await page.evaluate(()=>TD.peds.filter(p=>p.lead&&p.lead.terminos&&p.lead.terminos.ok).length);
+ await page.evaluate(()=>{TD.peds.unshift({id:'PRUEBA-LEGAL-1',ts:Date.now(),nota:'Aceptó Términos',lead:{name:'Cliente Prueba',tel:'60000000',email:'a@b.c',terminos:{ok:true,ver:'1.0',ua:'test'}}})});
+ const viol=[];
+ const pp=ctx.waitForEvent('page');
+ await page.evaluate(()=>{window.__cspv=0;document.addEventListener('securitypolicyviolation',()=>window.__cspv++)});
+ await page.evaluate(()=>poliImprimirEvidencia('PRUEBA-LEGAL-1'));
+ const pop=await pp;await pop.waitForLoadState('load');
+ pop.on('console',m=>viol.push(m.text().slice(0,160)));
+ await pop.evaluate(()=>{window.__imp=0;window.print=()=>{window.__imp++};window.__v=0;document.addEventListener('securitypolicyviolation',()=>window.__v++)});
+ const btn=await pop.$('#btnImprimir, button');
+ await btn.click();await pop.waitForTimeout(500);
+ const r=await pop.evaluate(()=>({imprimir:window.__imp,hayBoton:!!document.querySelector('button'),estiloAplicado:getComputedStyle(document.body).maxWidth}));
+ console.log(JSON.stringify({pedidosConEvidenciaReales:real,...r,consolaPopup:viol}));
+ await br.close()})();
