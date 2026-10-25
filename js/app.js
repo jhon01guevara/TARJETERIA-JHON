@@ -1863,49 +1863,6 @@ const PF_AN=[['bounce','Rebote'],['pulse','Latido'],['spin','Giro'],['wiggle','M
 function perfPrev(){const e=$('pf_pv');if(e)e.innerHTML=avFrom(PF,96,chatMe());document.querySelectorAll('#pf_g button').forEach(b=>b.classList.toggle('on',b.dataset.e===PF.e&&!PF.img))}
 function perfForm(){const id=chatMe();if(!id)return;const p=PERF[id]||{};PF={e:p.e||'',a:_okAn(p.a),img:_okImg(p.img)?p.img:''};
  $('mb').innerHTML=`<h3 style="margin-top:0">🙂 Mi perfil</h3><p style="font-size:12.5px;color:var(--gris);margin:0 0 10px">Elija un emoji con movimiento, o suba una foto o un GIF. Lo verán en el chat y en las llamadas.</p><div id="pf_pv" style="text-align:center;margin:6px 0 12px"></div><label>Emoji animado</label><div class="pfg" id="pf_g">${PF_EM.map(e=>`<button type="button" data-e="${e}" data-h-click="h161">${e}</button>`).join('')}</div><div class="g" style="margin-top:10px"><div><label>Movimiento</label><select data-h-change="h160">${PF_AN.map(([k,n])=>`<option value="${k}" ${PF.a===k?'selected':''}>${n}</option>`).join('')}</select></div></div><label style="display:block;margin-top:12px">Foto o GIF</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn s" style="cursor:pointer">📷 Tomar foto<input type="file" accept="image/*" capture="user" hidden data-h-change="h159"></label><label class="btn s" style="cursor:pointer">🖼 Elegir imagen o GIF<input type="file" accept="image/*" hidden data-h-change="h159"></label></div><p style="font-size:11.5px;color:var(--gris);margin:6px 0 0">Las fotos y los GIF pesados se comprimen solos.</p><div style="display:flex;gap:8px;justify-content:space-between;margin-top:16px;flex-wrap:wrap"><button class="btn d" data-h-click="h158">Quitar mi avatar</button><span><button class="btn" data-h-click="h12">Cancelar</button> <button class="btn p" data-h-click="h157">Guardar</button></span></div>`;$('md').classList.add('on');perfPrev()}
-// --- Compresión automática de GIF animados: se decodifican los cuadros, se reducen y se vuelve a generar el GIF ---
-function _gifMedianCut(S,n){const cnt=S.length/3;let boxes=[Array.from({length:cnt},(_,i)=>i)];
- const rng=bx=>{const mn=[255,255,255],mx=[0,0,0];for(const i of bx)for(let c=0;c<3;c++){const v=S[i*3+c];if(v<mn[c])mn[c]=v;if(v>mx[c])mx[c]=v}return [mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]]};
- while(boxes.length<n){let bi=-1,bs=0,bc=0;boxes.forEach((bx,i)=>{if(bx.length<2)return;const r=rng(bx),m=Math.max(r[0],r[1],r[2]),sc=m*Math.sqrt(bx.length);if(sc>bs){bs=sc;bi=i;bc=r.indexOf(m)}});if(bi<0||bs===0)break;
-  const bx=boxes[bi].sort((x,y)=>S[x*3+bc]-S[y*3+bc]),h=bx.length>>1;boxes.splice(bi,1,bx.slice(0,h),bx.slice(h))}
- return boxes.map(bx=>{let r=0,g=0,bl=0;for(const i of bx){r+=S[i*3];g+=S[i*3+1];bl+=S[i*3+2]}const k=bx.length||1;return [Math.round(r/k),Math.round(g/k),Math.round(bl/k)]})}
-function _gifLZW(px,minC){const clear=1<<minC,eoi=clear+1;let size=minC+1,next=eoi+1,dict=new Map(),out=[],cur=0,nb=0;
- const emit=c=>{cur|=c<<nb;nb+=size;while(nb>=8){out.push(cur&255);cur>>>=8;nb-=8}};
- emit(clear);let pre=px[0];
- for(let i=1;i<px.length;i++){const k=px[i],key=(pre<<8)|k,v=dict.get(key);
-  if(v!==undefined){pre=v;continue}
-  emit(pre);
-  if(next===4096){emit(clear);next=eoi+1;size=minC+1;dict=new Map()}
-  else{if(next>=(1<<size))size++;dict.set(key,next++)}
-  pre=k}
- emit(pre);emit(eoi);if(nb>0)out.push(cur&255);return out}
-function _gifEncode(frames,D,bits){const all=[];frames.forEach(f=>{const d=f.data;const st=Math.max(1,Math.floor(d.length/4/(14000/frames.length)));for(let i=0;i<d.length;i+=4*st)all.push(d[i],d[i+1],d[i+2])});
- const pal=_gifMedianCut(Uint8Array.from(all),1<<bits);while(pal.length<(1<<bits))pal.push([0,0,0]);
- const cache=new Map(),near=(r,g,b)=>{const key=((r>>3)<<10)|((g>>3)<<5)|(b>>3);let v=cache.get(key);if(v!==undefined)return v;let bd=1e9;v=0;for(let i=0;i<pal.length;i++){const q=pal[i],dd=(q[0]-r)**2+(q[1]-g)**2+(q[2]-b)**2;if(dd<bd){bd=dd;v=i}}cache.set(key,v);return v};
- const o=[],w16=n=>o.push(n&255,(n>>8)&255),minC=Math.max(2,bits);
- 'GIF89a'.split('').forEach(c=>o.push(c.charCodeAt(0)));w16(D);w16(D);o.push(0x80|(7<<4)|(bits-1),0,0);pal.forEach(c=>o.push(c[0],c[1],c[2]));
- o.push(0x21,0xFF,0x0B);'NETSCAPE2.0'.split('').forEach(c=>o.push(c.charCodeAt(0)));o.push(3,1,0,0,0);
- frames.forEach(f=>{o.push(0x21,0xF9,4,0x04);w16(Math.max(2,Math.round(f.d/10)));o.push(0,0);
-  o.push(0x2C);w16(0);w16(0);w16(D);w16(D);o.push(0);
-  const d=f.data,idx=new Uint8Array(D*D);for(let i=0,j=0;i<idx.length;i++,j+=4)idx[i]=near(d[j],d[j+1],d[j+2]);
-  o.push(minC);const z=_gifLZW(idx,minC);for(let i=0;i<z.length;i+=255){const ch=z.slice(i,i+255);o.push(ch.length);for(const x of ch)o.push(x)}o.push(0)});
- o.push(0x3B);return Uint8Array.from(o)}
-const _u8b64=u=>{let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)};
-async function gifComprimir(file,maxBytes){
- if(!('ImageDecoder' in window))return null;
- const dec=new ImageDecoder({data:await file.arrayBuffer(),type:'image/gif'});await dec.tracks.ready;const n=dec.tracks.selectedTrack.frameCount;if(!n)return null;
- const D0=128,cv=document.createElement('canvas');cv.width=cv.height=D0;const cx=cv.getContext('2d',{willReadFrequently:true});
- const keep=Math.min(n,60),step=n/keep,fr=[];let acc=0,nx=0;
- for(let i=0;i<n;i++){const {image}=await dec.decode({frameIndex:i});acc+=(image.duration||100000)/1000;
-  if(i>=Math.floor(nx)){const w=image.displayWidth,h=image.displayHeight,s=Math.min(w,h);cx.fillStyle='#fff';cx.fillRect(0,0,D0,D0);cx.drawImage(image,(w-s)/2,(h-s)/2,s,s,0,0,D0,D0);fr.push({d:acc,data:cx.getImageData(0,0,D0,D0)});acc=0;nx+=step}
-  image.close()}
- dec.close&&dec.close();
- const tmp=document.createElement('canvas'),tx=tmp.getContext('2d',{willReadFrequently:true});
- for(const [D,mf,bits] of [[128,60,8],[128,40,7],[112,32,7],[96,24,6],[80,18,6],[64,14,5],[48,10,5]]){
-  const k=Math.max(1,Math.ceil(fr.length/mf)),sel=[];for(let i=0;i<fr.length;i+=k){let d=0;for(let j=i;j<Math.min(fr.length,i+k);j++)d+=fr[j].d;sel.push({d,src:fr[i].data})}
-  const fs=sel.map(f=>{if(D===D0)return {d:f.d,data:f.src.data};tmp.width=tmp.height=D0;tx.putImageData(f.src,0,0);const c2=document.createElement('canvas');c2.width=c2.height=D;const x2=c2.getContext('2d',{willReadFrequently:true});x2.drawImage(tmp,0,0,D0,D0,0,0,D,D);return {d:f.d,data:x2.getImageData(0,0,D,D).data}});
-  const bytes=_gifEncode(fs,D,bits);if(bytes.length<=maxBytes)return 'data:image/gif;base64,'+_u8b64(bytes)}
- return null}
 const _perfLeer=f=>{const r=new FileReader();r.onload=()=>{PF.img=String(r.result);PF.e='';perfPrev()};r.readAsDataURL(f)};
 function _perfFoto(f){createImageBitmap(f).then(bm=>{const m=192,k=Math.max(m/bm.width,m/bm.height),w=bm.width*k,h=bm.height*k,c=document.createElement('canvas');c.width=c.height=m;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,m,m);x.drawImage(bm,(m-w)/2,(m-h)/2,w,h);PF.img=c.toDataURL('image/jpeg',.82);PF.e='';perfPrev();bm.close&&bm.close()}).catch(()=>alert('No se pudo leer la imagen.'))}
 async function perfFile(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;if(!/^image\//.test(f.type))return alert('Elija una imagen.');
@@ -2331,66 +2288,6 @@ const tdMoney=n=>+n>0?$$(+n):'Consultar';
 // ---------- Panel interno (admin y vendedores) ----------
 let _tdOn=false;
 function tdAviso(t){try{agSound()}catch(e){window._tjw&&_tjw(e)}if(DB.cfg.vozChat!==0)setTimeout(()=>vozDama('Atención. '+t),600)}
-/*FLE-INI*/
-/* ===== Directorio de transportistas de carga =====
-   Lista predeterminada (tomada del directorio de fletes de Panamá). Los datos vienen de directorios públicos:
-   confirmar con la empresa antes de enviar mercancía. El administrador elige en Configuración cuáles se ofrecen
-   en la tienda; el cliente escoge uno al pedir y sus datos salen en la etiqueta de envío. */
-const fleT=(v,n)=>String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,n);
-const FLE_DEF=[
- {id:'chavales',n:'Fletes Chavales (FLECHA)',t:'n',ini:'FC',col:'#c2410c',d:'Transporte de mercancía y fletes por carretera',tel:[],wa:'',web:'chavale.com',nota:'No se verificó un número vigente. Hay referencias a David y otras localidades; algunos registros muestran cambio de razón social en 2025. Pida lista de agencias, destinos, horarios y tarifas.'},
- {id:'ferguson',n:'Transportes Ferguson',t:'n',ini:'TF',col:'#1d4ed8',d:'Carga liviana, encomiendas y distribución nacional',tel:['225-1291','261-1482'],wa:'6330-3495',ig:'@transporte.ferguson',
-  suc:[['Pueblo Nuevo / Vía Fernández de Córdoba','225-1291 / 261-1482'],['Calle 50, Bella Vista','270-1616'],['Río Abajo / Juan Díaz','233-4597'],['Calidonia / Justo Arosemena','225-1291'],['La Chorrera','253-6591'],['Vista Alegre, Arraiján','344-4847'],['Colón','446-2287 / 6330-6035'],['24 de Diciembre','380-7536']],
-  nota:'Datos de directorios públicos: confirme dirección, horario y vigencia antes de visitar.'},
- {id:'uno',n:'Uno Express Panamá',t:'n',ini:'UE',col:'#be123c',d:'Encomiendas de sucursal a sucursal en todo el país',tel:['6781-4532','6675-4152','6781-3007','6676-3445'],wa:'6676-3445',web:'unoexpresspanama.com',ig:'@unoexpresspanama',
-  suc:[['24 de Diciembre','6982-4866'],['Aguadulce','6980-6580'],['Albrook','6949-1460'],['Almirante','6781-4520'],['Boquete','6781-4619'],['Vía Brasil','6781-4532'],['San Francisco','6675-4152'],['Vista Hermosa','6781-9588'],['Río Abajo','6670-6874'],['Juan Díaz','6781-4476'],['Los Andes','6983-1202'],['Puerto Armuelles','6781-4623'],['Frontera','6781-4630'],['Changuinola','6781-4622'],['Santiago','6781-4604'],['Las Tablas','6781-4642'],['Gorgona','6781-4280'],['El Valle de Antón','6948-1051'],['Pedasí','6781-4615']],
-  nota:'Se menciona una red de unas 45 sucursales; revise el directorio oficial para direcciones y horarios.'},
- {id:'cargasnac',n:'Cargas Nacionales',t:'n',ini:'CN',col:'#15803d',d:'Encomiendas y distribución de mercancía',tel:['393-3660','6028-8753'],wa:'6042-0478',nota:'Cobertura reportada: Ciudad de Panamá, Chiriquí, Santiago y Arraiján. Confirme rutas y oficinas actuales.'},
- {id:'ancon',n:'Ancón Express',t:'n',ini:'AE',col:'#7c3aed',d:'Courier, casillero y transporte aéreo y marítimo desde Miami',tel:['386-1545'],wa:'6617-6911',web:'anconexpress.com',dir:'Premier Plaza, Brisas del Golf, sótano, local 9A',hor:'Lunes a sábado, 9:00 a. m. a 6:00 p. m.'},
- {id:'graygorilla',n:'Gray Gorilla',t:'n',ini:'GG',col:'#475569',d:'Fletes, mudanzas y transporte con camiones',tel:['6280-0099'],wa:'',nota:'WhatsApp por confirmar. Carga voluminosa y traslados al interior; no se verificó red nacional de sucursales.'},
- {id:'dhlexpress',n:'DHL Express Panamá',t:'i',ini:'DHL',col:'#d4a017',d:'Documentos, paquetes urgentes y envíos internacionales',tel:['271-3400'],wa:'',ig:'@dhl_global',dir:'Edificio DHL, avenida Centenario, Costa del Este',nota:'Seguimiento disponible desde su página oficial.'},
- {id:'dhlgf',n:'DHL Global Forwarding',t:'i',ini:'DGF',col:'#b45309',d:'Carga aérea y marítima, importaciones, exportaciones y logística comercial',tel:['290-8901'],wa:'',dir:'Edificio DHL Global Forwarding, Parque Industrial y Corporativo Sur, vía Tocumen',nota:'Para mercancía pesada o contenedores, cotizar aquí.'},
- {id:'fedex',n:'FedEx Panamá',t:'i',ini:'FX',col:'#5b21b6',d:'Paquetería y carga internacional',tel:['+507 271-3838'],wa:'',nota:'Confirmar vigencia del teléfono. Oficinas reportadas en Ciudad de Panamá, David y Colón; consulte dirección y horario en su buscador oficial.'},
- {id:'ups',n:'UPS Panamá',t:'i',ini:'UPS',col:'#78350f',d:'Paquetería internacional, envíos empresariales y mensajería',tel:['+507 6936-6402'],wa:'',dir:'OPI, calle 2.ª, Llano Bonito, frente al Tabernáculo de la Fe, galera de Industrias Fernández, Juan Díaz',nota:'Confirmar vigencia del teléfono.'},
- {id:'dsv',n:'DSV Panamá',t:'i',ini:'DSV',col:'#0f172a',d:'Carga aérea, marítima y terrestre, aduanas y logística empresarial',tel:['+507 280-1111'],wa:'',dir:'Ciudad de Panamá; centro de distribución en Cocosolito, Colón',nota:'Confirmar vigencia del teléfono.'},
- {id:'kn',n:'Kuehne+Nagel Panamá',t:'i',ini:'KN',col:'#0369a1',d:'Carga marítima, aérea, terrestre y logística contractual',tel:[],wa:'',mail:'info.panamacity@kuehne-nagel.com',dir:'Dream Plaza, piso 11, avenida Centenario, Costa del Este',nota:'Otra referencia en Colón por confirmar. Cotizar por formulario oficial o correo.'},
- {id:'copacargo',n:'Copa Airlines Cargo',t:'i',ini:'CC',col:'#0e7490',d:'Transporte aéreo de mercancías entre destinos de su red',tel:['+507 217-2672'],wa:'',nota:'Es el centro de atención de Copa Airlines: pida transferencia al departamento de carga.'}
-];
-const FLE_WEB=/^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}(\/[^\s"'<>]*)?$/i;
-function fleSanExtra(x){
- if(!x||typeof x!=='object')return null;const id=String(x.id||''),n=fleT(x.n,80);
- if(!/^x[a-z0-9]{3,16}$/.test(id)||!n)return null;
- let web=fleT(x.web,100).replace(/^https?:\/\//i,'').replace(/\/$/,'');if(!FLE_WEB.test(web))web='';
- const tel=(Array.isArray(x.tel)?x.tel:[x.tel]).map(v=>fleT(v,30)).filter(Boolean).slice(0,4);
- return{id,n,t:x.t==='i'?'i':'n',ini:'',col:'#5b6573',d:fleT(x.d,160),tel,wa:fleT(x.wa,30),web,dir:fleT(x.dir,200),hor:fleT(x.hor,100),nota:fleT(x.nota,300),extra:1}
-}
-/* Limpia lo que viene de la nube: solo ids conocidos, fotos pequeñas en base64 y empresas propias bien formadas. */
-function fleSanCfg(r){
- r=r&&typeof r==='object'?r:{};
- const extra=(Array.isArray(r.extra)?r.extra:[]).slice(0,30).map(fleSanExtra).filter(Boolean),ids=new Set(FLE_DEF.map(x=>x.id).concat(extra.map(x=>x.id)));
- const on=(Array.isArray(r.on)?r.on:[]).filter((i,k,a)=>ids.has(i)&&a.indexOf(i)===k),img={};
- if(r.img&&typeof r.img==='object')Object.keys(r.img).forEach(k=>{const v=r.img[k];if(ids.has(k)&&typeof v==='string'&&v.length<40000&&/^data:image\/(png|jpeg);base64,[A-Za-z0-9+\/=]+$/.test(v))img[k]=v});
- return{on,extra,img}
-}
-const fleAll=C=>FLE_DEF.concat((C&&C.extra)||[]);
-const fleNorm=s=>String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,' ').trim();
-function fleBuscar(nombre,C){
- const q=fleNorm(nombre);if(!q)return null;const L=fleAll(C);
- return L.find(c=>fleNorm(c.n)===q)||(q.length>=3?L.find(c=>fleNorm(c.n).startsWith(q)):null)||null
-}
-const fleTelTxt=c=>(c.tel||[]).join(' · ');
-const fleWaNum=w=>{const d=String(w||'').replace(/\D/g,'');return d.length===8?'507'+d:d};
-const _fleMono={};
-function fleMono(ini,col){
- const k=ini+'|'+col;if(_fleMono[k]!==undefined)return _fleMono[k];
- try{const c=document.createElement('canvas');c.width=c.height=128;const g=c.getContext('2d');
-  g.fillStyle=col;g.fillRect(0,0,128,128);g.fillStyle='rgba(255,255,255,.14)';g.beginPath();g.arc(112,16,64,0,7);g.fill();
-  g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.font='700 '+(ini.length>2?42:56)+'px Arial,Helvetica,sans-serif';g.fillText(ini,64,68);
-  return _fleMono[k]=c.toDataURL('image/png')}catch(e){return _fleMono[k]=''}
-}
-const fleIni=c=>c.ini||fleT(c.n,60).split(/\s+/).filter(w=>/[A-Za-zÁÉÍÓÚÑ]/.test(w)).slice(0,2).map(w=>w[0].toUpperCase()).join('')||'?';
-const fleLogo=(c,C)=>(C&&C.img&&C.img[c.id])||fleMono(fleIni(c),c.col||'#5b6573');
-/*FLE-FIN*/
 
 /*FLE-UI-INI*/
 const fleCfgTD=()=>fleSanCfg(typeof TD!=='undefined'?TD.fletes:null);
@@ -2526,86 +2423,6 @@ function fleLinea(p){
 }
 /*FLE-UI-FIN*/
 
-/*ETQ-INI*/
-/* ===== Etiquetas de envío =====
-   Etiquetas para agencias de carga (nacional e internacional) de los pedidos de la tienda virtual.
-   Se generan como PDF con el tamaño exacto del rollo (o 4 por hoja A4), con código de barras Code 128. */
-const ETQ_TAM={
- e100x150:{n:'100 × 150 mm (4×6 pulgadas, envíos)',w:100,h:150},
- e100x100:{n:'100 × 100 mm',w:100,h:100},
- e80x120:{n:'80 × 120 mm',w:80,h:120},
- e62x100:{n:'62 × 100 mm (Brother QL de 62 mm)',w:62,h:100},
- a6:{n:'A6 (105 × 148 mm)',w:105,h:148},
- a4x4:{n:'Hoja A4 con 4 etiquetas (impresora común)',hoja:1,w:105,h:148.5}
-};
-const C128='212222 222122 222221 121223 121322 131222 122213 122312 132212 221213 221312 231212 112232 122132 122231 113222 123122 123221 223211 221132 221231 213212 223112 312131 311222 321122 321221 312212 322112 322211 212123 212321 232121 111323 131123 131321 112313 132113 132311 211313 231113 231311 112133 112331 132131 113123 113321 133121 313121 211331 231131 213113 213311 213131 311123 311321 331121 312113 312311 332111 314111 221411 431111 111224 111422 121124 121421 141122 141221 112214 112412 122114 122411 142112 142211 241211 221114 413111 241112 134111 111242 121142 121241 114212 124112 124211 411212 421112 421211 212141 214121 412121 111143 111341 131141 114113 114311 411113 411311 113141 114131 311141 411131 211412 211214 211232'.split(' ');
-function code128B(txt){const s=String(txt).replace(/[^\x20-\x7E]/g,'?'),v=[104];for(const ch of s)v.push(ch.charCodeAt(0)-32);let k=104;for(let i=1;i<v.length;i++)k+=v[i]*i;v.push(k%103);return v.map(x=>C128[x]).join('')+'2331112'}
-const etqTxt=t=>String(t==null?'':t).replace(/[^\u0000-ÿ]/g,'').replace(/\s+/g,' ').trim();
-function etqBarras(d,code,x,y,w,h){
- const p=code128B(code),mod=p.split('').reduce((a,b)=>a+(+b),0),u=w/mod;let cx=x;d.setFillColor(0);
- for(let i=0;i<p.length;i++){const a=+p[i]*u;if(i%2===0)d.rect(cx,y,a,h,'F');cx+=a}
-}
-/* Dibuja (o solo mide, si dib es falso) una etiqueta de ancho W y alto H con su esquina en (ox,oy). Devuelve la altura usada. */
-function etqFlow(d,W,H,e,s,ox,oy,dib){
- const m=4*s,iw=W-2*m,X=ox+m,pt=.3528,LH=1.16,zonaBar=23*s;let y=m;
- const font=(fs,b,col)=>{d.setFont('helvetica',b?'bold':'normal');d.setFontSize(fs*s);d.setTextColor(col==null?15:col)};
- const cortar=(t,fs,b,max,ancho)=>{font(fs,b);let L=d.splitTextToSize(etqTxt(t),ancho||iw);if(L.length>max){L=L.slice(0,max);let u=L[max-1];while(u.length>3&&d.getTextWidth(u+'...')>(ancho||iw))u=u.slice(0,-1);L[max-1]=u+'...'}return L};
- const bloque=(t,fs,b,max,gap,col,al)=>{if(!etqTxt(t))return;const L=cortar(t,fs,b,max),lh=fs*s*pt*LH;
-  if(dib)L.forEach((ln,i)=>d.text(ln,al==='c'?X+iw/2:al==='r'?X+iw:X,oy+y+lh*i+fs*s*pt*.86,al?{align:al==='c'?'center':'right'}:undefined));
-  y+=lh*L.length+(gap||0)*s};
- // Encabezado: remitente a la izquierda y tipo de envío a la derecha
- const tipo=e.tipo==='internacional'?'INTERNACIONAL':'NACIONAL';font(8.5,1,255);const tw=d.getTextWidth(tipo)+4*s,bh=6.4*s;
- if(dib){d.setFillColor(0);d.rect(X+iw-tw,oy+y,tw,bh,'F');font(8.5,1,255);d.text(tipo,X+iw-tw/2,oy+y+bh*.72,{align:'center'})}
- font(11,1);if(dib){const nm=cortar(e.rem.nombre||'',11,1,1,iw-tw-3*s)[0]||'';d.text(nm,X,oy+y+bh*.72)}
- y+=bh+2.2*s;if(dib){d.setDrawColor(0);d.setLineWidth(.5*s);d.line(X,oy+y,X+iw,oy+y)}y+=2.4*s;
- // Destinatario
- bloque('DESTINATARIO',6.5,1,1,.6,110);
- bloque(e.dest.name||'-',17,1,2,.8);
- bloque(e.dest.empresa,10,0,1,.8);
- bloque(e.dest.tel?('Tel.: '+e.dest.tel):'',14,1,1,.8);
- bloque(e.dest.ced?('Cédula / ID: '+e.dest.ced):'',9,0,1,.8);
- bloque(e.dest.email,8.5,0,1,1.2);
- bloque(e.dest.suc?('RETIRA EN: '+e.dest.suc):'',11,1,2,.8);
- bloque(e.dest.dir,11.5,0,4,.8);
- bloque(e.dest.ref?('Ref.: '+e.dest.ref):'',8.5,0,2,.8);
- bloque([e.dest.ciudad,e.dest.prov].filter(Boolean).join(', '),11.5,1,2,.4);
- bloque((e.dest.pais||'').toUpperCase(),15,1,1,1.6);
- // Datos del envío en cuadros: agencia, guía, bulto y peso
- const cw=(iw-2*s)/2,ch=9.6*s,celdas=[['AGENCIA',e.agencia||'-'],['GUÍA',e.guia||'-'],['BULTO',e.bulto[0]+' de '+e.bulto[1]],['PESO',e.peso>0?e.peso+' kg':'-']];
- celdas.forEach((c,i)=>{const cx=X+(i%2)*(cw+2*s),cy=oy+y+Math.floor(i/2)*(ch+1.6*s);
-  if(dib){d.setDrawColor(0);d.setLineWidth(.35*s);d.rect(cx,cy,cw,ch);font(5.8,0,100);d.text(c[0],cx+1.4*s,cy+2.6*s);font(10,1);const v=cortar(c[1],10,1,1,cw-2.8*s)[0]||'';d.text(v,cx+1.4*s,cy+7.4*s)}});
- y+=2*ch+1.6*s+2.2*s;
- // Datos de la agencia elegida (teléfono, WhatsApp, dirección) y su logo
- if(e.ag){const y0=y,tl=!!(e.logo&&typeof d.addImage==='function'),aw=iw-(tl?11*s:0);
-  const lin=(t,fs,b,max,col)=>{if(!etqTxt(t))return;const L=cortar(t,fs,b,max,aw),lh=fs*s*pt*LH;if(dib){font(fs,b,col);L.forEach((ln,i)=>d.text(ln,X,oy+y+lh*i+fs*s*pt*.86))}y+=lh*L.length+.5*s};
-  lin('AGENCIA: '+[e.ag.tel&&('Tel. '+e.ag.tel),e.ag.wa&&('WhatsApp '+e.ag.wa)].filter(Boolean).join('  ·  '),8,1,2);
-  lin(e.ag.dir,7.5,0,2,70);
-  if(tl){if(dib){try{d.addImage(e.logo,/^data:image\/jpeg/.test(e.logo)?'JPEG':'PNG',X+iw-9.6*s,oy+y0,9.6*s,9.6*s)}catch(x){}}y=Math.max(y,y0+10*s)}
-  y+=1.4*s}
- // Remitente, contenido y observaciones
- bloque('REMITE: '+[e.rem.nombre,e.rem.tel,e.rem.dir].filter(Boolean).join(' · '),7.5,0,2,1.4,70);
- if(e.obs)bloque('⚠ '.replace(/[^\u0000-ÿ]/g,'')+'OBS.: '+e.obs,8.5,1,2,1.4);
- const libre=H-m-zonaBar-y;
- if(e.cont){font(8.5,0);const lh=8.5*s*pt*LH,maxL=Math.max(1,Math.min(5,Math.floor((libre-4*s)/lh)));bloque('CONTENIDO: '+e.cont,8.5,0,maxL,0)}
- // Código de barras al pie
- const necesario=y+zonaBar+m;
- if(dib){const by=oy+H-m-zonaBar+1*s;etqBarras(d,e.codigo,X+2*s,by,iw-4*s,12.5*s);font(9,1);d.text(e.codigo,X+iw/2,by+12.5*s+3.6*s,{align:'center'});font(7,0,90);d.text(e.fecha,X+iw,oy+H-m+.4*s,{align:'right'});d.text('Tarjetería Jhon',X,oy+H-m+.4*s)}
- return necesario
-}
-function etqDibujar(d,x,y,w,h,e){
- let s=Math.min(1.25,w/100);while(s>.5&&etqFlow(d,w,h,e,s,x,y,false)>h)s-=.04;
- etqFlow(d,w,h,e,s,x,y,true)
-}
-function etqPDF(lista,tam){
- const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return null;
- if(tam.hoja){const d=new J({unit:'mm',format:'a4'});
-  lista.forEach((e,i)=>{if(i>0&&i%4===0)d.addPage();const c=i%4,x=(c%2)*105,y=Math.floor(c/2)*148.5;etqDibujar(d,x,y,105,148.5,e);d.setDrawColor(170);d.setLineWidth(.2);d.rect(x+.5,y+.5,104,147.5)});
-  return d.output('blob')}
- const d=new J({unit:'mm',format:[tam.w,tam.h],orientation:tam.w>tam.h?'l':'p'});
- lista.forEach((e,i)=>{if(i>0)d.addPage();etqDibujar(d,0,0,tam.w,tam.h,e)});
- return d.output('blob')
-}
-/*ETQ-FIN*/
 
 /*ETQ-UI-INI*/
 let ETQ_SEL=new Set();
@@ -3168,11 +2985,6 @@ function shopHeroList(){const mode=SH.heroMode||'mix',all=SH.items.filter(i=>i&&
  else if(mode==='random')L=shopHeroShuffle(all).slice(0,6);
  else{const rest=shopHeroShuffle(all.filter(i=>!curated.includes(i)));L=[...curated,...rest].slice(0,6)}
  SH._heroKey=key;SH._heroList=L;return L}
-// Posts promocionales del carrusel (imágenes en la carpeta banners/). Cada uno abre la tienda filtrada por esa ocasión.
-// Para quitar o reordenar posts, edite esta lista. Archivos: banners/<id>.jpg (escritorio) y banners/<id>-m.jpg (celular).
-const PROMO_IMG={"quince": ["banners/quince.jpg", "banners/quince-m.jpg"], "quince2": ["banners/quince2.jpg", "banners/quince2-m.jpg"], "baby": ["banners/baby.jpg", "banners/baby-m.jpg"], "baby2": ["banners/baby2.jpg", "banners/baby2-m.jpg"], "grad": ["banners/grad.jpg", "banners/grad-m.jpg"], "grad2": ["banners/grad2.jpg", "banners/grad2-m.jpg"], "boda": ["banners/boda.jpg", "banners/boda-m.jpg"], "boda2": ["banners/boda2.jpg", "banners/boda2-m.jpg"], "cumple": ["banners/cumple.jpg", "banners/cumple-m.jpg"], "cumple2": ["banners/cumple2.jpg", "banners/cumple2-m.jpg"], "amor": ["banners/amor.jpg", "banners/amor-m.jpg"], "amor2": ["banners/amor2.jpg", "banners/amor2-m.jpg"], "felic": ["banners/felic.jpg", "banners/felic-m.jpg"], "felic2": ["banners/felic2.jpg", "banners/felic2-m.jpg"]};
-const PROMO=[['quince2','quince','Tarjetas para Quinceañeras'],['quince','quince','Tarjetas para Quinceañeras'],['baby2','baby','Tarjetas para Baby Shower'],['baby','baby','Tarjetas para Baby Shower'],['grad2','grad','Tarjetas para Graduación'],['grad','grad','Tarjetas para Graduación'],['boda2','boda','Tarjetas para Bodas'],['boda','boda','Tarjetas para Bodas'],['cumple2','cumple','Tarjetas para Cumpleaños'],['cumple','cumple','Tarjetas para Cumpleaños'],['amor2','amor','Tarjetas para Amor'],['amor','amor','Tarjetas para Amor'],['felic2','felic','Tarjetas para Felicitaciones'],['felic','felic','Tarjetas para Felicitaciones']].map(([key,tema,name])=>({id:'promo-'+key,key,tema,name,promo:true}));
-function promoSlide(i){if(i.custom)return `<article class="khero-slide khero-promo"><picture><img src="${esc(i.src)}" alt="${esc(i.name)}" loading="lazy"></picture></article>`;return `<article class="khero-slide khero-promo" data-h-click="h78" data-a-click="${_ha(i.tema)}"><picture><source media="(max-width:700px)" srcset="${PROMO_IMG[i.key][1]}"><img src="${PROMO_IMG[i.key][0]}" alt="${esc(i.name)}" loading="lazy"></picture></article>`}
 function shopHero(){
  const e=$("khero");if(!e)return;if(SH.heroT){clearInterval(SH.heroT);SH.heroT=0}
  const all=(typeof shopHeroList==="function"?shopHeroList():SH.items).filter(i=>i&&i.img&&!noDisp(i));

@@ -16,6 +16,14 @@ const EXTR={
  'js/sanear.js':{consts:['SAFE_ID','sTxt','sNum'],funcs:['sanLead','sanPed','sanGal','sanEnv']},
  'js/redes.js':{consts:['RED_DEF','RED_HOST','RED_SVG','CONT_DEF','redesLista'],funcs:['redUrl','contLimpio']},
  // Textos legales: las funciones de dibujo usan document/navigator/window al EJECUTARSE (no al cargar), por eso 'efectos:true'
+ // Fase 19 (7a): compresor de GIF (usa document/ImageDecoder/btoa al EJECUTARSE, no al cargar)
+ 'js/gif.js':{consts:['_u8b64'],funcs:['_gifMedianCut','_gifLZW','_gifEncode','gifComprimir'],efectos:true},
+ // Fase 19 (13): datos del carrusel promocional; promoSlide usa esc/_ha al ejecutarse
+ 'js/promo.js':{consts:['PROMO_IMG','PROMO'],funcs:['promoSlide'],efectos:true},
+ // Fase 19 (6a): directorio de transportistas (datos y utilidades puras; fleMono usa canvas al ejecutarse)
+ 'js/transportistas.js':{consts:['fleT','FLE_DEF','FLE_WEB','fleAll','fleNorm','fleTelTxt','fleWaNum','_fleMono','fleIni','fleLogo'],funcs:['fleSanExtra','fleSanCfg','fleBuscar','fleMono'],efectos:true},
+ // Fase 19 (12a): motor de etiquetas de envío (usa window.jspdf al ejecutarse)
+ 'js/etiquetas.js':{consts:['ETQ_TAM','C128','etqTxt'],funcs:['code128B','etqBarras','etqFlow','etqDibujar','etqPDF'],efectos:true},
  'js/politicas.js':{consts:['TJ_POLITICAS'],funcs:['shopPoliticas','poliVerEvidencia','poliImprimirEvidencia','poliCopiarEvidencia','poliVerRegistroAuditoria','poliExportarCSV','poliCopiar','poliAdmCard'],efectos:true},
 };
 const TODOS=Object.entries(EXTR).flatMap(([f,o])=>[...o.consts.map(n=>[f,n,'const']),...o.funcs.map(n=>[f,n,'function'])]);
@@ -39,14 +47,14 @@ for(const f of Object.keys(EXTR)){
   for(const l of s.split('\n')){
    if(enComentario){if(/\*\//.test(l))enComentario=false;continue}
    if(/^\/\*/.test(l)){if(!/\*\//.test(l))enComentario=true;continue}
-   if(l===''||/^\s/.test(l)||/^(\/\/|const |function |async function |\}|\))/.test(l))continue;
+   if(l===''||/^\s/.test(l)||/^(\/\/|const |function |async function |\}|\)|\]|\/\*)/.test(l))continue;
    assert.fail(f+': línea de nivel superior que no es una declaración: '+l.slice(0,80));
   }
  });
  test(f+': declara lo movido con el mismo tipo de declaración y ningún otro script lo redeclara',()=>{
   const s=leer(f);
   for(const [file,n,tipo] of TODOS.filter(x=>x[0]===f)){
-   assert.ok(new RegExp('(^|[;\\n])'+(tipo==='const'?'const ':'function ')+esc(n)+(tipo==='const'?'\\s*=':'\\(')).test(s),f+' debe declarar '+tipo+' '+n);
+   assert.ok(new RegExp('(^|[;\\n])'+(tipo==='const'?'const ':'(?:async )?function ')+esc(n)+(tipo==='const'?'\\s*=':'\\(')).test(s),f+' debe declarar '+tipo+' '+n);
    for(const otro of locales.filter(x=>x!==f)){
     assert.ok(!new RegExp('^(?:const|let|var|function)\\s+'+esc(n)+'\\b','m').test(leer(otro)),otro+' redeclara '+n+' (ya vive en '+f+')');
    }
