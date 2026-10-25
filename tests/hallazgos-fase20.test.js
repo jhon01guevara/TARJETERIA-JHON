@@ -2,15 +2,15 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
-const {leer}=require('./helpers/app-fuentes');
-const app=leer('js/app.js'),css=leer('css/accesibilidad.css'),html=leer('index.html'),sw=leer('sw.js');
+const {leer,appTodo}=require('./helpers/app-fuentes');
+const app=leer('js/app.js'),todo=appTodo(),copiaLocal=leer('js/tienda-copia-local.js'),css=leer('css/accesibilidad.css'),html=leer('index.html'),sw=leer('sw.js');
 
 /* localStorage falso con la misma cuota que Chrome (≈5,24 M caracteres, claves incluidas) */
 function mundo(LIM=5242880){
  const m=new Map();const tam=()=>[...m].reduce((a,[k,v])=>a+k.length+v.length,0);
  const ls={get length(){return m.size},key:i=>[...m.keys()][i]??null,getItem:k=>m.has(k)?m.get(k):null,removeItem:k=>{m.delete(k)},
   setItem(k,v){v=String(v);const nuevo=tam()-(m.has(k)?k.length+m.get(k).length:0)+k.length+v.length;if(nuevo>LIM)throw Object.assign(new Error('quota'),{name:'QuotaExceededError'});m.set(k,v)}};
- const src=/function shopCacheItems\(items\)\{[\s\S]*?\n\}\nwindow\.shopCacheItems=/.exec(app)[0].replace(/\nwindow\.shopCacheItems=$/,'');
+ const src=/function shopCacheItems\(items\)\{[\s\S]*?\n\}\nwindow\.shopCacheItems=/.exec(copiaLocal)[0].replace(/\nwindow\.shopCacheItems=$/,'');
  const ctx=vm.createContext({localStorage:ls,lsk:k=>k});vm.runInContext(src+';this.f=shopCacheItems',ctx);
  return {ls,m,tam,f:ctx.f};
 }
@@ -20,7 +20,7 @@ const nube=(n,t=120000)=>Array.from({length:n},(_,i)=>articulo(i,t));
 test('la tienda ya no guarda 180 artículos enteros de golpe (superaba la cuota) sino que llama a shopCacheItems',()=>{
  assert.doesNotMatch(app,/localStorage\.setItem\(lsk\('tj_cached_items'\),JSON\.stringify\(SH\.items\.slice\(0,180\)\)\)/);
  assert.match(app,/shopCacheItems\(SH\.items\);\{\$\('sh_g'\)\?shopFilters\(\):shopCatalog\(\)\}/);
- assert.equal(app.split("lsk('tj_cached_items')").length-1,2,'la función y la lectura del arranque');
+ assert.equal(todo.split("lsk('tj_cached_items')").length-1,2,'la función y la lectura del arranque');
 });
 test('con 63 fotos de ~120 mil caracteres (7,5 M en total) guarda un prefijo de los MÁS NUEVOS, completos, sin pasar de 2 M',()=>{
  const w=mundo();w.f(nube(63));
@@ -85,6 +85,6 @@ test('el botón de WhatsApp vive dentro de un landmark complementary con nombre,
 });
 test('caché del service worker tj-net-first-17, ?v= de app.js y de accesibilidad.css subidos, y guía publicada',()=>{
  assert.match(sw,/const V='tj-net-first-(1[7-9]|[2-9]\d)'/);
- assert.match(html,/js\/app\.js\?v=(hallazgos-fase-20|modulos-fase-21[a-z]|hallazgos-fase-20-kwrap)/);assert.match(html,/css\/accesibilidad\.css\?v=[4-9]/);
+ assert.match(html,/js\/app\.js\?v=(hallazgos-fase-20|modulos-fase-2[13][a-z]|hallazgos-fase-20-kwrap)/);assert.match(html,/css\/accesibilidad\.css\?v=[4-9]/);
  assert.ok(leer('docs/GUIA-PRUEBAS-FASE-20.md').length>800);
 });

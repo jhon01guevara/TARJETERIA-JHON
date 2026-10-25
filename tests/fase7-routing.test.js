@@ -90,7 +90,9 @@ test('fbCol en app.js funciona en VM: rutas actuales hoy, enrutadas con la bande
  vm.createContext(ctx);
  for(const f of ['js/empresa-contexto.js','js/mkt-editor.js','js/marketing.js','js/empresas.js','migraciones/migracion-multiempresa.js','js/utils.js',
   /* Fase 21: app.js usa tplCard al cargarse (const _tc0=tplCard), así que carga después de los scripts extraídos que lo declaran */
-  'js/mapa-clientes.js','js/fondo-login.js','js/dashboard-vendedor.js','js/plantillas-factura.js'])
+  'js/mapa-clientes.js','js/fondo-login.js','js/dashboard-vendedor.js','js/plantillas-factura.js',
+  /* Fase 23: más bloques extraídos (se cargan antes de app.js, como en index.html) */
+  'js/agenda-alertas.js','js/tienda-config-medios.js','js/tienda-copia-local.js','js/tienda-temas.js','js/comprobante-pedido.js'])
   vm.runInContext(leer(f),ctx,{filename:f});
  vm.runInContext(leer('js/app.js'),ctx,{filename:'js/app.js'});
  /* Con la bandera apagada: rutas actuales (simula reversión) */

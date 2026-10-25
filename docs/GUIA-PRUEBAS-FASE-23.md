@@ -30,3 +30,11 @@ Salida: 0 todo bien · 1 alguna falló · 2 no se pudo preparar.
 2. **«Volver al pedido» desde el registro pierde la nota** escrita en el pedido (el cuadro vuelve vacío).
 3. **Cuota de Firestore de la copia de prueba**: el plan gratuito se agota (429 `resource-exhausted`); provoca ruido en consola y, a veces, un corte del canal de escritura. La prueba del panel lo tolera como ruido conocido.
 4. `catalogo_default.zip` no está en la copia de prueba (404 conocido).
+
+## Parte B (modularización): qué probar a mano
+Panel de prueba: https://tarjeteria-jhon-prueba.web.app/ (usuarios en `GUIA-PRUEBA.md`), ventana de incógnito + Ctrl+Shift+R. Cuando este cambio se despliegue allí:
+1. **Agenda:** crea un evento con aviso para dentro de 1 minuto: debe sonar la campana, salir el aviso en pantalla con «Hecho» y «Posponer», y (si diste permiso) la notificación del sistema. En Configuración, el botón de probar sonido y el cambio de tono.
+2. **Configuración de la tienda (administrador):** cambia el tipo de fondo (foto, video, colores, liso), el color, el movimiento y la marca de agua; sube una foto, un video y un logo (y comprueba los avisos de tamaño y de tipo de archivo) y pulsa Guardar.
+3. **Tienda pública:** recarga la tienda dos veces (la segunda debe pintar al instante desde la copia local), filtra por tema, mira los iconos del menú.
+4. **Comprobante:** haz un pedido de prueba en la copia de prueba y comprueba «Ver comprobante», «Descargar PDF» y la imagen.
+Comprobaciones automáticas: `npm test`, `node tests/navegador/verificar-movimiento-literal-23.js <base>` y `tests/navegador/funcional-fase23.js` (huellas iguales entre `main` y la rama).
