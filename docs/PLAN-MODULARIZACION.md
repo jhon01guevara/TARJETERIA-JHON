@@ -116,3 +116,17 @@ Misma regla de la Fase 10: se mueven líneas completas, literalmente, a scripts 
 ### Extracción 3: `js/politicas.js` (hecha)
 
 Textos legales y registro de consentimientos: `TJ_POLITICAS` (con getters que se evalúan al usarse) y las 8 funciones `shopPoliticas`, `poliVerEvidencia`, `poliImprimirEvidencia`, `poliCopiarEvidencia`, `poliVerRegistroAuditoria`, `poliExportarCSV`, `poliCopiar` y `poliAdmCard`. 315 líneas (el bloque completo, de comentario a comentario). Por qué es seguro mover también las funciones: a nivel superior solo hay declaraciones (un test lo comprueba línea por línea); usan `DB`, `SES`, `nombreNegocio`, `shopM`, `_ha` y `esc`, pero **solo al ejecutarse**, y los botones las llaman con `data-h-click="call"` → `window[nombre]`, que sigue funcionando porque siguen siendo `function` globales. Nota: `TJ_POLITICAS` hoy no tiene ningún uso en el código (solo se declara); se movió igual, sin borrarla.
+
+### Extracción 4: ampliar `js/utils.js` (hecha)
+
+`ext`, `tam`, `shopN` (`const`) y `fmtKB` (`function`), 4 líneas movidas al final de `js/utils.js` (`?v=modulos-fase-11d`). Comprobado: ningún otro script declara esos nombres a nivel superior (hay un `const tam` local dentro de `etqGenerar` y un `var tam` dentro de una función de la migración; son variables locales y no chocan con la global). `tam` y `fmtKB` se parecen pero redondean distinto (mínimo 1 KB en `tam`); se conservan las dos tal cual, sin unificarlas.
+
+### Qué NO se movió en la Fase 11 (a propósito)
+
+- `RS_DRAFT` y `RS_MSG` (`let` mutables, estado de la pantalla de redes): se quedan en `app.js`.
+- `redLink`, `shopRedes`, `shopContacto`, `redesCard`, `redesFill`, `redesGuardar` y el CSS `redCss`: dibujan y escriben en `DB`/`TD`; pertenecen a la futura extracción de la tienda.
+- `etqNum`, `etqEnvio` y el resto de las etiquetas de envío: siguen para la extracción 5.
+
+### Líneas de `app.js`
+
+5.040 (antes de la Fase 11) → 4.662 (−378): −25 (sanear) −34 (redes) −315 (políticas) −4 (utils). `js/utils.js` pasa de 12 a 19 líneas; nuevos: `sanear.js` (31), `redes.js` (41), `politicas.js` (324).
