@@ -6,7 +6,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const {leer,EXTRAIDOS}=require('./helpers/app-fuentes');
-const app=leer('js/app.js');
+const app=leer('js/app.js');const appTodoJs=[...EXTRAIDOS,'js/app.js'].map(leer).join('\n'); /* Fase 21: el mapa de clientes vive en js/mapa-clientes.js */
 
 test('A: const lsk se define una sola vez y ANTES de su primer uso en app.js',()=>{
  const defs=[...app.matchAll(/^const lsk\s*=/gm)];
@@ -51,9 +51,9 @@ test('A: evaluar app.js hasta tj_db no lanza TDZ (simulación con localStorage p
  assert.equal(sin.r.DB.cli.length,0,'una empresa sin copia local arranca vacía, no con datos de otra');
 });
 test('B: todos los invalidateSize diferidos pasan por mapaRefrescar',()=>{
- const sueltos=(app.replace(/function mapaRefrescar[^\n]*/,'').match(/[\w&]*\.invalidateSize\(\)/g)||[]);
+ const sueltos=(appTodoJs.replace(/function mapaRefrescar[^\n]*/,'').match(/[\w&]*\.invalidateSize\(\)/g)||[]);
  assert.deepEqual(sueltos,[],'setTimeout con invalidateSize sin protección');
- assert.equal((app.match(/setTimeout\(\(\)=>mapaRefrescar\(/g)||[]).length,4,'4 llamadas diferidas (mapa de ubicaciones x2, Mapa Central, mapa de clientes)');
+ assert.equal((appTodoJs.match(/setTimeout\(\(\)=>mapaRefrescar\(/g)||[]).length,4,'4 llamadas diferidas (mapa de ubicaciones x2, Mapa Central, mapa de clientes)');
 });
 test('B: mapaRefrescar no lanza con mapa nulo, quitado o fuera del DOM, y refresca si está vivo',()=>{
  const m=/function mapaRefrescar\(m\)\{[^\n]*\}/.exec(app);assert.ok(m);
