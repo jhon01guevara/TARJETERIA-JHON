@@ -11,6 +11,8 @@
    4) Avisos y ventanas creados por JS (#ksnack, #agToast, #shopm, #auth, zooms):
       aria-live / role="dialog" aria-modal.
    5) Enlace «Saltar al contenido» (el estilo está en css/accesibilidad.css).
+   7) Fase 18: nombre accesible (aria-label) para tablas de datos, texto solo-lector en cabeceras de tabla vacías, <img alt=""> clicables
+      con alt, y puntos de referencia (landmarks) de la tienda pública. Todo sin cambiar el aspecto.
    6) Ventanas modales (Fase 15): Esc para cerrar, foco atrapado dentro con Tab/Mayús+Tab, el foco vuelve
       al elemento que abrió la ventana y cada ventana tiene nombre accesible. Todo se hace aquí, de forma
       central, observando las ventanas existentes (#md, #shopm, zooms, vistas previas); no se reescribe ninguna.
@@ -36,6 +38,8 @@
   }
 
   function marcar(el) {
+    // Fase 18: una <img alt=""> es decorativa (role presentation); con role="button" axe avisa «presentation-role-conflict». Se le da su título como alt.
+    if (el.tagName === 'IMG' && el.getAttribute('alt') === '') { var n0 = nombre(el); if (n0) el.setAttribute('alt', n0); }
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
     el.setAttribute('data-a11y-kb', '1');
@@ -81,7 +85,13 @@
     arr.forEach(function (f) {
       var t = (f.getAttribute('type') || '').toLowerCase();
       if (/^(hidden|submit|button|reset|image)$/.test(t)) return;
-      if (f.hasAttribute('aria-label') || f.hasAttribute('aria-labelledby') || f.hasAttribute('title')) return;
+      if (f.hasAttribute('aria-label') || f.hasAttribute('aria-labelledby')) return;
+      // Fase 18: con solo «title» axe avisa (label-title-only): se copia el título como aria-label salvo que ya tenga una etiqueta con texto.
+      if (f.hasAttribute('title')) {
+        var tl = (f.getAttribute('title') || '').trim(), ls = f.labels ? [].slice.call(f.labels) : [];
+        if (tl && !ls.some(function (l) { return (l.textContent || '').trim(); })) f.setAttribute('aria-label', tl);
+        return;
+      }
       if (f.closest('label')) return;
       if (f.id) {
         var lf = document.getElementsByTagName('label');
@@ -104,6 +114,71 @@
     [].forEach.call(root.querySelectorAll('svg:not([aria-hidden]):not([role]):not([aria-label]):not([aria-labelledby])'), function (s) {
       if (!s.querySelector('title')) s.setAttribute('aria-hidden', 'true');
     });
+  }
+
+  /* 3b · Fase 18: tablas con nombre accesible y cabeceras vacías con texto solo para lectores */
+  function textoLimpio(x) { return (x && x.textContent || '').replace(/\s+/g, ' ').trim(); }
+  function nombreTabla(t) {
+    var n = t;
+    for (var d = 0; n && d < 5; d++, n = n.parentElement) {
+      var p = n.previousElementSibling;
+      for (var k = 0; p && k < 6; k++, p = p.previousElementSibling) {
+        var h = /^(H[1-4]|SUMMARY)$/.test(p.tagName) ? p : (p.querySelector && p.querySelector('h1,h2,h3,h4,summary'));
+        if (h && textoLimpio(h)) return textoLimpio(h).slice(0, 90);
+      }
+      if (n.tagName === 'DETAILS') { var sm = n.querySelector(':scope > summary'); if (sm && textoLimpio(sm)) return textoLimpio(sm).slice(0, 90); }
+      if (n.id === 'v' || n.id === 'mb' || n.id === 'shop') break;
+    }
+    var tt = document.getElementById('tt');
+    return (tt && textoLimpio(tt)) || 'Tabla de datos';
+  }
+  function tablasNombre(root) {
+    var arr = [].slice.call(root.querySelectorAll('table'));
+    if (root.matches && root.matches('table')) arr.unshift(root);
+    arr.forEach(function (t) {
+      if (t.hasAttribute('aria-label') || t.hasAttribute('aria-labelledby') || t.querySelector(':scope > caption')) return;
+      var r = t.getAttribute('role'); if (r === 'presentation' || r === 'none') return;
+      if (t.closest('#prt,.pv,.cv,[data-no-a11y]')) return;
+      if (!t.querySelector('th') && t.rows.length < 2) return; // tabla de maquetación de una sola fila
+      t.setAttribute('aria-label', nombreTabla(t));
+    });
+  }
+  function thsVacios(root) {
+    [].forEach.call(root.querySelectorAll('th'), function (th) {
+      if (th.hasAttribute('data-a11y-th') || th.hasAttribute('aria-label') || textoLimpio(th) || th.querySelector('img,svg,input,button')) return;
+      if (!th.closest('#v,#mb')) return; // solo pantallas del panel y sus ventanas (no la vista previa de facturas)
+      var tb = th.closest('table'), idx = th.cellIndex, etq = 'Acciones';
+      if (tb) {
+        var fila = [].filter.call(tb.rows, function (r) { return r.querySelector('td'); })[0];
+        var c = fila && fila.cells[idx];
+        if (c) etq = c.querySelector('input[type="checkbox"]') ? 'Seleccionar' : (c.querySelector('img') && !c.querySelector('button,a[href]')) ? 'Imagen' : 'Acciones';
+      }
+      var sp = document.createElement('span'); sp.className = 'sr-only-th'; sp.textContent = etq;
+      th.setAttribute('data-a11y-th', '1'); th.appendChild(sp);
+    });
+  }
+
+  /* 3c · Fase 18: puntos de referencia (landmarks) de la tienda pública y decoraciones de temporada */
+  var NOMBRES_TIENDA = { k_cats: 'Categorías', k_dest: 'Destacados', k_redes: 'Redes sociales', k_dnav: 'Secciones de la tienda', k_mmenu: 'Menú móvil', k_nav: 'Navegación inferior de la tienda' };
+  function tienda() {
+    var shop = document.getElementById('shop');
+    if (!shop) return;
+    Object.keys(NOMBRES_TIENDA).forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && !el.hasAttribute('aria-label')) { el.setAttribute('aria-label', NOMBRES_TIENDA[id]); if (el.tagName === 'SECTION') el.setAttribute('role', 'region'); }
+    });
+    var kl = shop.querySelector('.kh-links'); if (kl && !kl.hasAttribute('aria-label')) kl.setAttribute('aria-label', 'Enlaces rápidos');
+    var side = document.getElementById('k_side');
+    if (side && !side.hasAttribute('role')) { side.setAttribute('role', 'region'); side.setAttribute('aria-label', 'Filtros'); }
+    // <main> de la tienda: el área de filtros y resultados. Solo si el <main> del panel no se está mostrando (la tienda pública lo oculta).
+    var km = shop.querySelector('.kmain'), pm = document.getElementById('contenido');
+    if (km) {
+      var panelVisible = !!(pm && pm.getClientRects().length);
+      if (!panelVisible && !km.hasAttribute('role')) { km.setAttribute('role', 'main'); km.setAttribute('aria-label', 'Catálogo'); }
+      else if (panelVisible && km.getAttribute('role') === 'main') { km.removeAttribute('role'); km.removeAttribute('aria-label'); }
+    }
+    [].forEach.call(document.querySelectorAll('#shop .kxb:not([role])'), function (b) { b.setAttribute('role', 'region'); b.setAttribute('aria-label', 'Aviso de temporada'); });
+    [].forEach.call(document.querySelectorAll('#shop .kgd:not([aria-hidden]),#k_pcf:not([aria-hidden])'), function (b) { b.setAttribute('aria-hidden', 'true'); });
   }
 
   /* 4 · Contenedores creados por JS */
@@ -318,6 +393,8 @@
     try { clicables(root); } catch (e) { warn(e); }
     try { campos(root); } catch (e) { warn(e); }
     try { tablasYSvg(root); } catch (e) { warn(e); }
+    try { tablasNombre(root); } catch (e) { warn(e); }
+    try { thsVacios(root); } catch (e) { warn(e); }
   }
 
   /* Teclado: Enter / Espacio sobre lo que marcó este script */
@@ -350,6 +427,7 @@
     timer = null;
     var l = pend; pend = [];
     contenedores();
+    try { tienda(); } catch (e) { warn(e); }
     try { revisar(); } catch (e) { warn(e); }
     if (l.length > 300) { procesar(document.body); return; }
     l.forEach(function (n) { if (n.isConnected) procesar(n); });
@@ -357,6 +435,7 @@
   function inicio() {
     try {
       contenedores();
+      try { tienda(); } catch (e) { warn(e); }
       try { revisar(); } catch (e) { warn(e); }
       procesar(document.body);
       if (window.MutationObserver) {

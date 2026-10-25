@@ -1,4 +1,4 @@
-# Accesibilidad (Fase 9 y Fase 15)
+# Accesibilidad (Fase 9, 15 y 18)
 
 Objetivo: acercar la web a WCAG 2.1 AA **sin cambiar el aspecto ni la lógica**. Todo lo de esta fase es aditivo: atributos ARIA, un poco de CSS que solo se nota al usar el teclado, y un script pequeño (`js/a11y.js`). No se tocó Firebase, ni las reglas, ni los manejadores de `app.js`.
 
@@ -83,6 +83,41 @@ Un observador mira las ventanas que ya existen (`#md`/`#mb` del panel, `#shopm` 
 - Marcas de región (`region`) y landmarks de la tienda, tablas sin `caption`, zonas táctiles pequeñas (ver tabla de arriba).
 - Pruebas con lector de pantalla reales (NVDA/VoiceOver): aquí solo se comprobaron atributos ARIA y comportamiento de teclado en Chrome.
 - Safari, Firefox e iOS no se probaron.
+
+## Fase 18 · landmarks, tablas, zonas táctiles y reglas serias de axe
+
+Medido con `tests/navegador/axe-completo.js` (axe-core 4.14: reglas WCAG 2.0/2.1/2.2 A y AA + mejores prácticas + `target-size`) sobre **todas** las pantallas del panel (admin y vendedor, 18 y 7 pantallas) y la tienda pública, en escritorio (1366×900) y móvil real emulado (390×844, `isMobile`), contra una copia local apuntada al proyecto de **prueba**.
+
+| Regla de axe | Impacto | Antes (esc. / móvil) | Después |
+|---|---|---|---|
+| `label` (campos sin etiqueta: línea de factura, descuento, enlace de tienda) | crítico | 9 / 9 nodos | **0** |
+| `select-name` (producto de la factura, filtro del mapa) | crítico | 3 / 3 | **0** |
+| `aria-command-name` (barra inferior sin texto a ≤480 px) | serio | 0 / **348** | **0** |
+| `label-title-only` (casillas con solo `title`) | serio | 15 / 15 | **0** |
+| `color-contrast` (tarjetas de Inicio en móvil) | serio | 0 / 4 | **0** |
+| `scrollable-region-focusable` (gráfico de ventas en móvil) | serio | 0 / 1 | **0** |
+| `region` (contenido fuera de landmarks) | moderado | 9 / 8 | 1 (`#k_wa`, ver abajo) |
+| `page-has-heading-one` (móvil: la barra lateral con el h1 se oculta) | moderado | 0 / 25 | **0** |
+| `empty-table-header` | menor | 30 / 30 | **0** |
+| `presentation-role-conflict` (imágenes `alt=""` clicables) | menor | 64 / 64 | **0** |
+| `target-size` de axe | — | 0 / 0 | 0 |
+
+**Qué se hizo**
+- **Landmarks del panel:** `<aside>` con nombre («Barra lateral»), los dos `<nav>` ya nombrados, la barra de Inicio como `role="region"` con nombre y un `<h1 class="sr-only h1m">` dentro de `<main>` que solo existe en pantallas ≤820 px (en escritorio basta el h1 de la barra lateral). Cada pantalla ya tenía `<main id="contenido">`.
+- **Landmarks de la tienda** (en `js/a11y.js`, función `tienda()`, sin tocar la estructura): `role="main"` en el área de filtros y resultados (`.kmain`) solo si el `<main>` del panel no se muestra; los filtros (`<aside>`) pasan a `region` («Filtros»), las secciones y menús sin nombre reciben `aria-label`, los avisos de temporada (`.kxb`) son regiones y las bandas decorativas (`.kgd`) y el confeti de Panamá se ocultan a lectores.
+- **Tablas:** `aria-label` automático (el encabezado `h2/h3/summary` más cercano por encima, o el título de la pantalla), sin añadir `<caption>` para no alterar `rows`/`children` que usa `app.js`. Las cabeceras `<th>` vacías reciben un texto solo-lector («Acciones», «Seleccionar» o «Imagen» según la columna). No se toca la vista previa de facturas ni las tarjetas impresas.
+- **Campos:** `aria-label` en las plantillas (líneas de factura, descuento, filtro del mapa, enlace de la tienda, casillas de etiquetas) y, de forma central, cualquier campo que solo tuviera `title` lo copia a `aria-label`.
+- **Barra inferior móvil (≤480 px):** el texto de cada botón se ocultaba con `display:none` y los botones quedaban sin nombre; ahora sigue oculto a la vista pero legible. (No se usó `aria-label` en los botones porque axe exige que el nombre contenga el texto visible, p. ej. «Chat 3».)
+- **Contraste en móvil:** «● En línea», «facturas este mes» y otras cifras de color de las tarjetas de Inicio usan variables de tema (`--okt`, `--warnt`, `--viot`).
+- **Zonas táctiles (WCAG 2.2 · 2.5.8, 24×24 px)**, solo en ≤820 px: `summary`, títulos de tarjeta clicables y el enlace «¿Olvidó su contraseña?» con `min-height:24px`; enlaces y casillas en línea con `padding-block` (en elementos en línea no mueve el texto); casillas de etiquetas con 24 px. Controles <24 px en móvil: **43 → 14**; los 14 que quedan son los puntos del carrusel de banners de la tienda (8×8 y 22×8), que tienen una alternativa equivalente en la misma página (las flechas «Banner anterior/siguiente», de más de 24 px): excepción «equivalente» del criterio.
+- **Se descubrió y se corrigió una trampa:** un `.sr-only` con `position:absolute` dentro de una celda de tabla escapaba del scroll horizontal de `.tw` y ensanchaba la página en móvil real; por eso las cabeceras usan la variante `.sr-only-th` (sin `position:absolute`). Hay una prueba que lo vigila.
+
+**Qué sigue pendiente (no se arregló a propósito)**
+- **Escritorio:** 55 controles de menos de 24 px (resúmenes `<summary>`, botones `.btn.s`, casillas de tablas, títulos plegables). Arreglarlos cambia el aspecto de escritorio, que esta fase prometía no tocar.
+- `#k_wa` (botón flotante de WhatsApp de la tienda) queda fuera de un landmark (`region`, moderado): envolverlo cambiaría su posicionamiento fijo.
+- Carrusel de banners: puntos de 8 px (excepción «equivalente», ver arriba).
+- Decoraciones de temporada sin identificar (`#k_snow`, `#k_stars`, `#k_hearts`, `#k_conf`…) no se ocultaron a lectores por no poder comprobar cada una.
+- Safari, Firefox, iOS y lectores de pantalla reales no se probaron.
 
 ## Qué quedaba pendiente tras la Fase 9 (ver arriba lo resuelto en la 15)
 
