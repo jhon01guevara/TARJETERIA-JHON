@@ -79,12 +79,12 @@ test('CSS fase 20: zonas de 24 px en escritorio, puntos del carrusel de 24×24 c
  assert.match(css,/@media\(max-width:820px\)\{\n  summary,h3\[data-h-click\],#auth a\{min-height:24px/,'bloque móvil de la fase 18 sigue');
 });
 test('el botón de WhatsApp vive dentro de un landmark complementary con nombre, que se oculta junto con el botón',()=>{
- assert.match(app,/<div class="kwrap" role="complementary" aria-label="Contacto por WhatsApp" hidden><a class="kwa" id="k_wa"[^>]*hidden>[\s\S]*?<\/svg><\/a><\/div>`;/);
- assert.match(app,/const g=w\.parentNode;if\(g&&g\.classList\.contains\('kwrap'\)\)g\.hidden=w\.hidden/);
- assert.match(css,/\.kwrap\{margin:0;padding:0;border:0;height:0\}\s*\.kwrap\[hidden\]\{display:none\}/);
+ assert.match(app,/<div class="kwa-wrap" role="complementary" aria-label="Contacto por WhatsApp" hidden><a class="kwa" id="k_wa"[^>]*hidden>[\s\S]*?<\/svg><\/a><\/div>`;/);
+ assert.match(app,/const g=w\.parentNode;if\(g&&g\.classList\.contains\('kwa-wrap'\)\)g\.hidden=w\.hidden/);
+ assert.match(css,/\.kwa-wrap\{margin:0;padding:0;border:0;height:0\}\s*\.kwa-wrap\[hidden\]\{display:none\}/);
 });
 test('caché del service worker tj-net-first-17, ?v= de app.js y de accesibilidad.css subidos, y guía publicada',()=>{
  assert.match(sw,/const V='tj-net-first-(1[7-9]|[2-9]\d)'/);
- assert.match(html,/js\/app\.js\?v=(hallazgos-fase-20|modulos-fase-21[a-z])/);assert.match(html,/css\/accesibilidad\.css\?v=4/);
+ assert.match(html,/js\/app\.js\?v=(hallazgos-fase-20|modulos-fase-21[a-z]|hallazgos-fase-20-kwrap)/);assert.match(html,/css\/accesibilidad\.css\?v=[4-9]/);
  assert.ok(leer('docs/GUIA-PRUEBAS-FASE-20.md').length>800);
 });
