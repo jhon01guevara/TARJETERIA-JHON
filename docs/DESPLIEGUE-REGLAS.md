@@ -119,3 +119,13 @@ Tras publicar, prueba de inmediato con la cuenta admin y con un vendedor real (l
 3. Con CLI: `firebase deploy --only firestore:rules --project tarjeteria-jhon` desde una carpeta cuyo `firestore.rules` sea la copia antigua (`cp docs/respaldo-reglas-anteriores-2026-10-24.rules /tmp/rev/firestore.rules`). Si lo haces, restaura también `firestore.rules` del repo con otro PR para que sigan coincidiendo.
 
 Revertir no borra datos: las reglas solo controlan el acceso. Si borraste `miembros` por error, el admin puede recrearlos abriendo «Marketing» (los vendedores nuevos ya se crean solos al darlos de alta).
+
+## 6. Fase 24 · campo `envio` en `tienda_pedidos` (2026-10-25)
+
+Hallazgo de la Fase 23: la tienda escribe `envio` (transportista elegido) en `tienda_pedidos`, pero las reglas no lo admitían; la primera escritura se rechazaba y la app reintentaba con el transportista dentro de la nota.
+
+**Cambio (solo `firestore.rules`, sin relajar nada más):** `envio` se admite en las dos rutas (`tienda_pedidos` y `empresas/{eid}/tienda_pedidos`) y se valida con la función `envioValido`: mapa con solo las claves `agencia, fid, tipo, rec, rtel, rced, pais, prov, ciudad, suc, dir, ref` (las que escribe `shopEnvDatos`), `agencia` y `tipo` obligatorias, `tipo` ∈ `nacional | internacional`, todo texto y con los mismos límites que `sanEnv` (`js/sanear.js`). Las claves que solo escribe el panel después (`guia, cont, obs, bultos, peso, etq`) no se aceptan al crear. El resto de la regla (claves del pedido, `estado == 'nuevo'`, `nota ≤ 500`, 1–100 artículos, `validRef`, lectura/actualización/borrado) es idéntico.
+
+**Respaldo:** las reglas publicadas antes del cambio están en [`respaldo-reglas-anteriores-2026-10-25.rules`](respaldo-reglas-anteriores-2026-10-25.rules) (idénticas a `firestore.rules` de `main` al 2026-10-25 y verificadas contra producción con el conector de Firebase). Para revertir: publicar ese archivo.
+
+**Pruebas:** emulador (`tests/herramientas/reglas-emulador`, 32 nuevas + 27 existentes, ver su README), estáticas (`tests/reglas-envio-fase24.test.js`) y un pedido real de prueba con transportista en `tarjeteria-jhon-prueba` (ver `docs/GUIA-PRUEBAS-FASE-24.md`).
