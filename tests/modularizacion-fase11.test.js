@@ -22,6 +22,8 @@ const EXTR={
  'js/promo.js':{consts:['PROMO_IMG','PROMO'],funcs:['promoSlide'],efectos:true},
  // Fase 19 (6a): directorio de transportistas (datos y utilidades puras; fleMono usa canvas al ejecutarse)
  'js/transportistas.js':{consts:['fleT','FLE_DEF','FLE_WEB','fleAll','fleNorm','fleTelTxt','fleWaNum','_fleMono','fleIni','fleLogo'],funcs:['fleSanExtra','fleSanCfg','fleBuscar','fleMono'],efectos:true},
+ // Fase 19 (12a): motor de etiquetas de envío (usa window.jspdf al ejecutarse)
+ 'js/etiquetas.js':{consts:['ETQ_TAM','C128','etqTxt'],funcs:['code128B','etqBarras','etqFlow','etqDibujar','etqPDF'],efectos:true},
  'js/politicas.js':{consts:['TJ_POLITICAS'],funcs:['shopPoliticas','poliVerEvidencia','poliImprimirEvidencia','poliCopiarEvidencia','poliVerRegistroAuditoria','poliExportarCSV','poliCopiar','poliAdmCard'],efectos:true},
 };
 const TODOS=Object.entries(EXTR).flatMap(([f,o])=>[...o.consts.map(n=>[f,n,'const']),...o.funcs.map(n=>[f,n,'function'])]);

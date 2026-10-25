@@ -3,7 +3,7 @@
    moviendo código literal no los rompa. Al añadir una extracción nueva, se añade aquí. */
 const fs=require('node:fs');
 const path=require('node:path');
-const EXTRAIDOS=['js/utils.js','js/sanear.js','js/redes.js','js/politicas.js','js/transportistas.js','js/promo.js','js/gif.js'];
+const EXTRAIDOS=['js/utils.js','js/sanear.js','js/redes.js','js/politicas.js','js/etiquetas.js','js/transportistas.js','js/promo.js','js/gif.js'];
 /* Fase 13: estilos que antes inyectaba app.js con createElement('style') y ahora viven en css/inyectados.css. */
 const ESTILOS=['css/inyectados.css'];
 const leer=f=>fs.readFileSync(path.join(__dirname,'..','..',f),'utf8');
