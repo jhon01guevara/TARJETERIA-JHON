@@ -20,3 +20,18 @@ Cada arreglo va en su propio PR. Esta guía crece con cada uno.
    PUERTO=8944 node tests/navegador/tienda-fase23.js        # geometría de la tienda: 140/140
    ```
    El primero ahora exige: la nota se conserva al volver del registro, la aceptación se conserva, una nota vacía sigue vacía, y tras registrarse el pedido sale directo con la constancia en la nota.
+
+## Hallazgo 1 · productos con precio 0 («Consultar») — revisión, sin cambios
+
+No se tocaron datos ni precios (son del dueño). Se revisó el código y no se encontró ningún error:
+
+| Dónde | Qué hace con precio 0 | Verificado |
+|---|---|---|
+| `shopLines` | `p:+i.price\|\|0` (texto, vacío o NaN → 0) | estático |
+| Hoja de cantidad (`shopPickUpd`) y botón flotante | subtotal «Consultar»; el botón flotante omite el total | Chrome real (`tienda-pedido-fase23.js`, modo «a consultar» con el catálogo real: todos a precio 0) |
+| «Su pedido» (`shopCart`) | precio unitario «Consultar» (`tdMoney`), total «Consultar» si la suma es 0 | Chrome real |
+| Pedido guardado | `p:0`, `total:0` (las reglas admiten `total >= 0`) | reglas en el emulador |
+| Comprobante (PDF/imagen/HTML) y «Mi cuenta» | precio «Consultar», subtotal «—», total «Consultar» | estático |
+| Panel (`tdPedidos`) | total «Consultar» | estático |
+
+Observación (no es un error con los datos actuales, todos a 0): si algún día hay un pedido con productos con y sin precio, el total mostrado es la suma de los que sí tienen precio, sin aviso de que falta lo «a consultar». No se cambió porque es una decisión de presentación.
