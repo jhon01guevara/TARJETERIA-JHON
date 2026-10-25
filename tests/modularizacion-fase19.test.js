@@ -25,7 +25,7 @@ test('las marcas FLE y ETQ viajan con el bloque y aparecen una sola vez en todo 
 test('index.html carga los 4 archivos nuevos, sin defer/async/module, antes de app.js y con ?v=',()=>{
  const h=leer('index.html'),app=h.indexOf('js/app.js?v=');
  for(const f of NUEVOS){
-  const m=new RegExp('<script src="'+f.replace('.','\\.')+'\\?v=modulos-fase-19[a-z]"></script>').exec(h);
+  const m=new RegExp('<script src="'+f.replace('.','\\.')+'\\?v=(modulos-fase-19[a-z]|banners-fase-22)"></script>').exec(h);
   assert.ok(m,f+' sin <script> con ?v=');assert.ok(m.index<app,f+' debe ir antes de app.js');
   assert.equal(cuenta(h,f+'?v='),1,f+' cargado dos veces');
  }
