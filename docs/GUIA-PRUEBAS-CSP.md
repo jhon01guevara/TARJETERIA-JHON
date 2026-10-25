@@ -73,7 +73,7 @@ Si todo está en ✅, la fase está lista. En el panel de **Firebase → App Che
 * Los estilos del panel (`<style>` en `index.html`) pasaron a archivos: `css/panel.css`, `css/inyectados.css`, `css/chkskin.css`,
   `apps/modelos.css`, `apps/investigacion.css`. Cero cambios de aspecto (se comparó pantalla por pantalla contra la versión anterior:
   solo difiere el reloj).
-* `style-src-elem` ya no permite estilos en línea (solo archivos del sitio, Google Fonts, leaflet y dos "huellas" exactas).
+* `style-src-elem` ya no permite estilos en línea (solo archivos del sitio, Google Fonts, leaflet y tres "huellas" exactas).
   Los `style="…"` pequeños dentro del HTML generado siguen permitidos (`style-src-attr`).
 * `script-src` ya no permite sitios completos (cdnjs, jsdelivr, gstatic, google): solo la carpeta exacta de cada biblioteca.
   También se quitó `apis.google.com`.

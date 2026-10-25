@@ -174,7 +174,7 @@ form-action 'self'
 |---|---|---|
 | `default-src` | `'self'` | Bien |
 | `script-src` | `'self'` + **rutas exactas** de cada biblioteca: `gstatic.com/firebasejs/10.12.2/`, cdnjs (`Chart.js/4.4.1/`, `jszip/3.10.2/`, `leaflet/1.9.4/`, `pdf.js/3.11.174/`, `html2canvas/1.4.1/`), jsdelivr (`npm/jspdf@4.2.1/`, `npm/@emailjs/browser@4.4.1/`), `google.com/recaptcha/`, `gstatic.com/recaptcha/`, `recaptcha.net/recaptcha/` | **Sin `unsafe-inline` ni `unsafe-eval`, y ya no se permiten dominios enteros.** Se quitó `apis.google.com` (el panel solo usa correo+contraseña; no hay login con Google/teléfono) |
-| `style-src-elem` | `'self'`, `cdnjs…/leaflet/1.9.4/`, `fonts.googleapis.com/css2` y **2 hashes SHA-256** | **Sin `unsafe-inline`.** Aplica a `<style>` y `<link rel=stylesheet>` |
+| `style-src-elem` | `'self'`, `cdnjs…/leaflet/1.9.4/`, `fonts.googleapis.com/css2` y **3 hashes SHA-256** | **Sin `unsafe-inline`.** Aplica a `<style>` y `<link rel=stylesheet>` |
 | `style-src-attr` | `'unsafe-inline'` | Necesario: ≈1000 `style="…"` dentro de plantillas JS (ver más abajo) |
 | `style-src` | `'self' 'unsafe-inline'` + cdnjs, fonts.googleapis | **Solo respaldo** para navegadores viejos que no conocen `style-src-elem/-attr` (los modernos —Chrome 75+, Firefox 105+, Safari 15.4+— lo ignoran) |
 | `connect-src` | self, data:, blob:, `*.googleapis.com`, `*.firebaseio.com`, wss, `*.firebaseapp.com`, emailjs, google/recaptcha, gstatic | Razonable (sin cambios) |
