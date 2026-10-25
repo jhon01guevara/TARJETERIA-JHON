@@ -24,8 +24,8 @@ function cargar(search){
   ctx.window=ctx;ctx.self=ctx;ctx.globalThis=ctx;
   vm.createContext(ctx);
   /* El orden replica index.html: contexto + motor/vista de marketing + empresas
-     + migración + utilidades (js/utils.js, Fase 10), todos antes que app.js (que referencia sus funciones). */
-  const previos=['js/empresa-contexto.js','js/mkt-editor.js','js/marketing.js','js/empresas.js','migraciones/migracion-multiempresa.js','js/utils.js'];
+     + migración + utilidades (js/utils.js, Fase 10) + archivos extraídos en Fase 11, todos antes que app.js (que referencia sus funciones). */
+  const previos=['js/empresa-contexto.js','js/mkt-editor.js','js/marketing.js','js/empresas.js','migraciones/migracion-multiempresa.js','js/utils.js','js/sanear.js'];
   try{
     for(const f of previos)vm.runInContext(leer(f),ctx,{filename:f});
     vm.runInContext(src,ctx,{filename:'js/app.js'});return null

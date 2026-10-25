@@ -7,7 +7,7 @@ const vm=require('node:vm');
 const leer=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 
 test('La tarjeta de inicio de sesión agrupa logo, textos y fondo',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.match(app,/🔐 Configuración de inicio de sesión/,'título nuevo');
  assert.match(app,/🖼 Logo y textos de la pantalla de acceso/);
  assert.match(app,/data-a-change="\$\{_ha\('loginLogoFile'\)\}"/,'subida de logo/GIF/video');
@@ -27,7 +27,7 @@ test('La tarjeta de inicio de sesión agrupa logo, textos y fondo',()=>{
 });
 
 test('La factura usa el logo de la empresa con fallback al del panel',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.match(app,/c\.logoFac\|\|'assets\/logo\.png'/,'factura clásica');
  assert.match(app,/c\.logoFac\|\|LOGO_T/,'plantilla Apple');
  assert.match(app,/Logo de la empresa \(aparece en la factura\)/,'campo en Datos de la empresa');
@@ -35,7 +35,7 @@ test('La factura usa el logo de la empresa con fallback al del panel',()=>{
 });
 
 test('La Plantilla de la web contiene banners editables y forma de botones',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.match(app,/🖼 Plantilla de la web<\/h3>/,'título de la tarjeta');
  assert.match(app,/🎠 Banners promocionales de la portada/);
  assert.match(app,/function banGuardar/);
@@ -52,7 +52,7 @@ test('La Plantilla de la web contiene banners editables y forma de botones',()=>
 });
 
 test('Las políticas usan el nombre real de la empresa (nada de nombres fijos)',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.doesNotMatch(app,/DISTRIBUIDORA JHON/);
  assert.doesNotMatch(app,/Distribuidora Jhon \/ Tarjetería Jhon/);
  assert.match(app,/function poliCopiar\(\)\{\s*\n const NN=nombreNegocio\(\)/);
@@ -77,7 +77,7 @@ test('Las empresas nuevas nacen con demo completo y SIN contenido de Tarjetería
 });
 
 test('Los textos de tienda y login usan nombreNegocio() en lugar de nombres fijos',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.match(app,/function nombreNegocio\(\)/);
  assert.match(app,/SH\.heroTitle\|\|nombreNegocio\(\)/,'portada pública');
  assert.match(app,/TD\.heroTitle=cd\.heroTitle\|\|nombreNegocio\(\)/,'lado administración');

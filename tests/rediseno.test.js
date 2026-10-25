@@ -44,7 +44,7 @@ test('uber-nav agrupa TODAS las secciones del menú y respeta la edición',()=>{
 });
 
 test('La opción de tema ya no dice «rosa» (el acento claro ahora es negro)',()=>{
- const app=leer('js/app.js'),html=leer('index.html');
+ const app=require('./helpers/app-fuentes').appTodo(),html=leer('index.html');
  assert.match(app,/\['claro','Claro'\]/);
  assert.match(html,/>Tema claro</);
  assert.doesNotMatch(html,/>Tema rosa</);

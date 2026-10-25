@@ -1,0 +1,9 @@
+/* Fase 11: js/app.js se está dividiendo en scripts clásicos (js/utils.js, js/sanear.js, ...).
+   Los tests que buscan texto "del panel" leen app.js MÁS los archivos extraídos, para que seguir
+   moviendo código literal no los rompa. Al añadir una extracción nueva, se añade aquí. */
+const fs=require('node:fs');
+const path=require('node:path');
+const EXTRAIDOS=['js/utils.js','js/sanear.js'];
+const leer=f=>fs.readFileSync(path.join(__dirname,'..','..',f),'utf8');
+const appTodo=()=>[...EXTRAIDOS,'js/app.js'].map(leer).join('\n');
+module.exports={EXTRAIDOS,appTodo,leer};

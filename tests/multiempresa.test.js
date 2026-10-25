@@ -138,14 +138,14 @@ test('La simulación queda en verde con datos limpios y conserva conteos',()=>{
 test('index.html carga los módulos multiempresa antes que app.js',()=>{
  const html=leer('index.html');
  const pos=[html.indexOf('js/empresa-contexto.js?v='),html.indexOf('js/empresas.js?v='),
-  html.indexOf('migraciones/migracion-multiempresa.js?v='),html.indexOf('js/app.js?v=tiktok-live-20')];
+  html.indexOf('migraciones/migracion-multiempresa.js?v='),html.indexOf('js/app.js?v=')];
  assert.ok(pos.every(p=>p>0),'faltan script tags: '+pos.join(','));
  assert.ok(pos[3]>Math.max(pos[0],pos[1],pos[2]),'app.js debe cargarse después');
- assert.match(html,/js\/app\.js\?v=tiktok-live-20\d{6}[a-z]/);
+ assert.match(html,/js\/app\.js\?v=(tiktok-live-20\d{6}[a-z]|modulos-fase-\d+[a-z])/);
 });
 
 test('El panel integra la vista Empresas solo para administración',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.match(app,/V\.push\(\['empresas','🏢','Empresas'\]\)/);
  assert.match(app,/R\.empresas=empresasRender/);
  assert.match(app,/k!=='config'&&k!=='vend'&&k!=='mapa'&&k!=='empresas'/);

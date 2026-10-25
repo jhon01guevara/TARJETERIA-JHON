@@ -43,9 +43,9 @@ test('index.html carga js/utils.js con versión, antes de app.js y después de l
  assert.ok(!/<script[^>]*js\/utils\.js[^>]*(defer|async|type="module")/.test(h),'sin defer/async/module: debe ejecutarse en orden');
 });
 
-test('sw.js precachea js/utils.js y la caché subió a tj-net-first-7',()=>{
+test('sw.js precachea js/utils.js y la caché está en tj-net-first-8 (Fase 11)',()=>{
  const sw=leer('sw.js');
- assert.match(sw,/const V='tj-net-first-7'/);
+ assert.match(sw,/const V='tj-net-first-8'/);
  const pre=/const PRE=\[(.*?)\];/s.exec(sw)[1];
  assert.ok(pre.includes("'js/utils.js'")&&pre.includes("'js/app.js'"));
  assert.ok(pre.indexOf("'js/utils.js'")<pre.indexOf("'js/app.js'"));
@@ -82,7 +82,7 @@ test('comportamiento idéntico al original: esc, $$, fdate, ymd, hoy, uid, b64To
 test('el uid() generado cumple el formato SAFE_ID que app.js exige a los documentos públicos',()=>{
  const ctx=ctxUtils();
  const safe=/^[A-Za-z0-9_-]{1,60}$/;
- assert.ok(/const SAFE_ID=\/\^\[A-Za-z0-9_-\]\{1,60\}\$\//.test(leer('js/app.js')));
+ assert.ok(/const SAFE_ID=\/\^\[A-Za-z0-9_-\]\{1,60\}\$\//.test(leer('js/sanear.js')));
  for(let i=0;i<50;i++)assert.ok(safe.test(vm.runInContext('uid()',ctx)));
 });
 
@@ -95,6 +95,6 @@ test('js/utils.js es solo utilidades puras: sin Firebase, sin red y sin estado g
 test('docs/PLAN-MODULARIZACION.md existe y documenta el enfoque y las siguientes extracciones',()=>{
  const d=leer('docs/PLAN-MODULARIZACION.md');
  assert.match(d,/js\/utils\.js/);
- assert.match(d,/tj-net-first-7/);
+ assert.match(d,/tj-net-first-8/);
  assert.match(d,/Siguientes extracciones/i);
 });

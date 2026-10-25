@@ -112,11 +112,11 @@ test('index.html carga el motor y la vista de marketing antes que app.js',()=>{
  assert.ok(pos.every(p=>p>0),'faltan script tags');
  assert.ok(pos[1]>pos[0],'la vista va después del motor');
  assert.ok(pos[2]>pos[1],'app.js va último');
- assert.match(html,/js\/app\.js\?v=tiktok-live-20\d{6}[a-z]/);
+ assert.match(html,/js\/app\.js\?v=(tiktok-live-20\d{6}[a-z]|modulos-fase-\d+[a-z])/);
 });
 
 test('El panel integra la vista Marketing visible para vendedores con permiso',()=>{
- const app=leer('js/app.js');
+ const app=require('./helpers/app-fuentes').appTodo();
  assert.match(app,/V\.push\(\['marketing','🎨','Marketing'\]\)/);
  assert.match(app,/R\.marketing=marketingRender/);
  /* NO se excluye de PANELES ni de puede: el permiso por vendedor decide */

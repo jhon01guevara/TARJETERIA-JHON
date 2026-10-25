@@ -34,11 +34,11 @@ test('CSS de accesibilidad: foco visible, skip-link oculto y reduced-motion; sin
 
 test('Botones de solo icono llevan aria-label (panel y marketing)',()=>{
  for(const f of ['js/app.js','js/marketing.js']){
-  const s=leer(f);
+  const s=f==='js/app.js'?require('./helpers/app-fuentes').appTodo():leer(f);
   const solo=[...s.matchAll(/<button((?:\s[^<>]*?)?)>(🗑|✕|✏️|⬇|↑|↓|⧉|↶|↷|‹|›|🧾|➕)<\/button>/g)].filter(m=>!/aria-label=/.test(m[1]));
   assert.equal(solo.length,0,f+': quedan botones de solo icono sin aria-label: '+solo.slice(0,3).map(m=>m[0]).join(' '));
  }
- const a=leer('js/app.js');
+ const a=require('./helpers/app-fuentes').appTodo();
  assert.match(a,/aria-label="Eliminar">🗑<\/button>/);
  assert.match(a,/aria-label="Mes anterior">‹<\/button>/);
  assert.match(a,/aria-label="Volver a la lista de chats">‹<\/button>/);
@@ -46,7 +46,7 @@ test('Botones de solo icono llevan aria-label (panel y marketing)',()=>{
 });
 
 test('Login: etiquetas asociadas a sus campos; imágenes e iframes con alt/title',()=>{
- const a=leer('js/app.js');
+ const a=require('./helpers/app-fuentes').appTodo();
  assert.match(a,/<label for="au_e">Correo<\/label><input id="au_e"/);
  assert.match(a,/<label for="au_p">Contraseña<\/label><input id="au_p"/);
  for(const m of a.matchAll(/<iframe\b[^>]*>/g))assert.match(m[0],/\btitle=/,'iframe sin title: '+m[0]);

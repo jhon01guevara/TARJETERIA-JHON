@@ -100,3 +100,11 @@ Después de los primeros cuatro, `app.js` bajaría a ~4.500 líneas sin tocar na
 - `node --check` en todos los `.js`.
 - Prueba de humo con Chrome headless: sin `pageerror` ni `ReferenceError`, login visible, tienda `?tienda=1` visible, capturas antes/después idénticas (escritorio y móvil).
 - Panel de prueba (`tarjeteria-jhon-prueba`) con admin y vendedor: entra y carga sin errores.
+
+## 7. Fase 11: extracciones 1 a 4 (un commit por extracción)
+
+Misma regla de la Fase 10: se mueven líneas completas, literalmente, a scripts clásicos que se cargan **después de `js/utils.js` y antes de `js/app.js`**; las `const` siguen siendo globales de script y las `function` siguen siendo propiedades de `window`. La caché del service worker sube a `tj-net-first-8` y `app.js` pasa a `?v=modulos-fase-11x`. `tests/helpers/app-fuentes.js` hace que los tests que buscan texto del panel lean `app.js` más los archivos extraídos. `tests/modularizacion-fase11.test.js` es una tabla única (existencia, compilación, declaraciones, sin duplicados, orden en `index.html`, precaché, resolución por nombre y comportamiento).
+
+### Extracción 1: `js/sanear.js` (hecha)
+
+`SAFE_ID`, `sTxt`, `sNum`, `sanLead`, `sanPed`, `sanGal` y `sanEnv` (esta última estaba ~2.100 líneas más abajo, junto a las etiquetas de envío). Solo dependen entre sí; no tocan `DB`, `SES` ni Firebase. `sanPed` llama a `sanEnv` al ejecutarse (no al cargar), y ambas viven ahora en el mismo archivo. 25 líneas movidas.

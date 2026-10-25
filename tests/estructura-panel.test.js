@@ -5,7 +5,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 
 test('Configuración usa un solo renderizador de tarjetas adicionales',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.equal((app.match(/R\.config=function\(/g)||[]).length,1);
   for(const id of ['waCard','investCard','lbgCard','xmasCard','bkCard','sesCard','tplCard','recCard','vozCard','cintCard','llamCard']){
     assert.match(app,new RegExp("\\['"+id+"',"));
@@ -13,20 +13,20 @@ test('Configuración usa un solo renderizador de tarjetas adicionales',()=>{
 });
 
 test('Inicio usa un solo renderizador para sus tarjetas adicionales',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.equal((app.match(/R\.home=function\(/g)||[]).length,1);
   for(const name of ['vdAdmHTML','tdHomeHTML','investHomeHTML','waHomeHTML'])assert.match(app,new RegExp(name+'\\('));
 });
 
 test('Chat integra el ajuste de móvil sin encadenar renderizadores',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.equal((app.match(/R\.chat=function\(/g)||[]).length,1);
   assert.match(app,/function chatFitSoon\(\)/);
   assert.match(app,/chatConv\(\);chatFitSoon\(\)/);
 });
 
 test('Catálogo y Check integran permisos y ajuste móvil sin capas extras',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.equal((app.match(/R\.cat\s*=/g)||[]).length,1);
   assert.equal((app.match(/R\.check=function\(/g)||[]).length,0);
   assert.doesNotMatch(app,/const _rcat=|const _rck=/);
@@ -35,7 +35,7 @@ test('Catálogo y Check integran permisos y ajuste móvil sin capas extras',()=>
 });
 
 test('Chat consulta solo conversaciones propias y las reglas separan participantes',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
   assert.match(app,/\.where\('members','array-contains',chatMe\(\)\)\.onSnapshot/);
   assert.match(rules,/function chatMember\(data\)/);
@@ -46,7 +46,7 @@ test('Chat consulta solo conversaciones propias y las reglas separan participant
 });
 
 test('Los datos del panel se separan entre catálogo común y espacio privado por vendedor',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
   assert.match(app,/const publicRef=.*panel_public.*general/);
   assert.match(app,/const privateRef=.*vendedores/);
@@ -58,7 +58,7 @@ test('Los datos del panel se separan entre catálogo común y espacio privado po
 });
 
 test('La conexión reutiliza Firebase ya inicializado tras una actualización',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/if\(!\(firebase\.apps&&firebase\.apps\.length\)\)firebase\.initializeApp\(firebaseConfig\)/);
   assert.match(app,/function iniciarFirebase\(\)/);
   assert.match(app,/if\(!fbDb\)try\{iniciarFirebase\(\)\}/);
@@ -75,27 +75,27 @@ test('Las consultas autenticadas no repiten la búsqueda de rol por cada documen
 });
 
 test('El inicio de sesión no queda verificando indefinidamente si Firestore no responde',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/get\(\{source:'server'\}\)/);
   assert.match(app,/firestore\/timeout/);
   assert.match(app,/12000/);
 });
 
 test('Un error al cargar el panel no invalida una sesión cuyo rol ya fue verificado',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/let d;/);
   assert.match(app,/try\{entrar\(\)\}catch\(e\)/);
   assert.match(app,/Acceso aceptado/);
 });
 
 test('El administrador entra por su UID autenticado sin depender de una lectura de rol',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/const ADMIN_UID='o7bHndKtswSHreFnVwORqBSUKL43';/);
   assert.match(app,/if\(u\.uid===ADMIN_UID\)/);
 });
 
 test('Administración recibe las facturas de todos los vendedores sin copiarlas a panel/data',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/function escucharVendedores\(\)/);
   assert.match(app,/fbCol\('vendedores'\)\.doc\(id\)\.collection\('privado'\)\.doc\('data'\)\.onSnapshot/);
   assert.match(app,/fac:\(DB\.fac\|\|\[\]\)\.filter\(f=>!f\._v\)/);
@@ -104,7 +104,7 @@ test('Administración recibe las facturas de todos los vendedores sin copiarlas 
 });
 
 test('Las facturas toman su número de un contador único compartido',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
   assert.match(app,/panel_public'\)\.doc\('contador'\)/);
   assert.match(app,/async function reservarNumeroFactura\(\)/);
@@ -116,7 +116,7 @@ test('Las facturas toman su número de un contador único compartido',()=>{
 });
 
 test('Vendedores solo ven, descargan y comparten el catálogo',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/\$\{esVend\(\)\?'':`<div class="ckrow">/);
   assert.match(app,/\$\{esVend\(\)\?'':`<select class="catsel"/);
   assert.match(app,/\$\{esVend\(\)\?'':`<button class="btn s" data-h-click="h200"/);
@@ -126,7 +126,7 @@ test('Vendedores solo ven, descargan y comparten el catálogo',()=>{
 });
 
 test('Los clientes son una lista compartida, sin duplicados y solo administración elimina',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
   assert.match(app,/panel_public'\)\.doc\('clientes'\)/);
   assert.match(app,/function fusionarClientes\(/);
@@ -139,7 +139,7 @@ test('Los clientes son una lista compartida, sin duplicados y solo administraci�
 });
 
 test('El formulario de cliente permite registrar la ubicación del negocio',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/id="cu_link"/);
   assert.match(app,/function cliLocGPS\(\)/);
   assert.match(app,/nuevo\.lat=loc\.lat;nuevo\.lng=loc\.lng/);
@@ -148,7 +148,7 @@ test('El formulario de cliente permite registrar la ubicación del negocio',()=>
 });
 
 test('El formulario de cliente incluye un mapa para marcar el negocio',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/id="cuMap"/);
   assert.match(app,/function cliMapaIniciar\(\)/);
   assert.match(app,/function cliMapSync\(centrar\)/);
@@ -157,7 +157,7 @@ test('El formulario de cliente incluye un mapa para marcar el negocio',()=>{
 });
 
 test('El mapa general de clientes es solo para administración y se ve en Inicio',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.equal((app.match(/R\.mapa=function\(/g)||[]).length,1);
   assert.match(app,/V\.push\(\['mapa','🗺️','Mapa de clientes'\]\)/);
   assert.match(app,/const PANELES=V\.filter\(v=>v\[0\]!=='config'&&v\[0\]!=='vend'&&v\[0\]!=='mapa'&&v\[0\]!=='empresas'\)/);
@@ -168,7 +168,7 @@ test('El mapa general de clientes es solo para administración y se ve en Inicio
 });
 
 test('Las redes sociales se configuran en Configuración y se muestran en la tienda pública',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/\['redesCard',redesCard\]/);
   assert.match(app,/function redUrl\(red,txt\)/);
   assert.match(app,/function redesGuardar\(\)/);
@@ -180,7 +180,7 @@ test('Las redes sociales se configuran en Configuración y se muestran en la tie
 });
 
 test('Los enlaces de redes solo aceptan https en TikTok, Instagram o Facebook',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/tiktok:\/\^\(\?:\[a-z0-9-\]\+\\\.\)\*tiktok\\\.com\$\/i/);
   assert.match(app,/u\.username\|\|u\.password\|\|!RED_HOST\[red\]\.test\(u\.hostname\)/);
   assert.match(app,/u\.protocol='https:'/);
@@ -188,7 +188,7 @@ test('Los enlaces de redes solo aceptan https en TikTok, Instagram o Facebook',(
 });
 
 test('El botón Contacto de la tienda muestra los datos configurados y las redes salen junto al menú',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/function contLimpio\(c\)/);
   assert.match(app,/function shopContacto\(\)/);
   assert.match(app,/if\(k==='contact'\)\{shopContacto\(\);return\}/);
@@ -200,14 +200,14 @@ test('El botón Contacto de la tienda muestra los datos configurados y las redes
 });
 
 test('Lo escrito y el aviso de Redes y contacto sobreviven a los redibujados de la pantalla',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/let RS_DRAFT=\{\},RS_MSG=null;/);
   assert.match(app,/__H\.h336=function\(event,a\)\{RS_DRAFT\[this\.id\]=this\.value/);
   assert.match(app,/id in RS_DRAFT\?RS_DRAFT\[id\]:saved/);
 });
 
 test('La tienda muestra un botón flotante de WhatsApp con el número configurado',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/id="k_wa"/);
   assert.match(app,/\.kwa\{position:fixed/);
   assert.match(app,/w\.href='https:\/\/wa\.me\/'\+num\+'\?text='/);
@@ -215,7 +215,7 @@ test('La tienda muestra un botón flotante de WhatsApp con el número configurad
 });
 
 test('Destacados de la semana avanza solo cada 5 segundos y se adapta al móvil',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/SH\._dt=setInterval\(shopDestTick,5000\)/);
   assert.match(app,/\.join\(''\)\}<\/div>`;shopDestAuto\(\)\}/);
   assert.match(app,/prefers-reduced-motion:reduce\)'\)\.matches\)return/);
@@ -226,7 +226,7 @@ test('Destacados de la semana avanza solo cada 5 segundos y se adapta al móvil'
 
 
 test('Las etiquetas de envío de los pedidos de la tienda están integradas',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   for(const h of ['h337','h338','h339','h340','h341','h342','h343'])assert.match(app,new RegExp('__H\\.'+h+'='));
   assert.match(app,/\$\{etqBarra\(\)\}\$\{TD\.peds\.length\?TD\.peds\.map/);
   assert.match(app,/envio:sanEnv\(d\.envio\)/);
@@ -235,7 +235,7 @@ test('Las etiquetas de envío de los pedidos de la tienda están integradas',()=
 });
 
 test('Las etiquetas generan el código de barras Code 128 correcto y el número de páginas esperado',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   const a=app.indexOf('/*ETQ-INI*/'),b=app.indexOf('/*ETQ-FIN*/');
   assert.ok(a>0&&b>a);
   class Doc{constructor(){this.paginas=1;this.fs=10}
@@ -253,7 +253,7 @@ test('Las etiquetas generan el código de barras Code 128 correcto y el número 
 });
 
 test('El directorio de transportistas trae las 13 empresas y se ofrece desde Configuración',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   const a=app.indexOf('/*FLE-INI*/'),b=app.indexOf('/*FLE-FIN*/');
   assert.ok(a>0&&b>a);
   const ctx={};vm.createContext(ctx);
@@ -278,7 +278,7 @@ test('El directorio de transportistas trae las 13 empresas y se ofrece desde Con
 });
 
 test('El cliente elige transportista al pedir y la etiqueta lo recibe con sus datos',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   assert.match(app,/\$\{shopFleHTML\(\)\}<textarea id="sh_nt"/);
   assert.match(app,/ed=shopEnvDatos\(fl\);p\.envio=sanEnv\(ed\)/);
   assert.match(app,/Envío por: /);
@@ -301,7 +301,7 @@ test('El cliente elige transportista al pedir y la etiqueta lo recibe con sus da
 });
 
 test('Al elegir transportista el cliente llena los datos de quien recibe y llegan a la etiqueta',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   for(const id of ['ev_n','ev_a','ev_tel','ev_ced','ev_prov','ev_ciu','ev_suc','ev_dir','ev_ref','ev_yo'])assert.match(app,new RegExp("id=\""+id+"\"|'"+id+"'"));
   assert.match(app,/<div id="sh_env">/);
   assert.match(app,/const er=shopEnvErr\(\)/);
@@ -326,7 +326,7 @@ test('Al elegir transportista el cliente llena los datos de quien recibe y llega
 });
 
 test('Ningún manejador __H se define dos veces (un duplicado pisaría al anterior)',()=>{
-  const app=fs.readFileSync(path.join(__dirname,'..','js','app.js'),'utf8');
+  const app=require('./helpers/app-fuentes').appTodo();
   const nombres=app.match(/__H\.[A-Za-z0-9_]+=/g)||[];
   const vistos=new Set(),dup=new Set();
   nombres.forEach(n=>{if(vistos.has(n))dup.add(n);vistos.add(n)});
