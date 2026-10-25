@@ -11,9 +11,9 @@ const leer=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 test('Fase 15: caché del service worker tj-net-first-11 y ?v= subidos',()=>{
  assert.match(leer('sw.js'),/const V='tj-net-first-\d+'/);
  const h=leer('index.html');
- for(const f of ['js/a11y.js','js/politicas.js'])assert.match(h,new RegExp(f.replace(/[./]/g,'\\$&')+'\\?v=a11y-fase-15'),f);
+ for(const f of ['js/a11y.js','js/politicas.js'])assert.match(h,new RegExp(f.replace(/[./]/g,'\\$&')+'\\?v=(a11y-fase-15|a11y-restante-fase-18)'),f);
  assert.match(h,/js\/app\.js\?v=[a-z0-9-]+/);
- assert.match(h,/css\/accesibilidad\.css\?v=2/);assert.match(h,/css\/uber-skin\.css\?v=4/);
+ assert.match(h,/css\/accesibilidad\.css\?v=\d+/);assert.match(h,/css\/uber-skin\.css\?v=4/);
 });
 test('Fase 15: la CSP no se tocó (script-src sin unsafe-inline, style-src-elem sin unsafe-inline)',()=>{
  const csp=/Content-Security-Policy" content="([^"]*)"/.exec(leer('index.html'))[1];

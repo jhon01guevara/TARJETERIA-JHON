@@ -15,7 +15,7 @@ const ruido=/Failed to load resource|favicon|catalogo_default|ERR_INTERNET_DISCO
  const br=await chromium.launch({channel:'chrome',headless:true});
  const res={base:BASE,vp:W+'x'+H,roles:{}};
  for(const rol of ROLES){
-  const ctx=await br.newContext({viewport:{width:W,height:H},serviceWorkers:process.env.SW==='allow'?'allow':'block',reducedMotion:'reduce'});
+  const ctx=await br.newContext({viewport:{width:W,height:H},serviceWorkers:process.env.SW==='allow'?'allow':'block',reducedMotion:'reduce',isMobile:W<600,hasTouch:W<600});
   const R={consola:{},csp:[],pageerrors:[],pantallas:{},cintillo:null};res.roles[rol]=R;
   const nota=(t,x)=>{if(ruido.test(x))return;const k=t+': '+x.slice(0,220);R.consola[k]=(R.consola[k]||0)+1};
   const hook=p=>{p.on('console',m=>{if(['error','warning'].includes(m.type())||/Content Security Policy|error ignorado/i.test(m.text()))nota(m.type(),m.text())});p.on('pageerror',e=>R.pageerrors.push(e.message.slice(0,200)))};
@@ -24,13 +24,13 @@ const ruido=/Failed to load resource|favicon|catalogo_default|ERR_INTERNET_DISCO
   const page=await ctx.newPage();
   await page.goto(BASE,{waitUntil:'load'});await page.waitForTimeout(2500);
   await page.fill('#au_e',rol);await page.fill('#au_p',PASS);await page.click('text=Entrar');
-  await page.waitForSelector('.ni',{timeout:30000});await page.waitForTimeout(3500);
+  await page.waitForSelector('.ni',{state:'attached',timeout:30000});await page.waitForTimeout(3500);
   R.cintillo=await page.evaluate(()=>{const b=document.getElementById('cint');return b?{oculto:b.hidden,tag:(document.getElementById('cintTag')||{}).textContent,n:document.querySelectorAll('#cintTr .ci').length,imgs:document.querySelectorAll('#cintTr .ci img').length,imgsOk:[...document.querySelectorAll('#cintTr .ci img')].filter(i=>i.naturalWidth>0).length,primero:((document.querySelector('#cintTr .ci strong')||{}).textContent)||''}:null});
   const slug=s=>s.replace(/[^a-z0-9]+/gi,'_');
   await page.screenshot({path:`${OUT}/${slug(rol.split('@')[0])}-login-inicio.png`});
   const keys=[...new Set(await page.$$eval('#nav .ni',els=>els.map(e=>e.dataset.k)))];
   for(const k of keys){
-   try{await page.click('#nav .ni[data-k="'+k+'"]',{timeout:5000});await page.waitForTimeout(2000);
+   try{await page.click((W<821?'#nav2':'#nav')+' .ni[data-k="'+k+'"]',{timeout:5000});await page.waitForTimeout(2000);
     if(k==='config'){try{await page.click('text=Expandir todo',{timeout:2000});await page.waitForTimeout(1000)}catch(e){}}
     const txt=await page.evaluate(()=>{const m=document.querySelector('main')||document.getElementById('app')||document.body;return (m.innerText||'').replace(/\d{1,2}[:\/.]\d{2}([:\/.]\d{2,4})?/g,'#').replace(/\s+/g,' ').trim()});
     R.pantallas[k]={chars:txt.length,hash:crypto.createHash('md5').update(txt).digest('hex').slice(0,10)};

@@ -23,3 +23,6 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | `recorrido.js` | Entra con admin y vendedor, abre todas las pantallas del menú y la tienda; guarda capturas y un `resultado.json` (consola, CSP, huellas de texto, barra de Inicio). `BASE=… OUT=/tmp/antes node recorrido.js` |
 | `comparar.py` | Compara dos carpetas de `recorrido.js` (antes/después): consola nueva, CSP, pantallas y diferencia de píxeles. `python3 comparar.py /tmp/antes /tmp/despues` |
 | `cintillo-fase17.js` | Barra «Modelos» de Inicio: 30 modelos con imagen, sin avisos, sin pedir `modelos.js`. |
+| `axe-completo.js` | Fase 18: axe-core con todas las reglas WCAG A/AA + mejores prácticas + `target-size` en panel (admin/vendedor) y tienda; `VP=390x844` para móvil real. |
+| `axe-detalle.js` | Como el anterior pero imprime pantalla y HTML de cada nodo de las reglas pedidas (`RULES=label,region`). |
+| `tamano-zonas.js` | Fase 18: lista los controles de menos de 24×24 px (WCAG 2.2 · 2.5.8) por pantalla y selector. `VP=390x844` por defecto. |
