@@ -21,7 +21,7 @@ Fecha: 2026-10-24 · Alcance: `firestore.rules`, CSP de `index.html`, `js/app.js
 | 3 | En el árbol por empresa, lecturas/escrituras con `logged()` sin pertenecer a esa empresa | **Alta/Media** | No (propuesta) |
 | 4 | Pedidos y registros públicos de la tienda: creación sin sesión, sin límite de tamaño en varios campos | Media | No (propuesta + App Check) |
 | 5 | Datos de vendedor renderizados al administrador sin escapar (n.º de factura, fecha, pago, cantidad, hora) | Media | **Sí** (`esc()`) |
-| 6 | CSP con `style-src 'unsafe-inline'` y `script-src` con CDNs amplios | Media/Baja | No (documentado) |
+| 6 | CSP con `style-src 'unsafe-inline'` y `script-src` con CDNs amplios | Media/Baja | **Sí, en parte (Fase 13, PR de la rama `csp-fase-13`)**: `script-src` por ruta exacta; `<style>` sin `unsafe-inline` (`style-src-elem`). Queda `style-src-attr 'unsafe-inline'` (≈1000 `style="…"` en plantillas JS) |
 | 7 | App Check: el código ya lo activa, pero falta confirmar proveedor/clave y modo «Enforce» | Media | No (acción manual) |
 | 8 | `window.open(…,'_blank')` sin `noopener,noreferrer` | Baja | **Sí** |
 | 9 | Workflow: acciones fijadas solo por etiqueta mayor (`@v4`) | Baja | No (propuesta con SHA verificado; ver §4.6) |
@@ -149,42 +149,92 @@ Google dueña del proyecto de Firebase/Google Cloud.
 
 ---
 
-## 2. Content-Security-Policy (`index.html:5`, vía `<meta>`)
+## 2. Content-Security-Policy (`index.html`, vía `<meta>`) — actualizada en la Fase 13
 
-| Directiva | Valor actual | Evaluación |
+### Valor final (Fase 13)
+
+```
+default-src 'self';
+script-src 'self' https://www.gstatic.com/firebasejs/10.12.2/ https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/ https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.2/ https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/ https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/ https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/ https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/ https://cdn.jsdelivr.net/npm/jspdf@4.2.1/ https://www.google.com/recaptcha/ https://www.gstatic.com/recaptcha/ https://www.recaptcha.net/recaptcha/;
+style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com;
+style-src-elem 'self' https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/ https://fonts.googleapis.com/css2 'sha256-Gu7H6yQeElEGEhtaJWUnU8wJfuZQiNi6YYLWWZK0PUM=' 'sha256-rnpydsDSHKnLmE/7pGFQ2D+2Wl3CndNa0hJCgaH8M+0=' 'sha256-UP0QZg7irvSMvOBz9mH2PIIE28+57UiavRfeVea0l3g=';
+style-src-attr 'unsafe-inline';
+font-src 'self' data: https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+img-src 'self' data: blob: https:;
+media-src 'self' data: blob: https:;
+connect-src 'self' data: blob: https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://*.firebaseapp.com https://api.emailjs.com https://www.google.com https://www.recaptcha.net https://www.gstatic.com;
+frame-src 'self' blob: data: https://*.firebaseapp.com https://www.google.com https://www.recaptcha.net https://recaptcha.google.com;
+worker-src 'self' blob:;
+object-src 'none';
+base-uri 'self';
+form-action 'self'
+```
+
+| Directiva | Valor (Fase 13) | Evaluación |
 |---|---|---|
 | `default-src` | `'self'` | Bien |
-| `script-src` | `'self'` + gstatic, cdnjs, jsdelivr, google.com, recaptcha.net, apis.google.com | **Sin `unsafe-inline` ni `unsafe-eval`: bien.** CDNs enteros permitidos: ver abajo |
-| `style-src` | `'self' 'unsafe-inline'` + cdnjs, fonts.googleapis | `unsafe-inline` necesario hoy |
-| `connect-src` | self, data:, blob:, `*.googleapis.com`, `*.firebaseio.com`, wss, `*.firebaseapp.com`, emailjs, google/recaptcha, gstatic | Razonable |
-| `img-src` | `'self' data: blob: https:` | Permisivo (cualquier imagen https). Necesario para fotos del catálogo |
+| `script-src` | `'self'` + **rutas exactas** de cada biblioteca: `gstatic.com/firebasejs/10.12.2/`, cdnjs (`Chart.js/4.4.1/`, `jszip/3.10.2/`, `leaflet/1.9.4/`, `pdf.js/3.11.174/`, `html2canvas/1.4.1/`), jsdelivr (`npm/jspdf@4.2.1/`, `npm/@emailjs/browser@4.4.1/`), `google.com/recaptcha/`, `gstatic.com/recaptcha/`, `recaptcha.net/recaptcha/` | **Sin `unsafe-inline` ni `unsafe-eval`, y ya no se permiten dominios enteros.** Se quitó `apis.google.com` (el panel solo usa correo+contraseña; no hay login con Google/teléfono) |
+| `style-src-elem` | `'self'`, `cdnjs…/leaflet/1.9.4/`, `fonts.googleapis.com/css2` y **2 hashes SHA-256** | **Sin `unsafe-inline`.** Aplica a `<style>` y `<link rel=stylesheet>` |
+| `style-src-attr` | `'unsafe-inline'` | Necesario: ≈1000 `style="…"` dentro de plantillas JS (ver más abajo) |
+| `style-src` | `'self' 'unsafe-inline'` + cdnjs, fonts.googleapis | **Solo respaldo** para navegadores viejos que no conocen `style-src-elem/-attr` (los modernos —Chrome 75+, Firefox 105+, Safari 15.4+— lo ignoran) |
+| `connect-src` | self, data:, blob:, `*.googleapis.com`, `*.firebaseio.com`, wss, `*.firebaseapp.com`, emailjs, google/recaptcha, gstatic | Razonable (sin cambios) |
+| `img-src` | `'self' data: blob: https:` | Permisivo (cualquier imagen https). Necesario para fotos del catálogo (sin cambios) |
 | `object-src`, `base-uri`, `form-action` | `'none'`, `'self'`, `'self'` | Bien |
-| `frame-ancestors` | — | No se puede definir con `<meta>`; GitHub Pages no permite cabeceras (clickjacking no mitigable aquí) |
+| `frame-ancestors` | — | No se puede definir con `<meta>`; GitHub Pages no permite cabeceras (clickjacking no mitigable aquí; hay defensa con `js/inicio.js`) |
 
-### ¿Se puede quitar `style-src 'unsafe-inline'`? **No, sin romper la interfaz.**
+### Qué se hizo en la Fase 13 (estilos)
 
-Evidencia (conteos en el commit de este PR):
+* Los **5 bloques `<style>`** de `index.html` (`_akOff`, el principal, `#promoCss`, `#shopStyle`, `#kwaGlow`): 4 pasaron
+  **tal cual y en el mismo orden** a `css/panel.css`, enlazado antes de `uber-skin.css` y `accesibilidad.css`, así la cascada no cambia. El quinto, `#_akOff`
+  (`html{display:none!important}`, antichequeo de iframe/clickjacking), **se queda en línea** porque tiene que actuar antes de
+  cargar nada; se autoriza con su **hash SHA-256**. (`js/inicio.js` lo quita con `getElementById('_akOff')`, igual que antes.)
+* `js/app.js` **inyectaba 3 `<style>`** con `createElement('style')` (`#redCss`, `#destCss`, `#mcCss`) → ahora son
+  `css/inyectados.css`, enlazado al final del `<head>` (misma posición que tenían al añadirse al final).
+* `apps/modelos.html` y `apps/investigacion.html` se cargan en un **`<iframe srcdoc>`, que HEREDA la CSP del panel** (la
+  frase antigua «las apps no tienen CSP» no era cierta al abrirse desde el panel). Sus `<style>` pasaron a
+  `apps/modelos.css` y `apps/investigacion.css`, y el estilo «cristal» del módulo Check (`CHK_SKIN`, inyectado con `<style>`)
+  a `css/chkskin.css`. Se enlazan como `apps/…css` (ruta desde la raíz, porque el `srcdoc` resuelve rutas contra el panel).
+* **Ventanas `about:blank` abiertas con `window.open('')` también heredan la CSP.** Hay una que escribe un `<style>` fijo
+  (constancia legal, `js/politicas.js`): se autoriza con su hash. `shopPdfPrint` usa solo `style=""` (atributo, permitido).
+* **html2canvas 1.4.1** inyecta un `<style>` fijo en el iframe con que clona la página para capturarla (lo usan el PDF de
+  facturas, reportes y catálogos): se autoriza con su hash. Si se cambia de versión de la biblioteca hay que recalcularlo.
+* `chkLock()` (código sin usar) creaba un `<style>`; ahora usa CSSOM (`style.setProperty`), equivalente y permitido.
+* `tests/csp-fase13.test.js` vigila todo esto (hashes, rutas permitidas, que nadie vuelva a crear `<style>`).
+
+### ¿Se puede quitar también `style-src-attr 'unsafe-inline'`? **No, sin romper la interfaz.**
 
 * `style="` escritos dentro de plantillas JS: **854** en `js/app.js`, 67 en `js/marketing.js`, 23 en `js/empresas.js`,
-  33 en `apps/investigacion.js` (+20 en su HTML), más los de `index.html`.
-* **5** bloques `<style>` en `index.html` (habría que migrarlos a archivos `.css` o usar hashes).
-* `style.cssText` (10 usos) y unas 100 asignaciones `.style.x=` en `app.js` (estas se hacen por CSSOM y no las bloquea
-  la CSP; los atributos `style="…"` insertados con `innerHTML` sí).
+  33 en `apps/investigacion.js` (+20 en su HTML), más 3 en `index.html`.
+* Los `style.cssText` / `.style.x=` (CSSOM) no los bloquea la CSP; los atributos `style="…"` insertados con `innerHTML`/HTML sí.
+* Riesgo residual: un atacante que lograra inyectar HTML podría usar `style="…"` (p. ej. superponer elementos); no puede
+  ejecutar scripts. Camino a largo plazo: pasar esos estilos a clases CSS y entonces retirar `'unsafe-inline'` de `style-src-attr`.
+* Los 3 `style="` de `index.html` no se movieron: no aportan nada mientras `style-src-attr` siga permitiéndolos.
 
-Quitarlo bloquearía cientos de estilos incrustados en el HTML generado: el panel quedaría desfigurado. **No se modificó la
-CSP.** Camino a largo plazo: mover los estilos a clases CSS, abandonar `style="…"` en plantillas y solo entonces retirar
-`'unsafe-inline'`.
+### CDNs en `script-src` (Media/Baja → mitigado)
 
-### CDNs completos en `script-src` (Media/Baja)
+Antes se permitían **dominios enteros** (`cdnjs.cloudflare.com`, `cdn.jsdelivr.net`, `www.gstatic.com`, `www.google.com`,
+`www.recaptcha.net`, `apis.google.com`). Ahora solo las rutas de la tabla (en CSP una ruta que termina en `/` vale por
+prefijo; se comprobó con `curl -I` que ninguna URL de `index.html`/`apps/` redirige a otra ruta). Además todos los scripts
+de CDN tienen **SRI** (ver §7).
 
-`cdnjs.cloudflare.com`, `cdn.jsdelivr.net`, `www.google.com`, `apis.google.com` se permiten **enteros**; es un patrón
-conocido para saltarse la CSP si hubiera una inyección HTML (hay bibliotecas/endpoints en esos hosts aprovechables). Todos
-los scripts de `index.html` tienen **SRI** (ver §7). Mejora segura pero a probar con calma: restringir por ruta, por ejemplo
-`https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/`, `…/jszip/3.10.2/`, `…/leaflet/1.9.4/`, `…/pdf.js/3.11.174/`,
-`…/html2canvas/1.4.1/`, `https://cdn.jsdelivr.net/npm/jspdf@4.2.1/`, `https://cdn.jsdelivr.net/npm/@emailjs/browser@4.4.1/`.
-No se hizo: pdf.js carga un *worker* y otros recursos que habría que comprobar en un navegador real.
+Lo que se comprobó en un Chrome real (ver `docs/GUIA-PRUEBAS-CSP.md`): carga de todas las bibliotecas, reCAPTCHA Enterprise
+(`www.google.com/recaptcha/enterprise.js` + `www.gstatic.com/recaptcha/releases/…` + iframe `…/recaptcha/enterprise/anchor`),
+pdf.js con su worker local (`js/pdf.worker.min.js`, `'self'`), Firebase Auth/Firestore, jsPDF + html2canvas generando PDF,
+Leaflet, Chart.js, y los iframes de Check e Investigación: **0 violaciones nuevas**.
 
-Las páginas `apps/modelos.html` y `apps/investigacion.html` **no tienen CSP**.
+**No verificado (no hay navegador real con los datos/permisos para ello):** envío real de EmailJS (la copia de prueba lo
+tiene desactivado; EmailJS usa `connect-src`, que no cambió); el token real de App Check con la clave de producción (la clave
+solo vale en `jhon01guevara.github.io`); Safari/Firefox/iOS (solo se probó Chrome 156); ni una descarga real del catálogo ZIP
+(`catalogo_default.zip` no está en la copia de prueba).
+
+### Problema previo que se encontró (no causado por la Fase 13)
+
+En la consola aparece «Executing inline event handler violates the following Content Security Policy directive» (una vez al
+abrir ciertas pantallas). Viene de `onclick="shopBrandSave()"`, `onchange="shopLogoUpload(event)"`, etc. escritos a mano en
+`js/app.js` (≈ líneas 2829–2933, ajustes de la tienda): esos botones llevan **además** `data-h-click`, que es lo que sí funciona,
+así que solo es ruido de consola (el `onclick` sobrante se puede borrar). **Sí está realmente bloqueado** el
+`onclick="window.print()"` del botón «Imprimir» de la constancia legal (`js/politicas.js`): ahí se imprime con Ctrl+P.
+Pasa igual en `main` (comprobado con el mismo recorrido). Queda en la lista de pendientes.
 
 ---
 
@@ -303,7 +353,7 @@ Todos los `<script>` y la hoja de Leaflet de `index.html` y de `apps/modelos.htm
 2. `js/app.js`: `window.open(…,'noopener,noreferrer')` en 13 llamadas externas (§4.7).
 3. Documentación: este archivo y `PROPUESTA-SEGURIDAD-REGLAS.md`.
 
-**No se tocó:** `.github/workflows/` (solo propuesta, §4.6), `firestore.rules`, la CSP, `index.html`, `sw.js`, `package.json`, `migraciones/`, la lógica de ninguna regla ni el UID.
+**No se tocó (en ese PR de la fase de auditoría):** `.github/workflows/` (solo propuesta, §4.6), `firestore.rules`, la CSP, `index.html`, `sw.js`, `package.json`, `migraciones/`, la lógica de ninguna regla ni el UID.
 
 ---
 

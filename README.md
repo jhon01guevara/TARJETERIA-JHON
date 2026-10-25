@@ -28,7 +28,7 @@ Según el código y la documentación de `docs/`:
 ├── sw.js                      # Service worker
 ├── firestore.rules            # Reglas de seguridad de Firestore
 ├── estilo-tienda-shop.css     # Estilos de la tienda
-├── css/                       # Estilos adicionales (uber-skin.css)
+├── css/                       # Estilos: panel.css, inyectados.css, chkskin.css (Fase 13), uber-skin.css, accesibilidad.css
 ├── js/                        # Lógica del panel (app.js, utils.js, sanear.js, redes.js, politicas.js, facturacion.js, empresas.js, marketing.js, ...)
 ├── apps/                      # Apps auxiliares (modelos, investigacion)
 ├── migraciones/               # Herramientas de migración multiempresa
@@ -89,6 +89,7 @@ Antes de unir cambios, confirma que GitHub Actions termina en verde.
 | `docs/ESQUEMA-MULTIEMPRESA.md` | Esquema multiempresa y estado de fases |
 | `docs/FASE6-MIGRACION-PRUEBAS.md` | Migración de prueba en un proyecto Firebase aparte |
 | `docs/MARKETING-STUDIO.md` | Módulo de marketing |
+| `docs/GUIA-PRUEBAS-CSP.md` | Guía para probar la política de seguridad de contenido (CSP) en el navegador |
 | `docs/PERSONALIZACION.md` | Opciones de personalización por empresa |
 | `migracion-panel-roles.md` | Separación de datos por rol y orden seguro de publicación |
 

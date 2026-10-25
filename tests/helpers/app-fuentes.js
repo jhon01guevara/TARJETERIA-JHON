@@ -4,6 +4,8 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const EXTRAIDOS=['js/utils.js','js/sanear.js','js/redes.js','js/politicas.js'];
+/* Fase 13: estilos que antes inyectaba app.js con createElement('style') y ahora viven en css/inyectados.css. */
+const ESTILOS=['css/inyectados.css'];
 const leer=f=>fs.readFileSync(path.join(__dirname,'..','..',f),'utf8');
-const appTodo=()=>[...EXTRAIDOS,'js/app.js'].map(leer).join('\n');
-module.exports={EXTRAIDOS,appTodo,leer};
+const appTodo=()=>[...EXTRAIDOS,...ESTILOS,'js/app.js'].map(leer).join('\n');
+module.exports={EXTRAIDOS,ESTILOS,appTodo,leer};
