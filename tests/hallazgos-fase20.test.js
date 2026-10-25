@@ -85,6 +85,6 @@ test('el botón de WhatsApp vive dentro de un landmark complementary con nombre,
 });
 test('caché del service worker tj-net-first-17, ?v= de app.js y de accesibilidad.css subidos, y guía publicada',()=>{
  assert.match(sw,/const V='tj-net-first-(1[7-9]|[2-9]\d)'/);
- assert.match(html,/js\/app\.js\?v=(hallazgos-fase-20|modulos-fase-2[13][a-z]|hallazgos-fase-20-kwrap)/);assert.match(html,/css\/accesibilidad\.css\?v=[4-9]/);
+ assert.match(html,/js\/app\.js\?v=(hallazgos-fase-20|modulos-fase-2[1-9][a-z]|hallazgos-fase-20-kwrap)/);assert.match(html,/css\/accesibilidad\.css\?v=[4-9]/);
  assert.ok(leer('docs/GUIA-PRUEBAS-FASE-20.md').length>800);
 });

@@ -163,8 +163,12 @@ async function correr(br,base,[W,H]){
  /* «Volver al pedido» regresa a la hoja del pedido con el carrito intacto */
  await page.click('#shopm button:has-text("Volver al pedido")');await page.waitForTimeout(400);
  chk('«Volver al pedido» regresa a «Su pedido» con el carrito intacto',(await hoja()).k==='cart'&&(await cont()).n===19);
- const notaVuelta=await page.$eval('#sh_nt',e=>e.value);
- console.log('  nota    tras «Volver al pedido» la nota del pedido '+(notaVuelta?'se conserva':'queda VACÍA (hallazgo: se pierde lo escrito)'));
+ const notaVuelta=await page.$eval('#sh_nt',e=>e.value),poliVuelta=await page.$eval('#sh_chk_poli',e=>e.checked);
+ chk('Fase 24 · «Volver al pedido» CONSERVA la nota que el cliente escribió',notaVuelta==='Nota de prueba: entregar por la tarde',JSON.stringify(notaVuelta));
+ chk('Fase 24 · «Volver al pedido» conserva la aceptación de políticas que ya dio en el pedido',poliVuelta===true);
+ /* una nota que el cliente borra no resucita: se vacía, se va al registro, se vuelve y sigue vacía; luego se escribe de nuevo */
+ await page.fill('#sh_nt','');await page.click('#sh_sb');await page.waitForSelector('#sh_n',{timeout:5000});await page.click('#shopm button:has-text("Volver al pedido")');await page.waitForTimeout(400);
+ chk('Fase 24 · una nota vacía sigue vacía al volver del registro',await page.$eval('#sh_nt',e=>e.value)==='');
  await page.fill('#sh_nt','Nota de prueba: entregar por la tarde');
 
  /* ---------- PARTE C: flujo completo con escrituras capturadas por un doble ---------- */
@@ -175,11 +179,10 @@ async function correr(br,base,[W,H]){
  await page.waitForFunction(()=>window.__escr.some(e=>e.col==='tienda_leads')&&document.querySelector('#shopm').dataset.k==='cart',null,{timeout:15000}).catch(()=>{});
  await page.waitForTimeout(600);
  const trasReg=await page.evaluate(()=>({k:document.querySelector('#shopm').dataset.k,poli:document.querySelector('#sh_chk_poli')&&document.querySelector('#sh_chk_poli').checked,msg:(document.querySelector('#sh_m2')||{}).textContent,leads:window.__escr.filter(e=>e.col==='tienda_leads').length,peds:window.__escr.filter(e=>e.col==='tienda_pedidos').length}));
- chk('tras registrarse se guarda el cliente (1 registro) y se vuelve a «Su pedido»',trasReg.k==='cart'&&trasReg.leads===1,JSON.stringify(trasReg));
- /* HALLAZGO (no es una falla de esta prueba): al volver a «Su pedido» la casilla de políticas está sin marcar aunque ya se aceptó en el registro, así que el primer envío automático se detiene con el aviso «Debe marcar la casilla…». El cliente debe marcarla otra vez. */
- console.log('  nota    tras el registro la casilla de políticas del pedido vuelve a estar '+(trasReg.poli?'marcada':'SIN marcar (hallazgo: se pide aceptar dos veces)')+'  ['+(trasReg.msg||'sin aviso')+']');
- chk('el envío automático posterior al registro no escribe un pedido sin la casilla marcada',trasReg.poli?trasReg.peds===1:trasReg.peds===0,'pedidos escritos: '+trasReg.peds);
- if(!trasReg.poli){await page.check('#sh_chk_poli');await page.click('#sh_sb')}
+ chk('Fase 24 · tras registrarse se guarda el cliente (1 registro) y el pedido sale directo («¡Pedido enviado!») sin pasar otra vez por la casilla',trasReg.k==='ok'&&trasReg.leads===1&&trasReg.peds===1,JSON.stringify(trasReg));
+ /* Fase 24: la aceptación dada en el pedido/registro se conserva: tras registrarse la casilla queda marcada y el envío automático sigue sin pedir aceptar otra vez */
+ await page.waitForFunction(()=>window.__escr.some(e=>e.col==='tienda_pedidos'),null,{timeout:15000}).catch(()=>{});
+ chk('Fase 24 · tras el registro NO se vuelve a pedir aceptar las políticas: el pedido se envía solo, con la aceptación registrada',trasReg.peds===1||await page.evaluate(()=>window.__escr.filter(e=>e.col==='tienda_pedidos').length)===1,JSON.stringify(trasReg));
  await page.waitForFunction(()=>window.__escr.some(e=>e.col==='tienda_pedidos'),null,{timeout:15000}).catch(()=>{});
  await page.waitForTimeout(800);
  const fin=await page.evaluate(()=>({escr:window.__escr,k:document.querySelector('#shopm').dataset.k,txt:document.querySelector('#shopm').innerText,cart:Object.keys(SH.cart).length,ls:localStorage.getItem(lsk('tj_shop_cart')),cli:JSON.parse(localStorage.getItem(lsk('tj_shop_cli'))||'null'),ords:shopOrdLoad().length,fab:(document.querySelector('.kfab')||{}).textContent||''}));
@@ -190,7 +193,7 @@ async function correr(br,base,[W,H]){
   chk('pedido: total = suma de cantidad × precio ('+esperado.toFixed(2)+')',cerca(d.total,esperado),String(d.total));
   chk('pedido: 2 líneas con id, nombre, precio y cantidad correctos',d.items.length===2&&d.items.every(i=>esp[i.id]===i.q&&typeof i.n==='string'&&i.n.length>0&&i.p>0),JSON.stringify(d.items.map(i=>[i.id,i.q,i.p])));
   chk('pedido: estado «nuevo», datos del cliente y vínculo con el registro',d.estado==='nuevo'&&d.cid===lead.d.id&&d.lead.name==='Cliente de Prueba'&&d.lead.email==='prueba@example.com');
-  chk('pedido: la nota conserva lo escrito y añade la constancia de aceptación de la Ley 81',/^Nota de prueba: entregar por la tarde · \[🛡️ Aceptó Términos y Privacidad Ley 81: /.test(d.nota),d.nota);
+  chk('pedido: la nota conserva lo escrito (incluso tras pasar por el registro) y añade la constancia de aceptación de la Ley 81',/^Nota de prueba: entregar por la tarde · \[🛡️ Aceptó Términos y Privacidad Ley 81: /.test(d.nota),d.nota);
   chk('pedido: auditoría de términos (ok, versión, fecha ISO)',d.lead.terminos&&d.lead.terminos.ok===true&&/Ley 81/.test(d.lead.terminos.ver)&&!isNaN(Date.parse(d.lead.terminos.fecha)));
   chk('pedido: sin campos extraños (solo los que admiten las reglas)',Object.keys(d).every(k=>['id','cid','lead','items','total','nota','ref','ts','estado','envio'].includes(k)),Object.keys(d).join(','));
  }

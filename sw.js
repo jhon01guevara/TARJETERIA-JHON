@@ -1,6 +1,6 @@
 // Service worker de Tarjetería Jhon: siempre busca la versión más nueva en internet
 // y usa la copia guardada solo si no hay conexión.
-const V='tj-net-first-20';
+const V='tj-net-first-21';
 // Fase 16: apps/modelos.js (1,6 MB; 1,17 MB comprimido) ya NO se descarga al instalar. Se guarda al primer uso (el handler de fetch lo cachea)
 // o, sin esperar a que se use, cuando la página lo pide en un momento libre (mensaje 'precalentar-modelos'). Debe coincidir con el ?v= de apps/modelos.html.
 const MODELOS='apps/modelos.js?v=rendimiento-fase-16';
