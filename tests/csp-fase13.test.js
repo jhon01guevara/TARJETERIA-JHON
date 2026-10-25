@@ -92,8 +92,8 @@ test('los estilos movidos existen y se cargan en el mismo orden de cascada',()=>
  for(const id of ['redCss','destCss','mcCss'])assert.ok(leer('css/inyectados.css').includes('#'+id),id);
 });
 
-test('sw.js: caché tj-net-first-9 y precache de los css nuevos',()=>{
+test('sw.js: caché tj-net-first-10 y precache de los css nuevos',()=>{
  const sw=leer('sw.js');
- assert.match(sw,/const V='tj-net-first-9'/);
+ assert.match(sw,/const V='tj-net-first-10'/);
  for(const f of ['css/panel.css','css/inyectados.css','css/chkskin.css','apps/modelos.css','apps/investigacion.css'])assert.ok(sw.includes("'"+f+"'"),f);
 });
