@@ -14,8 +14,8 @@ Panel de prueba: https://tarjeteria-jhon-prueba.web.app/ (usuarios en `GUIA-PRUE
 
 ## Pasos (10 minutos)
 1. **Administrador:** entra y recorre todo el menú. Todo igual que antes.
-2. **Etiquetas de envío:** Pedidos → elige un pedido de la tienda → «Etiqueta de envío» → prueba 100×150 mm y «Hoja A4 con 4 etiquetas». El PDF se abre con remitente, destinatario, código de barras y logo de la agencia.
-3. **Transportistas:** Configuración → Transportistas: salen las 13 empresas; busca una por nombre; al pedir en la tienda el cliente puede escoger una y sus datos llegan a la etiqueta.
+2. **Etiquetas de envío:** En los pedidos de la tienda, abre un pedido y pulsa el botón 🏷️ de etiqueta («Etiqueta de envío · Pedido …») → prueba 100×150 mm y «Hoja A4 con 4 etiquetas». El PDF se abre con remitente, destinatario, código de barras y logo de la agencia.
+3. **Transportistas:** Configuración → «Transportistas de carga»: salen las 13 empresas; busca una por nombre; al pedir en la tienda el cliente puede escoger una y sus datos llegan a la etiqueta.
 4. **Tienda pública** (`?tienda=1`): el carrusel de promociones se ve y avanza; los banners llevan a su categoría.
 5. **Perfil:** Mi perfil → sube un GIF animado pesado: se comprime y se guarda (si el navegador no soporta `ImageDecoder`, se usa la foto tal cual, como antes).
 6. **Vendedor:** entra y recorre sus pantallas (Inicio, Facturas, Clientes, Agenda…). Igual que antes.
