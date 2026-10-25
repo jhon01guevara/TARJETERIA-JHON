@@ -30,3 +30,8 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | `banners-fase22.js` | Fase 22: banners WebP/JPG en la tienda (escritorio y móvil, sin soporte WebP, red lenta, los 14 banners) | `BASE=… OUT=/tmp/b22 node banners-fase22.js` |
 | `funcional-fase21.js` | Fase 21: ejecuta en la página, con una base de datos de ejemplo solo en memoria, las funciones movidas a `mapa-clientes.js`, `fondo-login.js`, `dashboard-vendedor.js` y `plantillas-factura.js` e imprime huellas; deben ser idénticas entre `main` y la rama **servidos desde el mismo origen** (el enlace de la tienda lleva el puerto). `ROL=vendedor.prueba@example.com` para el vendedor. | `BASE=… node funcional-fase21.js` |
 | `verificar-movimiento-literal.js` | Fase 21: comprueba (sin navegador) que los 4 archivos nuevos son un movimiento literal desde `js/app.js` de `origin/main` (contiguo, una vez, `app.js` nuevo = `main` menos los bloques). | `node tests/navegador/verificar-movimiento-literal.js [rama-base]` |
+
+## Fase 20
+| Script | Qué hace |
+|---|---|
+| `hallazgos-fase20.js` | Tienda pública: la copia local `tj_cached_items` ya no supera la cuota, no avisa en consola, se guarda dentro de un presupuesto, pinta sin Firestore y se limpia sola bajo presión de memoria (incluye un fallo de `setItem` simulado). Puntos del carrusel ≥24×24, `#k_wa` dentro de un landmark (axe `region`), y la barra «Modelos» del vendedor (sin permiso a Check/Catálogo el toque no hace nada; con el permiso, navega). `BASE=… [VP=390x844] node hallazgos-fase20.js` |
