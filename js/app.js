@@ -2837,7 +2837,7 @@ function xmasCard(){
      <h3 style="margin:0">🏷️ Logo, Portada, Foto/Video de Movimiento y Colores</h3>
      <p style="font-size:12.5px;color:var(--gris);margin:4px 0 0">Personalice el logo, foto de portada, video de movimiento en bucle, colores de fondo animados, palabra gigante (watermark), títulos y efectos de animación.</p>
    </div>
-   <button type="button" class="btn p s" onclick="shopBrandSave()" data-h-click="call" data-a-click="${_ha('shopBrandSave')}" style="box-shadow:0 3px 12px rgba(84,51,235,.35)">💾 Guardar cambios de portada</button>
+   <button type="button" class="btn p s" data-h-click="call" data-a-click="${_ha('shopBrandSave')}" style="box-shadow:0 3px 12px rgba(84,51,235,.35)">💾 Guardar cambios de portada</button>
  </div>
 
  <div class="g" style="margin-top:14px">
@@ -2847,9 +2847,9 @@ function xmasCard(){
       <input id="sh_cfg_logo" value="${esc(TD.logoUrl||'')}" placeholder="https://... o elija un archivo" style="flex:1;min-width:220px">
       <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
         📁 Subir logo
-        <input type="file" id="sh_cfg_logo_file" accept="image/*" style="display:none" onchange="shopLogoUpload(event)" data-h-change="call" data-a-change="${_ha('shopLogoUpload')}">
+        <input type="file" id="sh_cfg_logo_file" accept="image/*" style="display:none" data-h-change="call" data-a-change="${_ha('shopLogoUpload')}">
       </label>
-      <button type="button" class="btn s d" onclick="shopLogoClear()" data-h-click="call" data-a-click="${_ha('shopLogoClear')}" title="Quitar logo">Quitar</button>
+      <button type="button" class="btn s d" data-h-click="call" data-a-click="${_ha('shopLogoClear')}" title="Quitar logo">Quitar</button>
     </div>
     <div id="sh_cfg_logo_prev" style="margin-top:8px;${TD.logoUrl?'':'display:none'}">
       <img src="${esc(TD.logoUrl||'')}" alt="Vista previa logo" style="max-height:48px;border-radius:10px;background:#fff;padding:4px 10px;border:1px solid var(--linea)">
@@ -2859,7 +2859,7 @@ function xmasCard(){
   <div style="grid-column:1/-1">
     <label>Fondo de la portada: ¿Qué desea colocar?</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_bgtype_btns">
-      ${[['none','⚪ Normal (Limpio)'],['photo','📷 Foto / Banner de fondo'],['video','🎥 Video de movimiento (Bucle)'],['colors','🌈 Colores / Gradiente dinámico'],['solid','🎨 Color sólido']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgType===k?'p':''}" data-bgtype="${k}" onclick="shopCfgBgTypeSet('${k}')" data-h-click="call" data-a-click="${_ha('shopCfgBgTypeSet',k)}">${lbl}</button>`).join('')}
+      ${[['none','⚪ Normal (Limpio)'],['photo','📷 Foto / Banner de fondo'],['video','🎥 Video de movimiento (Bucle)'],['colors','🌈 Colores / Gradiente dinámico'],['solid','🎨 Color sólido']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgType===k?'p':''}" data-bgtype="${k}" data-h-click="call" data-a-click="${_ha('shopCfgBgTypeSet',k)}">${lbl}</button>`).join('')}
     </div>
   </div>
 
@@ -2869,9 +2869,9 @@ function xmasCard(){
       <input id="sh_cfg_hero_photo" value="${esc(TD.heroPhotoUrl||'')}" placeholder="https://... o suba una foto panorámica" style="flex:1;min-width:220px">
       <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
         📁 Subir foto
-        <input type="file" id="sh_cfg_photo_file" accept="image/*" style="display:none" onchange="shopPhotoUpload(event)" data-h-change="call" data-a-change="${_ha('shopPhotoUpload')}">
+        <input type="file" id="sh_cfg_photo_file" accept="image/*" style="display:none" data-h-change="call" data-a-change="${_ha('shopPhotoUpload')}">
       </label>
-      <button type="button" class="btn s d" onclick="shopPhotoClear()" data-h-click="call" data-a-click="${_ha('shopPhotoClear')}">Quitar foto</button>
+      <button type="button" class="btn s d" data-h-click="call" data-a-click="${_ha('shopPhotoClear')}">Quitar foto</button>
     </div>
     <div id="sh_cfg_photo_prev" style="margin-top:8px;${TD.heroPhotoUrl?'':'display:none'}">
       <img src="${esc(TD.heroPhotoUrl||'')}" alt="Vista previa foto" style="max-height:90px;border-radius:12px;border:1px solid var(--linea)">
@@ -2884,22 +2884,22 @@ function xmasCard(){
       <input id="sh_cfg_hero_video" value="${esc(TD.heroVideoUrl||'')}" placeholder="https://.../video.mp4 o elija archivo" style="flex:1;min-width:220px">
       <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">
         📁 Subir video
-        <input type="file" id="sh_cfg_video_file" accept="video/mp4,video/webm" style="display:none" onchange="shopVideoUpload(event)" data-h-change="call" data-a-change="${_ha('shopVideoUpload')}">
+        <input type="file" id="sh_cfg_video_file" accept="video/mp4,video/webm" style="display:none" data-h-change="call" data-a-change="${_ha('shopVideoUpload')}">
       </label>
-      <button type="button" class="btn s d" onclick="shopVideoClear()" data-h-click="call" data-a-click="${_ha('shopVideoClear')}">Quitar video</button>
+      <button type="button" class="btn s d" data-h-click="call" data-a-click="${_ha('shopVideoClear')}">Quitar video</button>
     </div>
     <small style="display:block;color:var(--gris);margin-top:4px">💡 Presets de video en movimiento:</small>
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-      <button type="button" class="btn s" onclick="shopPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-abstract-purple-lights-and-smoke-40228-large.mp4')" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-purple-lights-and-smoke-40228-large.mp4')}">💜 Humo & Luces Neón</button>
-      <button type="button" class="btn s" onclick="shopPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-golden-dust-particles-in-slow-motion-41846-large.mp4')" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-golden-dust-particles-in-slow-motion-41846-large.mp4')}">✨ Polvo Dorado Flotante</button>
-      <button type="button" class="btn s" onclick="shopPresetVideo('https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-curves-of-light-32085-large.mp4')" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-curves-of-light-32085-large.mp4')}">🌊 Ondas de Luz Cyan</button>
+      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-purple-lights-and-smoke-40228-large.mp4')}">💜 Humo & Luces Neón</button>
+      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-golden-dust-particles-in-slow-motion-41846-large.mp4')}">✨ Polvo Dorado Flotante</button>
+      <button type="button" class="btn s" data-h-click="call" data-a-click="${_ha('shopPresetVideo','https://assets.mixkit.co/videos/preview/mixkit-abstract-flowing-curves-of-light-32085-large.mp4')}">🌊 Ondas de Luz Cyan</button>
     </div>
   </div>
 
   <div id="sh_cfg_sec_colors" style="grid-column:1/-1;${curBgType==='colors'?'':'display:none'}">
     <label>Gradiente de movimiento / Paleta de color de fondo</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_color_btns">
-      ${[['hero-bg-aurora','🌌 Aurora Boreal'],['hero-bg-sunset','🌅 Atardecer Dorado'],['hero-bg-cosmic','🪐 Nebulosa Cósmica'],['hero-bg-cyber','⚡ Cyber Neón'],['hero-bg-ocean','🌊 Océano Cyan'],['hero-bg-pastel','🌸 Pastel Glamour']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgColor===k?'p':''}" data-color="${k}" onclick="shopCfgColorSet('${k}')" data-h-click="call" data-a-click="${_ha('shopCfgColorSet',k)}">${lbl}</button>`).join('')}
+      ${[['hero-bg-aurora','🌌 Aurora Boreal'],['hero-bg-sunset','🌅 Atardecer Dorado'],['hero-bg-cosmic','🪐 Nebulosa Cósmica'],['hero-bg-cyber','⚡ Cyber Neón'],['hero-bg-ocean','🌊 Océano Cyan'],['hero-bg-pastel','🌸 Pastel Glamour']].map(([k,lbl])=>`<button type="button" class="btn s ${curBgColor===k?'p':''}" data-color="${k}" data-h-click="call" data-a-click="${_ha('shopCfgColorSet',k)}">${lbl}</button>`).join('')}
     </div>
   </div>
 
@@ -2918,14 +2918,14 @@ function xmasCard(){
   <div style="grid-column:1/-1">
     <label>Animación Graphic Motion de las tarjetas de portada</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_motion_btns">
-      ${[['float','✨ Constelación 3D (Flotante)'],['shimmer','💫 Brillo Cósmico (Shimmer)'],['waves','🌊 Ondas Cinéticas'],['neon','⚡ Pulso Neón Cyber'],['clean','💎 Minimal Suave']].map(([k,lbl])=>`<button type="button" class="btn s ${(TD._curMotion||TD.motionStyle||'float')===k?'p':''}" data-motion="${k}" onclick="shopCfgMotionSet('${k}')" data-h-click="call" data-a-click="${_ha('shopCfgMotionSet',k)}">${lbl}</button>`).join('')}
+      ${[['float','✨ Constelación 3D (Flotante)'],['shimmer','💫 Brillo Cósmico (Shimmer)'],['waves','🌊 Ondas Cinéticas'],['neon','⚡ Pulso Neón Cyber'],['clean','💎 Minimal Suave']].map(([k,lbl])=>`<button type="button" class="btn s ${(TD._curMotion||TD.motionStyle||'float')===k?'p':''}" data-motion="${k}" data-h-click="call" data-a-click="${_ha('shopCfgMotionSet',k)}">${lbl}</button>`).join('')}
     </div>
   </div>
 
   <div style="grid-column:1/-1">
     <label>Color y Contraste del Watermark (Combinaciones de alto impacto)</label>
     <div style="display:flex;gap:8px;flex-wrap:wrap" id="sh_cfg_wm_btns">
-      ${[['wm_violeta','Violeta Profundo','#6366f1'],['wm_dorado','Dorado Champagne','#f59e0b'],['wm_cian','Cian Neón / Océano','#06b6d4'],['wm_rosa','Rosa Magenta Glam','#ec4899'],['wm_esmeralda','Verde Esmeralda','#10b981'],['wm_plata','Plata Mercurio','#94a3b8'],['wm_coral','Atardecer Coral','#f97316'],['wm_neon','Degradado Aurora','#a855f7'],['wm_blanco','Blanco Escarchado','#ffffff']].map(([k,lbl,col])=>`<button type="button" class="btn s ${(TD._curWmStyle||TD.watermarkStyle||'wm_violeta')===k?'p':''}" data-wm="${k}" style="display:inline-flex;align-items:center;gap:6px" onclick="shopCfgWmSet('${k}')" data-h-click="call" data-a-click="${_ha('shopCfgWmSet',k)}"><span style="width:11px;height:11px;border-radius:50%;background:${col};box-shadow:0 0 0 1px rgba(0,0,0,.2)"></span><span>${lbl}</span></button>`).join('')}
+      ${[['wm_violeta','Violeta Profundo','#6366f1'],['wm_dorado','Dorado Champagne','#f59e0b'],['wm_cian','Cian Neón / Océano','#06b6d4'],['wm_rosa','Rosa Magenta Glam','#ec4899'],['wm_esmeralda','Verde Esmeralda','#10b981'],['wm_plata','Plata Mercurio','#94a3b8'],['wm_coral','Atardecer Coral','#f97316'],['wm_neon','Degradado Aurora','#a855f7'],['wm_blanco','Blanco Escarchado','#ffffff']].map(([k,lbl,col])=>`<button type="button" class="btn s ${(TD._curWmStyle||TD.watermarkStyle||'wm_violeta')===k?'p':''}" data-wm="${k}" style="display:inline-flex;align-items:center;gap:6px" data-h-click="call" data-a-click="${_ha('shopCfgWmSet',k)}"><span style="width:11px;height:11px;border-radius:50%;background:${col};box-shadow:0 0 0 1px rgba(0,0,0,.2)"></span><span>${lbl}</span></button>`).join('')}
     </div>
   </div>
 
@@ -2941,7 +2941,7 @@ function xmasCard(){
  </div>
 
  <div style="margin-top:16px;padding-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-   <button type="button" class="btn p s" onclick="shopBrandSave()" data-h-click="call" data-a-click="${_ha('shopBrandSave')}" style="box-shadow:0 3px 12px rgba(84,51,235,.35)">💾 Guardar cambios de portada (Sincronizar)</button>
+   <button type="button" class="btn p s" data-h-click="call" data-a-click="${_ha('shopBrandSave')}" style="box-shadow:0 3px 12px rgba(84,51,235,.35)">💾 Guardar cambios de portada (Sincronizar)</button>
    <a class="btn s" href="index.html?tienda=1" target="_blank" rel="noopener">👁️ Abrir tienda para probar</a>
  </div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
