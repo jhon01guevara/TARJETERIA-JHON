@@ -108,3 +108,7 @@ Misma regla de la Fase 10: se mueven líneas completas, literalmente, a scripts 
 ### Extracción 1: `js/sanear.js` (hecha)
 
 `SAFE_ID`, `sTxt`, `sNum`, `sanLead`, `sanPed`, `sanGal` y `sanEnv` (esta última estaba ~2.100 líneas más abajo, junto a las etiquetas de envío). Solo dependen entre sí; no tocan `DB`, `SES` ni Firebase. `sanPed` llama a `sanEnv` al ejecutarse (no al cargar), y ambas viven ahora en el mismo archivo. 25 líneas movidas.
+
+### Extracción 2: `js/redes.js` (hecha)
+
+`RED_DEF`, `RED_HOST`, `RED_SVG`, `CONT_DEF`, `redUrl`, `contLimpio` y `redesLista`: la validación y limpieza de las redes sociales y los datos de contacto (solo reglas y datos). Se **quedó en `app.js`** el estado de la pantalla (`RS_DRAFT`, `RS_MSG`, que es un `let` mutable), el CSS, `redLink` y todo lo que dibuja (`shopRedes`, `shopContacto`, `redesCard`, `redesFill`, `redesGuardar`). 34 líneas movidas.

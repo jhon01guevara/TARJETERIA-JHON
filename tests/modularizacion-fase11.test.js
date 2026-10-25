@@ -14,6 +14,7 @@ const esc=s=>s.replace(/[$.*+?^{}()|[\]\\]/g,'\\$&');
 // file → símbolos declarados a nivel superior (const/function)
 const EXTR={
  'js/sanear.js':{consts:['SAFE_ID','sTxt','sNum'],funcs:['sanLead','sanPed','sanGal','sanEnv']},
+ 'js/redes.js':{consts:['RED_DEF','RED_HOST','RED_SVG','CONT_DEF','redesLista'],funcs:['redUrl','contLimpio']},
 };
 const TODOS=Object.entries(EXTR).flatMap(([f,o])=>[...o.consts.map(n=>[f,n,'const']),...o.funcs.map(n=>[f,n,'function'])]);
 const declRe=n=>new RegExp('(^|[;\\n{}])\\s*(const|let|var|function|async function|class)\\s+'+esc(n)+'\\b');
@@ -83,7 +84,6 @@ function ctxBase(){
 test('todo lo movido resuelve por nombre desde otro script clásico (const = global de script, function = window)',()=>{
  const ctx=ctxBase();
  for(const [f,n,tipo] of TODOS){
-  assert.equal(vm.runInContext('typeof '+n,ctx),tipo==='function'?'function':vm.runInContext('typeof '+n,ctx),n);
   assert.notEqual(vm.runInContext('typeof '+n,ctx),'undefined',n+' no resuelve desde otro script');
   if(tipo==='const')assert.equal(Object.prototype.hasOwnProperty.call(ctx,n),false,n+' no debe ser propiedad de window (igual que antes)');
   else assert.equal(typeof ctx[n],'function',n+' debe seguir siendo propiedad de window');
@@ -123,4 +123,29 @@ test('sanear.js: sanLead/sanPed/sanGal/sanEnv limpian igual que antes',()=>{
  assert.equal(ev('sanGal({id:"G1",img:"javascript:alert(1)"})'),null);
  assert.equal(ev('sanGal({id:"G1",img:"data:image/png;base64,AAAA",t:"T",by:"B",otro:1}).otro'),1);
  assert.equal(ev('sanGal({id:"G 1",img:"data:image/png;base64,AAAA"})'),null);
+});
+
+test('redes.js: redUrl, contLimpio y redesLista se comportan igual que antes',()=>{
+ const ctx=ctxBase(),ev=c=>vm.runInContext(c,ctx);
+ assert.equal(ev('JSON.stringify(RED_DEF)'),'[["tiktok","TikTok"],["instagram","Instagram"],["facebook","Facebook"]]');
+ assert.equal(ev('CONT_DEF.map(x=>x[0]).join()'),'tel,wa,email,dir,horario');
+ assert.deepEqual(ev('Object.keys(RED_SVG).join()').split(','),['tiktok','instagram','facebook']);
+ assert.equal(ev('redUrl("tiktok","@tarjeteriajhon")'),'https://www.tiktok.com/@tarjeteriajhon');
+ assert.equal(ev('redUrl("instagram","tarjeteriajhon")'),'https://www.instagram.com/tarjeteriajhon/');
+ assert.equal(ev('redUrl("facebook","tarjeteriajhon")'),'https://www.facebook.com/tarjeteriajhon');
+ assert.equal(ev('redUrl("facebook","fb.com/profile.php?id=1234567&x=1#h")'),'https://fb.com/profile.php?id=1234567');
+ assert.equal(ev('redUrl("tiktok","http://www.tiktok.com/@a")'),'https://www.tiktok.com/@a');
+ // rechazos (seguridad)
+ assert.equal(ev('redUrl("tiktok","javascript:alert(1)")'),'');
+ assert.equal(ev('redUrl("tiktok","https://evil.com/tiktok.com")'),'');
+ assert.equal(ev('redUrl("tiktok","https://u:p@tiktok.com/@a")'),'');
+ assert.equal(ev('redUrl("otra","x")+redUrl("tiktok","")+redUrl("tiktok",null)+redUrl("tiktok","a b")'),'');
+ assert.equal(ev('redUrl("tiktok","x".repeat(301))'),'');
+ assert.equal(ev('JSON.stringify(contLimpio({tel:"+507 6074-1150",wa:"6074-1150",email:"a@b.co",dir:"  Calle <b>1</b> ",horario:"L-S"}))'),
+  '{"tel":"+507 6074-1150","wa":"50760741150","email":"a@b.co","dir":"Calle b 1 /b","horario":"L-S"}');
+ assert.equal(ev('JSON.stringify(contLimpio(null))'),'{"tel":"","wa":"","email":"","dir":"","horario":""}');
+ assert.equal(ev('JSON.stringify(contLimpio({tel:"abc",email:"no-es-correo",wa:"12"}))'),'{"tel":"","wa":"","email":"","dir":"","horario":""}');
+ assert.equal(ev('JSON.stringify(redesLista({tiktok:"@a",instagram:"https://evil.com",facebook:"b"}))'),
+  '[["tiktok","TikTok","https://www.tiktok.com/@a"],["facebook","Facebook","https://www.facebook.com/b"]]');
+ assert.equal(ev('JSON.stringify(redesLista(null))'),'[]');
 });
