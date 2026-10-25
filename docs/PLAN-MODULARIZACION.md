@@ -112,3 +112,7 @@ Misma regla de la Fase 10: se mueven líneas completas, literalmente, a scripts 
 ### Extracción 2: `js/redes.js` (hecha)
 
 `RED_DEF`, `RED_HOST`, `RED_SVG`, `CONT_DEF`, `redUrl`, `contLimpio` y `redesLista`: la validación y limpieza de las redes sociales y los datos de contacto (solo reglas y datos). Se **quedó en `app.js`** el estado de la pantalla (`RS_DRAFT`, `RS_MSG`, que es un `let` mutable), el CSS, `redLink` y todo lo que dibuja (`shopRedes`, `shopContacto`, `redesCard`, `redesFill`, `redesGuardar`). 34 líneas movidas.
+
+### Extracción 3: `js/politicas.js` (hecha)
+
+Textos legales y registro de consentimientos: `TJ_POLITICAS` (con getters que se evalúan al usarse) y las 8 funciones `shopPoliticas`, `poliVerEvidencia`, `poliImprimirEvidencia`, `poliCopiarEvidencia`, `poliVerRegistroAuditoria`, `poliExportarCSV`, `poliCopiar` y `poliAdmCard`. 315 líneas (el bloque completo, de comentario a comentario). Por qué es seguro mover también las funciones: a nivel superior solo hay declaraciones (un test lo comprueba línea por línea); usan `DB`, `SES`, `nombreNegocio`, `shopM`, `_ha` y `esc`, pero **solo al ejecutarse**, y los botones las llaman con `data-h-click="call"` → `window[nombre]`, que sigue funcionando porque siguen siendo `function` globales. Nota: `TJ_POLITICAS` hoy no tiene ningún uso en el código (solo se declara); se movió igual, sin borrarla.

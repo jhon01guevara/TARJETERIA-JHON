@@ -15,6 +15,8 @@ const esc=s=>s.replace(/[$.*+?^{}()|[\]\\]/g,'\\$&');
 const EXTR={
  'js/sanear.js':{consts:['SAFE_ID','sTxt','sNum'],funcs:['sanLead','sanPed','sanGal','sanEnv']},
  'js/redes.js':{consts:['RED_DEF','RED_HOST','RED_SVG','CONT_DEF','redesLista'],funcs:['redUrl','contLimpio']},
+ // Textos legales: las funciones de dibujo usan document/navigator/window al EJECUTARSE (no al cargar), por eso 'efectos:true'
+ 'js/politicas.js':{consts:['TJ_POLITICAS'],funcs:['shopPoliticas','poliVerEvidencia','poliImprimirEvidencia','poliCopiarEvidencia','poliVerRegistroAuditoria','poliExportarCSV','poliCopiar','poliAdmCard'],efectos:true},
 };
 const TODOS=Object.entries(EXTR).flatMap(([f,o])=>[...o.consts.map(n=>[f,n,'const']),...o.funcs.map(n=>[f,n,'function'])]);
 const declRe=n=>new RegExp('(^|[;\\n{}])\\s*(const|let|var|function|async function|class)\\s+'+esc(n)+'\\b');
@@ -31,7 +33,15 @@ for(const f of Object.keys(EXTR)){
   assert.ok(s.length>200);
   new vm.Script(s,{filename:f});
   assert.doesNotMatch(s,/^(let|var) /m,f+': no debe declarar estado mutable global');
-  assert.doesNotMatch(s,/firebase|fetch\(|XMLHttpRequest|addEventListener|setInterval|setTimeout|document\.(?!getElementById\b)/,f+': no debe tener efectos al cargar');
+  if(!EXTR[f].efectos)assert.doesNotMatch(s,/firebase|fetch\(|XMLHttpRequest|addEventListener|setInterval|setTimeout|document\.(?!getElementById\b)/,f+': no debe tener efectos al cargar');
+  // A nivel superior (columna 0) solo puede haber comentarios, const, function o el cierre de un bloque: nada se ejecuta al cargar.
+  let enComentario=false;
+  for(const l of s.split('\n')){
+   if(enComentario){if(/\*\//.test(l))enComentario=false;continue}
+   if(/^\/\*/.test(l)){if(!/\*\//.test(l))enComentario=true;continue}
+   if(l===''||/^\s/.test(l)||/^(\/\/|const |function |async function |\}|\))/.test(l))continue;
+   assert.fail(f+': línea de nivel superior que no es una declaración: '+l.slice(0,80));
+  }
  });
  test(f+': declara lo movido con el mismo tipo de declaración y ningún otro script lo redeclara',()=>{
   const s=leer(f);
@@ -148,4 +158,29 @@ test('redes.js: redUrl, contLimpio y redesLista se comportan igual que antes',()
  assert.equal(ev('JSON.stringify(redesLista({tiktok:"@a",instagram:"https://evil.com",facebook:"b"}))'),
   '[["tiktok","TikTok","https://www.tiktok.com/@a"],["facebook","Facebook","https://www.facebook.com/b"]]');
  assert.equal(ev('JSON.stringify(redesLista(null))'),'[]');
+});
+
+test('politicas.js: TJ_POLITICAS evalúa sus getters al usarse (empresa activa o datos publicados de la tienda)',()=>{
+ const ctx=ctxBase(),ev=c=>vm.runInContext(c,ctx);
+ ctx.nombreNegocio=()=>'Mi Negocio';
+ assert.equal(ev('TJ_POLITICAS.nombre'),'Mi Negocio');
+ assert.equal(ev('TJ_POLITICAS.web'),'https://x.github.io/app/?tienda=1');
+ assert.equal(ev('TJ_POLITICAS.correo'),'tarjeteriajhon@gmail.com');
+ assert.equal(ev('TJ_POLITICAS.tel'),'6074-1150');
+ assert.match(ev('TJ_POLITICAS.estado'),/^Etapa preparatoria/);
+ vm.runInContext('var DB={cfg:{email:"a@b.co",tel:"123"}}',ctx);
+ assert.equal(ev('TJ_POLITICAS.correo+"|"+TJ_POLITICAS.tel'),'a@b.co|123');
+ vm.runInContext('var SHOP=true,SH={contacto:{email:"t@t.co",tel:"999"}}',ctx);
+ assert.equal(ev('TJ_POLITICAS.correo+"|"+TJ_POLITICAS.tel'),'t@t.co|999');
+});
+
+test('politicas.js: shopPoliticas dibuja las 6 pestañas con los datos del negocio (usa _ha, esc y shopM de app.js al ejecutarse)',()=>{
+ const ctx=ctxBase(),ev=c=>vm.runInContext(c,ctx);
+ let html='';
+ ctx.nombreNegocio=()=>'Negocio <X>';ctx.shopM=h=>{html=h};
+ vm.runInContext('var DB={cfg:{}};function _ha(){return JSON.stringify([].slice.call(arguments)).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;")}',ctx);
+ ev('shopPoliticas("1")');
+ for(const t of ['Aviso Preparatorio','Términos de Uso','Privacidad (Ley 81)','Entregas y Retiros','Reclamaciones','Lista de Verificación'])assert.ok(html.includes(t),t);
+ assert.ok(html.includes('Negocio &lt;X&gt;')&&!html.includes('Negocio <X>'),'el nombre del negocio se escapa');
+ for(let i=2;i<=6;i++){html='';ev('shopPoliticas("'+i+'")');assert.ok(html.length>500,'pestaña '+i)}
 });
