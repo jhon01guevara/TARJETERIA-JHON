@@ -58,7 +58,8 @@ test('a11y.js: sintaxis y reglas clave (sin doble disparo, solo sobre lo que mar
  new vm.Script(s);
  assert.match(s,/data-a11y-kb/);
  assert.doesNotMatch(s,/\.innerHTML\s*=/,'no inserta HTML: solo atributos');
- assert.doesNotMatch(s,/\.style\./,'no toca estilos');
+ assert.doesNotMatch(s,/\.style\.[a-zA-Z]+\s*=[^=]/,'no escribe estilos (solo lee style.display de las ventanas)');
+ assert.doesNotMatch(s,/\.style\.setProperty|\.cssText/,'no toca estilos');
 });
 
 /* Simulación mínima del navegador para probar el delegador de teclado. */
