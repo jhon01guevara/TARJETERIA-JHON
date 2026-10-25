@@ -60,7 +60,7 @@ Quitar `apps/modelos.js` de la lista `PRE` de `sw.js` reduciría la descarga en 
 | ~~Quitar `apps/modelos.js` de `PRE` en `sw.js`~~ | −1,6 MB en la instalación del service worker | Bajo/medio | **Aplicado en la fase 16** (ver abajo, con precalentamiento en momento libre para no perder el uso offline). |
 | Sacar las 63 fotos de `modelos.js` a archivos `.jpg` y que `modelos.html` las cargue bajo demanda | ~1,6 MB menos en un solo archivo; carga progresiva | Medio: cambia la lógica de `modelos.html` y de `cintChk` | Requiere pruebas del módulo Check y de `js/app.js` L1085 (lee `const IMGS` del HTML). |
 | Quitar miniaturas duplicadas del `manifest.json` (67 únicas de 88; ~1,1 MB sin comprimir) | ~0,8 MB | Medio: cambia el formato del manifest y la lógica de importación | Requiere tocar `precargarCatalogoDeFabrica` y el exportador del catálogo. |
-| Banners en WebP/AVIF con `<source type>` y JPEG de reserva | 25–50 % en banners | Medio: cambia el HTML generado; hay que mantener las rutas JPEG | **Medido en la fase 12: ningún archivo cumple SSIM ≥ 0,985 con ahorro ≥ 20 %** (ver sección «Fase 12»). Solo con aprobación de una pérdida visual leve. |
+| Banners en WebP/AVIF con `<source type>` y JPEG de reserva | 25–50 % en banners | Medio: cambia el HTML generado; hay que mantener las rutas JPEG | **Aplicado en la Fase 22** (ver sección «Fase 22»): −22 % (1,68 MB menos entre los 28 archivos), con pérdida visual leve aceptada por John (SSIM 0,945–0,972). |
 | Catálogo de fábrica en Firebase Storage / carga por partes | hasta −12 MB en el primer arranque | Alto: toca Firebase, reglas y la lógica de carga | Solo con confirmación expresa. |
 | Recompresión de banners con calidad ~80 | ~25 % | Medio: pérdida visible en banners con degradados (SSIM 0,94–0,97) | Solo si John acepta una pérdida mínima. |
 
@@ -143,3 +143,78 @@ Pruebas adicionales en `boda2`, `boda2-m` y `cumple` (los de mejor y peor SSIM):
 - Se añade `docs/medir-webp-banners.py` para repetir la medición.
 - Opciones si John acepta una pérdida leve (SSIM ≈ 0,95–0,97, similar al q82 JPEG descartado en la fase 8): WebP q85–q90 con `<picture>` y fallback JPG. Ahorro real esperable: ≈ 1,3–2,3 MB por visitante. Antes habría que revisarlo a ojo, sobre todo `cumple` y `felic` (SSIM más bajo).
 - Alternativa sin pérdida de calidad percibida: regenerar los banners **desde su diseño original** (no desde el JPG ya comprimido) directamente en WebP. Requiere los archivos fuente.
+
+## Fase 22: banners en WebP con respaldo JPG (aplicado)
+
+John aceptó una pérdida leve de calidad (la Fase 12 había medido que ningún banner cumple SSIM ≥ 0,985 con ≥ 20 % de ahorro). Se aplica WebP con `<picture>` y el JPG original como respaldo. **Los 28 JPG no se tocan ni se borran.**
+
+### Cómo se eligió la calidad
+`docs/generar-banners-webp.py` prueba, por imagen, calidades de 92 a 85 (Pillow, `method=6`, sin metadatos EXIF/XMP/ICC) y se queda con la **más alta** que ahorra **≥ 20 %** de bytes frente al JPG (si ni a q85 llegara al 15 %, no se genera el `.webp` y el banner queda en JPG; **no hizo falta: los 28 cumplen**). Con calidades más altas no hay ahorro real: q94 ahorra 0–7 %, q96 pesa más que el JPG. Resultado: q90–q92, SSIM 0,945–0,972.
+
+| Banner | JPG (bytes) | WebP (bytes) | Calidad | Ahorro | SSIM |
+|---|---:|---:|---:|---:|---:|
+| `amor-m` | 189.309 | 146.548 | q92 | 22.6 % | 0.9639 |
+| `amor` | 343.376 | 262.042 | q91 | 23.7 % | 0.9601 |
+| `amor2-m` | 183.291 | 139.660 | q92 | 23.8 % | 0.9641 |
+| `amor2` | 320.725 | 249.654 | q92 | 22.2 % | 0.9591 |
+| `baby-m` | 187.083 | 145.038 | q91 | 22.5 % | 0.9657 |
+| `baby` | 337.129 | 267.638 | q91 | 20.6 % | 0.9638 |
+| `baby2-m` | 178.004 | 135.270 | q91 | 24.0 % | 0.9644 |
+| `baby2` | 293.120 | 229.786 | q91 | 21.6 % | 0.9664 |
+| `boda-m` | 178.049 | 133.504 | q91 | 25.0 % | 0.9710 |
+| `boda` | 341.111 | 272.736 | q91 | 20.0 % | 0.9706 |
+| `boda2-m` | 182.622 | 136.420 | q91 | 25.3 % | 0.9717 |
+| `boda2` | 325.870 | 258.240 | q91 | 20.8 % | 0.9721 |
+| `cumple-m` | 199.740 | 157.940 | q92 | 20.9 % | 0.9521 |
+| `cumple` | 368.979 | 288.112 | q91 | 21.9 % | 0.9477 |
+| `cumple2-m` | 190.282 | 150.826 | q92 | 20.7 % | 0.9537 |
+| `cumple2` | 345.414 | 261.446 | q91 | 24.3 % | 0.9446 |
+| `felic-m` | 207.616 | 161.116 | q91 | 22.4 % | 0.9554 |
+| `felic` | 392.495 | 300.266 | q90 | 23.5 % | 0.9517 |
+| `felic2-m` | 210.341 | 163.968 | q91 | 22.0 % | 0.9537 |
+| `felic2` | 364.130 | 285.628 | q91 | 21.6 % | 0.9513 |
+| `grad-m` | 196.938 | 151.604 | q91 | 23.0 % | 0.9656 |
+| `grad` | 357.599 | 281.192 | q91 | 21.4 % | 0.9648 |
+| `grad2-m` | 186.216 | 140.052 | q91 | 24.8 % | 0.9654 |
+| `grad2` | 316.202 | 248.026 | q91 | 21.6 % | 0.9642 |
+| `quince-m` | 196.068 | 150.372 | q91 | 23.3 % | 0.9612 |
+| `quince` | 361.007 | 285.882 | q91 | 20.8 % | 0.9589 |
+| `quince2-m` | 197.387 | 147.570 | q91 | 25.2 % | 0.9608 |
+| `quince2` | 361.078 | 280.258 | q91 | 22.4 % | 0.9598 |
+| **Escritorio (14)** | **4.828.235** | **3.770.906** | | **21.9 %** | |
+| **Móvil (14)** | **2.682.946** | **2.059.888** | | **23.2 %** | |
+| **Total (28)** | **7.511.181** | **5.830.794** | | **22.4 %** | |
+
+(Bytes sin comprimir; los banners ya son imágenes comprimidas, gzip no los reduce.)
+
+### Revisión visual (a ojo, lado a lado, al 100 %)
+Se compararon JPG y WebP de `cumple`, `felic` (los de SSIM más bajo, 0,945–0,955), `quince`, `boda` y las variantes móviles, y una hoja con la **diferencia ×6 de los 14 banners de escritorio**: la diferencia está solo en los bordes de los textos y de las ilustraciones (ruido de compresión), **sin bandas en los degradados ni en los fondos planos**. Lo que SSIM penaliza es el *grano* fino del fondo plano del JPG original (p. ej. el amarillo de `cumple`), que el WebP suaviza; a tamaño normal es imperceptible, y el texto fino («Colección · Felicitaciones», subtítulos) se ve igual de nítido. Ninguno se dejó en JPG por calidad.
+
+### Qué cambió en el código
+| Archivo | Cambio |
+|---|---|
+| `banners/*.webp` | 28 archivos nuevos (14 escritorio 2400×853 y 14 móvil 1100×1100), junto a cada JPG. |
+| `js/promo.js` | `PROMO_IMG[id]` gana dos entradas (`[2]` WebP escritorio, `[3]` WebP móvil). `promoSlide` genera `<picture><source media="(max-width:700px)" srcset="…-m.webp" type="image/webp"><source media="(max-width:700px)" srcset="…-m.jpg"><source srcset="….webp" type="image/webp"><img src="….jpg"></picture>`. Un navegador sin WebP salta los `<source type="image/webp">` y usa el JPG. Si un banner no tuviera `.webp`, basta no ponerle esas dos entradas. Los banners propios (subidos por el dueño, `data:`) no cambian. |
+| `index.html` | `js/promo.js?v=banners-fase-22`. |
+| `sw.js` | Caché `tj-net-first-16`. Los banners nunca estuvieron en `PRE` (se guardan al descargarse, con el manejador `fetch`), así que no se precachean los nuevos: sería +1,7 MB en cada instalación para algo que se ve con `lazy`. |
+| CSP | Sin cambios: `img-src 'self'` ya cubre `/banners/*.webp`. |
+| Otros usos | Se buscaron todos: solo `js/promo.js` nombra los banners (no hay `background-image`, ni rutas construidas en `app.js`, ni en CSS). |
+
+### Verificación en Chrome real (`tests/navegador/banners-fase22.js`)
+- Con WebP: los 14 `<img>` del carrusel resuelven a `.webp` y cargan (`naturalWidth>0`), en escritorio (1366×900, `*.webp`) y en móvil (390×844, `*-m.webp`); no se descarga ningún JPG; 0 violaciones CSP, 0 errores de consola, 0 respuestas 404.
+- **Respaldo:** simulando un navegador sin WebP (se reescribe `type="image/webp"` por un tipo desconocido, que es lo que hace un navegador sin soporte), los 14 resuelven al JPG, cargan, y la captura es **idéntica píxel a píxel** a la de `main` (diferencia media 0,000).
+- Red limitada (CDP, 200 KB/s y 150 ms): se descarga WebP; primeros banners de escritorio 566.140 bytes (WebP) frente a 722.085 (JPG), de móvil 433.212 frente a 571.459.
+- Captura del carrusel WebP frente a `main`: diferencia media 1,04 (escritorio) y 0,65 (móvil) sobre 255; SSIM 0,986 y 0,993.
+- Panel (admin y vendedor, todas las pantallas) y tienda: sin consola, CSP ni errores de página nuevos respecto a `main` (`recorrido.js` + `comparar.py`).
+- No se puede probar un Chrome real sin soporte WebP (no existe uno actual); el respaldo se verificó como se describe arriba. Una limitación conocida de `<picture>`: si el navegador **soporta** WebP pero el archivo no llega (red caída), no vuelve a probar el JPG.
+
+### Bytes por visitante (14 banners, todos con `loading="lazy"`; el carrusel los va pidiendo)
+| | JPG | WebP | Ahorro |
+|---|---:|---:|---:|
+| Escritorio | 4.828.235 | 3.770.906 | 1.057.329 (21,9 %) |
+| Móvil | 2.682.946 | 2.059.888 | 623.058 (23,2 %) |
+
+**Lectura honesta:** el ahorro es de ~0,6–1,1 MB por visitante que recorre todo el carrusel (≈22 %), menor que el 1,3–2,3 MB estimado en la Fase 12, porque se eligió una calidad alta (q90–q92) en lugar de q85. Con q85 se ahorraría ~48 % (≈2,3 MB en escritorio) a costa de SSIM ≈ 0,94–0,96; si se quiere más ahorro basta bajar el tope en `docs/generar-banners-webp.py` y regenerar.
+
+### Cómo revertir
+Revertir el PR (quita los `.webp` y devuelve `promoSlide` al `<picture>` de solo JPG) o, sin tocar nada más, borrar las dos entradas `.webp` de cada banner en `PROMO_IMG`.
