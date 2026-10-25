@@ -16,3 +16,10 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | `actualizacion-sw.js` | Camino de actualización del SW (versión anterior → nueva): que la caché nueva acabe con `modelos.js` | `ANTES=/copia-main DESPUES=/copia-nueva node actualizacion-sw.js` |
 
 `BASE` es la URL (con `/` al final) de una copia servida en local (`python3 -m http.server`) o `https://tarjeteria-jhon-prueba.web.app/`.
+
+## Fases 17-19
+| Script | Qué hace |
+|---|---|
+| `recorrido.js` | Entra con admin y vendedor, abre todas las pantallas del menú y la tienda; guarda capturas y un `resultado.json` (consola, CSP, huellas de texto, barra de Inicio). `BASE=… OUT=/tmp/antes node recorrido.js` |
+| `comparar.py` | Compara dos carpetas de `recorrido.js` (antes/después): consola nueva, CSP, pantallas y diferencia de píxeles. `python3 comparar.py /tmp/antes /tmp/despues` |
+| `cintillo-fase17.js` | Barra «Modelos» de Inicio: 30 modelos con imagen, sin avisos, sin pedir `modelos.js`. |

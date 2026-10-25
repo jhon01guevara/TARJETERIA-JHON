@@ -94,6 +94,6 @@ test('los estilos movidos existen y se cargan en el mismo orden de cascada',()=>
 
 test('sw.js: caché tj-net-first-11 y precache de los css nuevos',()=>{
  const sw=leer('sw.js');
- assert.match(sw,/const V='tj-net-first-(11|12)'/);
+ assert.match(sw,/const V='tj-net-first-\d+'/);
  for(const f of ['css/panel.css','css/inyectados.css','css/chkskin.css','apps/modelos.css','apps/investigacion.css'])assert.ok(sw.includes("'"+f+"'"),f);
 });

@@ -110,3 +110,9 @@ Para restaurarlo, cualquiera de estas dos formas:
 2. Descargar `respaldo-fase-8.zip`, descomprimirlo, copiar `catalogo_default.zip` a la raíz del repo y subirlo con un PR; comprobar con `sha256sum -c SHA256SUMS.txt`.
 
 Los dispositivos que ya tienen el catálogo cargado no vuelven a descargar el zip, así que el cambio solo afecta a los primeros arranques.
+
+
+## Fase 17: `cintChk()` y `apps/modelos-cintillo.json`
+- `cintChk()` (barra «Modelos» de Inicio) leía `const IMGS`/`const DATA` de `apps/modelos.html`; esos datos viven en `apps/modelos.js` desde SEG-04 etapa 3B, así que la lectura fallaba en silencio y la barra mostraba solo la tarjeta genérica.
+- Solución: `apps/modelos-cintillo.json` (94,9 KB; 30 modelos, miniatura 88×88) generado por `tests/herramientas/generar-cintillo.py` a partir de `apps/modelos.js`. Se pide solo cuando la barra no tiene agenda ni catálogo propio que mostrar. Se añade a `PRE` de `sw.js` (caché `tj-net-first-13`). `modelos.js` sigue sin descargarse al inicio. El test `tests/avisos-fase-17.test.js` falla si el JSON deja de coincidir con `modelos.js`.
+- `catalogo_default.zip`: existe y carga en producción (GitHub Pages, 200, mismo SHA-256 que el repo). El 404 sale solo en las copias de Firebase (prueba y `tarjeteria-jhon.web.app`), que no incluyen ese archivo. Sin cambios de código.

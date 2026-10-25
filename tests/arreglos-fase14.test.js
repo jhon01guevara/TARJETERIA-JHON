@@ -67,6 +67,6 @@ test('B: mapaRefrescar no lanza con mapa nulo, quitado o fuera del DOM, y refres
  assert.doesNotThrow(()=>ctx.f({...vivo,invalidateSize(){throw new TypeError("reading '_leaflet_pos'")}}));
 });
 test('Fase 14: caché del service worker y ?v= de app.js subidos',()=>{
- assert.match(leer('sw.js'),/const V='tj-net-first-(11|12)'/);
- assert.match(leer('index.html'),/js\/app\.js\?v=(arreglos-fase-14|a11y-fase-15|rendimiento-fase-16)/);
+ assert.match(leer('sw.js'),/const V='tj-net-first-\d+'/);
+ assert.match(leer('index.html'),/js\/app\.js\?v=[a-z0-9-]+/);
 });

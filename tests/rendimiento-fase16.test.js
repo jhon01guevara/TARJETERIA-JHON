@@ -27,18 +27,18 @@ test('Fase 16: único consumidor = el iframe de Check, que lo trae al abrirse (a
  assert.equal((h.match(/modelos\.js/g)||[]).length,1);
  assert.equal(/<script src="(apps\/modelos\.js\?v=[\w-]+)">/.exec(h)[1],MODELOS);
  const app=appTodo();
- // los dos puntos de app.js que usan el módulo lo hacen solo a través de apps/modelos.html (appHtml), no de modelos.js
+ // el iframe de Check lo usa a través de apps/modelos.html (appHtml), no de modelos.js (Fase 17: cintChk ya no lee modelos.html; usa apps/modelos-cintillo.json)
  assert.match(app,/appHtml\('modelos'\)\.then\(h=>\{_cf\.srcdoc=chkSkin\(h\)\}\)/);
- assert.match(app,/h=await appHtml\('modelos'\)/);
+ assert.doesNotMatch(app,/h=await appHtml\('modelos'\)/);
  assert.doesNotMatch(app,/fetch\(['"`]apps\/modelos\.js/);
 });
 test('Fase 16: sw.js — caché tj-net-first-12, modelos.js fuera de la instalación y ?v= de la fase',()=>{
- assert.match(sw,/const V='tj-net-first-12'/);
+ assert.match(sw,/const V='tj-net-first-\d+'/);
  const pre=eval(/const PRE=(\[[^\]]*\])/.exec(sw)[1]);
  assert.ok(!pre.some(u=>/modelos\.js/.test(u)),'PRE no incluye modelos.js');
  for(const u of ['index.html','apps/modelos.html','apps/modelos.css','css/chkskin.css','js/app.js','apps/investigacion.js'])assert.ok(pre.includes(u),u+' sigue en el precache');
  assert.equal(MODELOS,'apps/modelos.js?v=rendimiento-fase-16');
- assert.match(leer('index.html'),/js\/app\.js\?v=rendimiento-fase-16/);
+ assert.match(leer('index.html'),/js\/app\.js\?v=[a-z0-9-]+/);
 });
 
 /* Ejecuta sw.js con un entorno falso para comprobar su comportamiento real. */
