@@ -60,7 +60,7 @@ Quitar `apps/modelos.js` de la lista `PRE` de `sw.js` reduciría la descarga en 
 | Quitar `apps/modelos.js` de `PRE` en `sw.js` (y subir la caché a `tj-net-first-9`) | −1,6 MB en la instalación del service worker | Bajo/medio: pérdida de uso offline del módulo Check la primera vez | Probar abriendo Check con internet, luego sin conexión. |
 | Sacar las 63 fotos de `modelos.js` a archivos `.jpg` y que `modelos.html` las cargue bajo demanda | ~1,6 MB menos en un solo archivo; carga progresiva | Medio: cambia la lógica de `modelos.html` y de `cintChk` | Requiere pruebas del módulo Check y de `js/app.js` L1085 (lee `const IMGS` del HTML). |
 | Quitar miniaturas duplicadas del `manifest.json` (67 únicas de 88; ~1,1 MB sin comprimir) | ~0,8 MB | Medio: cambia el formato del manifest y la lógica de importación | Requiere tocar `precargarCatalogoDeFabrica` y el exportador del catálogo. |
-| Banners en WebP/AVIF con `<source type>` y JPEG de reserva | 25–35 % en banners | Medio: cambia el HTML generado; hay que mantener las rutas JPEG | Se debe comprobar el aspecto con SSIM sobre la versión decodificada. |
+| Banners en WebP/AVIF con `<source type>` y JPEG de reserva | 25–50 % en banners | Medio: cambia el HTML generado; hay que mantener las rutas JPEG | **Medido en la fase 12: ningún archivo cumple SSIM ≥ 0,985 con ahorro ≥ 20 %** (ver sección «Fase 12»). Solo con aprobación de una pérdida visual leve. |
 | Catálogo de fábrica en Firebase Storage / carga por partes | hasta −12 MB en el primer arranque | Alto: toca Firebase, reglas y la lógica de carga | Solo con confirmación expresa. |
 | Recompresión de banners con calidad ~80 | ~25 % | Medio: pérdida visible en banners con degradados (SSIM 0,94–0,97) | Solo si John acepta una pérdida mínima. |
 
@@ -73,3 +73,30 @@ Para restaurarlo, cualquiera de estas dos formas:
 2. Descargar `respaldo-fase-8.zip`, descomprimirlo, copiar `catalogo_default.zip` a la raíz del repo y subirlo con un PR; comprobar con `sha256sum -c SHA256SUMS.txt`.
 
 Los dispositivos que ya tienen el catálogo cargado no vuelven a descargar el zip, así que el cambio solo afecta a los primeros arranques.
+
+## Fase 12: banners en WebP (medido, no aplicado)
+
+**Resultado: no se aplicó ningún cambio al sitio.** Los banners siguen siendo los mismos 28 JPG (7.511.181 bytes). Se midió WebP y no cumple el criterio acordado (SSIM ≥ 0,985 **y** ahorro ≥ 20 %), así que ningún archivo recibió versión WebP.
+
+### Cómo se sirven hoy los banners
+- `js/app.js` (`promoSlide`, ~L3198) genera `<picture><source media="(max-width:700px)" srcset="banners/<id>-m.jpg"><img src="banners/<id>.jpg" loading="lazy"></picture>`. Rutas literales en `PROMO_IMG` (~L3196). No hay CSS `background` ni URLs construidas en otro sitio.
+- `sw.js` **no** precachea los banners (solo los guarda si se descargan). Por eso añadir WebP no habría exigido cambiar la caché del service worker.
+- Dimensiones reales: escritorio 2400×853 px, móvil 1100×1100 px, sin perfil de color ICC. No se redimensiona nada.
+- Con `<picture>` el cambio técnico habría sido sencillo y con fallback nativo a JPG (`<source type="image/webp">` antes del `<source>`/`<img>` JPG). El obstáculo es la calidad, no el código.
+
+### Medición (Pillow 13, WebP `method=6`, SSIM por canal con scikit-image, comparando píxeles decodificados contra el JPG original)
+
+| Variante | JPG actual (bytes) | WebP q85 | Ahorro q85 | SSIM q85 (mín–máx) | WebP q90 | Ahorro q90 | SSIM q90 (mín–máx) |
+|---|---:|---:|---:|---|---:|---:|---|
+| Escritorio (14 × 2400×853) | 4.828.235 | 2.503.180 | 48,2 % | 0,934–0,957 | 3.565.702 | 26,1 % | 0,946–0,969 |
+| Móvil (14 × 1100×1100) | 2.682.946 | 1.318.560 | 50,9 % | 0,940–0,962 | 1.907.290 | 28,9 % | 0,949–0,970 |
+
+Pruebas adicionales en `boda2`, `boda2-m` y `cumple` (los de mejor y peor SSIM): q91 ahorra 21–25 % con SSIM 0,948–0,972; q93–q94 llega a SSIM 0,978–0,980 pero el ahorro baja a 0–8 %; con q95 el WebP pesa **más** que el JPG. En ningún punto se juntan SSIM ≥ 0,985 y ahorro ≥ 20 %. Una causa es que el JPG de origen ya es de calidad ~85 y tiene degradados suaves, donde WebP con pérdida introduce bandas sutiles.
+
+**Bytes que descarga un visitante (los 14 posts del carrusel, todos con `lazy`):** hoy 4,83 MB en escritorio o 2,68 MB en móvil. El WebP potencial sería 3,57/1,91 MB (q90) o 2,50/1,32 MB (q85), pero con pérdida visible según SSIM, por lo que no se aplica.
+
+### Qué se hizo y qué no
+- No se generó ni se subió ningún `.webp`, no se cambió `js/app.js`, `index.html` ni `sw.js`, y la caché sigue en `tj-net-first-8`.
+- Se añade `docs/medir-webp-banners.py` para repetir la medición.
+- Opciones si John acepta una pérdida leve (SSIM ≈ 0,95–0,97, similar al q82 JPEG descartado en la fase 8): WebP q85–q90 con `<picture>` y fallback JPG. Ahorro real esperable: ≈ 1,3–2,3 MB por visitante. Antes habría que revisarlo a ojo, sobre todo `cumple` y `felic` (SSIM más bajo).
+- Alternativa sin pérdida de calidad percibida: regenerar los banners **desde su diseño original** (no desde el JPG ya comprimido) directamente en WebP. Requiere los archivos fuente.
