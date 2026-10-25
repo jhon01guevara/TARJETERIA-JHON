@@ -41,6 +41,26 @@ service cloud.firestore {
         && (ref == 'admin' || exists(/databases/$(database)/documents/roles/$(ref)));
     }
 
+    // Datos de envío que la tienda pública escribe al crear el pedido (transportista elegido).
+    // Mismo formato y límites que shopEnvDatos + sanEnv en js/app.js y js/sanear.js; los campos que
+    // solo escribe el panel después (guia, cont, obs, bultos, peso, etq) NO se aceptan en la creación.
+    function envioValido(e) {
+      return e is map
+        && e.keys().hasOnly(['agencia','fid','tipo','rec','rtel','rced','pais','prov','ciudad','suc','dir','ref'])
+        && 'agencia' in e && e.agencia is string && e.agencia.size() > 0 && e.agencia.size() <= 80
+        && 'tipo' in e && e.tipo is string && (e.tipo == 'nacional' || e.tipo == 'internacional')
+        && (!('fid' in e) || (e.fid is string && e.fid.size() <= 30))
+        && (!('rec' in e) || (e.rec is string && e.rec.size() <= 120))
+        && (!('rtel' in e) || (e.rtel is string && e.rtel.size() <= 40))
+        && (!('rced' in e) || (e.rced is string && e.rced.size() <= 30))
+        && (!('pais' in e) || (e.pais is string && e.pais.size() <= 60))
+        && (!('prov' in e) || (e.prov is string && e.prov.size() <= 80))
+        && (!('ciudad' in e) || (e.ciudad is string && e.ciudad.size() <= 80))
+        && (!('suc' in e) || (e.suc is string && e.suc.size() <= 100))
+        && (!('dir' in e) || (e.dir is string && e.dir.size() <= 200))
+        && (!('ref' in e) || (e.ref is string && e.ref.size() <= 200));
+    }
+
     function chatMember(data) {
       return logged()
         && data.members is list
@@ -190,7 +210,7 @@ service cloud.firestore {
     }
 
     match /tienda_pedidos/{id} {
-      allow create: if request.resource.data.keys().hasOnly(['id','cid','lead','items','total','nota','ref','ts','estado'])
+      allow create: if request.resource.data.keys().hasOnly(['id','cid','lead','items','total','nota','ref','ts','estado','envio'])
         && request.resource.data.id == id
         && request.resource.data.cid is string && request.resource.data.cid.size() <= 100
         && request.resource.data.lead is map
@@ -202,7 +222,8 @@ service cloud.firestore {
         && request.resource.data.estado == 'nuevo'
         && request.resource.data.nota is string && request.resource.data.nota.size() <= 500
         && validRef(request.resource.data.ref)
-        && request.resource.data.ts is number;
+        && request.resource.data.ts is number
+        && (!('envio' in request.resource.data) || envioValido(request.resource.data.envio));
       allow read: if isAdmin() || (logged() && resource.data.ref == me());
       // El vendedor responsable solo cambia el estado; no puede alterar pedido, total o cliente.
       allow update: if isAdmin() || (logged() && resource.data.ref == me()
@@ -330,7 +351,7 @@ service cloud.firestore {
     }
 
     match /empresas/{eid}/tienda_pedidos/{id} {
-      allow create: if request.resource.data.keys().hasOnly(['id','cid','lead','items','total','nota','ref','ts','estado'])
+      allow create: if request.resource.data.keys().hasOnly(['id','cid','lead','items','total','nota','ref','ts','estado','envio'])
         && request.resource.data.id == id
         && request.resource.data.cid is string && request.resource.data.cid.size() <= 100
         && request.resource.data.lead is map
@@ -342,7 +363,8 @@ service cloud.firestore {
         && request.resource.data.estado == 'nuevo'
         && request.resource.data.nota is string && request.resource.data.nota.size() <= 500
         && validRef(request.resource.data.ref)
-        && request.resource.data.ts is number;
+        && request.resource.data.ts is number
+        && (!('envio' in request.resource.data) || envioValido(request.resource.data.envio));
       allow read: if isAdmin() || (logged() && resource.data.ref == me());
       allow update: if isAdmin() || (logged() && resource.data.ref == me()
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado'])
