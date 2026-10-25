@@ -79,3 +79,25 @@ Con las reglas ya publicadas en producción (2026-10-25), la escritura con `envi
 - El reintento recortaba la nota a **1200** caracteres, pero las reglas exigen **≤ 500**, así que con una nota normal (la constancia Ley 81 ya ocupa ≈ 65) el reintento también era rechazado y el cliente veía «No se pudo enviar». Ahora `fleNotaRespaldo` arma una nota de ≤ 500: primero el transportista (el panel lo lee con `fleNotaEnv`), luego la nota del cliente y siempre al final la constancia Ley 81 (el registro completo sigue en `lead.terminos`).
 
 Pruebas: `tests/pedido-fase24.test.js` (función aislada: nunca > 500, transportista primero, constancia al final) y Chrome real `pedido-envio-fase24.js` (modo «RESPALDO»: la 1.ª escritura con `envio` es rechazada por un doble, el reintento se guarda con nota de 500 y el panel recupera los datos) además de `tienda-pedido-fase23.js` y `tienda-fase23.js`.
+## Hallazgo 6 · la copia de prueba agota la cuota gratuita de Firestore (429 `resource-exhausted`)
+
+**Conclusión: no hay lecturas ni escrituras innecesarias en el código; la causa es el volumen de las propias pruebas contra un proyecto del plan gratuito. No se cambió código.**
+
+Medición (`tests/navegador/medir-lecturas-fase24.js`, administrador de la copia de prueba, escritorio):
+
+| Qué | Resultado |
+|---|---|
+| Escuchas (`onSnapshot`) abiertas al iniciar sesión | 13; tras recorrer todas las pantallas del menú, 16 |
+| Documentos entregados al iniciar sesión (todas las escuchas) | ≈ 86 (tienda_items 65, chats 6, pedidos 6, galería 2, clientes de la tienda 2, resto 0–1) |
+| Documentos nuevos por recorrer las 18 pantallas | ≈ 1 (las escuchas ya estaban abiertas, no se vuelve a leer) |
+| Tienda pública, una visita | ≈ 65 documentos (la colección `tienda_items`, 63 productos + configuración) |
+| Escrituras al abrir el panel | solo las que declara la app (p. ej. `miembros` en Marketing); la presencia (`presencia/{uid}`, cada 45 s, 135 s con la pestaña oculta) y `idleFetch` (1 lectura del servidor cada 2 min) solo ocurren con **vendedores**, no con el administrador |
+
+No hay sondeos repetidos: cada escucha entrega su contenido inicial una vez y después solo los cambios. Una sesión del panel ≈ 90 lecturas; la cuota gratuita es de 50 000 lecturas y 20 000 escrituras al día (se renueva a medianoche, hora del Pacífico), así que lo agotan cientos de recorridos completos en un mismo día; la causa más probable (no se pudo reconstruir el consumo histórico, la consola de Firebase no lo expone por script) son las baterías de las Fases 17–23 repiten los 18 menús con varios roles, en escritorio y móvil, más axe, capturas y comparaciones, repetidas varias veces por jornada. Al momento de medir (2026-10-25) la copia de prueba respondía con normalidad.
+
+Qué se hizo con eso:
+- Las pruebas **ya toleran** el ruido: `panel-fase23.js` ignora 404/429, `resource-exhausted`, `Quota exceeded` y los cortes del canal de escritura (constante `RUIDO`); las de la tienda no dependen de la consola.
+- Recomendación para correr las baterías completas: no repetirlas más de 2 o 3 veces al día contra la copia de prueba, usar `ROLES=` y `VP=` para acotar, y preferir el emulador (`tests/herramientas/reglas-emulador`) para reglas.
+- **No se tocó producción.**
+
+Observación que sí afecta a producción (para decidir, sin cambios hechos): cada visita a la tienda pública lee ≈ 65 documentos (`tienda_items` completa) aunque la tienda pinte antes desde la copia local; con el plan gratuito (sin facturación) el límite de 50 000 lecturas/día equivale a unas 770 visitas diarias. Si el tráfico se acerca a eso: (a) pasar el proyecto al plan con facturación (los primeros 50 000/día siguen gratis), o (b) publicar el catálogo como un archivo estático/JSON que se regenera al guardar y dejar Firestore solo para pedidos. Ambas son decisiones de producto, no un cambio pequeño y literal.
