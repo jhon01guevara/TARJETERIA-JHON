@@ -28,6 +28,8 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | `tamano-zonas.js` | Fase 18: lista los controles de menos de 24×24 px (WCAG 2.2 · 2.5.8) por pantalla y selector. `VP=390x844` por defecto. |
 | `funcional-fase19.js` | Fase 19: ejecuta en la página, con entradas fijas, las funciones movidas a `gif.js`, `promo.js`, `transportistas.js` y `etiquetas.js` (PDF de etiquetas incluido) y imprime huellas; deben ser idénticas entre `main` y la rama. `ROL=vendedor.prueba@example.com` para el vendedor. |
 | `banners-fase22.js` | Fase 22: banners WebP/JPG en la tienda (escritorio y móvil, sin soporte WebP, red lenta, los 14 banners) | `BASE=… OUT=/tmp/b22 node banners-fase22.js` |
+| `funcional-fase21.js` | Fase 21: ejecuta en la página, con una base de datos de ejemplo solo en memoria, las funciones movidas a `mapa-clientes.js`, `fondo-login.js`, `dashboard-vendedor.js` y `plantillas-factura.js` e imprime huellas; deben ser idénticas entre `main` y la rama **servidos desde el mismo origen** (el enlace de la tienda lleva el puerto). `ROL=vendedor.prueba@example.com` para el vendedor. | `BASE=… node funcional-fase21.js` |
+| `verificar-movimiento-literal.js` | Fase 21: comprueba (sin navegador) que los 4 archivos nuevos son un movimiento literal desde `js/app.js` de `origin/main` (contiguo, una vez, `app.js` nuevo = `main` menos los bloques). | `node tests/navegador/verificar-movimiento-literal.js [rama-base]` |
 
 ## Fase 20
 | Script | Qué hace |

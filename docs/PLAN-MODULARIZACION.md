@@ -168,3 +168,48 @@ Archivos nuevos: `gif.js` (46 líneas), `promo.js` (8), `transportistas.js` (63)
 
 ### Cómo revertir
 Revertir el PR (devuelve las 188 líneas a `app.js`, quita los 4 archivos y sus `<script>`, y vuelve la caché del SW a `tj-net-first-14`). Para revertir una sola extracción, `git revert` de su commit.
+
+## 9. Fase 21: extracciones 1 a 4 (un commit por extracción)
+
+Misma regla de las fases 11 y 19: se mueven líneas completas, **literalmente**, a scripts clásicos (sin ES modules, sin `defer`/`async`) cargados justo **antes de `js/app.js`**, en este orden: `mapa-clientes.js`, `fondo-login.js`, `dashboard-vendedor.js`, `plantillas-factura.js` (después de `etiquetas.js`). Solo se movió un bloque si se pudo **demostrar** que es equivalente: son bloques contiguos formados únicamente por declaraciones (`function` y `const`) que **no leen nada de `app.js` al cargarse** (un análisis del árbol sintáctico con `acorn` no encontró ninguna referencia a símbolos de fuera del bloque fuera de cuerpos de funciones).
+
+| # | Archivo | Qué se movió | Líneas |
+|---|---|---|---|
+| 1 | `js/mapa-clientes.js` | Mapa de clientes: `MC`, `MC_VACIO`, `mcTieneLoc` (`const`) y las funciones `mc*` (selector del formulario, filtros, mapa general, tarjeta del Inicio) | 155 |
+| 2 | `js/fondo-login.js` | Fondo personalizado del inicio de sesión: `LBG`, `LBG_PRE`, `LBG_DEF`, `lbgMeta`, `lbgSave`, `lbgFill`, `lbgApply`… | 27 |
+| 3 | `js/dashboard-vendedor.js` | Dashboard por vendedor: `VD`, `MESC`, `VDP`, `vdOwn`, `vdIni`, `vdStats`, `vdBars`, `vdHTML`, `vdAdmHTML`, `vdShare*`… | 42 |
+| 4 | `js/plantillas-factura.js` | Plantillas de factura, sello de estado y visor: `TPLS`, `VF`, `facTpl`, `facEstado`, `facSello`, `tplCard`, `tplRef`, `tplSet`, `tplPrev`, `vfFit`, `vfZoom`, `vfMax`, `verFactura`, `verTpl`, `facCobrar` | 32 |
+
+Cada archivo empieza con un comentario de 3 líneas (fase, qué contiene, por qué es seguro); el resto es idéntico al original. Los comentarios que explicaban cada bloque viajan con él.
+
+### Dos detalles que se comprobaron a propósito
+- **`tplCard`:** `app.js` lo usa AL CARGARSE (`const _tc0=tplCard;tplCard=function…`). Funciona porque `plantillas-factura.js` carga antes que `app.js` (y se corrigió `tests/fase7-routing.test.js`, que cargaba una lista fija de scripts). Mover un bloque más temprano nunca crea una zona muerta (TDZ); mover el que usa algo de `app.js` sí podría, por eso solo se movieron bloques que no usan nada al cargarse.
+- **`lsk` en `fondo-login.js`:** `lbgMeta` y `lbgSave` llaman a `lsk()` (definida en `app.js`) pero solo dentro de funciones flecha que se ejecutan después de cargar todo. `tests/arreglos-fase14.test.js` ahora lo permite solo para ese archivo y exige que cargue en un contexto vacío sin error.
+
+### Cómo se comprobó que es equivalente
+1. **Movimiento literal:** `node tests/navegador/verificar-movimiento-literal.js` (contra `origin/main`): cada bloque aparece contiguo y una sola vez en el `app.js` de `main`, y el `app.js` nuevo es exactamente el de `main` menos esos 4 bloques (256 líneas). Nada se reescribió.
+2. **Carga en vacío:** cada archivo se ejecuta en un contexto `vm` vacío sin error.
+3. **Tests (`npm test`, 217 pasan):** `tests/modularizacion-fase21.test.js` (cabeceras, orden en `index.html`, precaché del SW, nada declarado dos veces, resolución con los 4 cargados, comportamiento de `mcTieneLoc`, `vdOwn`, `facTpl`, `lbgMeta`); los de fase 11 y 19 siguen pasando; cada commit pasa los tests por separado.
+4. **Chrome real, funciones:** `tests/navegador/funcional-fase21.js` ejecuta en la página, con una base de datos de ejemplo solo en memoria, las funciones movidas (plantillas, estados y sellos de factura, tarjeta de plantillas, visor con zoom y maximizar; filtros y buscador del mapa de clientes, marcadores, tarjeta de Inicio; estadísticas, barras, HTML y resumen del dashboard en los 5 periodos, vista de administrador; fondo del inicio de sesión: presets, metadatos, imagen, video y degradados) e imprime huellas SHA-256. Resultado: **huellas idénticas entre `main` y la rama** como administrador y como vendedor, en escritorio (1366×900) y móvil (390×844), servidas desde el mismo origen (si se sirven desde puertos distintos cambian 6 huellas, porque el enlace de la tienda que sale en el dashboard incluye el puerto).
+5. **Chrome real, recorrido:** `recorrido.js` + `comparar.py` (todas las pantallas de administrador y vendedor, escritorio y móvil, y la tienda): sin consola, CSP ni errores de página nuevos; mismos textos de pantalla.
+
+### Líneas de `app.js`
+| | Líneas | Bytes |
+|---|---|---|
+| `main` antes de la Fase 21 | 4.459 | 556.932 |
+| Después de la Fase 21 | 4.203 (−256) | 522.136 (−34.796) |
+
+Archivos nuevos: `mapa-clientes.js` (158 líneas), `fondo-login.js` (30), `dashboard-vendedor.js` (45), `plantillas-factura.js` (35).
+
+### Qué NO se movió en la Fase 21 (a propósito) y por qué
+Se respetó el máximo de 4 extracciones por fase. El análisis encontró solo bloques pequeños más que cumplen la misma regla (p. ej. `shopPhotoUpload`/`shopLogoUpload`/`shopVideoUpload`, 12-13 líneas cada uno, y el código de TJ LIVE, ~39 líneas, que lee `lsk` y `DB` en funciones); son parte de la tienda y de TJ LIVE y se dejan para moverlos junto con su pantalla (son los que más se beneficiarían de una prueba manual tuya). El resto del archivo tiene alguna de estas características y **necesita una prueba manual tuya** antes de moverlo:
+- **Llamadas de voz (WebRTC, estado `LL`):** hacen falta dos usuarios reales con micrófono. Qué probar: llamar, contestar, rechazar, colgar, llamada perdida, con dos navegadores distintos.
+- **Perfil y emojis (`PERF`, `PF`, `EMO`):** son `let` compartidos con la pantalla y con el compresor de GIF. Qué probar: cambiar foto/GIF/emoji de perfil y que se vea en chat y menú tras recargar.
+- **Chat (listeners de Firestore, `fitChat`, mensajes y avisos con voz):** tiempo real entre dos usuarios. Qué probar: enviar/recibir texto, imagen y archivo; grupo; avisos.
+- **Tienda pública (estado `SH`, efectos de temporada, audio, carrito, pedidos):** muchos `let` mutables y efectos que solo se ven en un navegador real. Qué probar: temporada (Navidad/Panamá), «Escuchar», carrito y envío de un pedido de prueba.
+- **Interfaz del mapa (`R.mapa`, mapas de ubicaciones, Mapa Central):** `R.mapa=` modifica la tabla de vistas `R` y los mapas usan Leaflet y ubicación real. Qué probar: abrir cada mapa en escritorio y celular, marcar una ubicación, filtros.
+- **Interfaz de transportistas y de etiquetas (`FLE-UI`, `ETQ-UI`), `etqDatos`/`etqEnvio`:** usan `DB`, `TD` y el DOM al ejecutarse. Qué probar: imprimir una etiqueta real en cada tamaño de rollo.
+- **TJ LIVE, sincronización, vistas del panel (`R.*`), `authUI`/`ir` y sus wrappers:** estado central; no se tocan sin pruebas manuales.
+
+### Cómo revertir (Fase 21)
+Revertir el PR (devuelve las 256 líneas a `app.js`, quita los 4 archivos y sus `<script>`, y vuelve la caché del SW a `tj-net-first-16`). Para revertir una sola extracción, `git revert` de su commit (empezando por la última: las 4 tocan `index.html` y `sw.js` en líneas contiguas).

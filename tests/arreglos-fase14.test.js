@@ -6,7 +6,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const {leer,EXTRAIDOS}=require('./helpers/app-fuentes');
-const app=leer('js/app.js');
+const app=leer('js/app.js');const appTodoJs=[...EXTRAIDOS,'js/app.js'].map(leer).join('\n'); /* Fase 21: el mapa de clientes vive en js/mapa-clientes.js */
 
 test('A: const lsk se define una sola vez y ANTES de su primer uso en app.js',()=>{
  const defs=[...app.matchAll(/^const lsk\s*=/gm)];
@@ -17,7 +17,13 @@ test('A: const lsk se define una sola vez y ANTES de su primer uso en app.js',()
  assert.ok(def<uso,'lsk debe definirse antes de su primer uso (zona muerta TDZ)');
 });
 test('A: ningún script cargado antes de app.js usa lsk antes de que exista',()=>{
- for(const f of EXTRAIDOS){assert.ok(!/[^\w.]lsk\(/.test(leer(f)),f+' usa lsk(), que solo existe desde app.js')}
+ /* Fase 21: js/fondo-login.js usa lsk() SOLO dentro de funciones flecha (lbgMeta, lbgSave), que se ejecutan después de cargar app.js.
+    Se permite porque carga en un contexto vacío sin ReferenceError (si usara lsk al cargarse, fallaría aquí). */
+ const DIFERIDO=['js/fondo-login.js'];
+ for(const f of EXTRAIDOS){
+  const s=leer(f);
+  if(DIFERIDO.includes(f)){assert.doesNotThrow(()=>vm.runInContext(s,vm.createContext({})),f+' usa lsk() al cargarse');continue}
+  assert.ok(!/[^\w.]lsk\(/.test(s),f+' usa lsk(), que solo existe desde app.js')}
 });
 test('A: la lectura local de tj_cards y tj_db está dentro de try/catch y usa lsk (clave por empresa)',()=>{
  assert.match(app,/try\{cardState=Object\.assign\(cardState,JSON\.parse\(localStorage\.getItem\(lsk\('tj_cards'\)\)/);
@@ -51,9 +57,9 @@ test('A: evaluar app.js hasta tj_db no lanza TDZ (simulación con localStorage p
  assert.equal(sin.r.DB.cli.length,0,'una empresa sin copia local arranca vacía, no con datos de otra');
 });
 test('B: todos los invalidateSize diferidos pasan por mapaRefrescar',()=>{
- const sueltos=(app.replace(/function mapaRefrescar[^\n]*/,'').match(/[\w&]*\.invalidateSize\(\)/g)||[]);
+ const sueltos=(appTodoJs.replace(/function mapaRefrescar[^\n]*/,'').match(/[\w&]*\.invalidateSize\(\)/g)||[]);
  assert.deepEqual(sueltos,[],'setTimeout con invalidateSize sin protección');
- assert.equal((app.match(/setTimeout\(\(\)=>mapaRefrescar\(/g)||[]).length,4,'4 llamadas diferidas (mapa de ubicaciones x2, Mapa Central, mapa de clientes)');
+ assert.equal((appTodoJs.match(/setTimeout\(\(\)=>mapaRefrescar\(/g)||[]).length,4,'4 llamadas diferidas (mapa de ubicaciones x2, Mapa Central, mapa de clientes)');
 });
 test('B: mapaRefrescar no lanza con mapa nulo, quitado o fuera del DOM, y refresca si está vivo',()=>{
  const m=/function mapaRefrescar\(m\)\{[^\n]*\}/.exec(app);assert.ok(m);
