@@ -153,6 +153,20 @@ Medido con `tests/navegador/axe-completo.js` (axe-core 4.14: reglas WCAG 2.0/2.1
 
 `tests/accesibilidad.test.js` verifica `lang`, skip-link, nombres de `nav`, `role="dialog"` del modal, el CSS (`:focus-visible`, skip-link oculto, `prefers-reduced-motion`, sin redefinir colores), que ningún botón de solo icono quede sin `aria-label`, el login con `label for`, y simula el delegador de teclado (Enter/Espacio activan una vez, no actúan sobre botones nativos ni sobre lo que no marcó el script).
 
+## Fase 20: zonas táctiles de escritorio, puntos del carrusel y landmark de WhatsApp
+
+Cierra tres de los pendientes de la Fase 18 (los números son de `tests/navegador/tamano-zonas.js` en Chrome real, panel de administrador, vendedor y tienda):
+
+| | Antes (`main`) | Después |
+|---|---|---|
+| Controles de escritorio (1366×900) por debajo de 24×24 px | 55 | 0 |
+| Controles de móvil (390×844) por debajo de 24×24 px | 14 (puntos del carrusel) | 0 |
+| axe `region`: `#k_wa` fuera de landmark | 1 nodo | 0 |
+
+- **Escritorio:** las reglas de móvil de la Fase 18 (`summary`, `h3[data-h-click]`, «¿Olvidó su contraseña?», casillas de etiquetas, `input.etqcb`) se repiten dentro de `@media(min-width:821px)`. Las casillas con etiqueta de bloque o flex usan `min-height:24px`; las de `display:inline` usan `padding-block` (no mueve el texto). Los botones `.btn.s` pequeños suben a 24 px con `:where(.btn.s)` (especificidad 0), así no pisa el `min-height:36px` que `panel.css` ya les da en móvil.
+- **Puntos del carrusel (`.khero-dots button`):** el botón mide 24×24 px (el activo 38×24) y el punto visible sigue midiendo 8 px (22×8 el activo), porque se dibuja con `background-clip:content-box` sobre un `padding` de 8 px. Se quitó el `gap` y se corrió el contenedor 8 px hacia dentro para que el último punto quede donde estaba. Los puntos quedan más separados (24 px entre centros en vez de 14).
+- **`#k_wa`:** el botón sigue siendo `position:fixed`, pero ahora vive dentro de `<div class="kwrap" role="complementary" aria-label="Contacto por WhatsApp">` (alto 0, no ocupa lugar), que se oculta junto con el botón cuando la empresa no tiene número.
+
 ## Cómo revertir
 
 Revertir el PR. Para desactivar solo el comportamiento nuevo sin revertir los atributos: quitar de `index.html` el `<script src="js/a11y.js">` y el `<link href="css/accesibilidad.css">`.
