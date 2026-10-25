@@ -28,3 +28,8 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | `tamano-zonas.js` | Fase 18: lista los controles de menos de 24×24 px (WCAG 2.2 · 2.5.8) por pantalla y selector. `VP=390x844` por defecto. |
 | `funcional-fase19.js` | Fase 19: ejecuta en la página, con entradas fijas, las funciones movidas a `gif.js`, `promo.js`, `transportistas.js` y `etiquetas.js` (PDF de etiquetas incluido) y imprime huellas; deben ser idénticas entre `main` y la rama. `ROL=vendedor.prueba@example.com` para el vendedor. |
 | `banners-fase22.js` | Fase 22: banners WebP/JPG en la tienda (escritorio y móvil, sin soporte WebP, red lenta, los 14 banners) | `BASE=… OUT=/tmp/b22 node banners-fase22.js` |
+
+## Fase 20
+| Script | Qué hace |
+|---|---|
+| `hallazgos-fase20.js` | Tienda pública: la copia local `tj_cached_items` ya no supera la cuota, no avisa en consola, se guarda dentro de un presupuesto, pinta sin Firestore y se limpia sola bajo presión de memoria (incluye un fallo de `setItem` simulado). Puntos del carrusel ≥24×24, `#k_wa` dentro de un landmark (axe `region`), y la barra «Modelos» del vendedor (sin permiso a Check/Catálogo el toque no hace nada; con el permiso, navega). `BASE=… [VP=390x844] node hallazgos-fase20.js` |

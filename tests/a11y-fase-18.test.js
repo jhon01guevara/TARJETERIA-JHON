@@ -15,7 +15,7 @@ test('Fase 18: panel con landmarks nombrados (barra lateral, menús, región de 
  assert.match(html,/<main id="contenido">\s*<h1 class="sr-only h1m">[^<]+<\/h1>/);
  assert.equal((html.match(/<main\b/g)||[]).length,1);
  assert.match(css,/@media\(min-width:821px\)\{\.h1m\{display:none!important\}\}/,'en escritorio el h1 de la barra lateral basta (solo hay uno visible)');
- assert.match(html,/css\/accesibilidad\.css\?v=3/);
+ assert.match(html,/css\/accesibilidad\.css\?v=\d+/);
  assert.match(html,/js\/a11y\.js\?v=a11y-restante-fase-18/);
 });
 test('Fase 18: .sr-only existe y las cabeceras de tabla usan una variante SIN position:absolute (un absoluto escapa del scroll de .tw y ensancha la página en móvil)',()=>{
@@ -36,7 +36,7 @@ test('Fase 18: a11y.js nombra tablas (aria-label, sin caption nuevo que cambie f
  const proc=/function procesar\(root\) \{[\s\S]*?\n  \}/.exec(a11y)[0];assert.doesNotMatch(proc,/tienda\(\)/);
 });
 test('Fase 18: zonas táctiles de 24 px en móvil (solo dentro de @media max-width:820px) y barra inferior con nombre accesible a ≤480 px',()=>{
- const f18=css.slice(css.indexOf('FASE 18'));
+ const f18=css.slice(css.indexOf('FASE 18'),css.indexOf('FASE 20'));
  const mq=/@media\(max-width:820px\)\{([\s\S]*?)\n\}/.exec(f18)[1];
  assert.match(mq,/summary,h3\[data-h-click\],#auth a\{min-height:24px/);
  assert.match(mq,/label:has\(>input\[type="checkbox"\]\)\{padding-block:5px\}/);
