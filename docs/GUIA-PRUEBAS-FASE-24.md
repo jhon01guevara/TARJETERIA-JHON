@@ -72,6 +72,13 @@ Detalle del cambio y de cómo revertir: `docs/DESPLIEGUE-REGLAS.md`, sección 6.
    PUERTO=8947 node tests/navegador/pedido-envio-fase24.js                           # sin escribir nada (doble local)
    ```
 
+## PR «respaldo del transportista» (después de publicar la regla de `envio`)
+
+Con las reglas ya publicadas en producción (2026-10-25), la escritura con `envio` es aceptada a la primera (comprobado con un pedido real de prueba en la copia de prueba y con el emulador). **Se decidió conservar el reintento sin `envio`** (el transportista dentro de la nota) como respaldo, por si alguna vez se revierten las reglas con el archivo de respaldo; solo se corrigió un defecto del respaldo:
+
+- El reintento recortaba la nota a **1200** caracteres, pero las reglas exigen **≤ 500**, así que con una nota normal (la constancia Ley 81 ya ocupa ≈ 65) el reintento también era rechazado y el cliente veía «No se pudo enviar». Ahora `fleNotaRespaldo` arma una nota de ≤ 500: primero el transportista (el panel lo lee con `fleNotaEnv`), luego la nota del cliente y siempre al final la constancia Ley 81 (el registro completo sigue en `lead.terminos`).
+
+Pruebas: `tests/pedido-fase24.test.js` (función aislada: nunca > 500, transportista primero, constancia al final) y Chrome real `pedido-envio-fase24.js` (modo «RESPALDO»: la 1.ª escritura con `envio` es rechazada por un doble, el reintento se guarda con nota de 500 y el panel recupera los datos) además de `tienda-pedido-fase23.js` y `tienda-fase23.js`.
 ## Hallazgo 6 · la copia de prueba agota la cuota gratuita de Firestore (429 `resource-exhausted`)
 
 **Conclusión: no hay lecturas ni escrituras innecesarias en el código; la causa es el volumen de las propias pruebas contra un proyecto del plan gratuito. No se cambió código.**
