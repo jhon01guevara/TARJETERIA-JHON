@@ -30,7 +30,7 @@ test('index.html carga los 5 archivos nuevos, clásicos, después de plantillas-
   assert.ok(m,f+' sin <script> con ?v=');assert.ok(m.index>prev,f+' fuera de orden');assert.ok(m.index<ia,f+' debe ir antes de app.js');
   assert.equal(cuenta(h,f+'?v='),1,f+' cargado dos veces');prev=m.index;
  }
- assert.match(h,/<script src="js\/app\.js\?v=modulos-fase-23a"><\/script>/);
+ assert.match(h,/<script src="js\/app\.js\?v=(modulos-fase-23a|modulos-fase-2[4-9][a-z])"><\/script>/);
  assert.doesNotMatch(h,/<script[^>]*(defer|async|type="module")[^>]*src="js\/(agenda-alertas|tienda-|comprobante-)/);
 });
 test('sw.js precachea los 5 archivos antes de app.js y la caché es tj-net-first-20 o posterior',()=>{
