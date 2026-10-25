@@ -21,8 +21,6 @@ function _hcall(c){var m=/^(\w+)\((?:'([^']*)')?\)$/.exec(c);return m?(m[2]===un
 })();
 
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='js/pdf.worker.min.js';
-const $=id=>document.getElementById(id);
-function b64ToUtf8(b64){const bin=atob(b64);const bytes=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)bytes[i]=bin.charCodeAt(i);return new TextDecoder('utf-8').decode(bytes)}
 const _appC={};function appHtml(n){if(!_appC[n])_appC[n]=fetch('apps/'+n+'.html',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('apps/'+n+' '+r.status);return r.text()}).catch(e=>{delete _appC[n];throw e});return _appC[n]}
 
 let DB={prod:[],cli:[],fac:[],ubi:[],agenda:[],cfg:{sig:1058,itbms:0,nombre:'Tarjetería Jhon',ruc:'',tel:'(507) 6074-1150',email:'Tarjeteriajhon@gmail.com',dir:'Panama Oeste',banco:'Banco General',tcuenta:'Ahorro',cuenta:'',yappy:'',dests:[],tema:'claro',snd:1,tono:'campana',vol:70,nsys:0}};
@@ -393,8 +391,6 @@ async function sincronizarCatalogoNube(){
  }catch(e){console.warn('Sincronizar catálogo:',e)}
 }
 
-const $$=n=>'$'+(+n).toFixed(2);const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,5);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 /* ===== Redes sociales y contacto de la tienda virtual ===== */
 const RED_DEF=[['tiktok','TikTok'],['instagram','Instagram'],['facebook','Facebook']];
 const RED_HOST={tiktok:/^(?:[a-z0-9-]+\.)*tiktok\.com$/i,instagram:/^(?:[a-z0-9-]+\.)*instagram\.com$/i,facebook:/^(?:[a-z0-9-]+\.)*(?:facebook\.com|fb\.com)$/i};
@@ -882,7 +878,6 @@ function tema(t){aplicarTema(t,true);if(vista==='config')R.config()}
 function reloj(){const d=new Date();$('ct').textContent=d.toLocaleTimeString('es-PA');$('cd').textContent=d.toLocaleDateString('es-PA',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}
 setInterval(reloj,1000);reloj();
 function ir(v){if(v!=='home')0;vista=v;if(v==='nueva'&&!items.length)items=[{}];nav();$('tt').textContent=V.find(x=>x[0]==v)[2];R[v]();if(v==='home')renderE();scrollTo(0,0);cintillo()}
-const fdate=d=>d.split('-').reverse().join('/');const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');const hoy=()=>ymd(new Date());
 const act=()=>DB.fac.filter(f=>!f.anulada);
 const R={
 home(){editEmails=false;const h=hoy(),m=h.slice(0,7),a=act(),sum=l=>l.reduce((s,f)=>s+f.total,0);

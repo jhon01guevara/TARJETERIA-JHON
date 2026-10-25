@@ -29,7 +29,7 @@ Según el código y la documentación de `docs/`:
 ├── firestore.rules            # Reglas de seguridad de Firestore
 ├── estilo-tienda-shop.css     # Estilos de la tienda
 ├── css/                       # Estilos adicionales (uber-skin.css)
-├── js/                        # Lógica del panel (app.js, facturacion.js, empresas.js, marketing.js, ...)
+├── js/                        # Lógica del panel (app.js, utils.js, facturacion.js, empresas.js, marketing.js, ...)
 ├── apps/                      # Apps auxiliares (modelos, investigacion)
 ├── migraciones/               # Herramientas de migración multiempresa
 ├── docs/                      # Documentación técnica
