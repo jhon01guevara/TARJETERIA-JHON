@@ -23,6 +23,13 @@ function _hcall(c){var m=/^(\w+)\((?:'([^']*)')?\)$/.exec(c);return m?(m[2]===un
 if(window.pdfjsLib)pdfjsLib.GlobalWorkerOptions.workerSrc='js/pdf.worker.min.js';
 const _appC={};function appHtml(n){if(!_appC[n])_appC[n]=fetch('apps/'+n+'.html',{cache:'no-cache'}).then(r=>{if(!r.ok)throw new Error('apps/'+n+' '+r.status);return r.text()}).catch(e=>{delete _appC[n];throw e});return _appC[n]}
 
+/* Multiempresa: particiona las claves locales por empresa (la inicial conserva las suyas).
+   Debe definirse ANTES de su primer uso (cardState y tj_db, justo debajo): un const se queda en
+   'zona muerta' hasta su línea y usarlo antes lanza 'Cannot access lsk before initialization'.
+   Es seguro aquí: empLSKey solo lee ?emp= de la URL o localStorage 'tj_emp' (síncrono, ya cargado
+   por js/empresa-contexto.js, antes de app.js) y fbCol usa esa misma empresa, así que clave local y
+   ruta de Firestore siempre coinciden; cambiar de empresa recarga la página (empActivar). */
+const lsk=k=>TJEmpresa.empLSKey(k);
 let DB={prod:[],cli:[],fac:[],ubi:[],agenda:[],cfg:{sig:1058,itbms:0,nombre:'Tarjetería Jhon',ruc:'',tel:'(507) 6074-1150',email:'Tarjeteriajhon@gmail.com',dir:'Panama Oeste',banco:'Banco General',tcuenta:'Ahorro',cuenta:'',yappy:'',dests:[],tema:'claro',snd:1,tono:'campana',vol:70,nsys:0}};
 let cardState={cfg:false,email:false};
 try{cardState=Object.assign(cardState,JSON.parse(localStorage.getItem(lsk('tj_cards'))||'{}'))}catch(e){window._tjw&&_tjw(e)}
@@ -128,7 +135,7 @@ const pickCfg=(cfg,keys=PUBLIC_CFG)=>keys.reduce((o,k)=>(Object.prototype.hasOwn
    identidad (roles/perfiles/presencia) siguen globales. lsk particiona las claves
    locales por empresa — la inicial conserva las suyas (retro-compatible). */
 const fbCol=n=>fbDb&&fbDb.collection(TJEmpresa.empColPath(n));
-const lsk=k=>TJEmpresa.empLSKey(k);
+/* lsk: definido arriba, junto a cardState (Fase 14: se usaba antes de existir). */
 const publicRef=()=>fbDb&&fbCol('panel_public').doc('general');
 const privateRef=()=>fbDb&&(esAdmin()?fbCol('panel').doc('data'):fbCol('vendedores').doc(SES.id).collection('privado').doc('data'));
 const publicPayload=ts=>({prod:Array.isArray(DB.prod)?DB.prod:[],cfg:pickCfg(DB.cfg),_ts:ts});
@@ -951,6 +958,10 @@ function capturarUbicacion(){
  },{enableHighAccuracy:true,timeout:20000,maximumAge:0})
 }
 function delUbi(id){if(!confirm('¿Eliminar esta ubicación?'))return;DB.ubi=DB.ubi.filter(u=>u.id!==id);save();R.ubi()}
+/* Fase 14: invalidateSize() de Leaflet lanza 'Cannot read properties of undefined (reading _leaflet_pos)'
+   si el mapa ya se quitó (map.remove()) o su contenedor salió del DOM antes de que corra el setTimeout
+   (cambio rápido de pantalla). Solo refresca si el mapa sigue vivo; si no, no hace nada. */
+function mapaRefrescar(m){try{if(m&&m._loaded&&m._mapPane&&m.getContainer&&m.getContainer().isConnected)m.invalidateSize()}catch(e){}}
 let mapaUbi=null,marcadoresUbi=[],miMarcador=null,miCirculo=null;
 function pintarMapaUbi(){
  const el=$('ubiMap');if(!el||!window.L)return;
@@ -979,7 +990,7 @@ function pintarMapaUbi(){
  }else{
   mapaUbi.setView([8.9824,-79.5199],11) // Panamá Oeste / Arraiján por defecto
  }
- setTimeout(()=>mapaUbi&&mapaUbi.invalidateSize(),150);
+ setTimeout(()=>mapaRefrescar(mapaUbi),150);
  mapaUbi.on('locationfound',ev=>{
   if(miCirculo)mapaUbi.removeLayer(miCirculo);if(miMarcador)mapaUbi.removeLayer(miMarcador);
   miCirculo=L.circle(ev.latlng,{radius:ev.accuracy,color:'#2A7DE1',fillColor:'#2A7DE1',fillOpacity:.15,weight:1}).addTo(mapaUbi);
@@ -990,7 +1001,7 @@ function pintarMapaUbi(){
  mapaUbi.locate({setView:true,maxZoom:16,enableHighAccuracy:true})
 }
 let ubiTmp=null;
-function ubiFull(on){const w=$('ubiWrap');if(!w)return;on=on===undefined?!w.classList.contains('ubifs'):!!on;if(on){if(!w._home){w._home=w.parentNode;w._homeNext=w.nextSibling}document.body.appendChild(w)}else if(w._home){if(w._homeNext&&w._homeNext.parentNode===w._home)w._home.insertBefore(w,w._homeNext);else w._home.appendChild(w)}w.classList.toggle('ubifs',on);document.body.style.overflow=on?'hidden':'';[50,150,400].forEach(ms=>setTimeout(()=>mapaUbi&&mapaUbi.invalidateSize(),ms))}
+function ubiFull(on){const w=$('ubiWrap');if(!w)return;on=on===undefined?!w.classList.contains('ubifs'):!!on;if(on){if(!w._home){w._home=w.parentNode;w._homeNext=w.nextSibling}document.body.appendChild(w)}else if(w._home){if(w._homeNext&&w._homeNext.parentNode===w._home)w._home.insertBefore(w,w._homeNext);else w._home.appendChild(w)}w.classList.toggle('ubifs',on);document.body.style.overflow=on?'hidden':'';[50,150,400].forEach(ms=>setTimeout(()=>mapaRefrescar(mapaUbi),ms))}
 addEventListener('keydown',e=>{if(e.key==='Escape'){const w=$('ubiWrap');if(w&&w.classList.contains('ubifs'))ubiFull(0)}});
 function ubiParse(t){t=String(t||'').trim();if(!t)return null;try{t=decodeURIComponent(t)}catch(e){window._tjw&&_tjw(e)}
  const rx=[/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/,/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/,/[?&](?:q|ll|query|center|destination|daddr)=\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i,/^\s*(-?\d{1,2}(?:\.\d+)?)\s*[,;\s]\s*(-?\d{1,3}(?:\.\d+)?)\s*$/];
@@ -4148,7 +4159,7 @@ function mcPintar(slot){
  map.setView([8.9824,-79.5199],11);
  MC.s[slot]={map,grupo:L.featureGroup().addTo(map),mk:{}};
  mcCapa(slot,true);
- setTimeout(()=>map&&map.invalidateSize(),150)
+ setTimeout(()=>mapaRefrescar(map),150)
 }
 
 function mcCapa(slot,ajustar){
@@ -4208,7 +4219,7 @@ function cliMapaIniciar(){
  if(_cuMap){try{_cuMap.remove()}catch(e){window._tjw&&_tjw(e)}_cuMap=null;_cuMk=null}
  _cuMap=L.map('cuMap',{zoomControl:true});mcCapas(_cuMap,'calle');_cuMap.setView([8.9824,-79.5199],12);
  _cuMap.on('click',e=>{const i=$('cu_link');if(!i)return;i.value=e.latlng.lat.toFixed(6)+', '+e.latlng.lng.toFixed(6);delete i.dataset.acc;cliLocEstado()});
- setTimeout(()=>_cuMap&&_cuMap.invalidateSize(),150)
+ setTimeout(()=>mapaRefrescar(_cuMap),150)
 }
 function cliMapSync(centrar){
  if(!_cuMap||!$('cuMap'))return;
