@@ -16,6 +16,8 @@ const EXTR={
  'js/sanear.js':{consts:['SAFE_ID','sTxt','sNum'],funcs:['sanLead','sanPed','sanGal','sanEnv']},
  'js/redes.js':{consts:['RED_DEF','RED_HOST','RED_SVG','CONT_DEF','redesLista'],funcs:['redUrl','contLimpio']},
  // Textos legales: las funciones de dibujo usan document/navigator/window al EJECUTARSE (no al cargar), por eso 'efectos:true'
+ // Fase 19 (7a): compresor de GIF (usa document/ImageDecoder/btoa al EJECUTARSE, no al cargar)
+ 'js/gif.js':{consts:['_u8b64'],funcs:['_gifMedianCut','_gifLZW','_gifEncode','gifComprimir'],efectos:true},
  'js/politicas.js':{consts:['TJ_POLITICAS'],funcs:['shopPoliticas','poliVerEvidencia','poliImprimirEvidencia','poliCopiarEvidencia','poliVerRegistroAuditoria','poliExportarCSV','poliCopiar','poliAdmCard'],efectos:true},
 };
 const TODOS=Object.entries(EXTR).flatMap(([f,o])=>[...o.consts.map(n=>[f,n,'const']),...o.funcs.map(n=>[f,n,'function'])]);
@@ -46,7 +48,7 @@ for(const f of Object.keys(EXTR)){
  test(f+': declara lo movido con el mismo tipo de declaración y ningún otro script lo redeclara',()=>{
   const s=leer(f);
   for(const [file,n,tipo] of TODOS.filter(x=>x[0]===f)){
-   assert.ok(new RegExp('(^|[;\\n])'+(tipo==='const'?'const ':'function ')+esc(n)+(tipo==='const'?'\\s*=':'\\(')).test(s),f+' debe declarar '+tipo+' '+n);
+   assert.ok(new RegExp('(^|[;\\n])'+(tipo==='const'?'const ':'(?:async )?function ')+esc(n)+(tipo==='const'?'\\s*=':'\\(')).test(s),f+' debe declarar '+tipo+' '+n);
    for(const otro of locales.filter(x=>x!==f)){
     assert.ok(!new RegExp('^(?:const|let|var|function)\\s+'+esc(n)+'\\b','m').test(leer(otro)),otro+' redeclara '+n+' (ya vive en '+f+')');
    }

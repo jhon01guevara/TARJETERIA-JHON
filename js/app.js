@@ -1863,49 +1863,6 @@ const PF_AN=[['bounce','Rebote'],['pulse','Latido'],['spin','Giro'],['wiggle','M
 function perfPrev(){const e=$('pf_pv');if(e)e.innerHTML=avFrom(PF,96,chatMe());document.querySelectorAll('#pf_g button').forEach(b=>b.classList.toggle('on',b.dataset.e===PF.e&&!PF.img))}
 function perfForm(){const id=chatMe();if(!id)return;const p=PERF[id]||{};PF={e:p.e||'',a:_okAn(p.a),img:_okImg(p.img)?p.img:''};
  $('mb').innerHTML=`<h3 style="margin-top:0">🙂 Mi perfil</h3><p style="font-size:12.5px;color:var(--gris);margin:0 0 10px">Elija un emoji con movimiento, o suba una foto o un GIF. Lo verán en el chat y en las llamadas.</p><div id="pf_pv" style="text-align:center;margin:6px 0 12px"></div><label>Emoji animado</label><div class="pfg" id="pf_g">${PF_EM.map(e=>`<button type="button" data-e="${e}" data-h-click="h161">${e}</button>`).join('')}</div><div class="g" style="margin-top:10px"><div><label>Movimiento</label><select data-h-change="h160">${PF_AN.map(([k,n])=>`<option value="${k}" ${PF.a===k?'selected':''}>${n}</option>`).join('')}</select></div></div><label style="display:block;margin-top:12px">Foto o GIF</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn s" style="cursor:pointer">📷 Tomar foto<input type="file" accept="image/*" capture="user" hidden data-h-change="h159"></label><label class="btn s" style="cursor:pointer">🖼 Elegir imagen o GIF<input type="file" accept="image/*" hidden data-h-change="h159"></label></div><p style="font-size:11.5px;color:var(--gris);margin:6px 0 0">Las fotos y los GIF pesados se comprimen solos.</p><div style="display:flex;gap:8px;justify-content:space-between;margin-top:16px;flex-wrap:wrap"><button class="btn d" data-h-click="h158">Quitar mi avatar</button><span><button class="btn" data-h-click="h12">Cancelar</button> <button class="btn p" data-h-click="h157">Guardar</button></span></div>`;$('md').classList.add('on');perfPrev()}
-// --- Compresión automática de GIF animados: se decodifican los cuadros, se reducen y se vuelve a generar el GIF ---
-function _gifMedianCut(S,n){const cnt=S.length/3;let boxes=[Array.from({length:cnt},(_,i)=>i)];
- const rng=bx=>{const mn=[255,255,255],mx=[0,0,0];for(const i of bx)for(let c=0;c<3;c++){const v=S[i*3+c];if(v<mn[c])mn[c]=v;if(v>mx[c])mx[c]=v}return [mx[0]-mn[0],mx[1]-mn[1],mx[2]-mn[2]]};
- while(boxes.length<n){let bi=-1,bs=0,bc=0;boxes.forEach((bx,i)=>{if(bx.length<2)return;const r=rng(bx),m=Math.max(r[0],r[1],r[2]),sc=m*Math.sqrt(bx.length);if(sc>bs){bs=sc;bi=i;bc=r.indexOf(m)}});if(bi<0||bs===0)break;
-  const bx=boxes[bi].sort((x,y)=>S[x*3+bc]-S[y*3+bc]),h=bx.length>>1;boxes.splice(bi,1,bx.slice(0,h),bx.slice(h))}
- return boxes.map(bx=>{let r=0,g=0,bl=0;for(const i of bx){r+=S[i*3];g+=S[i*3+1];bl+=S[i*3+2]}const k=bx.length||1;return [Math.round(r/k),Math.round(g/k),Math.round(bl/k)]})}
-function _gifLZW(px,minC){const clear=1<<minC,eoi=clear+1;let size=minC+1,next=eoi+1,dict=new Map(),out=[],cur=0,nb=0;
- const emit=c=>{cur|=c<<nb;nb+=size;while(nb>=8){out.push(cur&255);cur>>>=8;nb-=8}};
- emit(clear);let pre=px[0];
- for(let i=1;i<px.length;i++){const k=px[i],key=(pre<<8)|k,v=dict.get(key);
-  if(v!==undefined){pre=v;continue}
-  emit(pre);
-  if(next===4096){emit(clear);next=eoi+1;size=minC+1;dict=new Map()}
-  else{if(next>=(1<<size))size++;dict.set(key,next++)}
-  pre=k}
- emit(pre);emit(eoi);if(nb>0)out.push(cur&255);return out}
-function _gifEncode(frames,D,bits){const all=[];frames.forEach(f=>{const d=f.data;const st=Math.max(1,Math.floor(d.length/4/(14000/frames.length)));for(let i=0;i<d.length;i+=4*st)all.push(d[i],d[i+1],d[i+2])});
- const pal=_gifMedianCut(Uint8Array.from(all),1<<bits);while(pal.length<(1<<bits))pal.push([0,0,0]);
- const cache=new Map(),near=(r,g,b)=>{const key=((r>>3)<<10)|((g>>3)<<5)|(b>>3);let v=cache.get(key);if(v!==undefined)return v;let bd=1e9;v=0;for(let i=0;i<pal.length;i++){const q=pal[i],dd=(q[0]-r)**2+(q[1]-g)**2+(q[2]-b)**2;if(dd<bd){bd=dd;v=i}}cache.set(key,v);return v};
- const o=[],w16=n=>o.push(n&255,(n>>8)&255),minC=Math.max(2,bits);
- 'GIF89a'.split('').forEach(c=>o.push(c.charCodeAt(0)));w16(D);w16(D);o.push(0x80|(7<<4)|(bits-1),0,0);pal.forEach(c=>o.push(c[0],c[1],c[2]));
- o.push(0x21,0xFF,0x0B);'NETSCAPE2.0'.split('').forEach(c=>o.push(c.charCodeAt(0)));o.push(3,1,0,0,0);
- frames.forEach(f=>{o.push(0x21,0xF9,4,0x04);w16(Math.max(2,Math.round(f.d/10)));o.push(0,0);
-  o.push(0x2C);w16(0);w16(0);w16(D);w16(D);o.push(0);
-  const d=f.data,idx=new Uint8Array(D*D);for(let i=0,j=0;i<idx.length;i++,j+=4)idx[i]=near(d[j],d[j+1],d[j+2]);
-  o.push(minC);const z=_gifLZW(idx,minC);for(let i=0;i<z.length;i+=255){const ch=z.slice(i,i+255);o.push(ch.length);for(const x of ch)o.push(x)}o.push(0)});
- o.push(0x3B);return Uint8Array.from(o)}
-const _u8b64=u=>{let s='';for(let i=0;i<u.length;i+=8192)s+=String.fromCharCode.apply(null,u.subarray(i,i+8192));return btoa(s)};
-async function gifComprimir(file,maxBytes){
- if(!('ImageDecoder' in window))return null;
- const dec=new ImageDecoder({data:await file.arrayBuffer(),type:'image/gif'});await dec.tracks.ready;const n=dec.tracks.selectedTrack.frameCount;if(!n)return null;
- const D0=128,cv=document.createElement('canvas');cv.width=cv.height=D0;const cx=cv.getContext('2d',{willReadFrequently:true});
- const keep=Math.min(n,60),step=n/keep,fr=[];let acc=0,nx=0;
- for(let i=0;i<n;i++){const {image}=await dec.decode({frameIndex:i});acc+=(image.duration||100000)/1000;
-  if(i>=Math.floor(nx)){const w=image.displayWidth,h=image.displayHeight,s=Math.min(w,h);cx.fillStyle='#fff';cx.fillRect(0,0,D0,D0);cx.drawImage(image,(w-s)/2,(h-s)/2,s,s,0,0,D0,D0);fr.push({d:acc,data:cx.getImageData(0,0,D0,D0)});acc=0;nx+=step}
-  image.close()}
- dec.close&&dec.close();
- const tmp=document.createElement('canvas'),tx=tmp.getContext('2d',{willReadFrequently:true});
- for(const [D,mf,bits] of [[128,60,8],[128,40,7],[112,32,7],[96,24,6],[80,18,6],[64,14,5],[48,10,5]]){
-  const k=Math.max(1,Math.ceil(fr.length/mf)),sel=[];for(let i=0;i<fr.length;i+=k){let d=0;for(let j=i;j<Math.min(fr.length,i+k);j++)d+=fr[j].d;sel.push({d,src:fr[i].data})}
-  const fs=sel.map(f=>{if(D===D0)return {d:f.d,data:f.src.data};tmp.width=tmp.height=D0;tx.putImageData(f.src,0,0);const c2=document.createElement('canvas');c2.width=c2.height=D;const x2=c2.getContext('2d',{willReadFrequently:true});x2.drawImage(tmp,0,0,D0,D0,0,0,D,D);return {d:f.d,data:x2.getImageData(0,0,D,D).data}});
-  const bytes=_gifEncode(fs,D,bits);if(bytes.length<=maxBytes)return 'data:image/gif;base64,'+_u8b64(bytes)}
- return null}
 const _perfLeer=f=>{const r=new FileReader();r.onload=()=>{PF.img=String(r.result);PF.e='';perfPrev()};r.readAsDataURL(f)};
 function _perfFoto(f){createImageBitmap(f).then(bm=>{const m=192,k=Math.max(m/bm.width,m/bm.height),w=bm.width*k,h=bm.height*k,c=document.createElement('canvas');c.width=c.height=m;const x=c.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,m,m);x.drawImage(bm,(m-w)/2,(m-h)/2,w,h);PF.img=c.toDataURL('image/jpeg',.82);PF.e='';perfPrev();bm.close&&bm.close()}).catch(()=>alert('No se pudo leer la imagen.'))}
 async function perfFile(inp){const f=inp.files&&inp.files[0];inp.value='';if(!f)return;if(!/^image\//.test(f.type))return alert('Elija una imagen.');
