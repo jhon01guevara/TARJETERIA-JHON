@@ -1,0 +1,7 @@
+/* Marca VEN CRM: solo el panel (html.ven-crm lo pone js/marca-crm.js; la tienda ?tienda= nunca lo tiene). Solo cambia la pantalla de inicio de sesión. */
+html.ven-crm #auth{background:#000;--c1:#3b3b3b;--c2:#1f1f1f;--c3:#505050}
+html.ven-crm #auth .abg span{opacity:.55}
+.vlogo{text-align:center;margin:0 auto 18px}
+.vlogo img{display:block;margin:0 auto;width:220px;max-width:80%;height:auto}
+html.ven-crm #auth .alogo{max-width:240px;padding:8px;border-radius:16px}
+html.ven-crm #auth .alogo img{max-height:64px}
