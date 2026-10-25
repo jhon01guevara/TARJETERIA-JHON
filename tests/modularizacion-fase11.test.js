@@ -20,6 +20,8 @@ const EXTR={
  'js/gif.js':{consts:['_u8b64'],funcs:['_gifMedianCut','_gifLZW','_gifEncode','gifComprimir'],efectos:true},
  // Fase 19 (13): datos del carrusel promocional; promoSlide usa esc/_ha al ejecutarse
  'js/promo.js':{consts:['PROMO_IMG','PROMO'],funcs:['promoSlide'],efectos:true},
+ // Fase 19 (6a): directorio de transportistas (datos y utilidades puras; fleMono usa canvas al ejecutarse)
+ 'js/transportistas.js':{consts:['fleT','FLE_DEF','FLE_WEB','fleAll','fleNorm','fleTelTxt','fleWaNum','_fleMono','fleIni','fleLogo'],funcs:['fleSanExtra','fleSanCfg','fleBuscar','fleMono'],efectos:true},
  'js/politicas.js':{consts:['TJ_POLITICAS'],funcs:['shopPoliticas','poliVerEvidencia','poliImprimirEvidencia','poliCopiarEvidencia','poliVerRegistroAuditoria','poliExportarCSV','poliCopiar','poliAdmCard'],efectos:true},
 };
 const TODOS=Object.entries(EXTR).flatMap(([f,o])=>[...o.consts.map(n=>[f,n,'const']),...o.funcs.map(n=>[f,n,'function'])]);
@@ -43,7 +45,7 @@ for(const f of Object.keys(EXTR)){
   for(const l of s.split('\n')){
    if(enComentario){if(/\*\//.test(l))enComentario=false;continue}
    if(/^\/\*/.test(l)){if(!/\*\//.test(l))enComentario=true;continue}
-   if(l===''||/^\s/.test(l)||/^(\/\/|const |function |async function |\}|\))/.test(l))continue;
+   if(l===''||/^\s/.test(l)||/^(\/\/|const |function |async function |\}|\)|\]|\/\*)/.test(l))continue;
    assert.fail(f+': línea de nivel superior que no es una declaración: '+l.slice(0,80));
   }
  });
