@@ -27,7 +27,7 @@ async function servidor(){
 let fallos=0,total=0;
 const chk=(n,ok,det)=>{total++;if(!ok)fallos++;console.log((ok?'  ok     ':'  FALLA  ')+n+(det?'  ['+det+']':''))};
 const CLAVES=['agencia','fid','tipo','rec','rtel','rced','pais','prov','ciudad','suc','dir','ref'];
-const LIM={agencia:80,fid:30,rec:120,rtel:40,rced:30,pais:60,prov:80,ciudad:80,suc:100,dir:200,ref:200};
+const LIM={tipo:13,agencia:80,fid:30,rec:120,rtel:40,rced:30,pais:60,prov:80,ciudad:80,suc:100,dir:200,ref:200};
 
 async function correr(br,base,[W,H],fid){
  const vp=W+'x'+H,intl=fid==='dhlexpress';console.log('\n== '+vp+(W<600?' (móvil)':' (escritorio)')+' · '+(intl?'transportista internacional':'transportista nacional')+' · '+(REAL?'REAL en prueba':'doble local')+' ==');
