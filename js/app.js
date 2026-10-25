@@ -3979,7 +3979,18 @@ document.addEventListener('click', function(e){
   }
 });
 
-window.addEventListener('load',()=>{(SHOP?Promise.resolve():navigator.serviceWorker.register('sw.js')).catch(()=>{})})}
+/* Fase 16: apps/modelos.js (módulo Check, 1,17 MB comprimido) ya no se precachea al instalar el service worker, para no competir con la primera carga.
+   Para que el módulo siga funcionando sin conexión aunque aún no se haya abierto, se le pide al service worker que lo guarde en un momento libre, ya pintada la pantalla
+   (nunca en la tienda pública, con "ahorro de datos" ni con conexión 2G). Si no llega a guardarse, se guarda igual la primera vez que se abre Check. */
+function precalentarModelos(){
+ const c=navigator.connection||{};
+ if(SHOP||navigator.onLine===false||c.saveData||/(^|-)2g$/.test(c.effectiveType||''))return;
+ const pedir=()=>navigator.serviceWorker.ready.then(r=>{if(r.active)r.active.postMessage('precalentar-modelos')}).catch(()=>{});
+ const idle=()=>{(window.requestIdleCallback||(f=>setTimeout(f,3000)))(pedir,{timeout:10000})};
+ setTimeout(idle,5000);
+ navigator.serviceWorker.addEventListener('controllerchange',()=>setTimeout(pedir,8000),{once:true});
+}
+window.addEventListener('load',()=>{(SHOP?Promise.resolve():navigator.serviceWorker.register('sw.js').then(precalentarModelos)).catch(()=>{})})}
 
 function investigacionAbrir(){const old=document.getElementById('investOv');if(old)old.remove();const v=document.createElement('div');v.id='investOv';
  v.innerHTML=`<div class="pdfvb"><b>📦 Investigación de productos</b><span><button class="btn s d" id="investX">✕ Cerrar</button></span></div><iframe id="investFrame" title="Investigación de productos"></iframe>`;

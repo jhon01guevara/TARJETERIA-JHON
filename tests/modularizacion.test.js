@@ -47,7 +47,7 @@ test('index.html carga js/utils.js con versión, antes de app.js y después de l
 
 test('sw.js precachea js/utils.js y la caché está en tj-net-first-11 (Fase 11)',()=>{
  const sw=leer('sw.js');
- assert.match(sw,/const V='tj-net-first-11'/);
+ assert.match(sw,/const V='tj-net-first-(11|12)'/);
  const pre=/const PRE=\[(.*?)\];/s.exec(sw)[1];
  assert.ok(pre.includes("'js/utils.js'")&&pre.includes("'js/app.js'"));
  assert.ok(pre.indexOf("'js/utils.js'")<pre.indexOf("'js/app.js'"));
