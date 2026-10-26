@@ -12,7 +12,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # para comparar con la rama base (aviso de la versión del service worker)
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 20
       - run: npm test
+      - name: Comprobaciones estáticas (sintaxis, archivos referenciados, service worker, Hosting)
+        env:
+          RAMA_BASE: ${{ github.base_ref }}
+        run: |
+          if [ -n "$RAMA_BASE" ]; then
+            node tests/herramientas/comprobar-estatico.js --base="origin/$RAMA_BASE"
+          else
+            node tests/herramientas/comprobar-estatico.js
+          fi

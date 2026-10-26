@@ -19,6 +19,8 @@ function copiar(a,b){fs.mkdirSync(b,{recursive:true});for(const e of fs.readdirS
  const cfg=(await r.text()).match(/^const firebaseConfig=\{[^\n]*\};/m);
  if(!cfg||!/projectId:"tarjeteria-jhon-prueba"/.test(cfg[0]))throw new Error('La configuración leída no es la del proyecto de PRUEBA: se cancela');
  fs.rmSync(dest,{recursive:true,force:true});copiar(RAIZ,dest);
+ /* index.html carga migraciones/migracion-multiempresa.js (Hosting sí lo publica): sin él habría un 404 que en producción no existe */
+ fs.mkdirSync(path.join(dest,'migraciones'),{recursive:true});fs.copyFileSync(path.join(RAIZ,'migraciones','migracion-multiempresa.js'),path.join(dest,'migraciones','migracion-multiempresa.js'));
  const f=path.join(dest,'js','app.js');let s=fs.readFileSync(f,'utf8');
  const n0=s.length;
  s=s.replace(/^const firebaseConfig=\{[^\n]*\};/m,()=>cfg[0]);
