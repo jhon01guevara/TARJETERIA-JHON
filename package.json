@@ -1,6 +1,8 @@
 {
   "private": true,
   "scripts": {
-    "test": "node --test tests/*.test.js"
+    "test": "node --test tests/*.test.js",
+    "humo": "node tests/navegador/humo.js",
+    "comprobar": "node tests/herramientas/comprobar-estatico.js"
   }
 }

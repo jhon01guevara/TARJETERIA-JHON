@@ -30,3 +30,6 @@ tmp/
 temp/
 *.tmp
 .firebase/
+
+# Capturas de la suite de humo
+humo-capturas/
