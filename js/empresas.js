@@ -85,9 +85,10 @@ function empGuardar(){
  if(EM.list.length>=20&&!EM.list.some(function(x){return x.id===d.id}))
   return alert('Ya llegó al máximo de 20 empresas previsto por ahora.');
  var nueva=!EM.list.some(function(x){return x.id===d.id});
+ var ej=!!(nueva&&typeof $==='function'&&$('em_ejemplos')&&$('em_ejemplos').checked);
  fbDb.collection('empresas').doc(d.id).set(d,{merge:true}).then(function(){
-  if(nueva)empCrearDemo(d);
-  EM.edit=null;EM.msg={ok:true,t:'✔ Empresa guardada.'+(nueva?' Se creó su tienda de muestra con 3 productos de ejemplo (todo editable en Configuración → Plantilla de la web).':'')};R.empresas();
+  if(nueva)empCrearDemo(d,{ejemplos:ej});
+  EM.edit=null;EM.msg={ok:true,t:'✔ Empresa guardada.'+(nueva?(ej?' Se añadió contenido de ejemplo (3 productos y un banner). Para quitarlo: entre a esa empresa (botón «Usar») y pulse «Quitar ejemplos» en esta pantalla.':' La empresa nació vacía: sin productos, catálogo ni ejemplos. Pulse «Usar» para entrar a ella.'):'')};R.empresas();
  }).catch(function(e){window._tjw&&window._tjw(e);alert('No se pudo guardar. Revise su conexión o las reglas de Firestore.')});
 }
 function empEditar(id){
@@ -151,29 +152,36 @@ function empDemoBanner(nombre){
   '<text x="600" y="370" font-family="Segoe UI,sans-serif" font-size="34" fill="rgba(255,255,255,.85)" text-anchor="middle">Banner de ejemplo · cámbielo en Configuración → Plantilla de la web</text></svg>';
  return 'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
 }
-/* Contenido de muestra de una empresa NUEVA: plantilla con SU nombre, banner y
-   logo demo, 3 productos de ejemplo y SIN nada de Tarjetería Jhon. Todo
-   editable/borrable después. Solo usa colecciones por empresa ya permitidas. */
-function empCrearDemo(d){
+/* Alta de una empresa NUEVA. Por defecto queda REALMENTE VACÍA: solo el nombre (plantilla de la tienda y panel) para que su tienda y su panel abran con su nombre.
+   Con op.ejemplos (casilla «Incluir contenido de ejemplo») se añaden además un banner, 3 productos de ejemplo y textos de muestra, todos con demo:1 y quitables con un clic
+   (Empresas → «Quitar ejemplos», js/limpieza-empresa.js). Todo se escribe SIEMPRE en empresas/<id nueva>/…: antes se usaba fbCol(), que escribe en la empresa ACTIVA
+   (la del administrador), y los productos de ejemplo y el nombre de la empresa nueva se guardaban en la tienda y el panel de la otra empresa. */
+function empCrearDemo(d,op){
  try{
-  if(typeof fbCol!=='function'||!fbCol)return;
-  var ts=Date.now();
-  fbCol('tienda_items').doc('__cfg').set({__cfg:true,empresaNombre:d.nombre,
+  if(typeof fbDb==='undefined'||!fbDb||!d||!TJEmpresa.empSlugOk(d.id))return;
+  var ej=!!(op&&op.ejemplos),ts=Date.now();
+  var col=function(n){return fbDb.collection('empresas/'+d.id+'/'+n)};
+  var cfgTienda={__cfg:true,empresaNombre:d.nombre,
    heroTitle:d.nombre,
-   heroSub:'Bienvenido a '+d.nombre+' · Coloque aquí su eslogan en Configuración → Plantilla de la web',
-   heroBgType:'photo',heroPhotoUrl:empDemoBanner(d.nombre),
    wordmark:d.nombre.slice(0,14),
-   banners:[{id:'demo_b1',src:empDemoBanner(d.nombre)}],
-   btnRadio:999,demo:1,ts:ts},{merge:true}).catch(function(){});
+   btnRadio:999,ts:ts};
+  if(ej)Object.assign(cfgTienda,{heroSub:'Bienvenido a '+d.nombre+' · Coloque aquí su eslogan en Configuración → Plantilla de la web',
+   heroBgType:'photo',heroPhotoUrl:empDemoBanner(d.nombre),
+   banners:[{id:'demo_b1',src:empDemoBanner(d.nombre)}],demo:1});
+  col('tienda_items').doc('__cfg').set(cfgTienda,{merge:true}).catch(function(){});
+  var cfgPanel={nombre:d.nombre,
+   loginTitulo:d.nombre};
+  if(ej)Object.assign(cfgPanel,{loginDesc:'Coloque la descripción de su empresa (Configuración → Inicio de sesión)',
+   loginLogoSrc:empDemoLogo(d.nombre),loginLogoKind:'image'});
+  var pd={cfg:cfgPanel};if(ej)pd.demo=1;
+  col('panel').doc('data').set(pd,{merge:true}).catch(function(){});
+  if(!ej)return;
   for(var i=0;i<3;i++){
-   fbCol('tienda_items').doc('demo_'+(i+1)).set({id:'demo_'+(i+1),
+   col('tienda_items').doc('demo_'+(i+1)).set({id:'demo_'+(i+1),
     name:'Producto de ejemplo '+(i+1),cat:'Demo',price:0,
     desc:'Producto de demostración de '+d.nombre+'. Edítelo o publíquelo cuando tenga el suyo.',
     img:empDemoImg(d.nombre,i),tags:[],stock:'ok',badges:[],ts:ts+i,demo:1}).catch(function(){});
   }
-  fbCol('panel').doc('data').set({cfg:{nombre:d.nombre,
-   loginTitulo:d.nombre,loginDesc:'Coloque la descripción de su empresa (Configuración → Inicio de sesión)',
-   loginLogoSrc:empDemoLogo(d.nombre),loginLogoKind:'image'},demo:1},{merge:true}).catch(function(){});
  }catch(e){window._tjw&&window._tjw(e)}
 }
 
@@ -229,7 +237,8 @@ function empresasRender(){
    +'<div><label>Color secundario</label><input id="em_color2" type="color" value="'+(e.color2||EMP_COLOR2)+'" style="height:42px;padding:2px"></div>'
    +'<div><label>Teléfono de contacto</label><input id="em_tel" value="'+(e.contacto?e.contacto.tel:'')+'" maxlength="25" placeholder="+507 0000-0000"></div>'
    +'<div><label>Correo de contacto</label><input id="em_email" value="'+(e.contacto?e.contacto.email:'')+'" maxlength="120" placeholder="contacto@suempresa.com"></div>'
-   +'</div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn p" data-h-click="call" data-a-click="'+(typeof _ha==='function'?_ha('empGuardar'):'')+'">💾 Guardar empresa</button>'
+   +'</div>'+(EM.edit?'':'<label style="display:flex;gap:8px;align-items:flex-start;margin-top:12px;font-size:13px"><input type="checkbox" id="em_ejemplos" style="margin-top:3px"><span>Incluir contenido de ejemplo <small style="display:block;color:var(--gris)">3 productos y un banner de muestra para ver cómo se ve la tienda. Se quitan con un clic. Sin marcar, la empresa nace vacía.</small></span></label>')
+   +'<div style="display:flex;gap:8px;margin-top:12px"><button class="btn p" data-h-click="call" data-a-click="'+(typeof _ha==='function'?_ha('empGuardar'):'')+'">💾 Guardar empresa</button>'
    +'<button class="btn" data-h-click="call" data-a-click="'+(typeof _ha==='function'?_ha('empCancelar'):'')+'">Cancelar</button></div>';
  }else if(EM.tab==='dominios'){
   var opts=EM.list.map(function(x){return '<option value="'+(typeof esc==='function'?esc(x.id):x.id)+'"'+(EM.domEmp===x.id?' selected':'')+'>'+ (typeof esc==='function'?esc(x.nombre||x.id):x.id)+'</option>'}).join('');
@@ -257,12 +266,13 @@ function empresasRender(){
     +'</div></div>';
   }).join('');
   body='<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn p" data-h-click="call" data-a-click="'+(typeof _ha==='function'?_ha('empNueva'):'')+'">+ Nueva empresa</button></div>'
-   +(filas||'<div class="vacio">Aún no hay empresas en la nube. La empresa inicial se registra sola al abrir esta pantalla; también puede crear otras con «Nueva empresa».</div>');
+   +(filas||'<div class="vacio">Aún no hay empresas en la nube. La empresa inicial se registra sola al abrir esta pantalla; también puede crear otras con «Nueva empresa».</div>')+(typeof limpiezaHTML==='function'?limpiezaHTML():'');
  }
 
  var html=cab+body+'</div>';
  var cont=typeof $==='function'?$('v'):null;
  if(cont)cont.innerHTML=html;
+ if(EM.tab==='lista'&&typeof limpiezaPintar==='function')limpiezaPintar();
 
  /* select de dominios: sincroniza la empresa elegida */
  var de=$id('em_domemp');

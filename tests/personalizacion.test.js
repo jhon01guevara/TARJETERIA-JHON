@@ -62,7 +62,7 @@ test('Las políticas usan el nombre real de la empresa (nada de nombres fijos)',
  assert.doesNotMatch(app,/genCards=\[\s*\n {3}\['poliCard'/,'ya no está en ajustes generales');
 });
 
-test('Las empresas nuevas nacen con demo completo y SIN contenido de Tarjetería Jhon',()=>{
+test('Las empresas nuevas nacen vacías (ejemplos solo si se piden) y SIN contenido de Tarjetería Jhon',()=>{
  const emp=leer('js/empresas.js');
  assert.match(emp,/function empNombreActiva/);
  assert.match(emp,/function empCrearDemo/);
@@ -72,9 +72,9 @@ test('Las empresas nuevas nacen con demo completo y SIN contenido de Tarjetería
  assert.match(emp,/banners:\[\{id:'demo_b1',src:empDemoBanner\(d\.nombre\)\}\]/,'un banner demo propio, nada heredado');
  assert.match(emp,/function empDemoBanner/);
  assert.match(emp,/function empDemoLogo/,'logo demo para el inicio de sesión');
- assert.match(emp,/cfg:\{nombre:d\.nombre,/,'el panel arranca con su nombre');
+ assert.match(emp,/cfgPanel=\{nombre:d\.nombre,/,'el panel arranca con su nombre');
  assert.match(emp,/loginLogoSrc:empDemoLogo\(d\.nombre\)/,'logo demo en el inicio de sesión');
- assert.match(emp,/if\(nueva\)empCrearDemo\(d\)/,'se crea solo para empresas nuevas');
+ assert.match(emp,/if\(nueva\)empCrearDemo\(d,\{ejemplos:ej\}\)/,'se crea solo para empresas nuevas; los ejemplos solo con la casilla');
 });
 
 test('Los textos de tienda y login usan nombreNegocio() en lugar de nombres fijos',()=>{
