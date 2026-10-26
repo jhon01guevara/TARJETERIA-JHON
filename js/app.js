@@ -84,7 +84,8 @@ window.cfgTab=cfgTab;
 function catExpandAll(){document.querySelectorAll('.cg2').forEach(d=>{d.open=true;catCl.add(d.dataset.k)})}
 function catCollapseAll(){document.querySelectorAll('.cg2').forEach(d=>{d.open=false;catCl.delete(d.dataset.k)})}
 try{const s=localStorage.getItem(lsk('tj_db'));if(s){const o=JSON.parse(s),c=DB.cfg;DB=Object.assign(DB,o);DB.cfg=Object.assign(c,o.cfg||{})}}catch(e){window._tjw&&_tjw(e)}
-if(!DB.prod.length)DB.prod=[['TARJETAS DE TODA OCACION',1.30],['TARJETAS DE TODA OCACION',1.25],['TARJETAS DE TODA OCACION',1.20],['TARJETAS DE TODA OCACION',1.15],['TARJETAS DE TODA OCACION',1.00],['TARJETAS DE TODA OCACION DISTRUBUCION',0.95]].map((p,i)=>({id:'p'+i,n:p[0],p:p[1]}));
+/* Productos de arranque: SOLO de la empresa inicial (Tarjetería Jhon). Una empresa nueva empieza sin productos. */
+if(!DB.prod.length&&TJEmpresa.empEsInicial())DB.prod=[['TARJETAS DE TODA OCACION',1.30],['TARJETAS DE TODA OCACION',1.25],['TARJETAS DE TODA OCACION',1.20],['TARJETAS DE TODA OCACION',1.15],['TARJETAS DE TODA OCACION',1.00],['TARJETAS DE TODA OCACION DISTRUBUCION',0.95]].map((p,i)=>({id:'p'+i,n:p[0],p:p[1]}));
 // Si la copia local (localStorage) falla (p.ej. el navegador llenó su cuota), antes esto quedaba
 // en silencio total: nadie se enteraba, ni en consola. Ahora avisa una vez cada 5 minutos como
 // máximo (para no llenar la pantalla de avisos si falla seguido) — la nube sigue intentando guardar
@@ -665,7 +666,8 @@ agenda(){const t=hoy(),pend=l=>l.filter(o=>!agDn(o)).length,q0=AG.q,c0=AG.c;AG.q
  $('v').innerHTML=`<div class="agk"><div><small>Hoy (pendientes)</small><b>${hoyN}</b></div><div><small>Próx. 7 días</small><b>${sem}</b></div><div><small>Vencidas</small><b style="color:${late?'#d92d20':'inherit'}">${late}</b></div><div><small>Total eventos</small><b>${tot}</b></div></div>
  <div class="agbar"><div class="pt">${[['mes','Mes'],['sem','Semana'],['lista','Lista']].map(([k,l])=>`<button class="${k==AG.v?'on':''}" data-h-click="h272" data-a-click="${_ha(k)}">${l}</button>`).join('')}</div>${AG.v!=='lista'?`<button class="btn s" data-h-click="h271" aria-label="Mes anterior">‹</button><b style="min-width:130px;text-align:center">${ttl}</b><button class="btn s" data-h-click="h270" aria-label="Mes siguiente">›</button>`:`<b>${ttl}</b>`}<button class="btn s" data-h-click="h269">Hoy</button><button class="btn p s" data-h-click="h259">➕ Nuevo evento</button></div>
  <div class="agbar"><input id="ag_q" placeholder="🔍 Buscar evento, cliente o nota…" value="${esc(AG.q)}" data-h-input="h268"><select data-h-change="h267" aria-label="Filtrar por tipo de evento"><option value="">Todos los tipos</option>${Object.entries(AGT).map(([k,x])=>`<option value="${k}" ${AG.c==k?'selected':''}>${x[0]} ${x[1]}</option>`).join('')}</select><button class="btn s" data-h-click="h266">${DB.cfg.snd?'🔊 Sonido activado':'🔇 Sonido silenciado'}</button><button class="btn s" data-h-click="h265">📆 Exportar a calendario (.ics)</button></div><div id="agBody"></div>`;agBody()},
-check(){$('v').innerHTML=`<div class="card" style="padding:0;overflow:hidden;max-width:none;width:100%;margin:0"><iframe id="checkFrame" title="Check: modelos de tarjetas" style="width:100%;height:calc(100vh - 150px);min-height:560px;border:0;display:block;background:transparent"></iframe></div>`;
+check(){if(!TJEmpresa.empEsInicial()){$('v').innerHTML='<div class="card"><h3 style="margin:0 0 6px">✅ Check</h3><div class="vacio">Esta empresa aún no tiene modelos. Cuando suba los suyos en Catálogo, aparecerán aquí.</div></div>';return}
+ $('v').innerHTML=`<div class="card" style="padding:0;overflow:hidden;max-width:none;width:100%;margin:0"><iframe id="checkFrame" title="Check: modelos de tarjetas" style="width:100%;height:calc(100vh - 150px);min-height:560px;border:0;display:block;background:transparent"></iframe></div>`;
  const _cf=$('checkFrame');_cf.onload=()=>{try{_cf.contentDocument.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-t')==='nocturno'?'dark':'light')}catch(e){window._tjw&&_tjw(e)}try{if(esVend())chkLock(_cf.contentDocument,_cf.contentWindow)}catch(e){window._tjw&&_tjw(e)}};
  appHtml('modelos').then(h=>{_cf.srcdoc=chkSkin(h)}).catch(e=>{window._tjw&&_tjw(e);_cf.srcdoc='<p style="font:15px sans-serif;padding:24px">No se pudo cargar el módulo. Recargue la página (Ctrl+F5).</p>'});checkFitSoon()}};
 
@@ -734,7 +736,7 @@ async function cintillo(){const bar=$('cint');if(!bar)return;const k=cintCfg();
  else if(k.mod){let cat=[];try{cat=(await tx('readonly',s=>s.getAll())).filter(f=>f.thumb)}catch(e){cat=(typeof CL!=='undefined'?CL:[]).filter(f=>f.thumb)}
   cat.sort((a,b)=>(b.date||'').localeCompare(a.date||''));tag='🎴 Modelos';
   if(cat.length){cat=cat.slice(0,30);items=cat.map(f=>`<div class="ci" data-h-click="h254"><img src="${f.thumb}" alt=""><span class="tt"><strong>${esc(f.name||'Modelo')}</strong><small>${esc(f.cat||'Catálogo')}</small></span><u>›</u></div>`);sig='C'+cat.map(f=>f.id).join()}
-  else{const m=(await cintChk()).slice(0,30);if(m.length){items=m.map(f=>`<div class="ci" data-h-click="h253"><img src="${f.i}" alt=""><span class="tt"><strong>${esc(f.n)}</strong><small>${esc(f.s)}</small></span><u>›</u></div>`);sig='M'+m.length}
+  else{const m=TJEmpresa.empEsInicial()?(await cintChk()).slice(0,30):[];if(m.length){items=m.map(f=>`<div class="ci" data-h-click="h253"><img src="${f.i}" alt=""><span class="tt"><strong>${esc(f.n)}</strong><small>${esc(f.s)}</small></span><u>›</u></div>`);sig='M'+m.length}
   else{{const pm=panelMarcaTextos();items=['<div class="ci" style="--c:#FF9F0A"><i class="ico">🎴</i><span class="tt"><strong>'+esc(pm.nombre)+'</strong>'+(pm.lema?'<small>'+esc(pm.lema)+'</small>':'')+'</span></div>'];sig='X'+pm.nombre+pm.lema}}}}
  else{bar.hidden=true;_cintSig='';return}
  sig+='|'+k.seg;if(sig===_cintSig&&!bar.hidden)return;_cintSig=sig;
@@ -1499,7 +1501,8 @@ async function precargarCatalogoDeFabrica(){
   if(vista==='cat'){CL=await tx('readonly',s=>s.getAll());dib()}
  }catch(e){window._tjw&&_tjw(e)}
 }
-if(!/[?&]tienda(=|&|$)/.test(location.search))precargarCatalogoDeFabrica();
+/* El catálogo de fábrica (catalogo_default.zip) son los modelos de Tarjetería Jhon: solo se precarga en la empresa inicial; una empresa nueva empieza con el catálogo vacío. */
+if(TJEmpresa.empEsInicial()&&!/[?&]tienda(=|&|$)/.test(location.search))precargarCatalogoDeFabrica();
 
 /* ===== TJ LIVE: centro de preparación para TikTok LIVE =====
    Esta capa NO afirma emitir ni leer eventos de TikTok. Hasta verificar acceso oficial,
@@ -2628,7 +2631,7 @@ function paletaSet(p){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__
 function tdRowHTML(o,pub){const isp=pub.has(o.id),pi=TD.items.find(x=>x.id===o.id),sel=new Set(pi&&Array.isArray(pi.tags)?pi.tags:temaOf(o)),ch=TEMAS.filter(t=>sel.has(t.id));
  const tm=`<details class="tdtm" id="tdd_${o.id}"><summary><span class="tdsum">${ch.length?ch.map(t=>t.e).join(' '):'<em>Sin tema</em>'}</span><i>▾</i></summary><div class="tdpop">${TEMAS.map(t=>`<label class="tdtg"><input type="checkbox" class="tdtgk" data-id="${o.id}" value="${t.id}" ${sel.has(t.id)?'checked':''} data-h-change="h98" data-a-change="${_ha(o.id)}"><span>${t.e} ${t.n}</span></label>`).join('')}</div></details>`;
  return `<tr data-pub="${isp?1:0}"><td><input type="checkbox" class="tdck mck" value="${o.id}" aria-label="Seleccionar producto"></td><td><img class="tdth" src="${o.thumb||''}" alt="" data-h-click="h97" data-a-click="${_ha(o.id)}" title="Ampliar"></td><td>${esc(o.name||'')}</td><td>${tm}</td><td class="r">${+o.price>0?$$(+o.price):'<small>Sin precio</small>'}</td><td>${tdStkSel(o.id,(pi&&pi.stock)||'ok')}</td><td>${tdBdSel(o.id,(pi&&pi.badges)||[])}</td><td>${isp?'<b class="okt">✔ Publicado</b>':'<small>No publicado</small>'}</td><td><button class="btn s d" data-h-click="h96" data-a-click="${_ha(o.id)}" title="Eliminar" aria-label="Eliminar">🗑</button></td></tr>`}
-function tdTabla(pub){const rows=tdRows();if(!rows.length)return '<div class="vacio">Cargando el catálogo… (solo se pueden publicar productos con foto).</div>';
+function tdTabla(pub){const rows=tdRows();if(!rows.length)return TJEmpresa.empEsInicial()?'<div class="vacio">Cargando el catálogo… (solo se pueden publicar productos con foto).</div>':'<div class="vacio">Aún no hay productos. Suba sus modelos en Catálogo para poder publicarlos (solo se publican los que tienen foto).</div>';
  const np=rows.filter(o=>pub.has(o.id)).length,G=new Map();
  rows.forEach(o=>{const k=String(o.cat||'').trim()||'Sin categoría';if(!G.has(k))G.set(k,[]);G.get(k).push(o)});
  const keys=[...G.keys()].sort((a,b)=>a==='Sin categoría'?1:b==='Sin categoría'?-1:a.localeCompare(b,'es'));
@@ -2924,7 +2927,7 @@ function shopGrid(reset){const g=$('sh_g');if(!g)return;if(reset)SH.n=24;if(SH.i
  if(!SH.ok){g.innerHTML=Array(8).fill('<div class="kc ksk"><div class="kimg"></div><div class="kbd"><i></i><i style="width:60%"></i></div></div>').join('');mt.innerHTML='';return}
  const L=shopList(),f=SH.q||SH.sel.length||SH.minPrice||SH.maxPrice||SH.avail!=='all',nm=SH.sel.map(k=>(SH.opts.find(o=>o.id===k)||{}).n).filter(Boolean).join(', '),priceTag=(SH.minPrice||SH.maxPrice)?` · $${SH.minPrice||'0'}–${SH.maxPrice||'∞'}`:'';
  mt.innerHTML=`<span class="kcnt">${L.length} diseño${L.length==1?'':'s'}${SH.favOnly?' favoritos':''}${nm?' · '+esc(nm):''}${priceTag}${SH.avail!=='all'?' · '+(SH.avail==='in'?'Disponibles':SH.avail==='low'?'Pocas existencias':'No disponibles'):''}</span><span class="kmr">${f?'<button data-h-click="h62">Limpiar</button>':''}${SH.sort==='pop'?`<span class="kfilter-tag">${kico(KI.star,13)} Popularidad</span>`:''}<select class="ksort" data-h-change="h64" aria-label="Ordenar"><option value="pop" ${SH.sort==='pop'?'selected':''}>Popularidad</option><option value="new" ${SH.sort==='new'?'selected':''}>Más recientes</option><option value="az" ${SH.sort==='az'?'selected':''}>Nombre A-Z</option><option value="pl" ${SH.sort==='pl'?'selected':''}>Precio: menor</option><option value="ph" ${SH.sort==='ph'?'selected':''}>Precio: mayor</option></select><button class="kview" data-h-click="h63" aria-label="${SH.view==='mini'?'Ver cuadrícula amplia':'Ver miniaturas'}">${kico(SH.view==='mini'?KI.grid:KI.list,18)}</button></span>`;
- g.innerHTML=L.length?L.slice(0,SH.n).map(shopCard).join(''):`<div class="kempty"><span class="e">${SH.favOnly&&!f?'♡':'🔍'}</span>${!SH.items.length?'Pronto tendremos productos disponibles.':SH.favOnly&&!f?'Aún no tienes favoritos.<br>Toca el corazón en los diseños que te gusten.':'No encontramos diseños con esos filtros.'}${f?'<br><button class="sbtn" style="width:auto" data-h-click="h62">Ver todos</button>':''}</div>`;
+ g.innerHTML=L.length?L.slice(0,SH.n).map(shopCard).join(''):`<div class="kempty"><span class="e">${SH.favOnly&&!f?'♡':'🔍'}</span>${!SH.items.length?'Esta tienda aún no tiene productos.':SH.favOnly&&!f?'Aún no tienes favoritos.<br>Toca el corazón en los diseños que te gusten.':'No encontramos diseños con esos filtros.'}${f?'<br><button class="sbtn" style="width:auto" data-h-click="h62">Ver todos</button>':''}</div>`;
  if(L.length>SH.n){mo.innerHTML='<div class="kspin"></div>';SH.io=new IntersectionObserver(es=>{if(!es[0].isIntersecting)return;const l=shopList(),a=SH.n;SH.n+=24;g.insertAdjacentHTML('beforeend',l.slice(a,SH.n).map(shopCard).join(''));if(l.length>SH.n){SH.io.unobserve(mo);SH.io.observe(mo)}else{SH.io.disconnect();mo.innerHTML=''}},{root:$('shop'),rootMargin:'900px'});SH.io.observe(mo)}}
 function shopView(){SH.view=SH.view==='mini'?'tiles':'mini';shopGrid(1)}
 const shopBtn=id=>{const it=SH.items.find(x=>x.id===id);if(noDisp(it))return '<span class="kno">'+stkLbl[it.stock]+'</span>';return shopBtn0(id)};
@@ -3625,7 +3628,7 @@ document.addEventListener('click', function(e){
    (nunca en la tienda pública, con "ahorro de datos" ni con conexión 2G). Si no llega a guardarse, se guarda igual la primera vez que se abre Check. */
 function precalentarModelos(){
  const c=navigator.connection||{};
- if(SHOP||navigator.onLine===false||c.saveData||/(^|-)2g$/.test(c.effectiveType||''))return;
+ if(SHOP||!TJEmpresa.empEsInicial()||navigator.onLine===false||c.saveData||/(^|-)2g$/.test(c.effectiveType||''))return;
  const pedir=()=>navigator.serviceWorker.ready.then(r=>{if(r.active)r.active.postMessage('precalentar-modelos')}).catch(()=>{});
  const idle=()=>{(window.requestIdleCallback||(f=>setTimeout(f,3000)))(pedir,{timeout:10000})};
  setTimeout(idle,5000);
