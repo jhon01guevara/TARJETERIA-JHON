@@ -1,6 +1,6 @@
 # Marca VEN CRM (panel) — qué cambia y cómo conectar el dominio
 
-> Estado: **marca aplicada al panel en esta rama; el dominio `vencrm.com` NO está comprado ni conectado.** Ningún paso de la sección «Conectar el dominio» se ejecutó: son instrucciones para hacerlas después, una por una, con aprobación de John.
+> Estado (2026-10-25): **marca aplicada al panel (PR 36 y 37, en `main`). El dominio `vencrm.com` YA ESTÁ COMPRADO en Namecheap** (RDAP: registrado el 2026-10-26 00:30 UTC = 2026-10-25 7:30 p. m. Panamá; nameservers `dns1/dns2.registrar-servers.com`, o sea el DNS se administra en Namecheap; estado `client transfer prohibited`). **Todavía NO está conectado a nada**: no hay sitio de Hosting `ven-crm`, ni registros DNS, ni dominio autorizado en Auth, ni cambio en la API key. La preparación de Hosting está en `firebase.json`, `.firebaserc` y `docs/HOSTING-VEN-CRM.md` (los pasos de consola y DNS, adaptados a Namecheap, están ahí). Ningún paso de la sección «Conectar el dominio» se ejecutó: se hacen uno por uno, con aprobación de John.
 
 ## 1. La marca
 
@@ -61,17 +61,17 @@ A mano: abrir el panel (sin `?tienda`) → pestaña del navegador «VEN CRM · P
 
 ## 5. Conectar el dominio `vencrm.com` (NO ejecutado)
 
-> Hacer en este orden. Cada paso es reversible hasta el 7. Mantener `github.io` funcionando todo el tiempo.
+> Hacer en este orden (la versión detallada, con comandos y registros DNS exactos para Namecheap, es `docs/HOSTING-VEN-CRM.md`). Cada paso es reversible hasta el 7. Mantener `github.io` funcionando todo el tiempo.
 
 **0. Antes de comprar.** Repetir la comprobación de disponibilidad (RDAP de Verisign: `https://rdap.verisign.com/com/v1/domain/vencrm.com`; 404 = libre) y la búsqueda de marcas (§3). Al 2026-10-25 figuraba libre.
 
-**1. Comprar el dominio** (Cloudflare Registrar —precio de costo, DNS incluido— o Porkbun). Cuenta a nombre de John, 2FA activo, renovación automática y bloqueo de transferencia. Activar WHOIS privado. Un dominio `.com` cuesta ~10–12 USD/año.
+**1. Comprar el dominio** — ✅ **HECHO en Namecheap** (2026-10-25). Pendiente de verificar en la cuenta de Namecheap: 2FA activo, renovación automática, bloqueo de transferencia (ya figura `client transfer prohibited`) y privacidad WHOIS. El DNS queda en Namecheap («Advanced DNS»); **no se usa Cloudflare**.
 
 **2. Decidir dónde se sirve el panel.** Hoy el panel se sirve desde GitHub Pages (`https://jhon01guevara.github.io/TARJETERIA-JHON/`) y el repo **no tiene `firebase.json`**. Dos caminos:
-- **A. Firebase Hosting (recomendado, ya usamos Firebase):** en el proyecto `tarjeteria-jhon`, `firebase init hosting` (carpeta pública = raíz del repo, sin reescribir a `index.html`, ignorar `docs/`, `tests/`, `.git`, `*.md`, `firestore.rules`), cabeceras reales de seguridad (`X-Frame-Options`, `Strict-Transport-Security`, etc.). Primero desplegar a un **canal de vista previa** (`firebase hosting:channel:deploy ven-crm`) y probar ahí. Sitio nuevo, p. ej. `ven-crm`, para no tocar `tarjeteria-jhon.web.app`.
+- **A. Firebase Hosting (recomendado, ya usamos Firebase):** en el proyecto `tarjeteria-jhon`, `firebase init hosting` (carpeta pública = raíz del repo, sin reescribir a `index.html`, ignorar `docs/`, `tests/`, `.git`, `*.md`, `firestore.rules`), cabeceras reales de seguridad (`X-Frame-Options`, `Strict-Transport-Security`, etc.). Primero desplegar a un **canal de vista previa** (`firebase hosting:channel:deploy vista --only ven-crm --project tarjeteria-jhon`) y probar ahí. Sitio nuevo, p. ej. `ven-crm`, para no tocar `tarjeteria-jhon.web.app`.
 - **B. Seguir en GitHub Pages con dominio propio:** archivo `CNAME` con `vencrm.com` + DNS (4 registros A de GitHub y `www` CNAME a `jhon01guevara.github.io`). Pero un sitio de Pages tiene un solo dominio: la **tienda pública dejaría de servirse en `github.io/TARJETERIA-JHON`** (redirige). No recomendado mientras la tienda viva en el mismo repo.
 
-**3. Dominio personalizado en Firebase Hosting (camino A).** Consola → Hosting → «Agregar dominio personalizado» → `vencrm.com` (y `www.vencrm.com` redirigiendo al raíz). Firebase da un registro TXT de verificación y registros A/AAAA. En Cloudflare agregarlos con la **nube gris (solo DNS, sin proxy)** hasta que el certificado SSL esté «Conectado» (puede tardar hasta unas horas). Después se puede decidir si se activa el proxy.
+**3. Dominio personalizado en Firebase Hosting (camino A).** Consola → Hosting → «Agregar dominio personalizado» → `vencrm.com` (y `www.vencrm.com` redirigiendo al raíz). Firebase da un registro TXT de verificación y registros A/AAAA. En Namecheap (Domain List → Manage → **Advanced DNS**) agregarlos tal cual se listan en `docs/HOSTING-VEN-CRM.md` §4 (A `@` y A `www` a `199.36.158.100`, TXT `@` de verificación) y **borrar** los registros de parking que Namecheap crea por defecto (CNAME `www` → `parkingpage.namecheap.com` y «URL Redirect Record» `@`). No hay proxy: el certificado SSL lo emite Firebase y puede tardar hasta unas horas.
 
 **4. Firebase Auth → dominios autorizados.** Consola → Authentication → Configuración → Dominios autorizados → agregar `vencrm.com` y `www.vencrm.com` (y el dominio de Hosting nuevo). **Sin esto el inicio de sesión falla en el dominio nuevo.** No quitar `jhon01guevara.github.io` ni `tarjeteria-jhon.firebaseapp.com`. El código usa correo/contraseña, así que `authDomain` en `firebaseConfig` no necesita cambiar.
 
@@ -86,7 +86,7 @@ A mano: abrir el panel (sin `?tienda`) → pestaña del navegador «VEN CRM · P
 
 **8. SEO y enlaces.** Ya con el dominio funcionando: actualizar `canonical`, `og:url`, `robots.txt`, `sitemap.xml`, la base del enlace de tienda (`TD.base` en la configuración de la tienda) y el `start_url`/`id` del manifest si hace falta. **Los enlaces de la tienda que ya se compartieron (`github.io/...?tienda=1`) deben seguir funcionando**; si en `vencrm.com` se sirve el mismo `index.html`, la tienda también responderá allí con marca Tarjetería (no es lo deseado a largo plazo: separar tienda y CRM en dominios distintos).
 
-**9. Correo del dominio (opcional).** Cloudflare Email Routing (gratis) para `soporte@vencrm.com`; SPF/DKIM/DMARC si se enviará correo desde el dominio.
+**9. Correo del dominio (opcional).** «Email Forwarding» de Namecheap (gratis) para `soporte@vencrm.com` (añade registros MX en Advanced DNS; no borrarlos al limpiar el parking); SPF/DKIM/DMARC si se enviará correo desde el dominio.
 
 **Plan de vuelta atrás.** Quitar el dominio en Firebase Hosting / borrar los registros DNS; `github.io` nunca se tocó. Revertir esta rama = `git revert` del PR (no reescribir historial).
 

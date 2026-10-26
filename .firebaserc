@@ -1,0 +1,13 @@
+{
+  "projects": {
+    "default": "tarjeteria-jhon",
+    "prueba": "tarjeteria-jhon-prueba"
+  },
+  "targets": {
+    "tarjeteria-jhon": {
+      "hosting": {
+        "ven-crm": ["ven-crm"]
+      }
+    }
+  }
+}
