@@ -2097,7 +2097,7 @@ const TD={items:[],leads:[],peds:[],cat:[]},SH={items:[],cart:{},cli:null,ref:'a
 
 const PALETAS=[['shop','🟣 Shop Mist (Original)','#5433eb','#f2f4f5'],['lino','🌾 Lino Cálido & Ámbar','#8a5a12','#f7f4ed'],['rosa','💌 Rosa Blush (Amor)','#c8183c','#faf1f4'],['esmeralda','💍 Eucalipto & Esmeralda','#0e3c30','#f0f5f2'],['violeta','🎈 Lavanda & Púrpura','#6b32b8','#f4f0fa'],['oceano','🌊 Hielo Nórdico & Océano','#0e6b78','#eef4f7'],['borgona','🎓 Marino & Oro Real','#121e42','#f0f2f7'],['clasico','⚫ Clásico Blanco Puro','#1D1D1F','#ffffff'],['carbon','🪨 Carbón & Piedra','#30363D','#f0f1f3'],['dark','🌙 Dark Obsidian Pro','#7c66ff','#0c0c0e']];
 const tdBase=()=>location.href.split(/[?#]/)[0];
-const BUILD=(Date.parse(document.lastModified)||0).toString(36);const tdLink=()=>((typeof esAdmin==='function'&&!esAdmin()&&TD.base)||tdBase())+'?tienda=1&v='+encodeURIComponent(chatMe()||'admin')+'&r='+(TD.rev||BUILD);
+const BUILD=(Date.parse(document.lastModified)||0).toString(36);const tdLink=()=>((typeof esAdmin==='function'&&!esAdmin()&&TD.base)||tdBase())+'?tienda=1'+tdEmpQ()+'&v='+encodeURIComponent(chatMe()||'admin')+'&r='+(TD.rev||BUILD);
 const tdMoney=n=>+n>0?$$(+n):'Consultar';
 // ---------- Panel interno (admin y vendedores) ----------
 let _tdOn=false;
@@ -2363,7 +2363,7 @@ function etqImprimirLote(){
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbCol(c):fbCol(c).where('ref','==',me);let f1=true,f2=true;
- fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||nombreNegocio();TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.banners=Array.isArray(cd.banners)?cd.banners:undefined;TD.btnRadio=cd.btnRadio||999;TD.empresaNombre=cd.empresaNombre||'';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{document.documentElement.style.setProperty('--kbtn-r',(TD.btnRadio)+'px')}catch(e){}try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||nombreNegocio();TD.heroSub=cd.heroSub||heroSubDef();TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.banners=Array.isArray(cd.banners)?cd.banners:undefined;TD.btnRadio=cd.btnRadio||999;TD.empresaNombre=cd.empresaNombre||'';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{document.documentElement.style.setProperty('--kbtn-r',(TD.btnRadio)+'px')}catch(e){}try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -2404,7 +2404,7 @@ function shopBrandSave(){
  if(!esAdmin()||!fbDb)return alert("Se requieren permisos de administrador y conexión a internet.");
  const wm=wmClean($("sh_cfg_wm")&&$("sh_cfg_wm").value).slice(0,30);
  const title=(($("sh_cfg_title")&&$("sh_cfg_title").value.trim())||nombreNegocio()).slice(0,60);
- const sub=(($("sh_cfg_sub")&&$("sh_cfg_sub").value.trim())||"Cada momento merece una tarjeta especial · Tarjetas para toda ocasión").slice(0,160);
+ const sub=(($("sh_cfg_sub")&&$("sh_cfg_sub").value.trim())||heroSubDef()).slice(0,160);
  const logo=(($("sh_cfg_logo")&&$("sh_cfg_logo").value.trim())||"").slice(0,250000);
  const motion=TD._curMotion||TD.motionStyle||'float';
  const wmStyle=TD._curWmStyle||TD.watermarkStyle||'wm_violeta';
@@ -2553,8 +2553,8 @@ function xmasCard(){
   </div>
 
   <div><label>Texto de fondo gigante (Watermark)</label><input id="sh_cfg_wm" value="${esc(wmClean(TD.wordmark))}" placeholder="Vacío = sin marca de agua" maxlength="30"></div>
-  <div><label>Título de la portada</label><input id="sh_cfg_title" value="${esc(TD.heroTitle||'Tarjetería Jhon')}" placeholder="Tarjetería Jhon" maxlength="60"></div>
-  <div style="grid-column:1/-1"><label>Subtítulo / eslogan</label><input id="sh_cfg_sub" value="${esc(TD.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión')}" placeholder="Cada momento merece una tarjeta especial..." maxlength="160"></div>
+  <div><label>Título de la portada</label><input id="sh_cfg_title" value="${esc(TD.heroTitle||nombreNegocio())}" placeholder="${esc(nombreNegocio())}" maxlength="60"></div>
+  <div style="grid-column:1/-1"><label>Subtítulo / eslogan</label><input id="sh_cfg_sub" value="${esc(TD.heroSub||heroSubDef())}" placeholder="Escriba el eslogan de su empresa" maxlength="160"></div>
 
   <div style="grid-column:1/-1">
     <label>Animación Graphic Motion de las tarjetas de portada</label>
@@ -2583,7 +2583,7 @@ function xmasCard(){
 
  <div style="margin-top:16px;padding-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
    <button type="button" class="btn p s" data-h-click="call" data-a-click="${_ha('shopBrandSave')}" style="box-shadow:0 3px 12px rgba(84,51,235,.35)">💾 Guardar cambios de portada (Sincronizar)</button>
-   <a class="btn s" href="index.html?tienda=1" target="_blank" rel="noopener">👁️ Abrir tienda para probar</a>
+   <a class="btn s" href="index.html?tienda=1${tdEmpQ()}" target="_blank" rel="noopener">👁️ Abrir tienda para probar</a>
  </div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🎠 Banners promocionales de la portada</h3>
@@ -2682,15 +2682,18 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
    const cCfg=JSON.parse(localStorage.getItem(lsk('tj_cached_cfg'))||'null');
    if(cCfg){
      SH.paleta=cCfg.paleta||'shop';SH.wordmark=wmClean(cCfg.wordmark);
+     SH.empresaNombre=cCfg.empresaNombre||'';
      SH.heroTitle=cCfg.heroTitle||nombreNegocio();
-     SH.heroSub=cCfg.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';
+     SH.heroSub=cCfg.heroSub||heroSubDef();
      SH.logoUrl=cCfg.logoUrl||'';SH.motionStyle=cCfg.motionStyle||'float';SH.watermarkStyle=cCfg.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cCfg.watermarkOpacity||'14';SH.heroBgType=cCfg.heroBgType||'none';SH.heroPhotoUrl=cCfg.heroPhotoUrl||'';SH.heroVideoUrl=cCfg.heroVideoUrl||'';SH.heroBgColor=cCfg.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cCfg.heroBgSolid||'#18181b';
      SH.banners=Array.isArray(cCfg.banners)?cCfg.banners:undefined;SH.btnRadio=cCfg.btnRadio||999;
+     SH.empresaNombre=cCfg.empresaNombre||'';SH.contacto=cCfg.contacto&&typeof cCfg.contacto==='object'?cCfg.contacto:{};SH.redes=cCfg.redes&&typeof cCfg.redes==='object'?cCfg.redes:{};SH.cfgOk=true;
      document.documentElement.setAttribute('data-paleta',SH.paleta);
      document.documentElement.style.setProperty('--kbtn-r',SH.btnRadio+'px');
    }else{
      SH.paleta='shop';document.documentElement.setAttribute('data-paleta','shop');
    }
+   if(!TJEmpresa.empEsInicial())document.title=SH.empresaNombre||'Tienda';
    const cItems=JSON.parse(localStorage.getItem(lsk('tj_cached_items'))||'[]');
    if(Array.isArray(cItems)&&cItems.length>0){
      SH.items=cItems;SH.ok=1;
@@ -2698,9 +2701,40 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
  }catch(e){window._tjw&&_tjw(e)}
  try{SH.cli=JSON.parse(localStorage.getItem(lsk('tj_shop_cli'))||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem(lsk('tj_shop_cart'))||'{}')}catch(e){window._tjw&&_tjw(e)}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem(lsk('tj_shop_fav'))||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.heroTitle=cd.heroTitle||nombreNegocio();SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.banners=Array.isArray(cd.banners)?cd.banners:undefined;SH.btnRadio=cd.btnRadio||999;SH.empresaNombre=cd.empresaNombre||'';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.style.setProperty('--kbtn-r',SH.btnRadio+'px');H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;shopCacheItems(SH.items);{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{cfgBlk:{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;
+ /* Sin red y sin copia de Firestore la primera lectura llega vacía: no debe pisar la copia local buena ni dar por cargada la plantilla. */
+ if(!cf&&sn.metadata&&sn.metadata.fromCache)break cfgBlk;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.empresaNombre=cd.empresaNombre||'';SH.heroTitle=cd.heroTitle||nombreNegocio();SH.heroSub=cd.heroSub||heroSubDef();SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.banners=Array.isArray(cd.banners)?cd.banners:undefined;SH.btnRadio=cd.btnRadio||999;SH.empresaNombre=cd.empresaNombre||'';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.style.setProperty('--kbtn-r',SH.btnRadio+'px');H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}SH.cfgOk=true;try{shopCacheCfg(cd);shopBrandRefresh()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;shopCacheItems(SH.items);{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
-const shopLogo=()=>{const custom=(typeof SH!=='undefined'&&SH.logoUrl)||(typeof TD!=='undefined'&&TD.logoUrl);if(custom)return '<img src="'+esc(custom)+'" alt="Logo" class="klogo-custom">';if(SH.logo!==undefined)return SH.logo;const g=document.querySelector('.logo img');return SH.logo=g?'<img src="'+g.src+'" alt="">':''};
+const shopLogo=()=>{const custom=(typeof SH!=='undefined'&&SH.logoUrl)||(typeof TD!=='undefined'&&TD.logoUrl);if(custom)return '<img src="'+esc(custom)+'" alt="Logo" class="klogo-custom">';
+ /* Otra empresa: nunca el logo de Tarjetería (.logo img es el del panel). Mientras llega su plantilla, un hueco neutro; si no tiene logo, su inicial. */
+ if(!TJEmpresa.empEsInicial()){if(!SH.cfgOk)return '<span class="klogo-ph" aria-hidden="true"></span>';const n=String(nombreNegocio()||'?').trim();return '<span class="klogo-mono" role="img" aria-label="'+esc(n)+'">'+esc(n.charAt(0).toUpperCase())+'</span>'}
+ if(SH.logo!==undefined)return SH.logo;const g=document.querySelector('.logo img');return SH.logo=g?'<img src="'+g.src+'" alt="">':''};
+/* Copia local de la PLANTILLA de la tienda (tj_cached_cfg, una por empresa porque lsk() añade el sufijo): logo, textos, colores, contacto y redes.
+  shopInit la lee en el primer pintado, así que al recargar se ve ya el logo y el nombre correctos de la empresa (y no un valor por defecto).
+  Presupuesto: como máximo ~400 000 caracteres; si se pasa se quitan primero el video/foto de portada incrustados y luego los banners. Es opcional: la nube manda. */
+function shopCacheCfg(cd){
+ let K;try{K=lsk('tj_cached_cfg')}catch(e){return}
+ try{
+   cd=cd&&typeof cd==='object'?cd:{};
+   const o={};
+   ['paleta','wordmark','heroTitle','heroSub','logoUrl','motionStyle','watermarkStyle','watermarkOpacity','heroBgType','heroPhotoUrl','heroVideoUrl','heroBgColor','heroBgSolid','btnRadio','empresaNombre'].forEach(k=>{if(cd[k]!==undefined)o[k]=cd[k]});
+   if(Array.isArray(cd.banners))o.banners=cd.banners;
+   if(cd.contacto&&typeof cd.contacto==='object')o.contacto=cd.contacto;
+   if(cd.redes&&typeof cd.redes==='object')o.redes=cd.redes;
+   const MAX=400000;let s=JSON.stringify(o);
+   if(s.length>MAX){['heroVideoUrl','heroPhotoUrl'].forEach(k=>{if(typeof o[k]==='string'&&o[k].length>20000)delete o[k]});s=JSON.stringify(o)}
+   if(s.length>MAX){delete o.banners;s=JSON.stringify(o)}
+   if(s.length>MAX){localStorage.removeItem(K);return}
+   localStorage.setItem(K,s);
+ }catch(e){try{localStorage.removeItem(K)}catch(x){}}
+}
+/* Cuando llega (o cambia) la plantilla de la tienda, la cabecera se actualiza en su sitio: antes solo se rehacía la portada y el logo del primer pintado se quedaba. */
+function shopBrandRefresh(){
+ const kb=document.querySelector('#shop .kbrand');
+ if(kb){const t=document.createElement('div');t.innerHTML=shopLogo();const n=t.firstElementChild,old=kb.firstElementChild;
+  if(n){if(old&&(old.tagName==='IMG'||old.classList.contains('klogo-ph')||old.classList.contains('klogo-mono')))old.replaceWith(n);else kb.insertBefore(n,kb.firstChild)}else if(old&&old.tagName==='IMG')old.remove()}
+ if(!TJEmpresa.empEsInicial()){const nm=nombreNegocio();document.title=nm;const a=document.querySelector('meta[name=apple-mobile-web-app-title]');if(a)a.setAttribute('content',nm)}
+}
 const shopSaveCart=()=>{try{localStorage.setItem(lsk('tj_shop_cart'),JSON.stringify(SH.cart))}catch(e){window._tjw&&_tjw(e)}};
 function shopRender(){const o=$('shop');if(!o)return;
  if(SH.err)return o.innerHTML=`<div class="kreg-w"><div class="kreg">${shopLogo()}<h2>Catálogo no disponible</h2><p>No se pudo conectar. Intente de nuevo en unos minutos.</p><button class="sbtn" data-h-click="h24">Reintentar</button></div></div>`;
@@ -2754,7 +2788,7 @@ function shopBanner(){const e=$('k_banner');if(!e)return;const L=SH.items.filter
  e.innerHTML=`<div class="kban-bg"><img src="${bg}" alt="" loading="lazy"></div><div class="kban-copy"><h1>${esc(SH.heroTitle||nombreNegocio())}</h1><p>${esc((SH.heroSub||'').split('·')[0].trim())}</p><button class="sbtn" data-h-click="h79">Descubre nuestra colección</button></div>`}
 function shopPromo(){
  const e=$("k_promo");if(!e)return;
- const custom=Array.isArray(SH.banners)?SH.banners:null;
+ const custom=Array.isArray(SH.banners)?SH.banners:(TJEmpresa.empEsInicial()?null:[]);
  const L=custom?custom.map((b,i)=>({id:b.id||('ban'+i),custom:true,src:b.src,name:'Banner '+(i+1)})):[...PROMO];
  if(!L.length){e.hidden=true;e.innerHTML="";return}
  e.hidden=false;
@@ -2817,8 +2851,7 @@ function shopHero(){
  e.innerHTML=`${bgMediaHtml}${SH.wordmark?`<div class="khero-bg-wordmark" aria-hidden="true">${esc(SH.wordmark)}<span class="khero-dot">.</span></div>`:''}
 <div class="khero-wordmark-wrap">
   ${logoCoverHtml}
-  <h1 class="khero-title">${esc(SH.heroTitle||nombreNegocio())}</h1>
-  <p class="khero-wordmark-sub">${esc(SH.heroSub||"Cada momento merece una tarjeta especial · Tarjetas para toda ocasión")}</p>
+  ${(!SH.cfgOk&&!TJEmpresa.empEsInicial())?'<h1 class="khero-title khero-sk" aria-hidden="true">&nbsp;</h1><p class="khero-wordmark-sub khero-sk" aria-hidden="true">&nbsp;</p>':`<h1 class="khero-title">${esc(SH.heroTitle||nombreNegocio())}</h1>${(SH.heroSub||heroSubDef())?`<p class="khero-wordmark-sub">${esc(SH.heroSub||heroSubDef())}</p>`:''}`}
 </div>
 <div class="khero-constellation">${flHtml}</div>
 <div class="khero-search-wrap">
@@ -3186,8 +3219,18 @@ function nombreNegocio(){
 	    demo de empresas nuevas). */
  try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&(SH.empresaNombre||SH.heroTitle))return SH.empresaNombre||SH.heroTitle}catch(e){}
  try{if(typeof empNombreActiva==='function'){var n=empNombreActiva();if(n)return n}}catch(e){}
- return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon';
+ /* Empresa inicial: sus textos de siempre. Cualquier otra NO hereda «Tarjetería Jhon» (valor por defecto de DB.cfg):
+    en la tienda pública solo vale lo publicado por la empresa (los datos locales de DB son de quien administra, no del visitante). */
+ var ini=true;try{ini=TJEmpresa.empEsInicial()}catch(e){}
+ var c=(typeof DB!=='undefined'&&DB.cfg)||{},shop=typeof SHOP!=='undefined'&&SHOP;
+ if(ini)return c.nombre||'Tarjetería Jhon';
+ if(!shop&&c.nombre&&c.nombre!=='Tarjetería Jhon')return c.nombre;
+ return shop?'Nuestra tienda':'Mi empresa';
 }
+/* Eslogan por defecto de la portada: solo la empresa inicial conserva el de Tarjetería; las demás, ninguno. */
+function heroSubDef(){try{return TJEmpresa.empEsInicial()?'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión':''}catch(e){return ''}}
+/* Parámetro de empresa para los enlaces de la tienda: sin él, un cliente abriría la tienda de la empresa inicial. */
+function tdEmpQ(){try{return TJEmpresa.empEsInicial()?'':'&emp='+encodeURIComponent(TJEmpresa.empActiva())}catch(e){return ''}}
 /* Logo del inicio de sesión: foto, GIF animado o video corto por empresa.
    Se guarda en cfg (sincroniza) Y en este navegador (tj_lg): la pantalla de
    entrada aparece ANTES de cargar la configuración de la nube, así que sin la

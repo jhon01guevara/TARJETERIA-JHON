@@ -43,7 +43,7 @@ test('La Plantilla de la web contiene banners editables y forma de botones',()=>
  assert.match(app,/🔘 Forma de los botones de la tienda/);
  assert.match(app,/function btnRadioSet/);
  /* la tienda usa banners propios si existen; si no, los del panel */
- assert.match(app,/const custom=Array\.isArray\(SH\.banners\)\?SH\.banners:null/);
+ assert.match(app,/const custom=Array\.isArray\(SH\.banners\)\?SH\.banners:\(TJEmpresa\.empEsInicial\(\)\?null:\[\]\)/,'sin banners propios: los de Tarjetería solo para la empresa inicial; las demás, ninguno');
  assert.match(app,/TD\.banners=Array\.isArray\(cd\.banners\)\?cd\.banners:undefined/);
  /* forma aplicada como variable CSS */
  assert.match(app,/--kbtn-r/);

@@ -12,7 +12,7 @@ const TJ_POLITICAS = {
  /* Getters: se evalúan al usarse — reflejan la empresa activa (panel) o los
     datos publicados de la tienda (__cfg.empresaNombre / contacto) en la web. */
  get nombre(){return nombreNegocio()},
- get web(){return location.origin+location.pathname+'?tienda=1'},
+ get web(){return location.origin+location.pathname+'?tienda=1'+(typeof tdEmpQ==='function'?tdEmpQ():'')},
  get correo(){
   try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.email)return SH.contacto.email}catch(e){}
   return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com';
@@ -278,7 +278,7 @@ function poliExportarCSV(){
 }
 
 function poliCopiar(){
- const NN=nombreNegocio(),CORREO=(DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com',TEL=(DB.cfg&&DB.cfg.tel)||'6074-1150',SITIO=location.origin+location.pathname+'?tienda=1';
+ const NN=nombreNegocio(),CORREO=(DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com',TEL=(DB.cfg&&DB.cfg.tel)||'6074-1150',SITIO=location.origin+location.pathname+'?tienda=1'+(typeof tdEmpQ==='function'?tdEmpQ():'');
  const txt = `${NN}\nPolíticas preliminares de uso, privacidad y protección del cliente\nEstado: etapa preparatoria. La tienda todavía no recibe pedidos ni pagos.\nNombre comercial: ${NN}\nSitio web: ${SITIO}\nCorreo de contacto: ${CORREO}\nTeléfono: ${TEL}\n\n1. Aviso de etapa preparatoria\nNo se reciben pedidos comerciales ni pagos por la tienda. No envíes dinero ni compartas claves.\n\n2. Términos y condiciones de uso\nUso lícito, productos y precios informativos.\n\n3. Política preliminar de privacidad y protección de datos\nProtección conforme a la Ley 81 de 2019 de la República de Panamá y Decreto Ejecutivo 285 de 2021.\n\n4. Entregas y retiros\nModalidades a domicilio y retiro en punto acordado.\n\n5. Atención al cliente y reclamaciones\n${CORREO} · ${TEL}\n\n6. Lista de verificación antes de la apertura\nRUC, Aviso de Operación y formalización comercial.`;
  navigator.clipboard&&navigator.clipboard.writeText(txt).then(()=>alert("Copiado al portapapeles.")).catch(()=>alert(txt));
 }
