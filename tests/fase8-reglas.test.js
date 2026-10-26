@@ -9,7 +9,7 @@ test('Las reglas Fase 8 habilitan el árbol por empresa (publicadas el 2026-10-2
  const r=leer('firestore.rules');
  assert.match(r,/function esMiembroEmpresa\(eid\)/);
  assert.match(r,/exists\(\/databases\/\$\(database\)\/documents\/empresas\/\$\(eid\)\/miembros\/\$\(request\.auth\.uid\)\)/);
- assert.match(r,/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if isAdmin\(\);/);
+ assert.match(r,/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if adminDe\(eid\);/);
  /* Espejo de las reglas de hoy bajo empresas/{eid}/… */
  assert.match(r,/match \/empresas\/\{eid\}\/panel_public\/contador \{[\s\S]{0,500}request\.resource\.data\.sig == resource\.data\.sig \+ 1/);
  assert.match(r,/match \/empresas\/\{eid\}\/panel_public\/clientes \{[\s\S]{0,420}cli\.size\(\) >= resource\.data\.cli\.size\(\)/);
@@ -20,8 +20,8 @@ test('Las reglas Fase 8 habilitan el árbol por empresa (publicadas el 2026-10-2
  assert.equal(nLeads,2,'esquema de leads en raíz y empresa');
  const nPeds=(r.match(/keys\(\)\.hasOnly\(\['id','cid','lead','items','total','nota','ref','ts','estado','envio'\]\)/g)||[]).length;
  assert.equal(nPeds,2,'esquema de pedidos en raíz y empresa');
- assert.match(r,/match \/empresas\/\{eid\}\/chats\/\{chat\} \{[\s\S]{0,700}allow read: if isAdmin\(\) \|\|/);
- assert.match(r,/match \/empresas\/\{eid\}\/llamadas\/\{id\} \{[\s\S]{0,420}allow read, update: if isAdmin\(\)/);
+ assert.match(r,/match \/empresas\/\{eid\}\/chats\/\{chat\} \{[\s\S]{0,700}allow read: if adminDe\(eid\) \|\|/);
+ assert.match(r,/match \/empresas\/\{eid\}\/llamadas\/\{id\} \{[\s\S]{0,420}allow read, update: if adminDe\(eid\)/);
  /* El catch-all final sigue denegando lo no listado. */
  assert.match(r,/match \/\{document=\*\*\} \{\s*allow read, write: if false;/);
 });

@@ -98,8 +98,11 @@ test('admin conserva acceso total', async () => {
   await assertSucceeds(a.doc('empresas/emp1/marketing_projects/m2').set({ id: 'm2' }));
   await assertSucceeds(a.doc('empresas/emp1/panel_public/clientes').set({ cli: [] }));
 });
-test('admin por documento roles (rol=admin, uid distinto al fijo)', async () => {
-  await assertSucceeds(as('adm2').doc('empresas/emp1/panel/data').get());
+test('admin por documento roles (rol=admin, uid distinto al fijo): solo en las empresas donde es miembro (aislamiento 2026-10-26)', async () => {
+  await assertFails(as('adm2').doc('empresas/emp1/panel/data').get());          // antes: pasaba (admin global)
+  await env.withSecurityRulesDisabled(async (c) => { await c.firestore().doc('empresas/emp1/miembros/adm2').set({ uid: 'adm2' }); });
+  await assertSucceeds(as('adm2').doc('empresas/emp1/panel/data').get());        // como miembro de emp1 sí
+  await assertFails(as('adm2').doc('empresas/emp2/panel_public/clientes').get()); // pero no de emp2
 });
 test('vendedor miembro: lee lo común de su empresa', async () => {
   const v = as('vend1');
@@ -142,15 +145,13 @@ test('vendedor: tienda (leads/pedidos propios)', async () => {
   await assertSucceeds(v.collection('empresas/emp1/tienda_pedidos').where('ref', '==', 'vend1').get());
   await assertSucceeds(v.doc('empresas/emp1/tienda_pedidos/p0').update({ estado: 'atendido' }));
 });
-test('vendedor (raíz, MULTIEMP=false): sigue funcionando', async () => {
+test('vendedor (raíz heredada, MULTIEMP=false): desde 2026-10-26 la raíz es solo del maestro; identidad global sigue', async () => {
   const v = as('vend1');
-  await assertSucceeds(v.doc('panel_public/clientes').get());
-  await assertSucceeds(v.doc('panel_public/general').get());
-  await assertSucceeds(v.doc('perfiles/vend1').get());
-  await assertSucceeds(v.doc('galeria/g1').get());
-  await assertSucceeds(v.doc('chats/c9').set({ id: 'c9', type: 'dm', members: ['vend1', 'admin'] }));
-  await assertSucceeds(v.doc('llamadas/l9').set({ from: 'vend1', to: 'admin' }));
-  await assertSucceeds(v.doc('galeria/g9').set({ id: 'g9', o: 'vend1' }));
+  await assertFails(v.doc('panel_public/clientes').get());   // antes pasaba: datos de clientes heredados de Tarjetería
+  await assertFails(v.doc('panel_public/general').get());
+  await assertFails(v.doc('galeria/g1').get());
+  await assertSucceeds(v.doc('perfiles/vend1').get());       // identidad global: igual
+  await assertSucceeds(admin().doc('panel_public/clientes').get()); // el maestro conserva la raíz (migración/reversión)
 });
 test('tienda pública (sin sesión)', async () => {
   const a = anon();

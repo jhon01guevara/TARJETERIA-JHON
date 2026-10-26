@@ -1,0 +1,437 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // La sesión se valida con Firebase Authentication. El rol se consulta de forma
+    // específica en isAdmin() y los recursos privados además validan propietario o
+    // participante. Evitamos una consulta exists() repetida en cada documento de una
+    // colección, que puede hacer que Firestore rechace consultas completas.
+    function logged() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return logged()
+        && (request.auth.uid == 'o7bHndKtswSHreFnVwORqBSUKL43'
+          || get(/databases/$(database)/documents/roles/$(request.auth.uid)).data.rol == 'admin');
+    }
+
+    // Cuenta con sesión Y con documento en roles/ (admin o vendedor activo).
+    // exists() no falla si el documento no existe.
+    function isStaff() {
+      return logged()
+        && (request.auth.uid == 'o7bHndKtswSHreFnVwORqBSUKL43'
+          || exists(/databases/$(database)/documents/roles/$(request.auth.uid)));
+    }
+
+    // Administración global o miembro declarado de la empresa (empresas/{eid}/miembros/{uid}).
+    function esMiembroEmpresa(eid) {
+      return logged()
+        && (isAdmin()
+          || exists(/databases/$(database)/documents/empresas/$(eid)/miembros/$(request.auth.uid)));
+    }
+
+    // El administrador usa la identidad interna "admin"; los vendedores usan su UID.
+    function me() {
+      return isAdmin() ? 'admin' : request.auth.uid;
+    }
+
+    function validRef(ref) {
+      return ref is string && ref.size() <= 80
+        && (ref == 'admin' || exists(/databases/$(database)/documents/roles/$(ref)));
+    }
+
+    // Datos de envío que la tienda pública escribe al crear el pedido (transportista elegido).
+    // Mismo formato y límites que shopEnvDatos + sanEnv en js/app.js y js/sanear.js; los campos que
+    // solo escribe el panel después (guia, cont, obs, bultos, peso, etq) NO se aceptan en la creación.
+    function envioValido(e) {
+      return e is map
+        && e.keys().hasOnly(['agencia','fid','tipo','rec','rtel','rced','pais','prov','ciudad','suc','dir','ref'])
+        && 'agencia' in e && e.agencia is string && e.agencia.size() > 0 && e.agencia.size() <= 80
+        && 'tipo' in e && e.tipo is string && (e.tipo == 'nacional' || e.tipo == 'internacional')
+        && (!('fid' in e) || (e.fid is string && e.fid.size() <= 30))
+        && (!('rec' in e) || (e.rec is string && e.rec.size() <= 120))
+        && (!('rtel' in e) || (e.rtel is string && e.rtel.size() <= 40))
+        && (!('rced' in e) || (e.rced is string && e.rced.size() <= 30))
+        && (!('pais' in e) || (e.pais is string && e.pais.size() <= 60))
+        && (!('prov' in e) || (e.prov is string && e.prov.size() <= 80))
+        && (!('ciudad' in e) || (e.ciudad is string && e.ciudad.size() <= 80))
+        && (!('suc' in e) || (e.suc is string && e.suc.size() <= 100))
+        && (!('dir' in e) || (e.dir is string && e.dir.size() <= 200))
+        && (!('ref' in e) || (e.ref is string && e.ref.size() <= 200));
+    }
+
+    function chatMember(data) {
+      return logged()
+        && data.members is list
+        && data.members.hasAny([me()]);
+    }
+
+    match /roles/{uid} {
+      // Leer el rol propio no necesita volver a consultar el rol dentro de isAdmin().
+      // Esto evita una evaluación circular cuando arranca la sesión.
+      allow get: if request.auth != null && request.auth.uid == uid;
+      allow list: if isAdmin();
+      allow create, update, delete: if isAdmin();
+    }
+
+    // Datos históricos completos: solo administración. Al actualizar la aplicación,
+    // se copian automáticamente las facturas ya identificadas a cada vendedor.
+    match /panel/data {
+      allow read, write: if isAdmin();
+    }
+
+    // Marca de migración; evita volver a copiar datos antiguos en cada acceso.
+    match /panel/migracion_roles_v1 {
+      allow read, write: if isAdmin();
+    }
+
+    // El fondo de inicio puede contener una URL privada de Storage: solo administración.
+    match /panel/loginbg {
+      allow read, write: if isAdmin();
+    }
+
+    // No permitir documentos inesperados dentro de panel.
+    match /panel/{doc} {
+      allow read, write: if false;
+    }
+
+    // Datos comunes sin información de clientes, usuarios, agenda o credenciales.
+    match /panel_public/general {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    // Espacio privado de cada vendedor: clientes, facturas, ubicaciones y agenda.
+    // Administración puede auditarlo; un vendedor solo puede acceder a su UID.
+    // El documento padre de cada vendedor (si existe) también es enumerable por
+    // administración: la simulación y la migración completas (Fase 6) lo requieren.
+    match /vendedores/{uid} {
+      allow read: if isAdmin();
+    }
+
+    match /vendedores/{uid}/privado/{doc} {
+      allow read, write: if isAdmin() || (logged() && request.auth.uid == uid);
+    }
+
+    match /catalogo/{doc} {
+      allow read: if isStaff();
+      allow write: if isAdmin();
+    }
+
+    match /galeria/{doc} {
+      allow read: if isStaff();
+      allow create: if isStaff() && request.resource.data.o == me();
+      allow update: if isAdmin() || (resource.data.o == me() && request.resource.data.o == resource.data.o);
+      allow delete: if isAdmin() || resource.data.o == me();
+    }
+
+    // Un chat y sus mensajes solo existen para integrantes declarados. La consulta
+    // del navegador debe llevar where('members', 'array-contains', me()).
+    // Administración puede enumerar todos (simulación/migración Fase 6).
+    match /chats/{chat} {
+      // PRUEBA: sin chatMember() aquí; su "data.members is list" impide que Firestore
+      // demuestre la consulta where('members','array-contains',me()) (el emulador la
+      // rechaza con "evaluation error"). hasAny sobre resource.data sí es demostrable
+      // y, si members no fuera lista, falla y deniega (misma seguridad).
+      allow read: if isAdmin() || (logged() && resource.data.members.hasAny([me()]));
+      allow create: if isStaff() && chatMember(request.resource.data);
+      allow update: if chatMember(resource.data)
+        && request.resource.data.members == resource.data.members;
+      allow delete: if isAdmin()
+        || (resource.data.type == 'grp' && resource.data.by == me());
+
+      match /msgs/{msg} {
+        allow read: if isAdmin()
+          || chatMember(get(/databases/$(database)/documents/chats/$(chat)).data);
+        allow create: if chatMember(get(/databases/$(database)/documents/chats/$(chat)).data)
+          && request.resource.data.from == me()
+          && request.resource.data.t is string
+          && request.resource.data.t.size() > 0
+          && request.resource.data.t.size() <= 2000;
+        // El creador del grupo puede borrarlo mediante un lote que incluye sus mensajes.
+        allow delete: if isAdmin()
+          || get(/databases/$(database)/documents/chats/$(chat)).data.by == me();
+      }
+    }
+
+    // Llamadas de voz: solo entre administrador y vendedor.
+    match /llamadas/{id} {
+      allow create: if isStaff()
+        && request.resource.data.from == me()
+        && (request.resource.data.from == 'admin' || request.resource.data.to == 'admin');
+      allow read, update: if isAdmin()
+        || (logged()
+          && (resource.data.from == me() || resource.data.to == me()));
+      allow delete: if isAdmin();
+
+      match /ice/{c} {
+        allow read, create: if logged()
+          && (get(/databases/$(database)/documents/llamadas/$(id)).data.from == me()
+            || get(/databases/$(database)/documents/llamadas/$(id)).data.to == me());
+      }
+    }
+
+    match /perfiles/{uid} {
+      allow read: if isStaff();
+      allow write: if logged()
+        && (request.auth.uid == uid || (isAdmin() && uid == 'admin'));
+    }
+
+    match /presencia/{uid} {
+      allow read: if isAdmin();
+      allow write: if logged() && request.auth.uid == uid;
+    }
+
+    // Catálogo público; las publicaciones proceden exclusivamente del administrador.
+    match /tienda_items/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /tienda_leads/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['id','name','tel','email','empresa','dir','ref','ts','imp'])
+        && request.resource.data.id == id
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 1 && request.resource.data.name.size() <= 120
+        && request.resource.data.tel is string && request.resource.data.tel.size() <= 40
+        && request.resource.data.email is string && request.resource.data.email.size() <= 120
+        && request.resource.data.empresa is string && request.resource.data.empresa.size() <= 120
+        && request.resource.data.dir is string && request.resource.data.dir.size() <= 200
+        && validRef(request.resource.data.ref)
+        && request.resource.data.ts is number
+        && request.resource.data.imp == false;
+      allow read: if isAdmin() || (logged() && resource.data.ref == me());
+      // Un vendedor únicamente marca como importado su propio lead; administración gestiona todo.
+      allow update: if isAdmin() || (logged() && resource.data.ref == me()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['imp'])
+        && request.resource.data.imp == true);
+      allow delete: if isAdmin();
+    }
+
+    match /tienda_pedidos/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['id','cid','lead','items','total','nota','ref','ts','estado','envio'])
+        && request.resource.data.id == id
+        && request.resource.data.cid is string && request.resource.data.cid.size() <= 100
+        && request.resource.data.lead is map
+        && request.resource.data.lead.keys().hasOnly(['name','tel','email','empresa','dir','terminos'])
+        && request.resource.data.lead.size() <= 8
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 100
+        && request.resource.data.total is number && request.resource.data.total >= 0
+        && request.resource.data.estado == 'nuevo'
+        && request.resource.data.nota is string && request.resource.data.nota.size() <= 500
+        && validRef(request.resource.data.ref)
+        && request.resource.data.ts is number
+        && (!('envio' in request.resource.data) || envioValido(request.resource.data.envio));
+      allow read: if isAdmin() || (logged() && resource.data.ref == me());
+      // El vendedor responsable solo cambia el estado; no puede alterar pedido, total o cliente.
+      allow update: if isAdmin() || (logged() && resource.data.ref == me()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado'])
+        && (request.resource.data.estado == 'nuevo' || request.resource.data.estado == 'atendido'));
+      allow delete: if isAdmin();
+    }
+
+    match /investigacion_items/{id} {
+      allow read, write: if isAdmin();
+    }
+
+    match /wa_conversaciones/{id} {
+      allow read, write: if isAdmin();
+    }
+
+        match /panel_public/contador {
+      allow read: if isStaff();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (isStaff() && request.resource.data.sig == resource.data.sig + 1);
+    }
+
+    match /panel_public/clientes {
+      allow read: if isStaff();
+      allow create, delete: if isAdmin();
+      allow update: if isStaff() && (isAdmin() || request.resource.data.cli.size() >= resource.data.cli.size());
+    }
+
+    /* ===== Multiempresa (Fases 3-5 del plan): SOLO metadatos nuevos =====
+       empresas: registro de negocios propios (admin). dominios: asociación de
+       subdominios/dominios por empresa; lectura pública para que la tienda
+       pueda resolver la empresa por hostname en la Fase 9. Ninguna colección
+       existente cambia. */
+    // PRUEBA: los miembros leen el documento de SU empresa (marca: logo/colores que
+    // Marketing Studio carga también para vendedores, js/marketing.js:mktCargarMarca).
+    // Antes lo permitía el comodín; tras la propuesta A se perdería sin esta regla.
+    match /empresas/{id} {
+      allow read: if esMiembroEmpresa(id);
+      allow write: if isAdmin();
+    }
+
+    match /dominios/{host} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    /* ===== Multiempresa Fase 8: rutas por empresa (empresas/{eid}/…) =====
+       Desplegar ANTES de activar MULTIEMP. No cambian nada de las rutas raíz
+       actuales: solo habilitan el árbol nuevo. esEmpresa = administración
+       global o miembro declarado (miembros/{uid}, uso futuro). */
+    function esEmpresa(eid) {
+      return isAdmin()
+        || exists(/databases/$(database)/documents/empresas/$(eid)/miembros/$(request.auth.uid));
+    }
+
+    // Árbol general de la empresa (panel, catálogo, chats, llamadas, wa…):
+    // SOLO administración global. Las colecciones que usan los vendedores y la tienda
+    // pública tienen su regla específica más abajo. Un comodín que admitiera miembros
+    // anularía esas reglas (en Firestore basta que UNA regla permita).
+    match /empresas/{eid}/{document=**} {
+      allow read, write: if isAdmin();
+    }
+
+    match /empresas/{eid}/miembros/{uid} {
+      allow read: if isAdmin() || (logged() && request.auth.uid == uid);
+      allow write: if isAdmin();
+    }
+
+    match /empresas/{eid}/panel_public/general {
+      allow read: if esMiembroEmpresa(eid);
+      allow write: if isAdmin();
+    }
+
+    match /empresas/{eid}/panel_public/contador {
+      allow read: if esMiembroEmpresa(eid);
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (esMiembroEmpresa(eid) && request.resource.data.sig == resource.data.sig + 1);
+    }
+
+    match /empresas/{eid}/panel_public/clientes {
+      allow read: if esMiembroEmpresa(eid);
+      allow create, delete: if isAdmin();
+      allow update: if esMiembroEmpresa(eid) && (isAdmin() || request.resource.data.cli.size() >= resource.data.cli.size());
+    }
+
+    match /empresas/{eid}/vendedores/{uid}/privado/{doc} {
+      allow read, write: if isAdmin() || (logged() && request.auth.uid == uid);
+    }
+
+    match /empresas/{eid}/catalogo/{doc} {
+      allow read: if esMiembroEmpresa(eid);
+      allow write: if isAdmin();
+    }
+
+    match /empresas/{eid}/galeria/{doc} {
+      allow read: if esMiembroEmpresa(eid);
+      allow create: if esMiembroEmpresa(eid) && request.resource.data.o == me();
+      allow update: if isAdmin() || (resource.data.o == me() && request.resource.data.o == resource.data.o);
+      allow delete: if isAdmin() || resource.data.o == me();
+    }
+
+    // Catálogo público de la tienda por empresa.
+    match /empresas/{eid}/tienda_items/{document=**} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    match /empresas/{eid}/tienda_leads/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['id','name','tel','email','empresa','dir','ref','ts','imp'])
+        && request.resource.data.id == id
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 1 && request.resource.data.name.size() <= 120
+        && request.resource.data.tel is string && request.resource.data.tel.size() <= 40
+        && request.resource.data.email is string && request.resource.data.email.size() <= 120
+        && request.resource.data.empresa is string && request.resource.data.empresa.size() <= 120
+        && request.resource.data.dir is string && request.resource.data.dir.size() <= 200
+        && validRef(request.resource.data.ref)
+        && request.resource.data.ts is number
+        && request.resource.data.imp == false;
+      allow read: if isAdmin() || (logged() && resource.data.ref == me());
+      allow update: if isAdmin() || (logged() && resource.data.ref == me()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['imp'])
+        && request.resource.data.imp == true);
+      allow delete: if isAdmin();
+    }
+
+    match /empresas/{eid}/tienda_pedidos/{id} {
+      allow create: if request.resource.data.keys().hasOnly(['id','cid','lead','items','total','nota','ref','ts','estado','envio'])
+        && request.resource.data.id == id
+        && request.resource.data.cid is string && request.resource.data.cid.size() <= 100
+        && request.resource.data.lead is map
+        && request.resource.data.lead.keys().hasOnly(['name','tel','email','empresa','dir','terminos'])
+        && request.resource.data.lead.size() <= 8
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0 && request.resource.data.items.size() <= 100
+        && request.resource.data.total is number && request.resource.data.total >= 0
+        && request.resource.data.estado == 'nuevo'
+        && request.resource.data.nota is string && request.resource.data.nota.size() <= 500
+        && validRef(request.resource.data.ref)
+        && request.resource.data.ts is number
+        && (!('envio' in request.resource.data) || envioValido(request.resource.data.envio));
+      allow read: if isAdmin() || (logged() && resource.data.ref == me());
+      allow update: if isAdmin() || (logged() && resource.data.ref == me()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['estado'])
+        && (request.resource.data.estado == 'nuevo' || request.resource.data.estado == 'atendido'));
+      allow delete: if isAdmin();
+    }
+
+    match /empresas/{eid}/chats/{chat} {
+      // PRUEBA: sin chatMember() aquí; su "data.members is list" impide que Firestore
+      // demuestre la consulta where('members','array-contains',me()) (el emulador la
+      // rechaza con "evaluation error"). hasAny sobre resource.data sí es demostrable
+      // y, si members no fuera lista, falla y deniega (misma seguridad).
+      allow read: if isAdmin() || (logged() && resource.data.members.hasAny([me()]));
+      allow create: if esMiembroEmpresa(eid) && chatMember(request.resource.data);
+      allow update: if chatMember(resource.data)
+        && request.resource.data.members == resource.data.members;
+      allow delete: if isAdmin()
+        || (resource.data.type == 'grp' && resource.data.by == me());
+
+      match /msgs/{msg} {
+        allow read: if isAdmin()
+          || chatMember(get(/databases/$(database)/documents/empresas/$(eid)/chats/$(chat)).data);
+        allow create: if chatMember(get(/databases/$(database)/documents/empresas/$(eid)/chats/$(chat)).data)
+          && request.resource.data.from == me()
+          && request.resource.data.t is string
+          && request.resource.data.t.size() > 0
+          && request.resource.data.t.size() <= 2000;
+        allow delete: if isAdmin()
+          || get(/databases/$(database)/documents/empresas/$(eid)/chats/$(chat)).data.by == me();
+      }
+    }
+
+    match /empresas/{eid}/llamadas/{id} {
+      allow create: if esMiembroEmpresa(eid)
+        && request.resource.data.from == me()
+        && (request.resource.data.from == 'admin' || request.resource.data.to == 'admin');
+      allow read, update: if isAdmin()
+        || (logged()
+          && (resource.data.from == me() || resource.data.to == me()));
+      allow delete: if isAdmin();
+
+      match /ice/{c} {
+        allow read, create: if logged()
+          && (get(/databases/$(database)/documents/empresas/$(eid)/llamadas/$(id)).data.from == me()
+            || get(/databases/$(database)/documents/empresas/$(eid)/llamadas/$(id)).data.to == me());
+      }
+    }
+
+    /* ===== Marketing Studio (plan maestro 2026-10-22, v1) =====
+       Acceso por EMPRESA: administración global o miembro declarado
+       (empresas/{eid}/miembros/{uid}, sincronizado por el panel desde cfg.users).
+       Un vendedor de una empresa NO puede leer la de otra. */
+    match /empresas/{eid}/marketing_projects/{id} {
+      allow read, write: if esMiembroEmpresa(eid);
+    }
+    match /empresas/{eid}/marketing_assets/{id} {
+      allow read, write: if esMiembroEmpresa(eid);
+    }
+    match /empresas/{eid}/marketing_exports/{id} {
+      allow read, write: if esMiembroEmpresa(eid);
+    }
+    match /empresas/{eid}/marketing_colecciones/{id} {
+      allow read, write: if esMiembroEmpresa(eid);
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

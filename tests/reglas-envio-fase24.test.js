@@ -42,9 +42,10 @@ test('lo que construye la tienda (shopEnvDatos → sanEnv) está dentro de lo qu
 test('respaldo de las reglas anteriores (producción al 2026-10-25) disponible y sin envio',()=>{
  const ant=leer('docs/respaldo-reglas-anteriores-2026-10-25.rules');
  assert.doesNotMatch(ant,/envioValido|'envio'/);
- assert.notEqual(ant,reglas);
+ const publicadas=leer('docs/respaldo-reglas-anteriores-2026-10-26.rules'); /* lo publicado el 2026-10-25/26 (con envio), antes del aislamiento entre empresas */
+ assert.notEqual(ant,publicadas);
  /* la única diferencia con las reglas nuevas es envio: quitando envioValido y las referencias a envio son iguales */
- const sin=reglas.replace(/    \/\/ Datos de envío que la tienda pública[\s\S]*?\n    \}\n\n(?=    function chatMember)/,'').replace(/,'estado','envio'\]/g,",'estado']").replace(/\n        && \(!\('envio' in request\.resource\.data\) \|\| envioValido\(request\.resource\.data\.envio\)\);/g,';').replace(/request\.resource\.data\.ts is number\n? *;/g,'request.resource.data.ts is number;');
+ const sin=publicadas.replace(/    \/\/ Datos de envío que la tienda pública[\s\S]*?\n    \}\n\n(?=    function chatMember)/,'').replace(/,'estado','envio'\]/g,",'estado']").replace(/\n        && \(!\('envio' in request\.resource\.data\) \|\| envioValido\(request\.resource\.data\.envio\)\);/g,';').replace(/request\.resource\.data\.ts is number\n? *;/g,'request.resource.data.ts is number;');
  assert.equal(sin.replace(/\s+/g,' '),ant.replace(/\s+/g,' '),'las reglas nuevas solo añaden envio');
 });
 test('el emulador: pruebas y README presentes',()=>{
