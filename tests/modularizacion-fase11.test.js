@@ -109,7 +109,7 @@ test('todo lo movido resuelve por nombre desde otro script clásico (const = glo
 });
 
 test('cada símbolo movido que se usa en otros archivos sigue resolviendo (app.js, marketing.js, empresas.js, apps/, sw.js)',()=>{
- const otros=['js/app.js','js/marketing.js','js/empresas.js','js/mkt-editor.js','js/empresa-contexto.js','js/facturacion.js','js/uber-nav.js','js/a11y.js','apps/investigacion.js','apps/modelos.js','sw.js'];
+ const otros=['js/app.js','js/marketing.js','js/empresas.js','js/mkt-editor.js','js/empresa-contexto.js','js/facturacion.js','js/uber-nav.js','js/guia.js','js/a11y.js','apps/investigacion.js','apps/modelos.js','sw.js'];
  const ctx=ctxBase();
  const definidos=new Set(TODOS.map(x=>x[1]));
  for(const f of otros){

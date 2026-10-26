@@ -131,6 +131,14 @@ const esperarFn=(p,fn,arg,ms)=>p.waitForFunction(fn,arg,{timeout:ms||20000});
    exige(f.n===1&&f.v==='fac','No se guardó la factura o no fue a «Facturas»',JSON.stringify({n:f.n,v:f.v}));
    exige(/Cliente Humo/.test(f.t)&&f.t.includes(TOTAL.toFixed(2)),'La factura no aparece en el historial con cliente y total',f.t.slice(0,120));
    exige(f.imp>=1,'No se abrió la impresión de la factura')});
+  await paso('Guía «Primeros pasos»: detecta sola el cliente, el producto y la factura y no estorba',async()=>{
+   await esperarFn(ap,()=>window.guiaEstado&&guiaEstado()&&guiaEstado().hechos>=3,null,12000).catch(()=>{});
+   const g=await ap.evaluate(()=>{const e=window.guiaEstado&&guiaEstado();return e&&{t:e.total,ids:e.items.filter(i=>i.hecho).map(i=>i.p.id)}});
+   exige(!!g,'No cargó la guía de primeros pasos (js/guia.js)');
+   for(const id of ['cliente','producto','venta'])exige(g.ids.includes(id),'La guía no marcó sola el paso «'+id+'»',JSON.stringify(g.ids));
+   await ap.evaluate(()=>ir('home'));await ap.waitForTimeout(800);
+   exige(await ap.evaluate(()=>!!document.getElementById('guiaCard')||!!document.getElementById('guiaAbrir')),'Inicio no muestra la guía (ni su botón «Primeros pasos»)');
+   await csp(ap)});
   await paso('Los datos quedaron guardados en la nube (cliente, producto y factura)',async()=>{
    await esperarFn(ap,async()=>{try{const d=await fbDocRef.get(),c=d.exists?d.data():{};const s=JSON.stringify(c);return /Producto Humo/.test(s)&&/Cliente Humo/.test(s)}catch(e){return false}},null,25000).catch(()=>{});
    const r=await ap.evaluate(async TOTAL=>{try{const d=await fbDocRef.get(),s=JSON.stringify(d.exists?d.data():{});return{prod:/Producto Humo/.test(s),fac:s.includes('"total":'+TOTAL),cli:/Cliente Humo/.test(s)||/Cliente Humo/.test(JSON.stringify(((await clientesRef().get()).data()||{})))}}catch(e){return{err:e.message}}},TOTAL);
