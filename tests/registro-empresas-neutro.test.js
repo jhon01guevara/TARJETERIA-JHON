@@ -27,5 +27,5 @@ test('el formulario explica que los datos son de esta empresa y los campos de co
  assert.match(emp,/Teléfono de contacto/);assert.match(emp,/Correo de contacto/);
 });
 test('versiones subidas',()=>{
- const h=leer('index.html');assert.match(h,/js\/empresas\.js\?v=registro-empresas-a/);assert.match(h,/js\/app\.js\?v=modulos-fase-24[m-z]/);assert.match(leer('sw.js'),/tj-net-first-(3[3-9]|[4-9]\d)/);
+ const h=leer('index.html');assert.match(h,/js\/empresas\.js\?v=(registro-empresas-a|etapa3-empresas-[a-z])/);assert.match(h,/js\/app\.js\?v=modulos-fase-24[m-z]/);assert.match(leer('sw.js'),/tj-net-first-(3[3-9]|[4-9]\d)/);
 });
