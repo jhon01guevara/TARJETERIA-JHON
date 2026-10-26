@@ -50,3 +50,9 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 |---|---|
 | `marca-ven-crm.js` | Acceso del panel y tienda: manifest, íconos, título, logo (sin iniciar sesión). |
 | `marca-ven-crm-interior.js` | Interior del panel con admin de PRUEBA: logo/símbolo/pie VEN CRM, empresa intacta (con `ANTES=` contra una copia de `main`), sin rosado, contraste claro/nocturno, recorrido por todas las pantallas, tienda sin cambios. `BASE=… [ANTES=…] [VP=390x844] [SHOTS=…] node marca-ven-crm-interior.js` |
+
+## Empresa GENUINE (tienda y panel de otra empresa)
+| Script | Qué hace |
+|---|---|
+| `genuine-siembra.js` | Crea/actualiza la empresa de PRUEBA `genuine-prueba` (logo ancho, plantilla y contacto propios) SOLO en `tarjeteria-jhon-prueba`; aborta si la app no apunta a PRUEBA. `BASE=… PRUEBA_PASSWORD=… PW=… node genuine-siembra.js` |
+| `genuine-tienda.js` | Tienda de otra empresa en Chrome real (sin sesión): ni logo ni textos de Tarjetería en ningún instante (línea de tiempo cada 15 ms), esqueleto sin copia local, primer pintado desde la copia local con Firestore bloqueado, inicial si no hay logo, y la empresa inicial intacta. `BASE=… [EMP=genuine-prueba] [SHOTS=/ruta] PW=… node genuine-tienda.js` |
