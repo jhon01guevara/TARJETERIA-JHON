@@ -56,8 +56,8 @@ async function mktCargarMarca(){
  if(MK.marca)return MK.marca;
  try{
   var d=await fbDb.collection('empresas').doc(mktEid()).get();
-  MK.marca=(d.exists&&d.data().marca)||{logo:'',c1:'#E0457B',c2:'#0F6CBD',fuente:'moderna'};
- }catch(e){MK.marca={logo:'',c1:'#E0457B',c2:'#0F6CBD',fuente:'moderna'}}
+  MK.marca=(d.exists&&d.data().marca)||{logo:'',c1:(typeof TJEmpresa!=='undefined'&&TJEmpresa.colorMarca?TJEmpresa.colorMarca():'#E0457B'),c2:'#0F6CBD',fuente:'moderna'};
+ }catch(e){MK.marca={logo:'',c1:(typeof TJEmpresa!=='undefined'&&TJEmpresa.colorMarca?TJEmpresa.colorMarca():'#E0457B'),c2:'#0F6CBD',fuente:'moderna'}}
  return MK.marca;
 }
 
@@ -135,7 +135,7 @@ function mktMarcaHTML(){
  var m=MK.marca||{};
  var fOpt=function(k,l){return '<option value="'+k+'"'+(m.fuente===k?' selected':'')+'>'+l+'</option>'};
  return '<div class="nota" style="margin:12px 0 10px">La identidad se aplica a las plantillas nuevas de <b>'+mktEid()+'</b> (colores, logo y tipografía).</div>'
-  +'<div class="g"><div><small>Color primario</small><br><input type="color" id="mkt_c1" value="'+(m.c1||'#E0457B')+'" style="width:70px;height:38px;border:0;background:none;cursor:pointer"></div>'
+  +'<div class="g"><div><small>Color primario</small><br><input type="color" id="mkt_c1" value="'+(m.c1||(typeof TJEmpresa!=='undefined'&&TJEmpresa.colorMarca?TJEmpresa.colorMarca():'#E0457B'))+'" style="width:70px;height:38px;border:0;background:none;cursor:pointer"></div>'
   +'<div><small>Color secundario</small><br><input type="color" id="mkt_c2" value="'+(m.c2||'#0F6CBD')+'" style="width:70px;height:38px;border:0;background:none;cursor:pointer"></div>'
   +'<div><small>Tipografía</small><br><select id="mkt_fuente">'+fOpt('moderna','Moderna')+fOpt('impacto','Impacto')+fOpt('clasica','Clásica')+fOpt('manual','Manual')+'</select></div>'
   +'<div><small>Logo</small><br><button class="btn s" id="mkt_logo">'+(m.logo?'🔁 Cambiar logo':'⬆ Subir logo')+'</button>'

@@ -240,7 +240,7 @@ var MKT_PLANTILLAS=[
 ];
 function mktAplicarMarca(doc,marca){
  marca=marca||{};
- var c1=marca.c1||'#E0457B',c2=marca.c2||'#0F6CBD';
+ var c1=marca.c1||(typeof TJEmpresa!=='undefined'&&TJEmpresa.colorMarca?TJEmpresa.colorMarca():'#E0457B'),c2=marca.c2||'#0F6CBD';
  (function rec(o){
   if(Array.isArray(o))return o.forEach(rec);
   if(o&&typeof o==='object'){
