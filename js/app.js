@@ -1583,7 +1583,7 @@ const usuarios=()=>DB.cfg.users||(DB.cfg.users=[]);
 const esAdmin=()=>!!SES&&SES.id==='admin';
 window.__panelBridge=()=>({db:fbDb?new Proxy(fbDb,{get(t,p){if(p==='collection')return n=>fbCol(n);const v=t[p];return typeof v==='function'?v.bind(t):v}}):fbDb,admin:esAdmin(),col:fbCol});
 const usr=()=>SES&&!esAdmin()?SES.u:null;
-const puede=k=>esAdmin()||(!!usr()&&k!=='config'&&k!=='vend'&&k!=='mapa'&&k!=='empresas'&&(usr().panels||[]).includes(k));
+const puede=k=>esAdmin()||(k==='ayuda'&&!!SES)||(!!usr()&&k!=='config'&&k!=='vend'&&k!=='mapa'&&k!=='empresas'&&(usr().panels||[]).includes(k));
 const _no=navOrd;navOrd=()=>_no().filter(v=>puede(v[0]));
 const _ir=ir;ir=function(v){if(!SES)return;if(!puede(v)){const f=navOrd().find(x=>puede(x[0]));if(!f)return;v=f[0]}return _ir(v)};
 const esVend=()=>!!SES&&!esAdmin();

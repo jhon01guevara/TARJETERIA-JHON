@@ -101,6 +101,7 @@
     try { c = (DB.cli || []).length; pr = (DB.prod || []).length; f = (DB.fac || []).length; } catch (e) {}
     return { c: c, pr: pr, f: f, p: p };
   }
+  function pl(n, uno, varios) { return n === 1 ? uno : varios; }
   function boton(cls, fn, args, texto, label, id) {
     return '<button type="button" class="btn ' + cls + '"' + (id ? ' id="' + id + '"' : '') + (label ? ' aria-label="' + html(label) + '"' : '') + ' data-h-click="call" data-a-click="' + ha.apply(null, [fn].concat(args)) + '">' + texto + '</button>';
   }
@@ -108,7 +109,7 @@
     var n = conteos(), zip = typeof JSZip !== 'undefined';
     return '<p style="font-size:12.5px;color:var(--gris);margin:0 0 4px">Descargue una copia de sus <b>clientes, productos, facturas y pedidos de la tienda</b> de <b>' + html(nombreEmp()) + '</b> para abrirla en Excel o guardarla aparte. ' +
       'Solo se lee: <b>no se borra ni se cambia nada</b>. Sirve para llevar sus datos a otro lugar o como respaldo adicional.</p>' +
-      '<p style="font-size:12.5px;margin:4px 0 8px" id="exp_cnt">Ahora tiene: <b>' + n.c + '</b> clientes · <b>' + n.pr + '</b> productos · <b>' + n.f + '</b> facturas · <b>' + n.p + '</b> pedidos de la tienda.</p>' +
+      '<p style="font-size:12.5px;margin:4px 0 8px" id="exp_cnt">Ahora tiene: <b>' + n.c + '</b> ' + pl(n.c, 'cliente', 'clientes') + ' · <b>' + n.pr + '</b> ' + pl(n.pr, 'producto', 'productos') + ' · <b>' + n.f + '</b> ' + pl(n.f, 'factura', 'facturas') + ' · <b>' + n.p + '</b> ' + pl(n.p, 'pedido', 'pedidos') + ' de la tienda.</p>' +
       '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
       boton('s', 'expDescargar', ['clientes'], '👥 Clientes (CSV)', 'Descargar clientes en CSV') +
       boton('s', 'expDescargar', ['productos'], '🎴 Productos (CSV)', 'Descargar productos en CSV') +

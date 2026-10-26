@@ -183,7 +183,8 @@
       boton('s', 'guiaOcultar', [], ev.completo ? 'Cerrar guía' : 'Ocultar', ' id="guiaOcultar"', ev.completo ? 'Cerrar guía de primeros pasos' : 'Ocultar guía de primeros pasos (se puede volver a abrir)') + '</div>' +
       '<div class="guia-prog"><progress class="guia-bar" max="' + ev.total + '" value="' + ev.hechos + '" aria-label="Progreso de los primeros pasos">' + ev.hechos + ' de ' + ev.total + '</progress>' +
       '<b class="guia-cnt">' + ev.hechos + ' de ' + ev.total + ' pasos</b></div>' + fin +
-      '<ol class="guia-l">' + li + '</ol></section>';
+      '<ol class="guia-l">' + li + '</ol>' +
+      '<p class="guia-ay">¿Necesita ayuda? ' + boton('s', 'ir', ['ayuda'], '❓ Ayuda y soporte', ' id="guiaAyuda"', 'Abrir Ayuda y soporte') + '</p></section>';
   }
   function minHTML(ev) {
     var txt = ev.completo ? '🚀 Primeros pasos · completados ✔' : '🚀 Primeros pasos · ' + ev.hechos + ' de ' + ev.total + ' — Abrir la guía';
