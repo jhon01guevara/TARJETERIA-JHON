@@ -246,3 +246,14 @@ Llamadas de voz (WebRTC, `LL`), chat, presencia (`PRES`), TJ LIVE, perfiles/emoj
 
 ### Cómo revertir
 Revertir el PR (devuelve las 233 líneas a `app.js`, quita los 5 archivos y sus `<script>`, y vuelve la caché del SW a `tj-net-first-19`).
+
+## 11. Fase 24: extracción 1 (reportes de ventas)
+Misma regla: líneas completas movidas **literalmente** a un script clásico cargado justo **antes de `js/app.js`** (después de `comprobante-pedido.js`), con `?v=modulos-fase-24a`. Caché del SW `tj-net-first-37` → `38`.
+
+| Archivo | Qué se movió | Líneas |
+|---|---|---|
+| `js/reportes-ventas.js` | `REPP` (const), `repData`, `repHTML`, `buildRepBlob`, `repPer`/`repLibs` (const flecha), `repPDF`, `repWA`, `repMail`, `repModal` | 45 |
+
+Comprobación: `node tests/navegador/verificar-movimiento-literal-24.js origin/main` (bloque contiguo y único; `app.js` nuevo = base menos esas 45 líneas: 4.168 → 4.123), `tests/modularizacion-fase24.test.js`, y Chrome real contra PRUEBA (empresa inicial y `genuine-prueba`): las funciones existen, `repHTML` genera las 2 páginas, `repModal` abre y `buildRepBlob` produce un PDF válido, sin errores de página ni CSP.
+Qué NO se movió: llamadas de voz, chat, presencia, TJ LIVE y vistas `R.*` (estado central o necesitan dos usuarios reales; sin prueba manual no es seguro).
+Revertir: revertir el PR.
