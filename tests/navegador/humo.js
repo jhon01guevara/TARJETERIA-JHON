@@ -109,12 +109,12 @@ const esperarFn=(p,fn,arg,ms)=>p.waitForFunction(fn,arg,{timeout:ms||20000});
   /* ============ 2. Clientes y productos ============ */
   await paso('Crea un cliente (Clientes) y lo ve en la lista',async()=>{
    await ap.evaluate(()=>ir('cli'));await ap.waitForSelector('#cn');await ap.fill('#cn','Cliente Humo');await ap.fill('#cr','8-123-456');await ap.fill('#ct2','6123-4567');await ap.fill('#cd2','Calle de prueba 1');
-   await ap.click('#v .card:first-child button.btn.p:has-text("Agregar")');await ap.waitForTimeout(1200);
+   await ap.click('#v div.card:first-of-type button.btn.p:has-text("Agregar")');await ap.waitForTimeout(1200);
    const t=await ap.evaluate(()=>({n:DB.cli.length,txt:document.getElementById('v').innerText}));
    exige(t.n===1&&/Cliente Humo/.test(t.txt),'El cliente no aparece en la lista',JSON.stringify({n:t.n}))});
   await paso('Crea un producto (Productos) y lo ve en la lista',async()=>{
    await ap.evaluate(()=>ir('prod'));await ap.waitForSelector('#pn');await ap.fill('#pn','Producto Humo');await ap.fill('#pp','10');
-   await ap.click('#v .card:first-child button.btn.p:has-text("Agregar")');await ap.waitForTimeout(1000);
+   await ap.click('#v div.card:first-of-type button.btn.p:has-text("Agregar")');await ap.waitForTimeout(1000);
    const t=await ap.evaluate(()=>({n:DB.prod.length,txt:document.getElementById('v').innerText}));
    exige(t.n===1&&/Producto Humo/.test(t.txt)&&/10\.00/.test(t.txt),'El producto no aparece con su precio',JSON.stringify({n:t.n}))});
   /* ============ 3. Factura ============ */
