@@ -3513,12 +3513,23 @@ function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
    </div>
   </div>
   <small style="display:block;color:var(--gris);font-size:11.5px;margin:0 0 8px">Recomendado <b>200×200 px</b> cuadrado (mínimo 100) · aparece en el menú de todos sus dispositivos.</small>
-  <div class="g" style="margin:0 0 8px"><div><label for="pm_nombre">Nombre bajo el logo del menú</label><input id="pm_nombre" maxlength="40" value="${esc(DB.cfg.panelNombre||'')}" placeholder="${esc(panelMarcaTextos().nombre)}"></div>
-  <div><label for="pm_lema">Eslogan bajo el nombre</label><input id="pm_lema" maxlength="60" value="${esc(DB.cfg.panelLema!=null?DB.cfg.panelLema:'')}" placeholder="${esc(panelMarcaTextos().lema||'Opcional')}"></div></div>
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn p s" data-h-click="call" data-a-click="${_ha('panelMarcaGuardar')}">💾 Guardar nombre y eslogan</button><button class="btn s" data-h-click="call" data-a-click="${_ha('panelMarcaRestaurar')}">↺ Restaurar</button></div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
    <input id="lg_url" placeholder="…o enlace (URL) de imagen/GIF/video" style="flex:1;min-width:200px"><button class="btn s" data-h-click="call" data-a-click="${_ha('loginLogoUrl')}">Usar enlace</button>
   </div>
+  <div style="padding-top:10px;border-top:1px dashed var(--linea)"><b style="font-size:13.5px">🏷 Nombre y eslogan bajo el logo del menú</b></div>
+  <div class="g" style="margin:0 0 8px"><div><label for="pm_nombre">Nombre bajo el logo del menú</label><input id="pm_nombre" maxlength="40" value="${esc(DB.cfg.panelNombre||'')}" placeholder="${esc(panelMarcaTextos().nombre)}"></div>
+  <div><label for="pm_lema">Eslogan bajo el nombre</label><input id="pm_lema" maxlength="60" value="${esc(DB.cfg.panelLema!=null?DB.cfg.panelLema:'')}" placeholder="${esc(panelMarcaTextos().lema||'Opcional')}"></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn p s" data-h-click="call" data-a-click="${_ha('panelMarcaGuardar')}">💾 Guardar nombre y eslogan</button><button class="btn s" data-h-click="call" data-a-click="${_ha('panelMarcaRestaurar')}">↺ Restaurar</button></div>
+  <div style="padding-top:10px;border-top:1px dashed var(--linea)"><b style="font-size:13.5px">🛍 Logo de la tienda web</b></div>
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0 6px">
+   ${TD.logoUrl?`<img src="${esc(TD.logoUrl)}" alt="logo de la tienda" style="height:44px;max-width:180px;object-fit:contain;border-radius:10px;background:#fff;padding:3px 6px;border:1px solid var(--linea)">`:`<small style="color:var(--gris)">${TJEmpresa.empEsInicial()?'Logo de la tienda web: usa el original.':'Logo de la tienda web: sin logo propio (la tienda muestra la inicial de su empresa).'}</small>`}
+   <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">📁 Subir logo de la tienda web<input type="file" accept="image/*" hidden data-h-change="call" data-a-change="${_ha('shopLogoFile')}"></label>
+    ${TD.logoUrl?`<button class="btn s d" data-h-click="call" data-a-click="${_ha('shopLogoQuitar')}">Quitar</button>`:''}
+   </div>
+  </div>
+  <small style="display:block;color:var(--gris);font-size:11.5px;margin:0 0 10px">Es el logo que ven sus clientes arriba a la izquierda de la tienda (junto a «Catálogo virtual») y en la portada. PNG con fondo transparente o JPG, recomendado ancho de 400–800 px; se reduce solo a ≤180 KB. Se guarda al instante, solo para esta empresa.</small>
+  <div style="padding-top:10px;border-top:1px dashed var(--linea)"><b style="font-size:13.5px">🔐 Textos de la pantalla de acceso</b></div>
   <div class="g"><div><label>Título (nombre que va arriba)</label><input id="lg_t" value="${esc(ll.loginTitulo||'')}" placeholder="${esc(nombreNegocio())}" maxlength="60"></div>
   <div><label>Descripción (línea de abajo)</label><input id="lg_d" value="${esc(ll.loginDesc||'')}" placeholder="Inicie sesión para continuar." maxlength="120"></div></div>
   <div style="margin-top:10px"><button class="btn p s" data-h-click="call" data-a-click="${_ha('loginIdentGuardar')}">💾 Guardar textos</button></div>
