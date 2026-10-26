@@ -39,6 +39,8 @@ function empActiva(){
  return EMPRESA_DEF.id;
 }
 function empEsInicial(){return empActiva()===EMPRESA_DEF.id}
+/* Color de marca para comprobantes, reportes y marketing cuando la empresa no tiene uno propio: la empresa inicial (Tarjetería Jhon) conserva su rosa de siempre; las demás, el azul sobrio de VEN CRM (nunca el rosa de Tarjetería). */
+function colorMarca(){return empEsInicial()?'#E0457B':'#1A56DB'}
 function empSet(slug){
  if(!empSlugOk(slug))return false;
  try{if(typeof localStorage!=='undefined')localStorage.setItem(EMP_LS,slug)}catch(e){}
@@ -75,7 +77,7 @@ function empColPath(n){
 }
 
 var TJEmpresa={MULTIEMP:MULTIEMP,EMPRESA_DEF:EMPRESA_DEF,empActiva:empActiva,empSet:empSet,
- empSlugOk:empSlugOk,empEsInicial:empEsInicial,empLSKey:empLSKey,empPath:empPath,empPathDe:empPathDe,
+ empSlugOk:empSlugOk,empEsInicial:empEsInicial,colorMarca:colorMarca,empLSKey:empLSKey,empPath:empPath,empPathDe:empPathDe,
  EMP_NEGOCIO:EMP_NEGOCIO,empColPath:empColPath};
 if(typeof window!=='undefined')window.TJEmpresa=TJEmpresa;
 /* Export para tests de Node (mismo patrón que js/facturacion.js). */

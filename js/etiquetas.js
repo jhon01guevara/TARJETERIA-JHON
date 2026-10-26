@@ -64,7 +64,7 @@ function etqFlow(d,W,H,e,s,ox,oy,dib){
  if(e.cont){font(8.5,0);const lh=8.5*s*pt*LH,maxL=Math.max(1,Math.min(5,Math.floor((libre-4*s)/lh)));bloque('CONTENIDO: '+e.cont,8.5,0,maxL,0)}
  // Código de barras al pie
  const necesario=y+zonaBar+m;
- if(dib){const by=oy+H-m-zonaBar+1*s;etqBarras(d,e.codigo,X+2*s,by,iw-4*s,12.5*s);font(9,1);d.text(e.codigo,X+iw/2,by+12.5*s+3.6*s,{align:'center'});font(7,0,90);d.text(e.fecha,X+iw,oy+H-m+.4*s,{align:'right'});d.text('Tarjetería Jhon',X,oy+H-m+.4*s)}
+ if(dib){const by=oy+H-m-zonaBar+1*s;etqBarras(d,e.codigo,X+2*s,by,iw-4*s,12.5*s);font(9,1);d.text(e.codigo,X+iw/2,by+12.5*s+3.6*s,{align:'center'});font(7,0,90);d.text(e.fecha,X+iw,oy+H-m+.4*s,{align:'right'});d.text((typeof nombreNegocio==='function'?nombreNegocio():'')||'',X,oy+H-m+.4*s)}
  return necesario
 }
 function etqDibujar(d,x,y,w,h,e){

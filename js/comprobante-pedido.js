@@ -13,7 +13,7 @@ function shopPdfPrint(p){const l=p.lead||{},w=window.open('','_blank');if(!w)ret
  const tb=E('table','width:100%;border-collapse:collapse'),h=E('tr','background:#f3f3f3');
  [['Cant.','left'],['Descripción','left'],['P. unit.','right'],['Subtotal','right']].forEach(c=>h.appendChild(E('th',null,c[0],{align:c[1]})));tb.appendChild(h);
  (p.items||[]).forEach(i=>{const r=E('tr');r.appendChild(E('td',null,String(i.q)));r.appendChild(E('td',null,i.n));r.appendChild(E('td',null,i.p>0?$$(i.p):'Consultar',{align:'right'}));r.appendChild(E('td',null,i.p>0?$$(i.q*i.p):'—',{align:'right'}));tb.appendChild(r)});
- B.append(E('h2','color:#E0457B;margin:0',emp),E('h3','margin:4px 0 14px','Comprobante de pedido N° '+num),hd,tb,E('h3',null,'Total: '+(p.total>0?$$(p.total):'Consultar'),{align:'right'}));
+ B.append(E('h2','color:'+(typeof TJEmpresa!=='undefined'&&TJEmpresa.colorMarca?TJEmpresa.colorMarca():'#E0457B')+';margin:0',emp),E('h3','margin:4px 0 14px','Comprobante de pedido N° '+num),hd,tb,E('h3',null,'Total: '+(p.total>0?$$(p.total):'Consultar'),{align:'right'}));
  if(p.nota)B.appendChild(E('p',null,'Nota: '+p.nota));
  B.appendChild(E('p','font-size:12px;color:#666','Precios sin ITBMS. Pedido sujeto a confirmación de disponibilidad.'));
  setTimeout(()=>{try{w.focus();w.print()}catch(e){window._tjw&&_tjw(e)}},250)}
@@ -39,7 +39,7 @@ function shopPdfVer(blob,name){const old=document.getElementById('pdfv');if(old)
  const k=e=>{if(e.key==='Escape'){cl();removeEventListener('keydown',k)}};addEventListener('keydown',k)}
 /* ---- bloque 2 (estaba separado en app.js) ---- */
 // ---------- Comprobante como imagen (vista inmediata) ----------
-function shopRecCanvas(p,cb){const l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof nombreNegocio==='function'?nombreNegocio():((typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon')),W=600,S=2,M=36,F="-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Arial,sans-serif",PK='#E0457B';
+function shopRecCanvas(p,cb){const l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof nombreNegocio==='function'?nombreNegocio():((typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon')),W=600,S=2,M=36,F="-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Arial,sans-serif",PK=(typeof TJEmpresa!=='undefined'&&TJEmpresa.colorMarca?TJEmpresa.colorMarca():'#E0457B');
  const c=document.createElement('canvas');c.width=W*S;c.height=40*S;const x=c.getContext('2d');
  const wrap=(t,w,font)=>{x.font=font;const out=[];String(t||'').split(/\n/).forEach(par=>{let ln='';par.split(/\s+/).filter(Boolean).forEach(wd=>{const tt=ln?ln+' '+wd:wd;if(x.measureText(tt).width>w&&ln){out.push(ln);ln=wd}else ln=tt});out.push(ln)});return out};
  const rows=(p.items||[]).map(i=>({q:i.q,ln:wrap(i.n,290,'500 14px '+F),pu:i.p>0?$$(i.p):'Consultar',st:i.p>0?$$(i.q*i.p):'—'}));
@@ -54,7 +54,7 @@ function shopRecCanvas(p,cb){const l=p.lead||{},num=String(p.id||'').slice(-6).t
   T('Pedido N° '+num,M,y,'700 17px '+F,'#1D1D1F');T(new Date(p.ts).toLocaleString('es-PA'),W-M,y,'13px '+F,'#6E6E73','right');y+=14;
   if(d){x.font='600 12px '+F;const tw=x.measureText(est[0]).width+20;x.fillStyle=est[1]+'22';x.beginPath();x.roundRect(M,y+2,tw,22,11);x.fill();T(est[0],M+10,y+17,'600 12px '+F,est[1])}y+=42;
   T('CLIENTE',M,y,'700 11px '+F,'#8E8E93');y+=20;cli.forEach((t,k)=>{T(String(t),M,y,(k?'400':'600')+' 14px '+F,'#1D1D1F');y+=20});y+=12;
-  if(d){x.fillStyle='#FBEAF0';x.beginPath();x.roundRect(M,y,W-2*M,30,8);x.fill()}
+  if(d){x.fillStyle=(typeof TJEmpresa!=='undefined'&&TJEmpresa.empEsInicial&&!TJEmpresa.empEsInicial()?'#E8EEFC':'#FBEAF0');x.beginPath();x.roundRect(M,y,W-2*M,30,8);x.fill()}
   T('CANT.',M+12,y+20,'700 11px '+F,'#6E6E73');T('DESCRIPCIÓN',M+64,y+20,'700 11px '+F,'#6E6E73');T('P. UNIT.',W-M-110,y+20,'700 11px '+F,'#6E6E73','right');T('SUBTOTAL',W-M-12,y+20,'700 11px '+F,'#6E6E73','right');y+=30;
   rows.forEach(r=>{const h=r.ln.length*19+16;T(String(r.q),M+12,y+22,'600 14px '+F,'#1D1D1F');r.ln.forEach((t,k)=>T(t,M+64,y+22+k*19,'500 14px '+F,'#1D1D1F'));T(r.pu,W-M-110,y+22,'14px '+F,'#3A3A3C','right');T(r.st,W-M-12,y+22,'600 14px '+F,'#1D1D1F','right');y+=h;if(d){x.fillStyle='#E5E5EA';x.fillRect(M,y-1,W-2*M,1)}});
   y+=26;T('Total',W-M-190,y,'500 15px '+F,'#6E6E73','right');T(p.total>0?$$(p.total):'Consultar',W-M-12,y+4,'800 30px '+F,'#1D1D1F','right');y+=34;

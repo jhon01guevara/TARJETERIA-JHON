@@ -36,3 +36,7 @@ Límites a tener presentes:
 ## Pruebas del bloque heredado
 - `tests/limpieza-heredado.test.js` (npm test; incluye la lista de fábrica real de 88 modelos).
 - `tests/navegador/quitar-heredado.js` (Chrome real, copia de PRUEBA con `CON_ZIP=1`; siembra y reinicia `vacia-prueba`, comprueba que no cambia nada en la vista previa, que lo propio queda, que tras recargar no reaparece y que la empresa inicial no muestra la herramienta).
+
+## 4. Color y nombre en comprobantes, reportes y marketing
+`TJEmpresa.colorMarca()` (js/empresa-contexto.js): la empresa inicial conserva su rosa `#E0457B`; **cualquier otra empresa usa el azul sobrio de VEN CRM `#1A56DB`**. Se usa en: comprobante de pedido (impresión e imagen; el recuadro de descuento pasa de rosa pálido a azul pálido), reporte PDF del panel y color primario por defecto de Marketing (solo si la empresa no guardó uno propio; lo ya guardado manda). El pie de la etiqueta de envío muestra el nombre de la empresa (antes «Tarjetería Jhon» fijo). No se tocan colores funcionales (estados, tipos de agenda, confeti) ni el CSS del tema del panel.
+Pruebas: `tests/color-marca-empresa.test.js`; verificado en Chrome real contra PRUEBA (genuine-prueba azul, inicial rosa).
