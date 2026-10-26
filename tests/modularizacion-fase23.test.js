@@ -26,7 +26,7 @@ test('index.html carga los 5 archivos nuevos, clásicos, después de plantillas-
  const h=leer('index.html'),ia=h.indexOf('js/app.js?v='),pf=h.indexOf('js/plantillas-factura.js?v=');
  let prev=pf;
  for(const f of NUEVOS){
-  const m=new RegExp('<script src="'+f.replace('.','\\.')+'\\?v=modulos-fase-23a"></script>').exec(h);
+  const m=new RegExp('<script src="'+f.replace('.','\\.')+'\\?v=(modulos-fase-23a|genuine-tienda-[a-z])"></script>').exec(h);
   assert.ok(m,f+' sin <script> con ?v=');assert.ok(m.index>prev,f+' fuera de orden');assert.ok(m.index<ia,f+' debe ir antes de app.js');
   assert.equal(cuenta(h,f+'?v='),1,f+' cargado dos veces');prev=m.index;
  }
