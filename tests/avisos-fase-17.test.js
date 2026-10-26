@@ -54,5 +54,5 @@ test('Fase 17: catalogo_default.zip existe en el repo, se pide desde la raíz y 
  const app=appTodo();
  assert.match(app,/fetch\('catalogo_default\.zip'\)/);
  assert.match(app,/if\(existentes\.length\)return;/);
- assert.match(app,/if\(!\/\[\?&\]tienda\(=\|&\|\$\)\/\.test\(location\.search\)\)precargarCatalogoDeFabrica\(\)/);
+ assert.match(app,/if\(TJEmpresa\.empEsInicial\(\)&&!\/\[\?&\]tienda\(=\|&\|\$\)\/\.test\(location\.search\)\)precargarCatalogoDeFabrica\(\)/);
 });

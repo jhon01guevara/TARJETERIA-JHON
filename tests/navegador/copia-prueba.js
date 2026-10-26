@@ -9,6 +9,8 @@ const dest=path.resolve(process.argv[2]||'');
 if(!process.argv[2])throw new Error('Falta la carpeta destino');
 if(dest===RAIZ||dest.startsWith(RAIZ+path.sep))throw new Error('El destino no puede estar dentro del repo');
 const EXCLUIR=new Set(['.git','.github','node_modules','docs','tests','README.md','package.json','package-lock.json','catalogo_default.zip','migraciones']);
+/* CON_ZIP=1 conserva catalogo_default.zip: así la copia se comporta como GitHub Pages / vencrm.com (donde el zip sí existe). */
+if(process.env.CON_ZIP)EXCLUIR.delete('catalogo_default.zip');
 function copiar(a,b){fs.mkdirSync(b,{recursive:true});for(const e of fs.readdirSync(a,{withFileTypes:true})){if(a===RAIZ&&(EXCLUIR.has(e.name)||/^firestore\.rules/.test(e.name)||/\.md$/.test(e.name)))continue;
  const x=path.join(a,e.name),y=path.join(b,e.name);if(e.isDirectory())copiar(x,y);else fs.copyFileSync(x,y)}}
 (async()=>{
