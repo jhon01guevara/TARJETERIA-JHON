@@ -211,7 +211,7 @@ test('La tienda muestra un botón flotante de WhatsApp con el número configurad
   assert.match(app,/id="k_wa"/);
   assert.match(app,/\.kwa\{position:fixed/);
   assert.match(app,/w\.href='https:\/\/wa\.me\/'\+num\+'\?text='/);
-  assert.match(app,/num=contLimpio\(typeof SH!=='undefined'\?SH\.contacto:null\)\.wa/);
+  assert.match(app,/num=contWa\(typeof SH!=='undefined'\?SH\.contacto:null\)/);
 });
 
 test('Destacados de la semana avanza solo cada 5 segundos y se adapta al móvil',()=>{

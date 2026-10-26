@@ -420,7 +420,7 @@ function shopFooterRender(){
 function shopRedes(){
 try{shopFooterRender()}catch(e){}
 
- const L=redesLista(typeof SH!=='undefined'?SH.redes:null),w=$('k_wa'),num=contLimpio(typeof SH!=='undefined'?SH.contacto:null).wa;
+ const L=redesLista(typeof SH!=='undefined'?SH.redes:null),w=$('k_wa'),num=contWa(typeof SH!=='undefined'?SH.contacto:null);
  if(w){if(num){w.href='https://wa.me/'+num+'?text='+encodeURIComponent('Hola, vi su catálogo virtual de '+nombreNegocio()+' y quisiera más información.');w.hidden=false}else{w.hidden=true;w.removeAttribute('href')}{const g=w.parentNode;if(g&&g.classList.contains('kwa-wrap'))g.hidden=w.hidden}}
  document.querySelectorAll('.kredh').forEach(e=>{e.innerHTML=L.map(([k,n,u])=>redLink(k,n,u,1)).join('')});
  const e=$('k_redes');if(!e)return;
@@ -429,8 +429,8 @@ try{shopFooterRender()}catch(e){}
 }
 // Botón "Contacto" de la tienda: muestra los datos que configuró el administrador.
 function shopContacto(){
- const c=contLimpio(typeof SH!=='undefined'?SH.contacto:null),L=redesLista(typeof SH!=='undefined'?SH.redes:null),f=[];
- if(c.wa)f.push(['💬','WhatsApp',`<a href="https://wa.me/${c.wa}" target="_blank" rel="noopener noreferrer">+${c.wa}</a>`]);
+ const c=contLimpio(typeof SH!=='undefined'?SH.contacto:null),L=redesLista(typeof SH!=='undefined'?SH.redes:null),f=[],wn=contWa(typeof SH!=='undefined'?SH.contacto:null);
+ if(wn)f.push(['💬','WhatsApp',`<a href="https://wa.me/${wn}" target="_blank" rel="noopener noreferrer">+${wn}</a>`]);
  if(c.tel)f.push(['📞','Teléfono',`<a href="tel:${esc(c.tel.replace(/[^\d+]/g,''))}">${esc(c.tel)}</a>`]);
  if(c.email)f.push(['✉️','Correo',`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`]);
  if(c.dir)f.push(['📍','Dirección',`<a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(c.dir)}" target="_blank" rel="noopener noreferrer">${esc(c.dir)}</a>`]);
@@ -444,15 +444,17 @@ function redesCard(){
 
  const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph=TJEmpresa.empEsInicial()?{tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'}:{tiktok:'@su_empresa',instagram:'@su_empresa',facebook:'su.empresa'};
  const val=(id,saved)=>id in RS_DRAFT?RS_DRAFT[id]:saved;
- return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. El número de WhatsApp además aparece como botón verde flotante en la tienda (8 dígitos o con código de país). Deje vacío lo que no use.</p>
+ return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. El botón verde flotante de WhatsApp usa por defecto el <b>teléfono de la empresa</b> (Datos de la empresa); si su WhatsApp es otro número, escríbalo en el campo «WhatsApp». Deje vacío lo que no use.</p>
  <div class="g">${RED_DEF.map(([k,n])=>`<div><label>${n}</label><input id="rs_${k}" value="${esc(val('rs_'+k,redUrl(k,r[k])))}" placeholder="${ph[k]}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
  <div class="g" style="margin-top:10px">${CONT_DEF.map(([k,n,p])=>`<div><label>${n}</label><input id="ct_${k}" value="${esc(val('ct_'+k,ct[k]))}" placeholder="${esc(p)}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
+ <label class="chk" style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px"><input type="checkbox" id="ct_waOff" ${val('ct_waOff',!!ct.waOff)?'checked':''} data-h-change="h365"> No mostrar el botón de WhatsApp en la tienda</label>
  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h335">Guardar redes y contacto</button><span id="rs_est" style="font-size:13px;color:${RS_MSG?RS_MSG.ok?'#1e7a43':'#b3261e':'inherit'}">${RS_MSG?esc(RS_MSG.t):''}</span></div>`
 }
 function redesFill(){
  if(typeof TD==='undefined')return;const r=TD.redes||{},ct=contLimpio(TD.contacto);
  RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=redUrl(k,r[k])});
- CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=ct[k]})
+ CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=ct[k]});
+ {const o=$('ct_waOff');if(o&&!(o.id in RS_DRAFT))o.checked=!!ct.waOff}
 }
 async function redesGuardar(){
  if(!esAdmin())return alert('Solo el administrador puede cambiar las redes sociales y el contacto.');
@@ -464,6 +466,7 @@ async function redesGuardar(){
   redes[k]=u
  }
  CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);raw[k]=i?i.value:''});
+ {const o=$('ct_waOff');raw.waOff=!!(o&&o.checked)}
  const ct=contLimpio(raw);
  for(const [k,n] of CONT_DEF){
   if(String(raw[k]).trim()&&!ct[k]){msg(false,'✖ '+n.replace(/ \(.*\)/,'')+': el dato no es válido.');const i=$('ct_'+k);if(i)i.focus();return}
@@ -3106,7 +3109,7 @@ async function poliChkLimpiar(){
 /* Fase 24: botón OPCIONAL «Enviar también por WhatsApp» tras «¡Pedido enviado!». El pedido ya está guardado en Firestore; esto solo abre un chat de WhatsApp con el resumen
    (número de pedido, artículos con cantidad, total o «a consultar», nombre). Usa el mismo número que #k_wa; sin número configurado no hay botón. Sin teléfono, correo, dirección ni nota. */
 function shopPedidoWAurl(p,c){
- const num=contLimpio(typeof SH!=='undefined'?SH.contacto:null).wa;if(!num||!p)return'';
+ const num=contWa(typeof SH!=='undefined'?SH.contacto:null);if(!num||!p)return'';
  const lim=(v,n)=>String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,n),its=(p.items||[]).filter(i=>+i.q>0),sin=its.some(i=>!(+i.p>0)),
   tot=+p.total>0?(sin?'Total parcial: '+$$(+p.total)+' (hay artículos a consultar)':'Total: '+$$(+p.total)):'Total: a consultar',
   ln=its.slice(0,15).map(i=>'• '+(+i.q)+' × '+lim(i.n,80)).concat(its.length>15?['… y '+(its.length-15)+' más']:[]);
@@ -4113,6 +4116,7 @@ __H.h333=function(event,a){mcIr(a[0])};
 __H.h334=function(event,a){ir('mapa')};
 __H.h335=function(event,a){redesGuardar()};
 __H.h336=function(event,a){RS_DRAFT[this.id]=this.value;RS_MSG=null;const e=$('rs_est');if(e)e.textContent=''};
+__H.h365=function(event,a){RS_DRAFT[this.id]=this.checked;RS_MSG=null;const e=$('rs_est');if(e)e.textContent=''};
 __H.h307=function(event,a){delP(a[0])};
 __H.h308=function(event,a){editP(a[0])};
 __H.h309=function(event,a){addP()};
