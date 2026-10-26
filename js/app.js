@@ -1162,7 +1162,7 @@ function dibujarGraficos(){
   a.forEach(f=>{(f.items||[]).forEach(it=>{const c=it.c||it.cat||(DB.prod.find(p=>p.id===it.id)||{}).cat||'Tarjetas';catM[c]=(catM[c]||0)+(it.total||(it.p*it.q)||0)})});
   const cEnt=Object.entries(catM).sort((x,y)=>y[1]-x[1]).slice(0,6);
   const cLab=cEnt.length?cEnt.map(x=>x[0]):['General'],cVal=cEnt.length?cEnt.map(x=>+x[1].toFixed(2)):[1];
-  const cPal=['#E0457B','#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'];
+  const cPal=(window.TJMarca&&TJMarca.panel&&TJMarca.paleta)||['#E0457B','#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'];
   window._chCat=new Chart(c4,{type:'doughnut',data:{labels:cLab,datasets:[{data:cVal,backgroundColor:cPal.slice(0,cLab.length),borderWidth:2,borderColor:'#fff',hoverOffset:6}]},options:{responsive:true,maintainAspectRatio:false,cutout:'68%',plugins:{legend:{position:'right',labels:{color:txt,font:{size:11.5},boxWidth:12,padding:12}},tooltip:{backgroundColor:'#1e293b',padding:10,cornerRadius:8,callbacks:{label:function(c){return ' $'+(+c.parsed).toFixed(2)}}}}}});
  }
  }catch(e){console.error('Error al dibujar gráficos:',e);if(w){w.style.display='block';w.textContent='No se pudieron generar los gráficos: '+((e&&e.message)||e)}}

@@ -44,3 +44,9 @@ Requisitos (fuera del repo): `npm i playwright-core axe-core`, Google Chrome ins
 | Script | Qué hace |
 |---|---|
 | `pedido-envio-fase24.js` | Pedido de la tienda con transportista (`envio`). Modo doble (local, sin escribir) y modo `REAL=1` contra la copia de PRUEBA (verifica que apunta a `tarjeteria-jhon-prueba`, exige que la primera escritura con `envio` sea aceptada, lee el pedido con el administrador de prueba y borra los datos de prueba). Ver `docs/GUIA-PRUEBAS-FASE-24.md`. |
+
+## Marca VEN CRM
+| Script | Qué hace |
+|---|---|
+| `marca-ven-crm.js` | Acceso del panel y tienda: manifest, íconos, título, logo (sin iniciar sesión). |
+| `marca-ven-crm-interior.js` | Interior del panel con admin de PRUEBA: logo/símbolo/pie VEN CRM, empresa intacta (con `ANTES=` contra una copia de `main`), sin rosado, contraste claro/nocturno, recorrido por todas las pantallas, tienda sin cambios. `BASE=… [ANTES=…] [VP=390x844] [SHOTS=…] node marca-ven-crm-interior.js` |

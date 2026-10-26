@@ -22,7 +22,7 @@
 | `sw.js` | Caché `tj-net-first-24`; precachea manifest, logo, ícono, script y CSS nuevos. |
 | `tests/marca-ven-crm.test.js`, `tests/navegador/marca-ven-crm.js` | Pruebas (ver §4). |
 
-**No cambia:** `manifest.json` (tienda y copia instalada anterior), íconos de Tarjetería, la CSP, las reglas de Firestore, ni el interior del panel (barra lateral, colores y textos por empresa siguen siendo los de cada empresa: el CRM es multiempresa).
+**No cambia:** `manifest.json` (tienda y copia instalada anterior), íconos de Tarjetería, la CSP, las reglas de Firestore, ni el logo, nombre y lema de cada empresa (el CRM es multiempresa: su logo sigue siendo el primer `.logo img`, del que leen facturas, informes y PDF), ni la tienda, ni las facturas e impresiones.
 
 ## 3. Pendientes de marca que NO hace esta rama
 - Re-teñir el interior del panel (acentos rosados `#E0457B`, temas) con la paleta VEN. Hoy solo el acceso, el manifest y los íconos son VEN.
@@ -30,9 +30,27 @@
 - Textos internos que dicen «Panel de Facturación» (encabezado `.rt`, sidebar).
 - Registro de marca: antes de comprar el dominio, buscar «VEN» / «VEN CRM» en la clase 9/35/42 (SIC Panamá, WIPO Global Brand Database, USPTO/EUIPO). Es un nombre corto y muy genérico.
 
+## 3b. Interior del panel (PR «marca-ven-crm-panel»)
+
+Todo bajo `html.ven-crm` (solo el panel; la tienda `?tienda=` nunca tiene esa clase). El HTML estático de `index.html` NO cambia (por eso la vista previa y la tienda siguen siendo Tarjetería Jhon): `js/marca-crm.js` aplica `TJMarca.interior()` al cargar el DOM, solo en el panel y de forma idempotente.
+
+| Pieza | Cambio en el panel |
+|---|---|
+| Barra lateral | Logo horizontal VEN CRM arriba (dentro del `<h1>` de la marca; en nocturno se invierte). Debajo, la tarjeta de la empresa **tal cual** (logo, nombre, lema). |
+| Cabecera | Símbolo V (30 px) a la izquierda del título; el rótulo pasa de «Tarjetería Jhon · Panel de Facturación» a «Tarjetería Jhon · VEN CRM»; el `<h1>` oculto, a «VEN CRM · Tarjetería Jhon». En móvil (sin barra lateral) el símbolo es la marca. |
+| Pie | «VEN CRM» bajo los botones de respaldo (solo admin, como el resto del pie). |
+| Menú | Iconos monocromos (blanco sobre `#1f1f1f`; ítem activo: píldora negra con ícono blanco; en nocturno, píldora blanca). Sin degradados de color por módulo. |
+| Acento | Anillo de foco azul `#1A56DB` (7,0:1 sobre blanco; `#7FA8FF` en nocturno). El resto: negro/blanco/grises de `uber-skin.css`. |
+| Gráficos | `app.js`: la dona de categorías usa `TJMarca.paleta` (negro, azul, grises) solo en el panel; el respaldo conserva la paleta anterior. `?v=modulos-fase-24e`. |
+| Service worker | `tj-net-first-25`; precachea el logo claro y el símbolo. |
+
+**No cambia:** logo/nombre/lema de la empresa (se mide su alto, ancho y `src` antes/después), `#prt` (facturas e impresiones), informes, catálogo en PDF, tienda, CSP, reglas de Firestore, `manifest.json`.
+
+Prueba en Chrome real: `tests/navegador/marca-ven-crm-interior.js` (ver comentario de cabecera; `ANTES=` compara contra una copia de `main`).
+
 ## 4. Cómo probar
 ```
-npm test                                   # 284 pruebas (11 nuevas de marca)
+npm test                                   # 11 pruebas de marca + 9 del interior
 node tests/navegador/copia-prueba.js /tmp/copia-ven        # copia apuntando al proyecto de PRUEBA
 (cd /tmp/copia-ven && python3 -m http.server 8961 --bind 127.0.0.1) &
 BASE=http://127.0.0.1:8961/ PW=<ruta>/playwright-core SHOTS=/tmp/capturas node tests/navegador/marca-ven-crm.js

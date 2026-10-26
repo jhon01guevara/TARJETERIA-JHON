@@ -9,7 +9,10 @@
   loginHTML:function(logoEmpresa){
    return '<div class="vlogo"><img src="'+M.logo+'" alt="VEN CRM" width="220" height="64"></div>'+(logoEmpresa||'');
   },
-  pie:function(){return '🔒 Acceso restringido · VEN CRM'}};
+  pie:function(){return '🔒 Acceso restringido · VEN CRM'},
+  simbolo:'assets/ven-crm/icono-app.svg',wordmark:'assets/ven-crm/ven-crm-horizontal-claro.svg',
+  /* Paleta de los gráficos del panel (negro, azul sobrio y grises). */
+  paleta:['#000000','#276EF1','#6B6B6B','#A8A8A8','#3E3E3E','#D4D4D4']};
  if(tienda)return;
  var d=document;
  function set(sel,attr,val){var e=d.querySelector(sel);if(e)e.setAttribute(attr,val)}
@@ -23,4 +26,19 @@
  set('meta[property="og:title"]','content','VEN CRM · Panel');
  set('meta[name="twitter:title"]','content','VEN CRM · Panel');
  d.title='VEN CRM · Panel';
+ /* Interior del panel: se aplica cuando el DOM está listo (el script va en <head>). Idempotente: no repite nada si ya se aplicó. */
+ function img(cls,src,alt,w,h){var i=d.createElement('img');i.className=cls;i.src=src;i.alt=alt;i.width=w;i.height=h;return i}
+ function reemplazar(e){if(e&&e.textContent&&e.textContent.indexOf('Panel de Facturación')>-1)e.textContent=e.textContent.replace('Panel de Facturación','VEN CRM')}
+ M.interior=function(){
+  try{
+   var b=d.querySelector('.brand h1');
+   if(b&&!b.querySelector('img')){b.textContent='';b.classList.add('vwm');b.appendChild(img('',M.wordmark,'VEN CRM',132,41))}
+   reemplazar(d.querySelector('.top .rt'));reemplazar(d.querySelector('h1.h1m'));
+   var t=d.querySelector('.top > div');
+   if(t&&!t.querySelector('.vsym'))t.insertBefore(img('vsym',M.simbolo,'',30,30),t.firstChild);
+   var f=d.querySelector('.sf');
+   if(f&&!f.querySelector('.vpie')){var p=d.createElement('div');p.className='vpie';p.textContent='VEN CRM';f.appendChild(p)}
+  }catch(e){window._tjw&&window._tjw(e)}
+ };
+ if(d.readyState==='loading'&&d.addEventListener)d.addEventListener('DOMContentLoaded',M.interior);else M.interior();
 })();
