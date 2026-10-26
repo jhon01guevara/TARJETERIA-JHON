@@ -442,7 +442,7 @@ function shopContacto(){
 
 function redesCard(){
 
- const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph={tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'};
+ const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph=TJEmpresa.empEsInicial()?{tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'}:{tiktok:'@su_empresa',instagram:'@su_empresa',facebook:'su.empresa'};
  const val=(id,saved)=>id in RS_DRAFT?RS_DRAFT[id]:saved;
  return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. El número de WhatsApp además aparece como botón verde flotante en la tienda (8 dígitos o con código de país). Deje vacío lo que no use.</p>
  <div class="g">${RED_DEF.map(([k,n])=>`<div><label>${n}</label><input id="rs_${k}" value="${esc(val('rs_'+k,redUrl(k,r[k])))}" placeholder="${ph[k]}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
@@ -707,11 +707,11 @@ function agForm(id,date){const e=id?DB.agenda.find(x=>x.id==id):{},v=(k,d='')=>e
 function agSave(id){const ti=$('ag_ti').value.trim(),f=$('ag_f').value;if(!ti||!f)return alert('Escriba un título y elija la fecha.');const o={ti,f,h:$('ag_h').value,h2:$('ag_h2').value,t:$('ag_t').value,r:$('ag_r').value,av:$('ag_av').value,cn:$('ag_cn').value.trim(),tel:$('ag_tel').value.trim(),nt:$('ag_nt').value.trim()};
  if(id){Object.assign(DB.agenda.find(x=>x.id==id),o)}else DB.agenda.push(Object.assign({id:uid(),dn:{}},o));AG.sel=f;AG.d=f;save();cerrar();R.agenda();cintillo()}
 function agIcs(){if(!DB.agenda.length)return alert('La agenda está vacía.');const z=n=>String(n).padStart(2,'0'),dd=d=>d.replace(/-/g,''),tt=h=>h.replace(':','')+'00';
- const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Tarjeteria Jhon//Agenda//ES'];DB.agenda.forEach(e=>{L.push('BEGIN:VEVENT','UID:'+e.id+'@tarjeteriajhon','DTSTAMP:'+dd(hoy())+'T000000Z');
+ const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//'+nomArch('Tarjeteria Jhon')+'//Agenda//ES'];DB.agenda.forEach(e=>{L.push('BEGIN:VEVENT','UID:'+e.id+'@'+nomArch('tarjeteriajhon'),'DTSTAMP:'+dd(hoy())+'T000000Z');
  if(e.h){L.push('DTSTART:'+dd(e.f)+'T'+tt(e.h));const f=e.h2||(z((+e.h.slice(0,2)+1)%24)+':'+e.h.slice(3));L.push('DTEND:'+dd(e.f)+'T'+tt(f))}else L.push('DTSTART;VALUE=DATE:'+dd(e.f));
  L.push('SUMMARY:'+(AGT[e.t]||AGT.otro)[1]+': '+e.ti.replace(/[,;\n]/g,' '));if(e.nt||e.cn)L.push('DESCRIPTION:'+((e.cn?'Cliente: '+e.cn+'. ':'')+(e.nt||'')).replace(/[,;\n]/g,' '));
  if(e.r)L.push('RRULE:FREQ='+{dia:'DAILY',sem:'WEEKLY',mes:'MONTHLY'}[e.r]);L.push('END:VEVENT')});L.push('END:VCALENDAR');
- const a=document.createElement('a');a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(L.join('\r\n'));a.download='agenda_tarjeteria_jhon.ics';a.click()}
+ const a=document.createElement('a');a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(L.join('\r\n'));a.download=nomArch('agenda_tarjeteria_jhon','agenda_')+'.ics';a.click()}
 
 let _cintSig='',_chk=null;
 function cintGo(k,a,b){if(k=='ag'){AG.sel=b;AG.d=b;ir('agenda')}else ir(k)}
@@ -846,13 +846,15 @@ function facL(f){const L=[],m=f.pagos&&f.pagos.length>1;if(m||f.credito)L.push([
 function facTxt(f){return facL(f).map(([a,b])=>a+' '+b.replace(/\s*\n\s*/g,' ')).join('\n')}
 function facExtra(f){const L=facL(f);return L.length?'<div class="fx">'+L.map(([a,b])=>'<div><b>'+a+'</b> '+b.replace(/\n/g,'<br>')+'</div>').join('')+'</div>':''}
 const LOGO_T="assets/logo-t.png";
+/* Logo de la factura: el de la empresa; si no tiene, solo la empresa inicial cae al de Tarjetería; otra empresa, el logo de su panel/inicio de sesión o su inicial. */
+function facLogoSrc(c,def){c=c||{};if(c.logoFac)return c.logoFac;if(TJEmpresa.empEsInicial())return def;return c.panelLogoSrc||c.loginLogoSrc||(typeof empDemoLogo==='function'?empDemoLogo(c.nombre||nombreNegocio()):'')}
 function facApple(f){
  const c=DB.cfg,cr=f.credito,pc=(f.itbmsp??c.itbms),L=facL(f);
  const venc=cr&&cr.vence?fdate(cr.vence):fdate(f.fecha);
  const notas=L.length?L.map(([a,b])=>`<li><b>${a}</b> ${b.replace(/\n/g,'<br>')}</li>`).join(''):'<li>Gracias por su compra.</li>';
  const row=(a,b)=>b?`<div class="ar"><span>${a}</span><b>${b}</b></div>`:'';
  return `<div class="fa tpl-apple">${facSello(f)}
- <div class="ap-top"><div class="ap-brand"><img src="${c.logoFac||LOGO_T}" alt=""><i></i><div><h2>${esc(c.nombre)}</h2><small>${esc((c.loginDesc||'TARJETAS PARA TODA OCASIÓN')).toUpperCase()}</small></div></div>
+ <div class="ap-top"><div class="ap-brand"><img src="${facLogoSrc(c,LOGO_T)}" alt=""><i></i><div><h2>${esc(c.nombre)}</h2><small>${esc((c.loginDesc||(TJEmpresa.empEsInicial()?'TARJETAS PARA TODA OCASIÓN':''))).toUpperCase()}</small></div></div>
   <div class="ap-contact">${c.dir?`<div><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>${esc(c.dir)}</span></div>`:''}${c.tel?`<div><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><span>${esc(c.tel)}</span></div>`:''}${c.email?`<div><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span>${esc(c.email)}</span></div>`:''}</div></div>
  <div class="ap-mid"><div><h1>Factura</h1><p>Gracias por tu confianza</p>${f.anulada?'<div class="ap-anu">ANULADA</div>':''}</div>
   <div class="ap-meta"><div><span>N.º de Factura</span><b>${esc(f.n)}</b></div><div><span>Fecha de Emisión</span><b>${esc(fdate(f.fecha))}</b></div><div><span>Fecha de Vencimiento</span><b>${esc(venc)}</b></div><div><span>Moneda</span><b>USD</b></div></div></div>
@@ -862,7 +864,7 @@ function facApple(f){
  <div class="ap-two"><div class="ap-box"><h4><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0a84ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h4"/></svg>Información de Pago</h4>${row('Banco:',esc(c.banco))}${row('Tipo:',esc(c.tcuenta))}${row('Cuenta:',esc(c.cuenta))}${row('Beneficiario:',esc(c.nombre))}${c.yappy?row('Yappy:',esc(c.yappy)):''}</div>
   <div class="ap-box"><h4><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Notas</h4><ol>${notas}</ol></div></div>
  <div class="ap-ft"><div class="ap-tag">GRACIAS POR SER PARTE DE NUESTRO CRECIMIENTO<i></i></div><div class="ap-bd"><div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Calidad</span></div><div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l4-4 4 2 4-2 6 5-5 5-3-1-3 2-4-3z"/></svg><span>Confianza</span></div><div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19C5 9 11 4 20 4c0 9-5 15-14 15z"/><path d="M5 19l8-8"/></svg><span>Innovación</span></div></div></div></div>`}
-function facHTML(id){const f=DB.fac.find(x=>x.id==id),c=DB.cfg;if(facTpl(f)==='apple')return facApple(f);return `<div class="fa tpl-${facTpl(f)}">${facSello(f)}<div class="h"><div><h1>FACTURA</h1><div class="m"><div><span>Factura n.°</span><b>${esc(f.n)}</b></div><div><span>Fecha</span><b>${esc(fdate(f.fecha))}</b></div>${f.anulada?'<div><b style="color:#d92d20">ANULADA</b></div>':''}</div></div><div class="lg"><img src="${c.logoFac||'assets/logo.png'}" alt=""></div></div>
+function facHTML(id){const f=DB.fac.find(x=>x.id==id),c=DB.cfg;if(facTpl(f)==='apple')return facApple(f);return `<div class="fa tpl-${facTpl(f)}">${facSello(f)}<div class="h"><div><h1>FACTURA</h1><div class="m"><div><span>Factura n.°</span><b>${esc(f.n)}</b></div><div><span>Fecha</span><b>${esc(fdate(f.fecha))}</b></div>${f.anulada?'<div><b style="color:#d92d20">ANULADA</b></div>':''}</div></div><div class="lg"><img src="${facLogoSrc(c,'assets/logo.png')}" alt=""></div></div>
  <div class="cl"><b>${esc(f.cli).toUpperCase()}</b>${f.ruc?'RUC/Céd.: '+esc(f.ruc)+'<br>':''}${esc(f.dir||'')}</div>
  <table><tr><th>Articulo</th><th>Cantidad</th><th>Precio Unitario</th><th>Total</th></tr>${f.items.map(i=>`<tr><td>${esc(i.d).toUpperCase()}</td><td>${esc(i.q)}</td><td>${$$(i.p)}</td><td>${(i.q*i.p).toFixed(2)}</td></tr>`).join('')}</table><div class="fill"></div>
  <div class="tt"><div><span>Subtotal:</span><span>${$$(f.sub)}</span></div>${f.ds?`<div><span>Descuento:</span><span>-${$$(f.ds)}</span></div>`:''}<div><span>I.T.B.M.S(${esc(f.itbmsp??c.itbms)}%):</span><span>${$$(f.itbms)}</span></div><div class="gt"><span>Total:</span><span>${$$(f.total)}</span></div></div>
@@ -1026,7 +1028,7 @@ function exportUbiCSV(){
  const rows=[['Nombre','Nota','X_Longitud','Y_Latitud','Precision_m','Altitud_m','Fecha','Hora']];
  DB.ubi.forEach(u=>rows.push([u.n,u.nota||'',u.lng,u.lat,u.acc!=null?Math.round(u.acc):'',u.alt??'',u.fecha,u.hora||'']));
  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
- dlBlob(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'ubicaciones_tarjeteria_jhon.csv')
+ dlBlob(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),nomArch('ubicaciones_tarjeteria_jhon','ubicaciones_')+'.csv')
 }
 
 async function facPDF(id){if(!window.html2canvas||!window.jspdf)return alert('Para descargar el PDF se necesita conexión a internet. Use "Ver/Imprimir" y elija "Guardar como PDF".');
@@ -1127,7 +1129,7 @@ function cfg(){Object.assign(DB.cfg,{nombre:$('c1').value||(TJEmpresa.empEsInici
   }
  }catch(e){window._tjw&&window._tjw(e)}
  alert('Datos guardados. Los campos se bloquearon de nuevo.\nNombre, correo, teléfono y dirección también se actualizaron en la web (tienda, contacto y políticas).')}
-function respaldo(){const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,1));a.download='respaldo_tarjeteria_john.json';a.click()}
+function respaldo(){const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,1));a.download=nomArch('respaldo_tarjeteria_john','respaldo_')+'.json';a.click()}
 
 function dibujarGraficos(){
  const w=$('chWarn');
@@ -1347,7 +1349,7 @@ async function expCatBackup(){
    zip.file('manifest.json',JSON.stringify({app:'tj_cat_backup',v:2,parte:li+1,partes:lotes.length,exportedAt:new Date().toISOString(),items:meta}));
    const blob=await zip.generateAsync({type:'blob',compression:'STORE'});
    const suf=lotes.length>1?`_parte${li+1}de${lotes.length}`:'';
-   dlBlob(blob,`catalogo_tarjeteria_jhon${suf}.zip`);
+   dlBlob(blob,`${nomArch('catalogo_tarjeteria_jhon','catalogo_')}${suf}.zip`);
    if(li<lotes.length-1)await sleep(600)
   }
   if(lotes.length>1)alert(`Se generaron ${lotes.length} archivos .zip (el catálogo es muy grande para uno solo). Si su navegador bloqueó alguna descarga después de la primera, permita "descargas múltiples" para este sitio y toque el botón de nuevo. Guarde los ${lotes.length} archivos juntos; se necesitan todos para restaurar el catálogo completo.`);
@@ -1453,7 +1455,7 @@ async function impCat0(){const q=cq.toLowerCase(),l=CL.filter(f=>f.thumb&&(!cc||
  const cats=Object.keys(G).sort(),ct=`${esc(c.tel)} · ${esc(c.email)} · ${esc(c.dir)}`;let pg=3,idx='',pp='';
  cats.forEach(k=>{const a=G[k],n=Math.ceil(a.length/2);idx+=`<div class="ir"><b>${esc(k)}</b><span>${a.length} MODELO${a.length>1?'S':''}</span><i></i><em>${pg}</em></div>`;
   for(let x=0;x<n;x++){pp+=`<div class="pg"><div class="bar"></div><div class="hdr"><span>Catálogo ${yr}</span><img alt="" src="${LG}"><span>${esc(k)}</span></div><div class="body"><div class="ct2"><span>${esc(k)}</span><small>${a.length} MODELO${a.length>1?'S':''}${n>1?' · '+(x+1)+'/'+n:''}</small></div>${(()=>{const m=Math.min(2,a.length-x*2);return `<div class="gd2" style="${m==1?'grid-template-rows:minmax(0,105mm)':''}">`})()}${a.slice(x*2,x*2+2).map(f=>`<div class="cd"><div class="im"><img alt="" src="${f.thumb}"></div><div class="tx"><i class="ml">MODELO</i><div class="row"><span class="cdg mod">${esc(f.name).toUpperCase()}</span>${f.price?`<div class="pr">${$$(f.price)}</div>`:''}</div>${f.desc?`<p>${esc(f.desc)}</p>`:''}</div></div>`).join('')}</div></div><div class="ftr"><span>${esc(c.nombre)}</span><span>${ct}</span><span>${pg}</span></div></div>`;pg++}});
- const h=`<div class="cv"><div class="pg cover"><div class="bar"></div><div class="cov-top"><span>${esc(c.nombre).toUpperCase()}</span><span>COLECCIÓN ${yr}</span></div><div class="cov-mid"><img class="big" alt="" src="${LG}"><h1>Catálogo<br>de Productos</h1><div class="sb2">Tarjetas para toda ocasión</div><div class="rl"></div></div><div class="cov-band"><div><small>TELÉFONO</small><span>${esc(c.tel)}</span></div><div><small>CORREO</small><span>${esc(c.email)}</span></div><div><small>UBICACIÓN</small><span>${esc(c.dir)}</span></div></div><div class="bar"></div></div>
+ const h=`<div class="cv"><div class="pg cover"><div class="bar"></div><div class="cov-top"><span>${esc(c.nombre).toUpperCase()}</span><span>COLECCIÓN ${yr}</span></div><div class="cov-mid"><img class="big" alt="" src="${LG}"><h1>Catálogo<br>de Productos</h1><div class="sb2">${TJEmpresa.empEsInicial()?'Tarjetas para toda ocasión':''}</div><div class="rl"></div></div><div class="cov-band"><div><small>TELÉFONO</small><span>${esc(c.tel)}</span></div><div><small>CORREO</small><span>${esc(c.email)}</span></div><div><small>UBICACIÓN</small><span>${esc(c.dir)}</span></div></div><div class="bar"></div></div>
  <div class="pg"><div class="bar"></div><div class="hdr"><span>Catálogo ${yr}</span><img alt="" src="${LG}"><span>Contenido</span></div><div class="ix"><h2>Contenido</h2>${idx}</div></div>${pp}
  <div class="pg back"><div class="bar"></div><div class="cvb"><div class="lgo"><img alt="" src="${LG}"></div><h1>Gracias por<br>confiar en nosotros</h1><div class="rl" style="background:#fff"></div><div class="ci" style="margin-top:10mm">${esc(c.tel)}<br>${esc(c.email)}<br>${esc(c.dir)}${c.yappy?'<br>Yappy: '+esc(c.yappy):''}</div></div></div></div>`;
  window._cath=h;$('prt').innerHTML=h;$('mb').innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;position:sticky;top:-14px;z-index:2;background:var(--card);padding:6px 0"><b>Vista previa del catálogo · ${l.length} modelo${l.length>1?'s':''}</b><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn p s" id="bpdf" data-h-click="h194">⬇ Descargar PDF</button> <button class="btn s" data-h-click="h193">📱 WhatsApp</button> <button class="btn s" data-h-click="h192">🖨 Imprimir</button> <button class="btn s" data-h-click="h12" aria-label="Cerrar">✕</button></span></div><div class="pv">${h}</div>`;$('md').classList.add('on');fitPv()}
@@ -2293,7 +2295,7 @@ function etqDatos(p,def){
  return{tipo,agencia:nm,guia:env.guia||'',peso:+env.peso||0,obs:env.obs||'',cont,
   ag:car?{tel:(car.tel&&car.tel[0])||'',wa:car.wa||'',dir:car.dir||''}:null,logo:car?fleLogo(car,FC):'',
   codigo:'TJ-'+etqNum(p),fecha:new Date().toLocaleDateString('es-PA'),
-  rem:{nombre:c.nombre||(typeof nombreNegocio==='function'?nombreNegocio():'Tarjetería Jhon'),tel:c.tel||'',dir:c.dir||''},
+  rem:{nombre:c.nombre||(typeof nombreNegocio==='function'?nombreNegocio():''),tel:c.tel||'',dir:c.dir||''},
   dest:{name:env.rec||l.name||'',empresa:l.empresa||'',tel:env.rtel||l.tel||'',email:l.email||'',ced:env.rced||'',suc:env.suc||'',ref:env.ref||'',dir:env.dir||l.dir||'',ciudad:env.ciudad||'',prov:env.prov||'',pais},
   nb:Math.min(99,Math.max(1,+env.bultos||1))}
 }
@@ -2629,7 +2631,7 @@ function temaSet(t){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cf
 function heroModeSet(m){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cfg:true,heroMode:m,ts:Date.now()},{merge:true}).then(()=>{TD.heroMode=m;R.config()}).catch(()=>alert('No se pudo guardar la configuración del carrusel. Revise su conexión o permisos.'))}
 function paletaSet(p){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cfg:true,paleta:p,ts:Date.now()},{merge:true}).then(()=>{TD.paleta=p;R.config()}).catch(()=>alert('No se pudo guardar la paleta. Revise su conexión o permisos.'))}
 function tdRowHTML(o,pub){const isp=pub.has(o.id),pi=TD.items.find(x=>x.id===o.id),sel=new Set(pi&&Array.isArray(pi.tags)?pi.tags:temaOf(o)),ch=TEMAS.filter(t=>sel.has(t.id));
- const tm=`<details class="tdtm" id="tdd_${o.id}"><summary><span class="tdsum">${ch.length?ch.map(t=>t.e).join(' '):'<em>Sin tema</em>'}</span><i>▾</i></summary><div class="tdpop">${TEMAS.map(t=>`<label class="tdtg"><input type="checkbox" class="tdtgk" data-id="${o.id}" value="${t.id}" ${sel.has(t.id)?'checked':''} data-h-change="h98" data-a-change="${_ha(o.id)}"><span>${t.e} ${t.n}</span></label>`).join('')}</div></details>`;
+ const tm=!TEMAS.length?'<small>—</small>':`<details class="tdtm" id="tdd_${o.id}"><summary><span class="tdsum">${ch.length?ch.map(t=>t.e).join(' '):'<em>Sin tema</em>'}</span><i>▾</i></summary><div class="tdpop">${TEMAS.map(t=>`<label class="tdtg"><input type="checkbox" class="tdtgk" data-id="${o.id}" value="${t.id}" ${sel.has(t.id)?'checked':''} data-h-change="h98" data-a-change="${_ha(o.id)}"><span>${t.e} ${t.n}</span></label>`).join('')}</div></details>`;
  return `<tr data-pub="${isp?1:0}"><td><input type="checkbox" class="tdck mck" value="${o.id}" aria-label="Seleccionar producto"></td><td><img class="tdth" src="${o.thumb||''}" alt="" data-h-click="h97" data-a-click="${_ha(o.id)}" title="Ampliar"></td><td>${esc(o.name||'')}</td><td>${tm}</td><td class="r">${+o.price>0?$$(+o.price):'<small>Sin precio</small>'}</td><td>${tdStkSel(o.id,(pi&&pi.stock)||'ok')}</td><td>${tdBdSel(o.id,(pi&&pi.badges)||[])}</td><td>${isp?'<b class="okt">✔ Publicado</b>':'<small>No publicado</small>'}</td><td><button class="btn s d" data-h-click="h96" data-a-click="${_ha(o.id)}" title="Eliminar" aria-label="Eliminar">🗑</button></td></tr>`}
 function tdTabla(pub){const rows=tdRows();if(!rows.length)return TJEmpresa.empEsInicial()?'<div class="vacio">Cargando el catálogo… (solo se pueden publicar productos con foto).</div>':'<div class="vacio">Aún no hay productos. Suba sus modelos en Catálogo para poder publicarlos (solo se publican los que tienen foto).</div>';
  const np=rows.filter(o=>pub.has(o.id)).length,G=new Map();
@@ -2698,7 +2700,7 @@ function shopThemeCycle(){const cur=shopThemeGet(),next=cur==='auto'?'light':cur
 function shopThemeSet(mode){try{localStorage.setItem(lsk('tj_shop_theme'),mode)}catch(e){}if(typeof shopThemeApply==="function")shopThemeApply();const msg=mode==='dark'?'🌙 Modo Oscuro activado':mode==='light'?'☀️ Modo Día activado':'⚙️ Modo Automático activado (se adapta a la hora y a tu dispositivo)';if(typeof shopSnack==='function')shopSnack(msg)}
 window.shopThemeGet=shopThemeGet;window.shopThemeApply=shopThemeApply;window.shopThemeCycle=shopThemeCycle;window.shopThemeSet=shopThemeSet;
 
-function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
+function shopInit(){try{shopMetaEmpresa()}catch(e){window._tjw&&_tjw(e)}shopPurge();SH.openTs=Date.now();shopThemeApply();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{
    const cCfg=JSON.parse(localStorage.getItem(lsk('tj_cached_cfg'))||'null');
    if(cCfg){
@@ -2750,11 +2752,29 @@ function shopCacheCfg(cd){
  }catch(e){try{localStorage.removeItem(K)}catch(x){}}
 }
 /* Cuando llega (o cambia) la plantilla de la tienda, la cabecera se actualiza en su sitio: antes solo se rehacía la portada y el logo del primer pintado se quedaba. */
+/* Cabecera del documento de la tienda de OTRA empresa: ni manifest, ni iconos, ni textos de vista previa de Tarjetería Jhon.
+   Sin manifest propio (la CSP no admite blob: en manifest-src) la tienda no se instala como app, pero tampoco se instala con el nombre y el icono de Tarjetería.
+   Icono: el logo de la empresa si es una imagen; si no, la inicial de la empresa. La empresa inicial no cambia. */
+function shopMetaEmpresa(){
+ if(TJEmpresa.empEsInicial()||typeof document==='undefined')return;
+ const d=document,nm=nombreNegocio(),q=s=>d.querySelector(s),set=(s,a,v)=>{const e=q(s);if(e)e.setAttribute(a,v)};
+ const mf=q('link[rel=manifest]');if(mf)mf.remove();
+ const c=q('link[rel=canonical]');if(c)c.remove();
+ const lg=String(SH.logoUrl||'');
+ const ok=/^(data:image\/(png|jpe?g|webp|gif|svg\+xml)[;,]|https:\/\/)/i.test(lg)?lg:'';
+ const ini=(String(nm).trim().charAt(0)||'T').toUpperCase().replace(/[<>&"']/g,'T'),sv='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192"><rect width="192" height="192" rx="36" fill="#18181b"/><text x="96" y="132" font-family="Arial,sans-serif" font-size="112" font-weight="700" fill="#fff" text-anchor="middle">'+ini+'</text></svg>');
+ ['link[rel=icon]','link[rel=apple-touch-icon]'].forEach(s=>{const e=q(s);if(!e)return;e.setAttribute('href',ok||sv);e.removeAttribute('sizes');if(ok)e.removeAttribute('type');else e.setAttribute('type','image/svg+xml')});
+ const desc='Tienda en línea de '+nm;
+ set('meta[name=apple-mobile-web-app-title]','content',nm);set('meta[name=description]','content',desc);
+ set('meta[property="og:site_name"]','content',nm);set('meta[property="og:title"]','content',nm);set('meta[property="og:description"]','content',desc);
+ set('meta[name="twitter:title"]','content',nm);set('meta[name="twitter:description"]','content',desc);
+ const u=q('meta[property="og:url"]');if(u)u.remove();
+}
 function shopBrandRefresh(){
  const kb=document.querySelector('#shop .kbrand');
  if(kb){const t=document.createElement('div');t.innerHTML=shopLogo();const n=t.firstElementChild,old=kb.firstElementChild;
   if(n){if(old&&(old.tagName==='IMG'||old.classList.contains('klogo-ph')||old.classList.contains('klogo-mono')))old.replaceWith(n);else kb.insertBefore(n,kb.firstChild)}else if(old&&old.tagName==='IMG')old.remove()}
- if(!TJEmpresa.empEsInicial()){const nm=nombreNegocio();document.title=nm;const a=document.querySelector('meta[name=apple-mobile-web-app-title]');if(a)a.setAttribute('content',nm)}
+ if(!TJEmpresa.empEsInicial()){document.title=nombreNegocio();shopMetaEmpresa()}
 }
 const shopSaveCart=()=>{try{localStorage.setItem(lsk('tj_shop_cart'),JSON.stringify(SH.cart))}catch(e){window._tjw&&_tjw(e)}};
 function shopRender(){const o=$('shop');if(!o)return;
@@ -2896,7 +2916,7 @@ function shopFilters(){shopOpts();shopChips();shopSide();shopGrid(1);shopHero();
 function shopChips(){const e=$('sh_ch');if(!e)return;
  e.innerHTML=SH.opts.length?`<button class="kchip ${SH.sel.length?'':'on'}" data-h-click="h71">Todos</button>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<button class="kchip ${on?'on':''}" data-h-click="h70" data-a-click="${_ha(k)}" aria-pressed="${on}">${on?'✓':o.e} ${esc(o.n)}</button>`}).join(''):''}
 function shopSide(){const e=$('k_side');if(!e)return;const av=[['all','Todos',SH.items.length],['in','Disponibles',SH.items.filter(i=>!noDisp(i)).length],['low','Pocas existencias',SH.items.filter(i=>i.stock==='low').length],['out','No disponibles',SH.items.filter(noDisp).length]];
- e.innerHTML=`<div class="kfilter-section"><h3>Filtros <button class="kfilter-clear" data-h-click="h62">Limpiar</button></h3><div class="kprice-fields"><label>Precio desde<input type="number" min="0" inputmode="decimal" placeholder="$ 0" value="${esc(SH.minPrice)}" data-h-input="h74"></label><label>Precio hasta<input type="number" min="0" inputmode="decimal" placeholder="Sin límite" value="${esc(SH.maxPrice)}" data-h-input="h73"></label></div><div class="kavail">${av.map(([v,l,n])=>`<button class="${SH.avail===v?'on':''}" data-h-click="h72" data-a-click="${_ha(v)}"><span>${l}</span><span>${n}</span></button>`).join('')}</div></div><div class="kfilter-section"><h3>Por ocasión</h3>${SH.opts.length?`<label class="ksd ${SH.sel.length?'':'on'}"><input type="checkbox" ${SH.sel.length?'':'checked'} data-h-change="h71"><span>✨ Todos</span><i>${SH.items.length}</i></label>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<label class="ksd ${on?'on':''}"><input type="checkbox" ${on?'checked':''} data-h-change="h70" data-a-change="${_ha(k)}"><span>${o.e} ${esc(o.n)}</span><i>${o.c}</i></label>`}).join(''):''}</div>`}
+ e.innerHTML=`<div class="kfilter-section"><h3>Filtros <button class="kfilter-clear" data-h-click="h62">Limpiar</button></h3><div class="kprice-fields"><label>Precio desde<input type="number" min="0" inputmode="decimal" placeholder="$ 0" value="${esc(SH.minPrice)}" data-h-input="h74"></label><label>Precio hasta<input type="number" min="0" inputmode="decimal" placeholder="Sin límite" value="${esc(SH.maxPrice)}" data-h-input="h73"></label></div><div class="kavail">${av.map(([v,l,n])=>`<button class="${SH.avail===v?'on':''}" data-h-click="h72" data-a-click="${_ha(v)}"><span>${l}</span><span>${n}</span></button>`).join('')}</div></div><div class="kfilter-section"><h3>${TEMAS.length?'Por ocasión':'Categorías'}</h3>${SH.opts.length?`<label class="ksd ${SH.sel.length?'':'on'}"><input type="checkbox" ${SH.sel.length?'':'checked'} data-h-change="h71"><span>✨ Todos</span><i>${SH.items.length}</i></label>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<label class="ksd ${on?'on':''}"><input type="checkbox" ${on?'checked':''} data-h-change="h70" data-a-change="${_ha(k)}"><span>${o.e} ${esc(o.n)}</span><i>${o.c}</i></label>`}).join(''):''}</div>`}
 function shopSel(k){if(k<0)SH.sel=[];else{const id=SH.opts[k].id,p=SH.sel.indexOf(id);if(p<0)SH.sel.push(id);else SH.sel.splice(p,1)}shopChips();shopSide();shopGrid(1)}
 function shopTemaId(t){SH.sel=[t];SH.favOnly=false;SH.q='';if($('sh_q'))$('sh_q').value='';shopFilters();shopNav();const s=$('shop');if(s)s.scrollTo({top:0,behavior:'smooth'})}
 function shopSearchSubmit(){const q=(($("sh_q_hero")&&$("sh_q_hero").value)||($("sh_q")&&$("sh_q").value)||"").trim();shopQ(q);const g=$("sh_g");if(g)g.scrollIntoView({behavior:"smooth",block:"start"})}
@@ -3234,6 +3254,11 @@ NAVI.mapa=['M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7
 const _mr=mergeRemote;mergeRemote=function(r){_mr(r);authRefresh()};
 /* Nombre comercial real de la empresa activa (empresas.js lo resuelve; aquí cae
    a cfg.nombre y por último al histórico). Usar en login, tienda, políticas... */
+/* Nombre de archivo de exportación: la empresa inicial conserva los de siempre; otra empresa usa su propio nombre (sin acentos ni espacios). */
+function nomArch(inicial,prefijo){
+ try{if(TJEmpresa.empEsInicial())return inicial}catch(e){return inicial}
+ var s=String(nombreNegocio()||'empresa').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,30)||'empresa';
+ return (prefijo||'')+s}
 function nombreNegocio(){
  /* En la tienda pública (sin sesión) manda el nombre de la empresa guardado en
 	    su plantilla (__cfg.empresaNombre, que escriben Datos de la empresa y el
@@ -3418,7 +3443,7 @@ async function loginLogoFile(ev){
  }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~900 KB: suba uno más liviano o use un enlace.':'❌ No se pudo procesar el archivo ('+((e&&e.message)||e)+').')}
 }
 /* Logo del menú lateral del panel (la marca de la barra izquierda). */
-function panelLogoApply(){try{const im=document.querySelector('.brand .logo img');if(im)im.src=(DB.cfg&&DB.cfg.panelLogoSrc)||'assets/logo.png'}catch(e){}try{panelMarcaApply()}catch(e){window._tjw&&_tjw(e)}}
+function panelLogoApply(){try{const im=document.querySelector('.brand .logo img');if(im)im.src=(DB.cfg&&DB.cfg.panelLogoSrc)||(TJEmpresa.empEsInicial()?'assets/logo.png':(typeof empDemoLogo==='function'?empDemoLogo((DB.cfg&&DB.cfg.nombre)||nombreNegocio()):'assets/ven-crm/icono-app.svg'))}catch(e){}try{panelMarcaApply()}catch(e){window._tjw&&_tjw(e)}}
 /* Nombre visible y lema de la barra lateral (debajo del logo): editables por empresa (cfg.panelNombre / cfg.panelLema).
    Sin valor propio: la empresa inicial conserva sus textos de siempre; cualquier otra usa el nombre de SU empresa y sin lema
    (nunca los de Tarjetería Jhon, que están escritos fijos en index.html). */

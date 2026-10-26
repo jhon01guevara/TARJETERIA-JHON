@@ -18,7 +18,7 @@ test('index.html carga los 4 archivos nuevos, clásicos, después de etiquetas.j
  const h=leer('index.html'),app=h.indexOf('js/app.js?v='),etq=h.indexOf('js/etiquetas.js?v=');
  let prev=etq;
  NUEVOS.forEach((f,i)=>{
-  const m=new RegExp('<script src="'+f.replace('.','\\.')+'\\?v=modulos-fase-21'+'abcd'[i]+'"></script>').exec(h);
+  const m=new RegExp('<script src="'+f.replace('.','\\.')+'\\?v=(modulos-fase-21'+'abcd'[i]+'|genuine-tienda-[a-z])"></script>').exec(h);
   assert.ok(m,f+' sin <script> con ?v=');assert.ok(m.index>prev,f+' fuera de orden');assert.ok(m.index<app,f+' debe ir antes de app.js');
   assert.equal(cuenta(h,f+'?v='),1,f+' cargado dos veces');prev=m.index;
  });
