@@ -7,8 +7,8 @@ const fs=require('node:fs');
 const path=require('node:path');
 const leer=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
 
-test('firestore.rules es el texto publicado en producción (2026-10-24) y el respaldo anterior sigue disponible',()=>{
- assert.match(leer('firestore.rules'),/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if isAdmin\(\);/,
+test('firestore.rules (aislamiento entre empresas, PROPUESTA 2026-10-26; lo publicado antes de eso está en el respaldo) y el respaldo 2026-10-24 sigue disponible',()=>{
+ assert.match(leer('firestore.rules'),/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if adminDe\(eid\);/,
   'el comodín de empresas ya no admite a los miembros');
  assert.ok(!fs.existsSync(path.join(__dirname,'..','firestore.rules.propuesta')),'la propuesta ya no existe: es firestore.rules');
  const ant=leer('docs/respaldo-reglas-anteriores-2026-10-24.rules');
@@ -21,45 +21,45 @@ test('Reglas: chat (equivalente a «Chat consulta solo conversaciones propias»)
  assert.match(app,/\.where\('members','array-contains',chatMe\(\)\)\.onSnapshot/);
  assert.match(r,/function chatMember\(data\)/);
  /* La lectura de chats exige ser admin o participante (hasAny sobre resource.data). */
- assert.match(r,/match \/chats\/\{chat\} \{[\s\S]{0,700}allow read: if isAdmin\(\) \|\| \(logged\(\) && resource\.data\.members\.hasAny\(\[me\(\)\]\)\);/);
+ assert.match(r,/match \/chats\/\{chat\} \{[\s\S]{0,700}allow read: if isMaster\(\) \|\| \(logged\(\) && resource\.data\.members\.hasAny\(\[me\(\)\]\)\);/);
  assert.match(r,/request\.resource\.data\.members == resource\.data\.members/,'los participantes no se pueden alterar');
- assert.match(r,/match \/panel\/loginbg \{\s*allow read, write: if isAdmin\(\);/);
+ assert.match(r,/match \/panel\/loginbg \{\s*allow read, write: if isMaster\(\);/);
  assert.match(r,/match \/panel\/data \{/);
 });
 
-test('Reglas: administración LEE todo lo que la simulación enumera',()=>{
+test('Reglas: el MAESTRO LEE todo (raíz heredada) lo que la simulación enumera',()=>{
  const r=leer('firestore.rules');
- assert.match(r,/match \/vendedores\/\{uid\} \{\s*allow read: if isAdmin\(\);/);
- assert.match(r,/match \/chats\/\{chat\} \{[\s\S]{0,700}allow read: if isAdmin\(\) \|\|/,'chats completos para administración');
- assert.match(r,/match \/msgs\/\{msg\} \{\s*allow read: if isAdmin\(\)/,'msgs de cualquier chat para administración');
- assert.match(r,/match \/llamadas\/\{id\} \{[\s\S]{0,420}allow read, update: if isAdmin\(\)/,'llamadas completas para administración');
+ assert.match(r,/match \/vendedores\/\{uid\} \{\s*allow read: if isMaster\(\);/);
+ assert.match(r,/match \/chats\/\{chat\} \{[\s\S]{0,700}allow read: if isMaster\(\) \|\|/,'chats completos para administración');
+ assert.match(r,/match \/msgs\/\{msg\} \{\s*allow read: if isMaster\(\)/,'msgs de cualquier chat para administración');
+ assert.match(r,/match \/llamadas\/\{id\} \{[\s\S]{0,420}allow read, update: if isMaster\(\)/,'llamadas completas para administración');
 });
 
 test('Reglas: el árbol empresas/{eid} es solo de administración, salvo reglas específicas',()=>{
  const r=leer('firestore.rules');
  assert.match(r,/function esMiembroEmpresa\(eid\)/);
  assert.match(r,/exists\(\/databases\/\$\(database\)\/documents\/empresas\/\$\(eid\)\/miembros\/\$\(request\.auth\.uid\)\)/);
- /* El comodín ya NO admite a los miembros: solo isAdmin(). */
- assert.match(r,/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if isAdmin\(\);/);
+ /* El comodín ya NO admite a los miembros: solo adminDe(eid). */
+ assert.match(r,/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if adminDe\(eid\);/);
  assert.ok(!/match \/empresas\/\{eid\}\/\{document=\*\*\} \{\s*allow read, write: if esEmpresa/.test(r),'sin comodín de miembros');
  /* miembros: solo admin escribe; cada uno lee el suyo. */
- assert.match(r,/match \/empresas\/\{eid\}\/miembros\/\{uid\} \{\s*allow read: if isAdmin\(\) \|\| \(logged\(\) && request\.auth\.uid == uid\);\s*allow write: if isAdmin\(\);/);
+ assert.match(r,/match \/empresas\/\{eid\}\/miembros\/\{uid\} \{\s*allow read: if adminDe\(eid\) \|\| \(logged\(\) && request\.auth\.uid == uid\);\s*allow write: if adminDe\(eid\);/);
  assert.match(r,/match \/empresas\/\{eid\}\/panel_public\/contador \{[\s\S]{0,500}request\.resource\.data\.sig == resource\.data\.sig \+ 1/);
  assert.match(r,/match \/empresas\/\{eid\}\/panel_public\/clientes \{[\s\S]{0,420}cli\.size\(\) >= resource\.data\.cli\.size\(\)/);
  assert.match(r,/match \/empresas\/\{eid\}\/vendedores\/\{uid\}\/privado\/\{doc\} \{[\s\S]{0,220}request\.auth\.uid == uid/);
  assert.match(r,/match \/empresas\/\{eid\}\/tienda_items\/\{document=\*\*\} \{\s*allow read: if true;/,'tienda pública por empresa');
  assert.equal((r.match(/keys\(\)\.hasOnly\(\['id','name','tel','email','empresa','dir','ref','ts','imp'\]\)/g)||[]).length,2,'esquema de leads en raíz y empresa');
  assert.equal((r.match(/keys\(\)\.hasOnly\(\['id','cid','lead','items','total','nota','ref','ts','estado','envio'\]\)/g)||[]).length,2,'esquema de pedidos en raíz y empresa');
- assert.match(r,/match \/empresas\/\{eid\}\/chats\/\{chat\} \{[\s\S]{0,700}allow read: if isAdmin\(\) \|\|/);
- assert.match(r,/match \/empresas\/\{eid\}\/llamadas\/\{id\} \{[\s\S]{0,420}allow read, update: if isAdmin\(\)/);
+ assert.match(r,/match \/empresas\/\{eid\}\/chats\/\{chat\} \{[\s\S]{0,700}allow read: if adminDe\(eid\) \|\|/);
+ assert.match(r,/match \/empresas\/\{eid\}\/llamadas\/\{id\} \{[\s\S]{0,420}allow read, update: if adminDe\(eid\)/);
  assert.match(r,/match \/\{document=\*\*\} \{\s*allow read, write: if false;/);
 });
 
 test('Reglas: metadatos de empresa y dominios',()=>{
  const r=leer('firestore.rules');
  /* Antes: leer/escribir solo admin. Ahora los miembros leen SU empresa; escribir sigue siendo del admin. */
- assert.match(r,/match \/empresas\/\{id\} \{\s*allow read: if esMiembroEmpresa\(id\);\s*allow write: if isAdmin\(\);/);
- assert.match(r,/match \/dominios\/\{host\} \{\s*allow read: if true;\s*allow write: if isAdmin\(\);/);
+ assert.match(r,/match \/empresas\/\{id\} \{\s*allow read: if esMiembroEmpresa\(id\);\s*allow create, delete: if isMaster\(\);\s*allow update: if adminDe\(id\);/);
+ assert.match(r,/match \/dominios\/\{host\} \{\s*allow read: if true;[\s\S]{0,900}adminDe\(request\.resource\.data\.empresaId\)/);
 });
 
 test('Reglas: los límites de tamaño de la tienda cuadran con los inputs de la app',()=>{

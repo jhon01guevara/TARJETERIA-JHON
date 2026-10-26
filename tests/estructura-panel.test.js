@@ -39,9 +39,9 @@ test('Chat consulta solo conversaciones propias y las reglas separan participant
   const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
   assert.match(app,/\.where\('members','array-contains',chatMe\(\)\)\.onSnapshot/);
   assert.match(rules,/function chatMember\(data\)/);
-  assert.match(rules,/allow read: if isAdmin\(\) \|\| \(logged\(\) && resource\.data\.members\.hasAny\(\[me\(\)\]\)\);/);
+  assert.match(rules,/allow read: if isMaster\(\) \|\| \(logged\(\) && resource\.data\.members\.hasAny\(\[me\(\)\]\)\);/);
   assert.match(rules,/request\.resource\.data\.members == resource\.data\.members/);
-  assert.match(rules,/match \/panel\/loginbg \{\s*allow read, write: if isAdmin\(\);/);
+  assert.match(rules,/match \/panel\/loginbg \{\s*allow read, write: if isMaster\(\);/);
   assert.match(rules,/match \/panel\/data \{/);
 });
 
@@ -54,7 +54,7 @@ test('Los datos del panel se separan entre catálogo común y espacio privado po
   assert.match(app,/clientes_y_agenda_heredados_admin/);
   assert.match(rules,/match \/panel_public\/general \{/);
   assert.match(rules,/match \/vendedores\/\{uid\}\/privado\/\{doc\} \{/);
-  assert.match(rules,/match \/panel\/data \{\s*allow read, write: if isAdmin\(\);/);
+  assert.match(rules,/match \/panel\/data \{\s*allow read, write: if isMaster\(\);/);
 });
 
 test('La conexión reutiliza Firebase ya inicializado tras una actualización',()=>{
@@ -68,10 +68,12 @@ test('La conexión reutiliza Firebase ya inicializado tras una actualización',(
 test('Las consultas autenticadas no repiten la búsqueda de rol por cada documento',()=>{
   const rules=fs.readFileSync(path.join(__dirname,'..','firestore.rules'),'utf8');
   assert.match(rules,/function logged\(\) \{\s*return request\.auth != null;/);
-  assert.match(rules,/function isAdmin\(\)/);
+  assert.match(rules,/function isMaster\(\)/);
+  assert.match(rules,/function esRolAdmin\(\)/);
+  assert.match(rules,/function adminDe\(eid\)/);
   assert.match(rules,/request\.auth\.uid == 'o7bHndKtswSHreFnVwORqBSUKL43'/);
   assert.match(rules,/allow get: if request\.auth != null && request\.auth\.uid == uid;/);
-  assert.match(rules,/allow list: if isAdmin\(\);/);
+  assert.match(rules,/allow list: if isMaster\(\);/);
 });
 
 test('El inicio de sesión no queda verificando indefinidamente si Firestore no responde',()=>{
@@ -134,7 +136,7 @@ test('Los clientes son una lista compartida, sin duplicados y solo administraci�
   assert.match(app,/\$\{esAdmin\(\)\?`<button class="btn s" data-h-click="h305"/);
   assert.match(app,/'delC','editC'/);
   assert.match(rules,/match \/panel_public\/clientes \{/);
-  assert.match(rules,/allow create, delete: if isAdmin\(\);/);
+  assert.match(rules,/allow create, delete: if adminDe\(eid\);/);
   assert.match(rules,/request\.resource\.data\.cli\.size\(\) >= resource\.data\.cli\.size\(\)/);
 });
 

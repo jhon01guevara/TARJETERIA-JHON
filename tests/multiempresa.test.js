@@ -151,6 +151,6 @@ test('El panel integra la vista Empresas solo para administración',()=>{
  assert.match(app,/k!=='config'&&k!=='vend'&&k!=='mapa'&&k!=='empresas'/);
  assert.match(app,/v\[0\]!=='config'&&v\[0\]!=='vend'&&v\[0\]!=='mapa'&&v\[0\]!=='empresas'/);
  const reglas=leer('firestore.rules');
- assert.match(reglas,/match \/empresas\/\{id\} \{\s*allow read: if esMiembroEmpresa\(id\);\s*allow write: if isAdmin\(\);/);
- assert.match(reglas,/match \/dominios\/\{host\} \{\s*allow read: if true;\s*allow write: if isAdmin\(\);/);
+ assert.match(reglas,/match \/empresas\/\{id\} \{\s*allow read: if esMiembroEmpresa\(id\);\s*allow create, delete: if isMaster\(\);\s*allow update: if adminDe\(id\);/);
+ assert.match(reglas,/match \/dominios\/\{host\} \{\s*allow read: if true;[\s\S]{0,900}adminDe\(request\.resource\.data\.empresaId\)/);
 });
