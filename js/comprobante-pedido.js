@@ -3,7 +3,7 @@
    (lo que usa de app.js lo usa dentro de funciones que se ejecutan después de cargar todo). Las const siguen siendo globales de script y las function, propiedades de window. */
 function shopPdfPrint(p){const l=p.lead||{},w=window.open('','_blank');if(!w)return alert('Permita las ventanas emergentes para descargar el comprobante.');
  try{w.opener=null}catch(e){window._tjw&&_tjw(e)}
- const emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',num=String(p.id||'').slice(-6).toUpperCase();
+ const emp=(typeof nombreNegocio==='function'?nombreNegocio():((typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon')),num=String(p.id||'').slice(-6).toUpperCase();
  const d=w.document;d.open();d.write('<!DOCTYPE html><meta charset="utf-8"><title></title>');d.close();
  if(!d.body)d.documentElement.appendChild(d.createElement('body'));
  d.title='Pedido '+num;d.body.style.cssText='font-family:Arial,sans-serif;max-width:720px;margin:24px auto;color:#222';
@@ -18,7 +18,7 @@ function shopPdfPrint(p){const l=p.lead||{},w=window.open('','_blank');if(!w)ret
  B.appendChild(E('p','font-size:12px;color:#666','Precios sin ITBMS. Pedido sujeto a confirmación de disponibilidad.'));
  setTimeout(()=>{try{w.focus();w.print()}catch(e){window._tjw&&_tjw(e)}},250)}
 function shopPdf(p,modo){if(!p)return;const J=window.jspdf&&window.jspdf.jsPDF;if(!J)return shopPdfPrint(p);
- try{const d=new J({unit:'mm',format:'a4'}),W=210,M=16,l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',cl=t=>String(t||'').replace(/[^\u0000-\u00FF]/g,'').trim();let y=20;
+ try{const d=new J({unit:'mm',format:'a4'}),W=210,M=16,l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof nombreNegocio==='function'?nombreNegocio():((typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon')),cl=t=>String(t||'').replace(/[^\u0000-\u00FF]/g,'').trim();let y=20;
   try{const g=document.querySelector('.logo img');if(g&&/^data:image\/(png|jpe?g)/i.test(g.src))d.addImage(g.src,/png/i.test(g.src)?'PNG':'JPEG',M,8,0,18)}catch(e){window._tjw&&_tjw(e)}
   d.setFont('helvetica','bold');d.setFontSize(17);d.setTextColor(224,69,123);d.text('COMPROBANTE DE PEDIDO',W-M,16,{align:'right'});
   d.setFontSize(10);d.setTextColor(90);d.setFont('helvetica','normal');d.text(cl(emp),W-M,22,{align:'right'});
@@ -39,7 +39,7 @@ function shopPdfVer(blob,name){const old=document.getElementById('pdfv');if(old)
  const k=e=>{if(e.key==='Escape'){cl();removeEventListener('keydown',k)}};addEventListener('keydown',k)}
 /* ---- bloque 2 (estaba separado en app.js) ---- */
 // ---------- Comprobante como imagen (vista inmediata) ----------
-function shopRecCanvas(p,cb){const l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon',W=600,S=2,M=36,F="-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Arial,sans-serif",PK='#E0457B';
+function shopRecCanvas(p,cb){const l=p.lead||{},num=String(p.id||'').slice(-6).toUpperCase(),emp=(typeof nombreNegocio==='function'?nombreNegocio():((typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon')),W=600,S=2,M=36,F="-apple-system,BlinkMacSystemFont,'Inter','Segoe UI',Arial,sans-serif",PK='#E0457B';
  const c=document.createElement('canvas');c.width=W*S;c.height=40*S;const x=c.getContext('2d');
  const wrap=(t,w,font)=>{x.font=font;const out=[];String(t||'').split(/\n/).forEach(par=>{let ln='';par.split(/\s+/).filter(Boolean).forEach(wd=>{const tt=ln?ln+' '+wd:wd;if(x.measureText(tt).width>w&&ln){out.push(ln);ln=wd}else ln=tt});out.push(ln)});return out};
  const rows=(p.items||[]).map(i=>({q:i.q,ln:wrap(i.n,290,'500 14px '+F),pu:i.p>0?$$(i.p):'Consultar',st:i.p>0?$$(i.q*i.p):'—'}));

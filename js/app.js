@@ -30,7 +30,9 @@ const _appC={};function appHtml(n){if(!_appC[n])_appC[n]=fetch('apps/'+n+'.html'
    por js/empresa-contexto.js, antes de app.js) y fbCol usa esa misma empresa, así que clave local y
    ruta de Firestore siempre coinciden; cambiar de empresa recarga la página (empActivar). */
 const lsk=k=>TJEmpresa.empLSKey(k);
-let DB={prod:[],cli:[],fac:[],ubi:[],agenda:[],cfg:{sig:1058,itbms:0,nombre:'Tarjetería Jhon',ruc:'',tel:'(507) 6074-1150',email:'Tarjeteriajhon@gmail.com',dir:'Panama Oeste',banco:'Banco General',tcuenta:'Ahorro',cuenta:'',yappy:'',dests:[],tema:'claro',snd:1,tono:'campana',vol:70,nsys:0}};
+/* Valores por defecto de los datos de la empresa: solo la empresa inicial arranca con los de Tarjetería Jhon; cualquier otra empresa, vacíos
+   (si no, su factura, su formulario y su tienda mostrarían el teléfono, el correo, la dirección y el banco de Tarjetería). */
+let DB={prod:[],cli:[],fac:[],ubi:[],agenda:[],cfg:{sig:1058,itbms:0,nombre:TJEmpresa.empEsInicial()?'Tarjetería Jhon':'',ruc:'',tel:TJEmpresa.empEsInicial()?'(507) 6074-1150':'',email:TJEmpresa.empEsInicial()?'Tarjeteriajhon@gmail.com':'',dir:TJEmpresa.empEsInicial()?'Panama Oeste':'',banco:TJEmpresa.empEsInicial()?'Banco General':'',tcuenta:'Ahorro',cuenta:'',yappy:'',dests:[],tema:'claro',snd:1,tono:'campana',vol:70,nsys:0}};
 let cardState={cfg:false,email:false};
 try{cardState=Object.assign(cardState,JSON.parse(localStorage.getItem(lsk('tj_cards'))||'{}'))}catch(e){window._tjw&&_tjw(e)}
 const wmClean=v=>{v=String(v||'').trim();return v.toLowerCase()==='shop'?'':v};
@@ -82,7 +84,8 @@ window.cfgTab=cfgTab;
 function catExpandAll(){document.querySelectorAll('.cg2').forEach(d=>{d.open=true;catCl.add(d.dataset.k)})}
 function catCollapseAll(){document.querySelectorAll('.cg2').forEach(d=>{d.open=false;catCl.delete(d.dataset.k)})}
 try{const s=localStorage.getItem(lsk('tj_db'));if(s){const o=JSON.parse(s),c=DB.cfg;DB=Object.assign(DB,o);DB.cfg=Object.assign(c,o.cfg||{})}}catch(e){window._tjw&&_tjw(e)}
-if(!DB.prod.length)DB.prod=[['TARJETAS DE TODA OCACION',1.30],['TARJETAS DE TODA OCACION',1.25],['TARJETAS DE TODA OCACION',1.20],['TARJETAS DE TODA OCACION',1.15],['TARJETAS DE TODA OCACION',1.00],['TARJETAS DE TODA OCACION DISTRUBUCION',0.95]].map((p,i)=>({id:'p'+i,n:p[0],p:p[1]}));
+/* Productos de arranque: SOLO de la empresa inicial (Tarjetería Jhon). Una empresa nueva empieza sin productos. */
+if(!DB.prod.length&&TJEmpresa.empEsInicial())DB.prod=[['TARJETAS DE TODA OCACION',1.30],['TARJETAS DE TODA OCACION',1.25],['TARJETAS DE TODA OCACION',1.20],['TARJETAS DE TODA OCACION',1.15],['TARJETAS DE TODA OCACION',1.00],['TARJETAS DE TODA OCACION DISTRUBUCION',0.95]].map((p,i)=>({id:'p'+i,n:p[0],p:p[1]}));
 // Si la copia local (localStorage) falla (p.ej. el navegador llenó su cuota), antes esto quedaba
 // en silencio total: nadie se enteraba, ni en consola. Ahora avisa una vez cada 5 minutos como
 // máximo (para no llenar la pantalla de avisos si falla seguido) — la nube sigue intentando guardar
@@ -417,8 +420,8 @@ function shopFooterRender(){
 function shopRedes(){
 try{shopFooterRender()}catch(e){}
 
- const L=redesLista(typeof SH!=='undefined'?SH.redes:null),w=$('k_wa'),num=contLimpio(typeof SH!=='undefined'?SH.contacto:null).wa;
- if(w){if(num){w.href='https://wa.me/'+num+'?text='+encodeURIComponent('Hola, vi su catálogo virtual de Tarjetería Jhon y quisiera más información.');w.hidden=false}else{w.hidden=true;w.removeAttribute('href')}{const g=w.parentNode;if(g&&g.classList.contains('kwa-wrap'))g.hidden=w.hidden}}
+ const L=redesLista(typeof SH!=='undefined'?SH.redes:null),w=$('k_wa'),num=contWa(typeof SH!=='undefined'?SH.contacto:null);
+ if(w){if(num){w.href='https://wa.me/'+num+'?text='+encodeURIComponent('Hola, vi su catálogo virtual de '+nombreNegocio()+' y quisiera más información.');w.hidden=false}else{w.hidden=true;w.removeAttribute('href')}{const g=w.parentNode;if(g&&g.classList.contains('kwa-wrap'))g.hidden=w.hidden}}
  document.querySelectorAll('.kredh').forEach(e=>{e.innerHTML=L.map(([k,n,u])=>redLink(k,n,u,1)).join('')});
  const e=$('k_redes');if(!e)return;
  if(!L.length){e.hidden=true;e.innerHTML='';return}
@@ -426,30 +429,32 @@ try{shopFooterRender()}catch(e){}
 }
 // Botón "Contacto" de la tienda: muestra los datos que configuró el administrador.
 function shopContacto(){
- const c=contLimpio(typeof SH!=='undefined'?SH.contacto:null),L=redesLista(typeof SH!=='undefined'?SH.redes:null),f=[];
- if(c.wa)f.push(['💬','WhatsApp',`<a href="https://wa.me/${c.wa}" target="_blank" rel="noopener noreferrer">+${c.wa}</a>`]);
+ const c=contLimpio(typeof SH!=='undefined'?SH.contacto:null),L=redesLista(typeof SH!=='undefined'?SH.redes:null),f=[],wn=contWa(typeof SH!=='undefined'?SH.contacto:null);
+ if(wn)f.push(['💬','WhatsApp',`<a href="https://wa.me/${wn}" target="_blank" rel="noopener noreferrer">+${wn}</a>`]);
  if(c.tel)f.push(['📞','Teléfono',`<a href="tel:${esc(c.tel.replace(/[^\d+]/g,''))}">${esc(c.tel)}</a>`]);
  if(c.email)f.push(['✉️','Correo',`<a href="mailto:${esc(c.email)}">${esc(c.email)}</a>`]);
  if(c.dir)f.push(['📍','Dirección',`<a href="https://www.google.com/maps/search/?api=1&amp;query=${encodeURIComponent(c.dir)}" target="_blank" rel="noopener noreferrer">${esc(c.dir)}</a>`]);
  if(c.horario)f.push(['🕒','Horario',esc(c.horario)]);
- if(!f.length)f.push(['✉️','Correo','<a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a>']);
+ if(!f.length){if(TJEmpresa.empEsInicial())f.push(['✉️','Correo','<a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a>']);else f.push(['ℹ️','Contacto','Esta empresa aún no ha publicado sus datos de contacto.'])}
  shopM(`<h2 style="margin:6px 0">Contacto</h2><div class="kcont">${f.map(([i,l,h])=>`<div class="kcr"><span>${i}</span><div><small>${l}</small><br>${h}</div></div>`).join('')}</div>${L.length?`<h3 style="margin:6px 0 10px">Síganos en redes</h3><div class="kred-row">${L.map(([k,n,u])=>redLink(k,n,u)).join('')}</div>`:''}<div class="kact2" style="margin-top:14px"><button class="sbtn g" data-h-click="h31">Cerrar</button></div>`,'contact')
 }
 // Configuración (administrador). Lo escrito sin guardar y el aviso sobreviven a los redibujados de la pantalla.
 
 function redesCard(){
 
- const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph={tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'};
+ const r=(typeof TD!=='undefined'&&TD.redes)||{},ct=contLimpio(typeof TD!=='undefined'?TD.contacto:null),ph=TJEmpresa.empEsInicial()?{tiktok:'@tarjeteriajhon',instagram:'@tarjeteriajhon',facebook:'tarjeteriajhon'}:{tiktok:'@su_empresa',instagram:'@su_empresa',facebook:'su.empresa'};
  const val=(id,saved)=>id in RS_DRAFT?RS_DRAFT[id]:saved;
- return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. El número de WhatsApp además aparece como botón verde flotante en la tienda (8 dígitos o con código de país). Deje vacío lo que no use.</p>
+ return `<h3 style="margin:0">📣 Redes sociales y contacto de la tienda</h3><p style="font-size:12.5px;color:var(--gris)">Las redes aparecen junto al menú y al final de la tienda virtual. Los datos de contacto se muestran cuando el cliente toca <b>Contacto</b>. El botón verde flotante de WhatsApp usa por defecto el <b>teléfono de la empresa</b> (Datos de la empresa); si su WhatsApp es otro número, escríbalo en el campo «WhatsApp». Deje vacío lo que no use.</p>
  <div class="g">${RED_DEF.map(([k,n])=>`<div><label>${n}</label><input id="rs_${k}" value="${esc(val('rs_'+k,redUrl(k,r[k])))}" placeholder="${ph[k]}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
  <div class="g" style="margin-top:10px">${CONT_DEF.map(([k,n,p])=>`<div><label>${n}</label><input id="ct_${k}" value="${esc(val('ct_'+k,ct[k]))}" placeholder="${esc(p)}" data-h-input="h336" autocomplete="off"></div>`).join('')}</div>
+ <label class="chk" style="display:flex;gap:8px;align-items:center;margin-top:10px;font-size:13px"><input type="checkbox" id="ct_waOff" ${val('ct_waOff',!!ct.waOff)?'checked':''} data-h-change="h365"> No mostrar el botón de WhatsApp en la tienda</label>
  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px"><button class="btn p" data-h-click="h335">Guardar redes y contacto</button><span id="rs_est" style="font-size:13px;color:${RS_MSG?RS_MSG.ok?'#1e7a43':'#b3261e':'inherit'}">${RS_MSG?esc(RS_MSG.t):''}</span></div>`
 }
 function redesFill(){
  if(typeof TD==='undefined')return;const r=TD.redes||{},ct=contLimpio(TD.contacto);
  RED_DEF.forEach(([k])=>{const i=$('rs_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=redUrl(k,r[k])});
- CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=ct[k]})
+ CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);if(i&&!(i.id in RS_DRAFT)&&document.activeElement!==i)i.value=ct[k]});
+ {const o=$('ct_waOff');if(o&&!(o.id in RS_DRAFT))o.checked=!!ct.waOff}
 }
 async function redesGuardar(){
  if(!esAdmin())return alert('Solo el administrador puede cambiar las redes sociales y el contacto.');
@@ -461,6 +466,7 @@ async function redesGuardar(){
   redes[k]=u
  }
  CONT_DEF.forEach(([k])=>{const i=$('ct_'+k);raw[k]=i?i.value:''});
+ {const o=$('ct_waOff');raw.waOff=!!(o&&o.checked)}
  const ct=contLimpio(raw);
  for(const [k,n] of CONT_DEF){
   if(String(raw[k]).trim()&&!ct[k]){msg(false,'✖ '+n.replace(/ \(.*\)/,'')+': el dato no es válido.');const i=$('ct_'+k);if(i)i.focus();return}
@@ -663,7 +669,8 @@ agenda(){const t=hoy(),pend=l=>l.filter(o=>!agDn(o)).length,q0=AG.q,c0=AG.c;AG.q
  $('v').innerHTML=`<div class="agk"><div><small>Hoy (pendientes)</small><b>${hoyN}</b></div><div><small>Próx. 7 días</small><b>${sem}</b></div><div><small>Vencidas</small><b style="color:${late?'#d92d20':'inherit'}">${late}</b></div><div><small>Total eventos</small><b>${tot}</b></div></div>
  <div class="agbar"><div class="pt">${[['mes','Mes'],['sem','Semana'],['lista','Lista']].map(([k,l])=>`<button class="${k==AG.v?'on':''}" data-h-click="h272" data-a-click="${_ha(k)}">${l}</button>`).join('')}</div>${AG.v!=='lista'?`<button class="btn s" data-h-click="h271" aria-label="Mes anterior">‹</button><b style="min-width:130px;text-align:center">${ttl}</b><button class="btn s" data-h-click="h270" aria-label="Mes siguiente">›</button>`:`<b>${ttl}</b>`}<button class="btn s" data-h-click="h269">Hoy</button><button class="btn p s" data-h-click="h259">➕ Nuevo evento</button></div>
  <div class="agbar"><input id="ag_q" placeholder="🔍 Buscar evento, cliente o nota…" value="${esc(AG.q)}" data-h-input="h268"><select data-h-change="h267" aria-label="Filtrar por tipo de evento"><option value="">Todos los tipos</option>${Object.entries(AGT).map(([k,x])=>`<option value="${k}" ${AG.c==k?'selected':''}>${x[0]} ${x[1]}</option>`).join('')}</select><button class="btn s" data-h-click="h266">${DB.cfg.snd?'🔊 Sonido activado':'🔇 Sonido silenciado'}</button><button class="btn s" data-h-click="h265">📆 Exportar a calendario (.ics)</button></div><div id="agBody"></div>`;agBody()},
-check(){$('v').innerHTML=`<div class="card" style="padding:0;overflow:hidden;max-width:none;width:100%;margin:0"><iframe id="checkFrame" title="Check: modelos de tarjetas" style="width:100%;height:calc(100vh - 150px);min-height:560px;border:0;display:block;background:transparent"></iframe></div>`;
+check(){if(!TJEmpresa.empEsInicial()){$('v').innerHTML='<div class="card"><h3 style="margin:0 0 6px">✅ Check</h3><div class="vacio">Esta empresa aún no tiene modelos. Cuando suba los suyos en Catálogo, aparecerán aquí.</div></div>';return}
+ $('v').innerHTML=`<div class="card" style="padding:0;overflow:hidden;max-width:none;width:100%;margin:0"><iframe id="checkFrame" title="Check: modelos de tarjetas" style="width:100%;height:calc(100vh - 150px);min-height:560px;border:0;display:block;background:transparent"></iframe></div>`;
  const _cf=$('checkFrame');_cf.onload=()=>{try{_cf.contentDocument.documentElement.setAttribute('data-theme',document.documentElement.getAttribute('data-t')==='nocturno'?'dark':'light')}catch(e){window._tjw&&_tjw(e)}try{if(esVend())chkLock(_cf.contentDocument,_cf.contentWindow)}catch(e){window._tjw&&_tjw(e)}};
  appHtml('modelos').then(h=>{_cf.srcdoc=chkSkin(h)}).catch(e=>{window._tjw&&_tjw(e);_cf.srcdoc='<p style="font:15px sans-serif;padding:24px">No se pudo cargar el módulo. Recargue la página (Ctrl+F5).</p>'});checkFitSoon()}};
 
@@ -703,11 +710,11 @@ function agForm(id,date){const e=id?DB.agenda.find(x=>x.id==id):{},v=(k,d='')=>e
 function agSave(id){const ti=$('ag_ti').value.trim(),f=$('ag_f').value;if(!ti||!f)return alert('Escriba un título y elija la fecha.');const o={ti,f,h:$('ag_h').value,h2:$('ag_h2').value,t:$('ag_t').value,r:$('ag_r').value,av:$('ag_av').value,cn:$('ag_cn').value.trim(),tel:$('ag_tel').value.trim(),nt:$('ag_nt').value.trim()};
  if(id){Object.assign(DB.agenda.find(x=>x.id==id),o)}else DB.agenda.push(Object.assign({id:uid(),dn:{}},o));AG.sel=f;AG.d=f;save();cerrar();R.agenda();cintillo()}
 function agIcs(){if(!DB.agenda.length)return alert('La agenda está vacía.');const z=n=>String(n).padStart(2,'0'),dd=d=>d.replace(/-/g,''),tt=h=>h.replace(':','')+'00';
- const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Tarjeteria Jhon//Agenda//ES'];DB.agenda.forEach(e=>{L.push('BEGIN:VEVENT','UID:'+e.id+'@tarjeteriajhon','DTSTAMP:'+dd(hoy())+'T000000Z');
+ const L=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//'+nomArch('Tarjeteria Jhon')+'//Agenda//ES'];DB.agenda.forEach(e=>{L.push('BEGIN:VEVENT','UID:'+e.id+'@'+nomArch('tarjeteriajhon'),'DTSTAMP:'+dd(hoy())+'T000000Z');
  if(e.h){L.push('DTSTART:'+dd(e.f)+'T'+tt(e.h));const f=e.h2||(z((+e.h.slice(0,2)+1)%24)+':'+e.h.slice(3));L.push('DTEND:'+dd(e.f)+'T'+tt(f))}else L.push('DTSTART;VALUE=DATE:'+dd(e.f));
  L.push('SUMMARY:'+(AGT[e.t]||AGT.otro)[1]+': '+e.ti.replace(/[,;\n]/g,' '));if(e.nt||e.cn)L.push('DESCRIPTION:'+((e.cn?'Cliente: '+e.cn+'. ':'')+(e.nt||'')).replace(/[,;\n]/g,' '));
  if(e.r)L.push('RRULE:FREQ='+{dia:'DAILY',sem:'WEEKLY',mes:'MONTHLY'}[e.r]);L.push('END:VEVENT')});L.push('END:VCALENDAR');
- const a=document.createElement('a');a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(L.join('\r\n'));a.download='agenda_tarjeteria_jhon.ics';a.click()}
+ const a=document.createElement('a');a.href='data:text/calendar;charset=utf-8,'+encodeURIComponent(L.join('\r\n'));a.download=nomArch('agenda_tarjeteria_jhon','agenda_')+'.ics';a.click()}
 
 let _cintSig='',_chk=null;
 function cintGo(k,a,b){if(k=='ag'){AG.sel=b;AG.d=b;ir('agenda')}else ir(k)}
@@ -732,8 +739,8 @@ async function cintillo(){const bar=$('cint');if(!bar)return;const k=cintCfg();
  else if(k.mod){let cat=[];try{cat=(await tx('readonly',s=>s.getAll())).filter(f=>f.thumb)}catch(e){cat=(typeof CL!=='undefined'?CL:[]).filter(f=>f.thumb)}
   cat.sort((a,b)=>(b.date||'').localeCompare(a.date||''));tag='🎴 Modelos';
   if(cat.length){cat=cat.slice(0,30);items=cat.map(f=>`<div class="ci" data-h-click="h254"><img src="${f.thumb}" alt=""><span class="tt"><strong>${esc(f.name||'Modelo')}</strong><small>${esc(f.cat||'Catálogo')}</small></span><u>›</u></div>`);sig='C'+cat.map(f=>f.id).join()}
-  else{const m=(await cintChk()).slice(0,30);if(m.length){items=m.map(f=>`<div class="ci" data-h-click="h253"><img src="${f.i}" alt=""><span class="tt"><strong>${esc(f.n)}</strong><small>${esc(f.s)}</small></span><u>›</u></div>`);sig='M'+m.length}
-  else{items=['<div class="ci" style="--c:#FF9F0A"><i class="ico">🎴</i><span class="tt"><strong>Tarjetería Jhon</strong><small>Tarjetas para toda ocasión</small></span></div>'];sig='X'}}}
+  else{const m=TJEmpresa.empEsInicial()?(await cintChk()).slice(0,30):[];if(m.length){items=m.map(f=>`<div class="ci" data-h-click="h253"><img src="${f.i}" alt=""><span class="tt"><strong>${esc(f.n)}</strong><small>${esc(f.s)}</small></span><u>›</u></div>`);sig='M'+m.length}
+  else{{const pm=panelMarcaTextos();items=['<div class="ci" style="--c:#FF9F0A"><i class="ico">🎴</i><span class="tt"><strong>'+esc(pm.nombre)+'</strong>'+(pm.lema?'<small>'+esc(pm.lema)+'</small>':'')+'</span></div>'];sig='X'+pm.nombre+pm.lema}}}}
  else{bar.hidden=true;_cintSig='';return}
  sig+='|'+k.seg;if(sig===_cintSig&&!bar.hidden)return;_cintSig=sig;
  $('cintTr').innerHTML=items.join('');$('cintTag').textContent=tag;$('cintVw').scrollLeft=0;bar.hidden=false;cintDots(items.length);cintArranca()}
@@ -842,13 +849,15 @@ function facL(f){const L=[],m=f.pagos&&f.pagos.length>1;if(m||f.credito)L.push([
 function facTxt(f){return facL(f).map(([a,b])=>a+' '+b.replace(/\s*\n\s*/g,' ')).join('\n')}
 function facExtra(f){const L=facL(f);return L.length?'<div class="fx">'+L.map(([a,b])=>'<div><b>'+a+'</b> '+b.replace(/\n/g,'<br>')+'</div>').join('')+'</div>':''}
 const LOGO_T="assets/logo-t.png";
+/* Logo de la factura: el de la empresa; si no tiene, solo la empresa inicial cae al de Tarjetería; otra empresa, el logo de su panel/inicio de sesión o su inicial. */
+function facLogoSrc(c,def){c=c||{};if(c.logoFac)return c.logoFac;if(TJEmpresa.empEsInicial())return def;return c.panelLogoSrc||c.loginLogoSrc||(typeof empDemoLogo==='function'?empDemoLogo(c.nombre||nombreNegocio()):'')}
 function facApple(f){
  const c=DB.cfg,cr=f.credito,pc=(f.itbmsp??c.itbms),L=facL(f);
  const venc=cr&&cr.vence?fdate(cr.vence):fdate(f.fecha);
  const notas=L.length?L.map(([a,b])=>`<li><b>${a}</b> ${b.replace(/\n/g,'<br>')}</li>`).join(''):'<li>Gracias por su compra.</li>';
  const row=(a,b)=>b?`<div class="ar"><span>${a}</span><b>${b}</b></div>`:'';
  return `<div class="fa tpl-apple">${facSello(f)}
- <div class="ap-top"><div class="ap-brand"><img src="${c.logoFac||LOGO_T}" alt=""><i></i><div><h2>${esc(c.nombre)}</h2><small>${esc((c.loginDesc||'TARJETAS PARA TODA OCASIÓN')).toUpperCase()}</small></div></div>
+ <div class="ap-top"><div class="ap-brand"><img src="${facLogoSrc(c,LOGO_T)}" alt=""><i></i><div><h2>${esc(c.nombre)}</h2><small>${esc((c.loginDesc||(TJEmpresa.empEsInicial()?'TARJETAS PARA TODA OCASIÓN':''))).toUpperCase()}</small></div></div>
   <div class="ap-contact">${c.dir?`<div><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span>${esc(c.dir)}</span></div>`:''}${c.tel?`<div><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg><span>${esc(c.tel)}</span></div>`:''}${c.email?`<div><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg><span>${esc(c.email)}</span></div>`:''}</div></div>
  <div class="ap-mid"><div><h1>Factura</h1><p>Gracias por tu confianza</p>${f.anulada?'<div class="ap-anu">ANULADA</div>':''}</div>
   <div class="ap-meta"><div><span>N.º de Factura</span><b>${esc(f.n)}</b></div><div><span>Fecha de Emisión</span><b>${esc(fdate(f.fecha))}</b></div><div><span>Fecha de Vencimiento</span><b>${esc(venc)}</b></div><div><span>Moneda</span><b>USD</b></div></div></div>
@@ -858,7 +867,7 @@ function facApple(f){
  <div class="ap-two"><div class="ap-box"><h4><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#0a84ff" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 10h18M7 15h4"/></svg>Información de Pago</h4>${row('Banco:',esc(c.banco))}${row('Tipo:',esc(c.tcuenta))}${row('Cuenta:',esc(c.cuenta))}${row('Beneficiario:',esc(c.nombre))}${c.yappy?row('Yappy:',esc(c.yappy)):''}</div>
   <div class="ap-box"><h4><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="#6b7280" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4M9 12h6M9 16h6"/></svg>Notas</h4><ol>${notas}</ol></div></div>
  <div class="ap-ft"><div class="ap-tag">GRACIAS POR SER PARTE DE NUESTRO CRECIMIENTO<i></i></div><div class="ap-bd"><div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 5-3 8-7 10-4-2-7-5-7-10V6z"/><path d="M9 12l2 2 4-4"/></svg><span>Calidad</span></div><div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l4-4 4 2 4-2 6 5-5 5-3-1-3 2-4-3z"/></svg><span>Confianza</span></div><div><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#6b7280" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 19C5 9 11 4 20 4c0 9-5 15-14 15z"/><path d="M5 19l8-8"/></svg><span>Innovación</span></div></div></div></div>`}
-function facHTML(id){const f=DB.fac.find(x=>x.id==id),c=DB.cfg;if(facTpl(f)==='apple')return facApple(f);return `<div class="fa tpl-${facTpl(f)}">${facSello(f)}<div class="h"><div><h1>FACTURA</h1><div class="m"><div><span>Factura n.°</span><b>${esc(f.n)}</b></div><div><span>Fecha</span><b>${esc(fdate(f.fecha))}</b></div>${f.anulada?'<div><b style="color:#d92d20">ANULADA</b></div>':''}</div></div><div class="lg"><img src="${c.logoFac||'assets/logo.png'}" alt=""></div></div>
+function facHTML(id){const f=DB.fac.find(x=>x.id==id),c=DB.cfg;if(facTpl(f)==='apple')return facApple(f);return `<div class="fa tpl-${facTpl(f)}">${facSello(f)}<div class="h"><div><h1>FACTURA</h1><div class="m"><div><span>Factura n.°</span><b>${esc(f.n)}</b></div><div><span>Fecha</span><b>${esc(fdate(f.fecha))}</b></div>${f.anulada?'<div><b style="color:#d92d20">ANULADA</b></div>':''}</div></div><div class="lg"><img src="${facLogoSrc(c,'assets/logo.png')}" alt=""></div></div>
  <div class="cl"><b>${esc(f.cli).toUpperCase()}</b>${f.ruc?'RUC/Céd.: '+esc(f.ruc)+'<br>':''}${esc(f.dir||'')}</div>
  <table><tr><th>Articulo</th><th>Cantidad</th><th>Precio Unitario</th><th>Total</th></tr>${f.items.map(i=>`<tr><td>${esc(i.d).toUpperCase()}</td><td>${esc(i.q)}</td><td>${$$(i.p)}</td><td>${(i.q*i.p).toFixed(2)}</td></tr>`).join('')}</table><div class="fill"></div>
  <div class="tt"><div><span>Subtotal:</span><span>${$$(f.sub)}</span></div>${f.ds?`<div><span>Descuento:</span><span>-${$$(f.ds)}</span></div>`:''}<div><span>I.T.B.M.S(${esc(f.itbmsp??c.itbms)}%):</span><span>${$$(f.itbms)}</span></div><div class="gt"><span>Total:</span><span>${$$(f.total)}</span></div></div>
@@ -1022,7 +1031,7 @@ function exportUbiCSV(){
  const rows=[['Nombre','Nota','X_Longitud','Y_Latitud','Precision_m','Altitud_m','Fecha','Hora']];
  DB.ubi.forEach(u=>rows.push([u.n,u.nota||'',u.lng,u.lat,u.acc!=null?Math.round(u.acc):'',u.alt??'',u.fecha,u.hora||'']));
  const csv=rows.map(r=>r.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n');
- dlBlob(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),'ubicaciones_tarjeteria_jhon.csv')
+ dlBlob(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),nomArch('ubicaciones_tarjeteria_jhon','ubicaciones_')+'.csv')
 }
 
 async function facPDF(id){if(!window.html2canvas||!window.jspdf)return alert('Para descargar el PDF se necesita conexión a internet. Use "Ver/Imprimir" y elija "Guardar como PDF".');
@@ -1096,18 +1105,34 @@ function toggleEditCfg(on){
  if(sv)sv.style.display=on?'':'none';
  if(cn)cn.style.display=on?'':'none';
 }
-function cfg(){Object.assign(DB.cfg,{nombre:$('c1').value||'Tarjetería Jhon',tel:$('c3').value,dir:$('c4').value,itbms:+$('c5').value||0,email:$('c6').value,banco:$('c7').value,tcuenta:$('c8').value,cuenta:$('c9').value,yappy:$('c10').value,sig:+$('c11').value||DB.cfg.sig});save();toggleEditCfg(false);
+/* «Datos de la empresa» manda sobre lo que muestra la web. cfg() ya replica nombre/correo/teléfono/dirección al guardar; esta función cubre lo que se
+   guardó ANTES de existir esa copia: una sola vez por empresa (marca __cfg.contactoSync) rellena SOLO los datos de la web que estén vacíos con los de
+   «Datos de la empresa». Nunca pisa algo que ya tenga la web. Solo el administrador, con la plantilla ya leída de la nube. */
+let _cwSync=0;
+function contactoWebSync(cd){
+ if(_cwSync||!cd||cd.contactoSync||!esAdmin()||!fbDb)return;
+ const c=DB.cfg||{};if(!(c.nombre||c.tel||c.email||c.dir))return; /* DB aún sin datos propios: no se da por hecho nada */
+ _cwSync=1;
+ const ct=Object.assign({},cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{}),dat={__cfg:true,contactoSync:true,ts:Date.now()};
+ const quiere={tel:c.tel,email:c.email,dir:c.dir};
+ let cambia=false;
+ Object.keys(quiere).forEach(k=>{const v=String(quiere[k]==null?'':quiere[k]).trim();if(!String(ct[k]||'').trim()&&v){ct[k]=v;cambia=true}});
+ if(cambia)dat.contacto=ct;
+ if(!String(cd.empresaNombre||'').trim()&&String(c.nombre||'').trim())dat.empresaNombre=String(c.nombre).trim();
+ fbCol('tienda_items').doc('__cfg').set(dat,{merge:true}).catch(e=>{window._tjw&&_tjw(e)}); /* si falla (sin permiso/red) no se reintenta en esta sesión */
+}
+function cfg(){Object.assign(DB.cfg,{nombre:$('c1').value||(TJEmpresa.empEsInicial()?'Tarjetería Jhon':''),tel:$('c3').value,dir:$('c4').value,itbms:+$('c5').value||0,email:$('c6').value,banco:$('c7').value,tcuenta:$('c8').value,cuenta:$('c9').value,yappy:$('c10').value,sig:+$('c11').value||DB.cfg.sig});save();toggleEditCfg(false);
  /* La web lee el nombre/correo/teléfono de la empresa desde su plantilla: se
     replican aquí para que la tienda y las políticas cambien en automático. */
  try{
   if(typeof fbCol==='function'&&fbCol){
    var contacto={};try{if(typeof TD!=='undefined'&&TD.contacto)Object.assign(contacto,TD.contacto)}catch(e){}
-  contacto.email=DB.cfg.email;contacto.tel=DB.cfg.tel;
+  contacto.email=DB.cfg.email;contacto.tel=DB.cfg.tel;contacto.dir=DB.cfg.dir;
    fbCol('tienda_items').doc('__cfg').set({__cfg:true,empresaNombre:DB.cfg.nombre,contacto:contacto,ts:Date.now()},{merge:true}).then(function(){try{TD.empresaNombre=DB.cfg.nombre;TD.contacto=contacto}catch(e){}}).catch(function(){});
   }
  }catch(e){window._tjw&&window._tjw(e)}
- alert('Datos guardados. Los campos se bloquearon de nuevo.\nNombre, correo y teléfono también se actualizaron en la web (tienda y políticas).')}
-function respaldo(){const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,1));a.download='respaldo_tarjeteria_john.json';a.click()}
+ alert('Datos guardados. Los campos se bloquearon de nuevo.\nNombre, correo, teléfono y dirección también se actualizaron en la web (tienda, contacto y políticas).')}
+function respaldo(){const a=document.createElement('a');a.href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(DB,null,1));a.download=nomArch('respaldo_tarjeteria_john','respaldo_')+'.json';a.click()}
 
 function dibujarGraficos(){
  const w=$('chWarn');
@@ -1327,7 +1352,7 @@ async function expCatBackup(){
    zip.file('manifest.json',JSON.stringify({app:'tj_cat_backup',v:2,parte:li+1,partes:lotes.length,exportedAt:new Date().toISOString(),items:meta}));
    const blob=await zip.generateAsync({type:'blob',compression:'STORE'});
    const suf=lotes.length>1?`_parte${li+1}de${lotes.length}`:'';
-   dlBlob(blob,`catalogo_tarjeteria_jhon${suf}.zip`);
+   dlBlob(blob,`${nomArch('catalogo_tarjeteria_jhon','catalogo_')}${suf}.zip`);
    if(li<lotes.length-1)await sleep(600)
   }
   if(lotes.length>1)alert(`Se generaron ${lotes.length} archivos .zip (el catálogo es muy grande para uno solo). Si su navegador bloqueó alguna descarga después de la primera, permita "descargas múltiples" para este sitio y toque el botón de nuevo. Guarde los ${lotes.length} archivos juntos; se necesitan todos para restaurar el catálogo completo.`);
@@ -1433,7 +1458,7 @@ async function impCat0(){const q=cq.toLowerCase(),l=CL.filter(f=>f.thumb&&(!cc||
  const cats=Object.keys(G).sort(),ct=`${esc(c.tel)} · ${esc(c.email)} · ${esc(c.dir)}`;let pg=3,idx='',pp='';
  cats.forEach(k=>{const a=G[k],n=Math.ceil(a.length/2);idx+=`<div class="ir"><b>${esc(k)}</b><span>${a.length} MODELO${a.length>1?'S':''}</span><i></i><em>${pg}</em></div>`;
   for(let x=0;x<n;x++){pp+=`<div class="pg"><div class="bar"></div><div class="hdr"><span>Catálogo ${yr}</span><img alt="" src="${LG}"><span>${esc(k)}</span></div><div class="body"><div class="ct2"><span>${esc(k)}</span><small>${a.length} MODELO${a.length>1?'S':''}${n>1?' · '+(x+1)+'/'+n:''}</small></div>${(()=>{const m=Math.min(2,a.length-x*2);return `<div class="gd2" style="${m==1?'grid-template-rows:minmax(0,105mm)':''}">`})()}${a.slice(x*2,x*2+2).map(f=>`<div class="cd"><div class="im"><img alt="" src="${f.thumb}"></div><div class="tx"><i class="ml">MODELO</i><div class="row"><span class="cdg mod">${esc(f.name).toUpperCase()}</span>${f.price?`<div class="pr">${$$(f.price)}</div>`:''}</div>${f.desc?`<p>${esc(f.desc)}</p>`:''}</div></div>`).join('')}</div></div><div class="ftr"><span>${esc(c.nombre)}</span><span>${ct}</span><span>${pg}</span></div></div>`;pg++}});
- const h=`<div class="cv"><div class="pg cover"><div class="bar"></div><div class="cov-top"><span>${esc(c.nombre).toUpperCase()}</span><span>COLECCIÓN ${yr}</span></div><div class="cov-mid"><img class="big" alt="" src="${LG}"><h1>Catálogo<br>de Productos</h1><div class="sb2">Tarjetas para toda ocasión</div><div class="rl"></div></div><div class="cov-band"><div><small>TELÉFONO</small><span>${esc(c.tel)}</span></div><div><small>CORREO</small><span>${esc(c.email)}</span></div><div><small>UBICACIÓN</small><span>${esc(c.dir)}</span></div></div><div class="bar"></div></div>
+ const h=`<div class="cv"><div class="pg cover"><div class="bar"></div><div class="cov-top"><span>${esc(c.nombre).toUpperCase()}</span><span>COLECCIÓN ${yr}</span></div><div class="cov-mid"><img class="big" alt="" src="${LG}"><h1>Catálogo<br>de Productos</h1><div class="sb2">${TJEmpresa.empEsInicial()?'Tarjetas para toda ocasión':''}</div><div class="rl"></div></div><div class="cov-band"><div><small>TELÉFONO</small><span>${esc(c.tel)}</span></div><div><small>CORREO</small><span>${esc(c.email)}</span></div><div><small>UBICACIÓN</small><span>${esc(c.dir)}</span></div></div><div class="bar"></div></div>
  <div class="pg"><div class="bar"></div><div class="hdr"><span>Catálogo ${yr}</span><img alt="" src="${LG}"><span>Contenido</span></div><div class="ix"><h2>Contenido</h2>${idx}</div></div>${pp}
  <div class="pg back"><div class="bar"></div><div class="cvb"><div class="lgo"><img alt="" src="${LG}"></div><h1>Gracias por<br>confiar en nosotros</h1><div class="rl" style="background:#fff"></div><div class="ci" style="margin-top:10mm">${esc(c.tel)}<br>${esc(c.email)}<br>${esc(c.dir)}${c.yappy?'<br>Yappy: '+esc(c.yappy):''}</div></div></div></div>`;
  window._cath=h;$('prt').innerHTML=h;$('mb').innerHTML=`<div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:10px;align-items:center;flex-wrap:wrap;position:sticky;top:-14px;z-index:2;background:var(--card);padding:6px 0"><b>Vista previa del catálogo · ${l.length} modelo${l.length>1?'s':''}</b><span style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn p s" id="bpdf" data-h-click="h194">⬇ Descargar PDF</button> <button class="btn s" data-h-click="h193">📱 WhatsApp</button> <button class="btn s" data-h-click="h192">🖨 Imprimir</button> <button class="btn s" data-h-click="h12" aria-label="Cerrar">✕</button></span></div><div class="pv">${h}</div>`;$('md').classList.add('on');fitPv()}
@@ -1481,7 +1506,8 @@ async function precargarCatalogoDeFabrica(){
   if(vista==='cat'){CL=await tx('readonly',s=>s.getAll());dib()}
  }catch(e){window._tjw&&_tjw(e)}
 }
-if(!/[?&]tienda(=|&|$)/.test(location.search))precargarCatalogoDeFabrica();
+/* El catálogo de fábrica (catalogo_default.zip) son los modelos de Tarjetería Jhon: solo se precarga en la empresa inicial; una empresa nueva empieza con el catálogo vacío. */
+if(TJEmpresa.empEsInicial()&&!/[?&]tienda(=|&|$)/.test(location.search))precargarCatalogoDeFabrica();
 
 /* ===== TJ LIVE: centro de preparación para TikTok LIVE =====
    Esta capa NO afirma emitir ni leer eventos de TikTok. Hasta verificar acceso oficial,
@@ -1514,7 +1540,7 @@ function tjLiveScript(){
  const product=p?String(p.n||p.nombre||'Producto'):'nuestros productos';
  const price=p?$$(Number(p.p||p.precio||0)):'precio disponible en el catálogo';
  const script=[
-  '¡Hola! Bienvenidos al LIVE de Tarjetería Jhon.',
+  '¡Hola! Bienvenidos al LIVE de '+nombreNegocio()+'.',
   d.topic?'Hoy vamos a mostrar: '+d.topic+'.':'Hoy les mostraremos nuestros productos y cómo hacer sus pedidos.',
   'Producto destacado: '+product+'. Precio de referencia: '+price+'.',
   d.promo?'Promoción: '+d.promo+(d.discount?' · '+d.discount:'')+'.':'Pregunten en el chat por las promociones vigentes.',
@@ -1530,7 +1556,7 @@ R.tiktoklive=function(){
  v.innerHTML=`
  <div class="card">
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap">
-   <div><div class="bd">CENTRO DE TRANSMISIONES</div><h3 style="font-size:22px;margin:12px 0 6px">TikTok LIVE · Tarjetería Jhon</h3>
+   <div><div class="bd">CENTRO DE TRANSMISIONES</div><h3 style="font-size:22px;margin:12px 0 6px">TikTok LIVE · ${esc(nombreNegocio())}</h3>
    <p style="color:var(--gris);margin:0;max-width:680px">Prepara tus ventas, promociones y guion desde el panel. La emisión y los datos en tiempo real se activarán únicamente cuando se confirme el acceso compatible de tu cuenta.</p></div>
    <div style="display:flex;gap:8px;flex-wrap:wrap">
     <button class="btn p" data-h-click="h363" style="display:inline-flex;align-items:center;gap:8px;background:#000;color:#fff;box-shadow:0 3px 12px rgba(0,0,0,.35)"><svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64c.3 0 .61.05.9.15V9.35a6.34 6.34 0 0 0-.9-.07 6.34 6.34 0 0 0-6.34 6.34 6.35 6.35 0 0 0 6.34 6.35 6.34 6.34 0 0 0 6.35-6.35V7.95a8.21 8.21 0 0 0 4.76 1.5v-3.45a4.76 4.76 0 0 1-1-.69z"/></svg> Abrir TikTok</button>
@@ -2097,7 +2123,7 @@ const TD={items:[],leads:[],peds:[],cat:[]},SH={items:[],cart:{},cli:null,ref:'a
 
 const PALETAS=[['shop','🟣 Shop Mist (Original)','#5433eb','#f2f4f5'],['lino','🌾 Lino Cálido & Ámbar','#8a5a12','#f7f4ed'],['rosa','💌 Rosa Blush (Amor)','#c8183c','#faf1f4'],['esmeralda','💍 Eucalipto & Esmeralda','#0e3c30','#f0f5f2'],['violeta','🎈 Lavanda & Púrpura','#6b32b8','#f4f0fa'],['oceano','🌊 Hielo Nórdico & Océano','#0e6b78','#eef4f7'],['borgona','🎓 Marino & Oro Real','#121e42','#f0f2f7'],['clasico','⚫ Clásico Blanco Puro','#1D1D1F','#ffffff'],['carbon','🪨 Carbón & Piedra','#30363D','#f0f1f3'],['dark','🌙 Dark Obsidian Pro','#7c66ff','#0c0c0e']];
 const tdBase=()=>location.href.split(/[?#]/)[0];
-const BUILD=(Date.parse(document.lastModified)||0).toString(36);const tdLink=()=>((typeof esAdmin==='function'&&!esAdmin()&&TD.base)||tdBase())+'?tienda=1&v='+encodeURIComponent(chatMe()||'admin')+'&r='+(TD.rev||BUILD);
+const BUILD=(Date.parse(document.lastModified)||0).toString(36);const tdLink=()=>((typeof esAdmin==='function'&&!esAdmin()&&TD.base)||tdBase())+'?tienda=1'+tdEmpQ()+'&v='+encodeURIComponent(chatMe()||'admin')+'&r='+(TD.rev||BUILD);
 const tdMoney=n=>+n>0?$$(+n):'Consultar';
 // ---------- Panel interno (admin y vendedores) ----------
 let _tdOn=false;
@@ -2272,7 +2298,7 @@ function etqDatos(p,def){
  return{tipo,agencia:nm,guia:env.guia||'',peso:+env.peso||0,obs:env.obs||'',cont,
   ag:car?{tel:(car.tel&&car.tel[0])||'',wa:car.wa||'',dir:car.dir||''}:null,logo:car?fleLogo(car,FC):'',
   codigo:'TJ-'+etqNum(p),fecha:new Date().toLocaleDateString('es-PA'),
-  rem:{nombre:c.nombre||'Tarjetería Jhon',tel:c.tel||'',dir:c.dir||''},
+  rem:{nombre:c.nombre||(typeof nombreNegocio==='function'?nombreNegocio():''),tel:c.tel||'',dir:c.dir||''},
   dest:{name:env.rec||l.name||'',empresa:l.empresa||'',tel:env.rtel||l.tel||'',email:l.email||'',ced:env.rced||'',suc:env.suc||'',ref:env.ref||'',dir:env.dir||l.dir||'',ciudad:env.ciudad||'',prov:env.prov||'',pais},
   nb:Math.min(99,Math.max(1,+env.bultos||1))}
 }
@@ -2363,7 +2389,7 @@ function etqImprimirLote(){
 function tdBadge(){if(!SES)return;const n=TD.peds.filter(p=>p.estado==='nuevo').length;document.querySelectorAll('.ni[data-k="tienda"] .lb').forEach(e=>{const b=e.querySelector('.cbd');if(b)b.remove();if(n){const x=document.createElement('b');x.className='cbd';x.textContent=n;e.appendChild(x)}})}
 const _nvt=nav;nav=function(){_nvt.apply(this,arguments);try{tdBadge()}catch(e){window._tjw&&_tjw(e)}};
 function tiendaListen(){if(_tdOn||!fbDb||SHOP)return;_tdOn=true;const me=chatMe(),adm=esAdmin(),q=c=>adm?fbCol(c):fbCol(c).where('ref','==',me);let f1=true,f2=true;
- fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||nombreNegocio();TD.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.banners=Array.isArray(cd.banners)?cd.banners:undefined;TD.btnRadio=cd.btnRadio||999;TD.empresaNombre=cd.empresaNombre||'';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{document.documentElement.style.setProperty('--kbtn-r',(TD.btnRadio)+'px')}catch(e){}try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
+ fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{};TD.tema=cd.tema||(cd.navidad?'navidad':'');TD.xmas=TD.tema==='navidad';TD.base=cd.base||'';TD.rev=cd.rev||'';TD.heroMode=cd.heroMode||'mix';TD.paleta=cd.paleta||'shop';TD.wordmark=wmClean(cd.wordmark);TD.heroTitle=cd.heroTitle||nombreNegocio();TD.heroSub=cd.heroSub||heroSubDef();TD.logoUrl=cd.logoUrl||'';TD.motionStyle=cd.motionStyle||'float';TD.watermarkStyle=cd.watermarkStyle||'wm_violeta';TD.watermarkOpacity=cd.watermarkOpacity||'14';TD.heroBgType=cd.heroBgType||'none';TD.heroPhotoUrl=cd.heroPhotoUrl||'';TD.heroVideoUrl=cd.heroVideoUrl||'';TD.heroBgColor=cd.heroBgColor||'hero-bg-aurora';TD.heroBgSolid=cd.heroBgSolid||'#18181b';TD.banners=Array.isArray(cd.banners)?cd.banners:undefined;TD.btnRadio=cd.btnRadio||999;TD.empresaNombre=cd.empresaNombre||'';TD.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};TD.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};TD.fletes=fleSanCfg(cd.fletes);try{document.documentElement.style.setProperty('--kbtn-r',(TD.btnRadio)+'px')}catch(e){}try{fleRefrescar()}catch(e){window._tjw&&_tjw(e)}try{redesFill()}catch(e){window._tjw&&_tjw(e)}try{contactoWebSync(cf?cd:null)}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&fbDb&&!window._tdBW&&parseInt(BUILD,36)>parseInt(cd.build||'0',36)&&(window._tdBW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,build:BUILD,rev:Date.now()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}try{if(esAdmin()&&location.protocol==='https:'&&!/^(localhost|127\.)/.test(location.hostname)&&!window._tdBaseW&&cd.base!==tdBase()&&(window._tdBaseW=1))fbCol('tienda_items').doc('__cfg').set({__cfg:true,base:tdBase()},{merge:true}).catch(()=>{})}catch(e){window._tjw&&_tjw(e)}}TD.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data());if(vista==='tienda')tdRender()},e=>console.warn('Tienda:',e));
  q('tienda_leads').onSnapshot(sn=>{TD.leads=sn.docs.map(d=>sanLead(d.data())).filter(Boolean).sort((a,b)=>b.ts-a.ts);
   if(!f1)sn.docChanges().forEach(ch=>{const d=ch.doc.data();if(ch.type==='added'&&!ch.doc.metadata.hasPendingWrites&&Date.now()-d.ts<120000)tdAviso('Nuevo cliente registrado en la tienda virtual: '+d.name+'.')});
   f1=false;if(adm)tdImport();if(vista==='tienda')tdRender();tdHomeRefresh()},e=>console.warn('Registros:',e));
@@ -2404,7 +2430,7 @@ function shopBrandSave(){
  if(!esAdmin()||!fbDb)return alert("Se requieren permisos de administrador y conexión a internet.");
  const wm=wmClean($("sh_cfg_wm")&&$("sh_cfg_wm").value).slice(0,30);
  const title=(($("sh_cfg_title")&&$("sh_cfg_title").value.trim())||nombreNegocio()).slice(0,60);
- const sub=(($("sh_cfg_sub")&&$("sh_cfg_sub").value.trim())||"Cada momento merece una tarjeta especial · Tarjetas para toda ocasión").slice(0,160);
+ const sub=(($("sh_cfg_sub")&&$("sh_cfg_sub").value.trim())||heroSubDef()).slice(0,160);
  const logo=(($("sh_cfg_logo")&&$("sh_cfg_logo").value.trim())||"").slice(0,250000);
  const motion=TD._curMotion||TD.motionStyle||'float';
  const wmStyle=TD._curWmStyle||TD.watermarkStyle||'wm_violeta';
@@ -2553,8 +2579,8 @@ function xmasCard(){
   </div>
 
   <div><label>Texto de fondo gigante (Watermark)</label><input id="sh_cfg_wm" value="${esc(wmClean(TD.wordmark))}" placeholder="Vacío = sin marca de agua" maxlength="30"></div>
-  <div><label>Título de la portada</label><input id="sh_cfg_title" value="${esc(TD.heroTitle||'Tarjetería Jhon')}" placeholder="Tarjetería Jhon" maxlength="60"></div>
-  <div style="grid-column:1/-1"><label>Subtítulo / eslogan</label><input id="sh_cfg_sub" value="${esc(TD.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión')}" placeholder="Cada momento merece una tarjeta especial..." maxlength="160"></div>
+  <div><label>Título de la portada</label><input id="sh_cfg_title" value="${esc(TD.heroTitle||nombreNegocio())}" placeholder="${esc(nombreNegocio())}" maxlength="60"></div>
+  <div style="grid-column:1/-1"><label>Subtítulo / eslogan</label><input id="sh_cfg_sub" value="${esc(TD.heroSub||heroSubDef())}" placeholder="Escriba el eslogan de su empresa" maxlength="160"></div>
 
   <div style="grid-column:1/-1">
     <label>Animación Graphic Motion de las tarjetas de portada</label>
@@ -2583,7 +2609,7 @@ function xmasCard(){
 
  <div style="margin-top:16px;padding-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
    <button type="button" class="btn p s" data-h-click="call" data-a-click="${_ha('shopBrandSave')}" style="box-shadow:0 3px 12px rgba(84,51,235,.35)">💾 Guardar cambios de portada (Sincronizar)</button>
-   <a class="btn s" href="index.html?tienda=1" target="_blank" rel="noopener">👁️ Abrir tienda para probar</a>
+   <a class="btn s" href="index.html?tienda=1${tdEmpQ()}" target="_blank" rel="noopener">👁️ Abrir tienda para probar</a>
  </div>
  <hr style="border:0;border-top:1px solid var(--linea);margin:16px 0">
  <h3 style="margin:0">🎠 Banners promocionales de la portada</h3>
@@ -2608,9 +2634,9 @@ function temaSet(t){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cf
 function heroModeSet(m){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cfg:true,heroMode:m,ts:Date.now()},{merge:true}).then(()=>{TD.heroMode=m;R.config()}).catch(()=>alert('No se pudo guardar la configuración del carrusel. Revise su conexión o permisos.'))}
 function paletaSet(p){if(!fbDb)return;fbCol('tienda_items').doc('__cfg').set({__cfg:true,paleta:p,ts:Date.now()},{merge:true}).then(()=>{TD.paleta=p;R.config()}).catch(()=>alert('No se pudo guardar la paleta. Revise su conexión o permisos.'))}
 function tdRowHTML(o,pub){const isp=pub.has(o.id),pi=TD.items.find(x=>x.id===o.id),sel=new Set(pi&&Array.isArray(pi.tags)?pi.tags:temaOf(o)),ch=TEMAS.filter(t=>sel.has(t.id));
- const tm=`<details class="tdtm" id="tdd_${o.id}"><summary><span class="tdsum">${ch.length?ch.map(t=>t.e).join(' '):'<em>Sin tema</em>'}</span><i>▾</i></summary><div class="tdpop">${TEMAS.map(t=>`<label class="tdtg"><input type="checkbox" class="tdtgk" data-id="${o.id}" value="${t.id}" ${sel.has(t.id)?'checked':''} data-h-change="h98" data-a-change="${_ha(o.id)}"><span>${t.e} ${t.n}</span></label>`).join('')}</div></details>`;
+ const tm=!TEMAS.length?'<small>—</small>':`<details class="tdtm" id="tdd_${o.id}"><summary><span class="tdsum">${ch.length?ch.map(t=>t.e).join(' '):'<em>Sin tema</em>'}</span><i>▾</i></summary><div class="tdpop">${TEMAS.map(t=>`<label class="tdtg"><input type="checkbox" class="tdtgk" data-id="${o.id}" value="${t.id}" ${sel.has(t.id)?'checked':''} data-h-change="h98" data-a-change="${_ha(o.id)}"><span>${t.e} ${t.n}</span></label>`).join('')}</div></details>`;
  return `<tr data-pub="${isp?1:0}"><td><input type="checkbox" class="tdck mck" value="${o.id}" aria-label="Seleccionar producto"></td><td><img class="tdth" src="${o.thumb||''}" alt="" data-h-click="h97" data-a-click="${_ha(o.id)}" title="Ampliar"></td><td>${esc(o.name||'')}</td><td>${tm}</td><td class="r">${+o.price>0?$$(+o.price):'<small>Sin precio</small>'}</td><td>${tdStkSel(o.id,(pi&&pi.stock)||'ok')}</td><td>${tdBdSel(o.id,(pi&&pi.badges)||[])}</td><td>${isp?'<b class="okt">✔ Publicado</b>':'<small>No publicado</small>'}</td><td><button class="btn s d" data-h-click="h96" data-a-click="${_ha(o.id)}" title="Eliminar" aria-label="Eliminar">🗑</button></td></tr>`}
-function tdTabla(pub){const rows=tdRows();if(!rows.length)return '<div class="vacio">Cargando el catálogo… (solo se pueden publicar productos con foto).</div>';
+function tdTabla(pub){const rows=tdRows();if(!rows.length)return TJEmpresa.empEsInicial()?'<div class="vacio">Cargando el catálogo… (solo se pueden publicar productos con foto).</div>':'<div class="vacio">Aún no hay productos. Suba sus modelos en Catálogo para poder publicarlos (solo se publican los que tienen foto).</div>';
  const np=rows.filter(o=>pub.has(o.id)).length,G=new Map();
  rows.forEach(o=>{const k=String(o.cat||'').trim()||'Sin categoría';if(!G.has(k))G.set(k,[]);G.get(k).push(o)});
  const keys=[...G.keys()].sort((a,b)=>a==='Sin categoría'?1:b==='Sin categoría'?-1:a.localeCompare(b,'es'));
@@ -2677,20 +2703,23 @@ function shopThemeCycle(){const cur=shopThemeGet(),next=cur==='auto'?'light':cur
 function shopThemeSet(mode){try{localStorage.setItem(lsk('tj_shop_theme'),mode)}catch(e){}if(typeof shopThemeApply==="function")shopThemeApply();const msg=mode==='dark'?'🌙 Modo Oscuro activado':mode==='light'?'☀️ Modo Día activado':'⚙️ Modo Automático activado (se adapta a la hora y a tu dispositivo)';if(typeof shopSnack==='function')shopSnack(msg)}
 window.shopThemeGet=shopThemeGet;window.shopThemeApply=shopThemeApply;window.shopThemeCycle=shopThemeCycle;window.shopThemeSet=shopThemeSet;
 
-function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
+function shopInit(){try{shopMetaEmpresa()}catch(e){window._tjw&&_tjw(e)}shopPurge();SH.openTs=Date.now();shopThemeApply();document.documentElement.classList.add('shopmode');document.body.style.overflow='hidden';const p=new URLSearchParams(location.search);SH.ref=p.get('v')||'admin';
  try{
    const cCfg=JSON.parse(localStorage.getItem(lsk('tj_cached_cfg'))||'null');
    if(cCfg){
      SH.paleta=cCfg.paleta||'shop';SH.wordmark=wmClean(cCfg.wordmark);
+     SH.empresaNombre=cCfg.empresaNombre||'';
      SH.heroTitle=cCfg.heroTitle||nombreNegocio();
-     SH.heroSub=cCfg.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';
+     SH.heroSub=cCfg.heroSub||heroSubDef();
      SH.logoUrl=cCfg.logoUrl||'';SH.motionStyle=cCfg.motionStyle||'float';SH.watermarkStyle=cCfg.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cCfg.watermarkOpacity||'14';SH.heroBgType=cCfg.heroBgType||'none';SH.heroPhotoUrl=cCfg.heroPhotoUrl||'';SH.heroVideoUrl=cCfg.heroVideoUrl||'';SH.heroBgColor=cCfg.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cCfg.heroBgSolid||'#18181b';
      SH.banners=Array.isArray(cCfg.banners)?cCfg.banners:undefined;SH.btnRadio=cCfg.btnRadio||999;
+     SH.empresaNombre=cCfg.empresaNombre||'';SH.contacto=cCfg.contacto&&typeof cCfg.contacto==='object'?cCfg.contacto:{};SH.redes=cCfg.redes&&typeof cCfg.redes==='object'?cCfg.redes:{};SH.cfgOk=true;
      document.documentElement.setAttribute('data-paleta',SH.paleta);
      document.documentElement.style.setProperty('--kbtn-r',SH.btnRadio+'px');
    }else{
      SH.paleta='shop';document.documentElement.setAttribute('data-paleta','shop');
    }
+   if(!TJEmpresa.empEsInicial())document.title=SH.empresaNombre||'Tienda';
    const cItems=JSON.parse(localStorage.getItem(lsk('tj_cached_items'))||'[]');
    if(Array.isArray(cItems)&&cItems.length>0){
      SH.items=cItems;SH.ok=1;
@@ -2698,9 +2727,58 @@ function shopInit(){shopPurge();SH.openTs=Date.now();shopThemeApply();document.d
  }catch(e){window._tjw&&_tjw(e)}
  try{SH.cli=JSON.parse(localStorage.getItem(lsk('tj_shop_cli'))||'null')}catch(e){window._tjw&&_tjw(e)}SH.deep=p.get('p')||null;if(p.get('dir')==='1'){SH.guest=1;SH.cli={id:'dir',name:'Vista previa',tel:'',email:''}}try{SH.cart=JSON.parse(localStorage.getItem(lsk('tj_shop_cart'))||'{}')}catch(e){window._tjw&&_tjw(e)}
  const o=document.createElement('div');o.id='shop';document.body.appendChild(o);const m=document.createElement('div');m.id='shopm';m.onclick=e=>{if(e.target===m)shopClose()};document.body.appendChild(m);const sn=document.createElement('div');sn.id='ksnack';document.body.appendChild(sn);Object.assign(SH,{sel:[],sort:'pop',n:24,fav:{},favOnly:false,minPrice:'',maxPrice:'',avail:'all',view:'tiles'});try{SH.fav=JSON.parse(localStorage.getItem(lsk('tj_shop_fav'))||'{}')||{}}catch(e){window._tjw&&_tjw(e)}
- if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.heroTitle=cd.heroTitle||nombreNegocio();SH.heroSub=cd.heroSub||'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión';SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.banners=Array.isArray(cd.banners)?cd.banners:undefined;SH.btnRadio=cd.btnRadio||999;SH.empresaNombre=cd.empresaNombre||'';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.style.setProperty('--kbtn-r',SH.btnRadio+'px');H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;shopCacheItems(SH.items);{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
+ if(!fbDb)SH.err=1;else fbCol('tienda_items').onSnapshot(sn=>{cfgBlk:{const cf=sn.docs.find(d=>d.id==='__cfg'),cd=cf?cf.data():{},tm=cd.tema||(cd.navidad?'navidad':''),H=document.documentElement;
+ /* Sin red y sin copia de Firestore la primera lectura llega vacía: no debe pisar la copia local buena ni dar por cargada la plantilla. */
+ if(!cf&&sn.metadata&&sn.metadata.fromCache)break cfgBlk;SH.tema=tm;SH.xmas=tm==='navidad';SH.heroMode=cd.heroMode||'mix';SH.paleta=cd.paleta||'shop';SH.wordmark=wmClean(cd.wordmark);SH.empresaNombre=cd.empresaNombre||'';SH.heroTitle=cd.heroTitle||nombreNegocio();SH.heroSub=cd.heroSub||heroSubDef();SH.logoUrl=cd.logoUrl||'';SH.motionStyle=cd.motionStyle||'float';SH.watermarkStyle=cd.watermarkStyle||'wm_violeta';SH.watermarkOpacity=cd.watermarkOpacity||'14';SH.heroBgType=cd.heroBgType||'none';SH.heroPhotoUrl=cd.heroPhotoUrl||'';SH.heroVideoUrl=cd.heroVideoUrl||'';SH.heroBgColor=cd.heroBgColor||'hero-bg-aurora';SH.heroBgSolid=cd.heroBgSolid||'#18181b';SH.banners=Array.isArray(cd.banners)?cd.banners:undefined;SH.btnRadio=cd.btnRadio||999;SH.empresaNombre=cd.empresaNombre||'';SH.logo=undefined;SH.redes=cd.redes&&typeof cd.redes==='object'?cd.redes:{};SH.contacto=cd.contacto&&typeof cd.contacto==='object'?cd.contacto:{};SH.fletes=fleSanCfg(cd.fletes);H.setAttribute('data-paleta',SH.paleta);H.style.setProperty('--kbtn-r',SH.btnRadio+'px');H.classList.toggle('xmas',tm==='navidad');H.classList.toggle('summer',tm==='verano');H.classList.toggle('panama',tm==='panama');H.classList.toggle('madres',tm==='madres');H.classList.toggle('padres',tm==='padres');H.classList.toggle('trabajador',tm==='trabajador');H.classList.toggle('galaxia',tm==='galaxia');H.classList.toggle('amor',tm==='amor');try{shopXmas();shopSummer();shopPanama();shopMadres();shopPadres();shopTrabajador();shopGalaxia();shopAmor()}catch(e){window._tjw&&_tjw(e)}try{shopRedes()}catch(e){window._tjw&&_tjw(e)}SH.cfgOk=true;try{shopCacheCfg(cd);shopBrandRefresh()}catch(e){window._tjw&&_tjw(e)}}SH.items=sn.docs.filter(d=>d.id!=='__cfg').map(d=>d.data()).sort((a,b)=>(b.ts||0)-(a.ts||0));SH.ok=1;shopCacheItems(SH.items);{$('sh_g')?shopFilters():shopCatalog()}},()=>{SH.err=1;shopRender()});
  shopRender()}
-const shopLogo=()=>{const custom=(typeof SH!=='undefined'&&SH.logoUrl)||(typeof TD!=='undefined'&&TD.logoUrl);if(custom)return '<img src="'+esc(custom)+'" alt="Logo" class="klogo-custom">';if(SH.logo!==undefined)return SH.logo;const g=document.querySelector('.logo img');return SH.logo=g?'<img src="'+g.src+'" alt="">':''};
+const shopLogo=()=>{const custom=(typeof SH!=='undefined'&&SH.logoUrl)||(typeof TD!=='undefined'&&TD.logoUrl);if(custom)return '<img src="'+esc(custom)+'" alt="Logo" class="klogo-custom">';
+ /* Otra empresa: nunca el logo de Tarjetería (.logo img es el del panel). Mientras llega su plantilla, un hueco neutro; si no tiene logo, su inicial. */
+ if(!TJEmpresa.empEsInicial()){if(!SH.cfgOk)return '<span class="klogo-ph" aria-hidden="true"></span>';const n=String(nombreNegocio()||'?').trim();return '<span class="klogo-mono" role="img" aria-label="'+esc(n)+'">'+esc(n.charAt(0).toUpperCase())+'</span>'}
+ if(SH.logo!==undefined)return SH.logo;const g=document.querySelector('.logo img');return SH.logo=g?'<img src="'+g.src+'" alt="">':''};
+/* Copia local de la PLANTILLA de la tienda (tj_cached_cfg, una por empresa porque lsk() añade el sufijo): logo, textos, colores, contacto y redes.
+  shopInit la lee en el primer pintado, así que al recargar se ve ya el logo y el nombre correctos de la empresa (y no un valor por defecto).
+  Presupuesto: como máximo ~400 000 caracteres; si se pasa se quitan primero el video/foto de portada incrustados y luego los banners. Es opcional: la nube manda. */
+function shopCacheCfg(cd){
+ let K;try{K=lsk('tj_cached_cfg')}catch(e){return}
+ try{
+   cd=cd&&typeof cd==='object'?cd:{};
+   const o={};
+   ['paleta','wordmark','heroTitle','heroSub','logoUrl','motionStyle','watermarkStyle','watermarkOpacity','heroBgType','heroPhotoUrl','heroVideoUrl','heroBgColor','heroBgSolid','btnRadio','empresaNombre'].forEach(k=>{if(cd[k]!==undefined)o[k]=cd[k]});
+   if(Array.isArray(cd.banners))o.banners=cd.banners;
+   if(cd.contacto&&typeof cd.contacto==='object')o.contacto=cd.contacto;
+   if(cd.redes&&typeof cd.redes==='object')o.redes=cd.redes;
+   const MAX=400000;let s=JSON.stringify(o);
+   if(s.length>MAX){['heroVideoUrl','heroPhotoUrl'].forEach(k=>{if(typeof o[k]==='string'&&o[k].length>20000)delete o[k]});s=JSON.stringify(o)}
+   if(s.length>MAX){delete o.banners;s=JSON.stringify(o)}
+   if(s.length>MAX){localStorage.removeItem(K);return}
+   localStorage.setItem(K,s);
+ }catch(e){try{localStorage.removeItem(K)}catch(x){}}
+}
+/* Cuando llega (o cambia) la plantilla de la tienda, la cabecera se actualiza en su sitio: antes solo se rehacía la portada y el logo del primer pintado se quedaba. */
+/* Cabecera del documento de la tienda de OTRA empresa: ni manifest, ni iconos, ni textos de vista previa de Tarjetería Jhon.
+   Sin manifest propio (la CSP no admite blob: en manifest-src) la tienda no se instala como app, pero tampoco se instala con el nombre y el icono de Tarjetería.
+   Icono: el logo de la empresa si es una imagen; si no, la inicial de la empresa. La empresa inicial no cambia. */
+function shopMetaEmpresa(){
+ if(TJEmpresa.empEsInicial()||typeof document==='undefined')return;
+ const d=document,nm=nombreNegocio(),q=s=>d.querySelector(s),set=(s,a,v)=>{const e=q(s);if(e)e.setAttribute(a,v)};
+ const mf=q('link[rel=manifest]');if(mf)mf.remove();
+ const c=q('link[rel=canonical]');if(c)c.remove();
+ const lg=String(SH.logoUrl||'');
+ const ok=/^(data:image\/(png|jpe?g|webp|gif|svg\+xml)[;,]|https:\/\/)/i.test(lg)?lg:'';
+ const ini=(String(nm).trim().charAt(0)||'T').toUpperCase().replace(/[<>&"']/g,'T'),sv='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192"><rect width="192" height="192" rx="36" fill="#18181b"/><text x="96" y="132" font-family="Arial,sans-serif" font-size="112" font-weight="700" fill="#fff" text-anchor="middle">'+ini+'</text></svg>');
+ ['link[rel=icon]','link[rel=apple-touch-icon]'].forEach(s=>{const e=q(s);if(!e)return;e.setAttribute('href',ok||sv);e.removeAttribute('sizes');if(ok)e.removeAttribute('type');else e.setAttribute('type','image/svg+xml')});
+ const desc='Tienda en línea de '+nm;
+ set('meta[name=apple-mobile-web-app-title]','content',nm);set('meta[name=description]','content',desc);
+ set('meta[property="og:site_name"]','content',nm);set('meta[property="og:title"]','content',nm);set('meta[property="og:description"]','content',desc);
+ set('meta[name="twitter:title"]','content',nm);set('meta[name="twitter:description"]','content',desc);
+ const u=q('meta[property="og:url"]');if(u)u.remove();
+}
+function shopBrandRefresh(){
+ const kb=document.querySelector('#shop .kbrand');
+ if(kb){const t=document.createElement('div');t.innerHTML=shopLogo();const n=t.firstElementChild,old=kb.firstElementChild;
+  if(n){if(old&&(old.tagName==='IMG'||old.classList.contains('klogo-ph')||old.classList.contains('klogo-mono')))old.replaceWith(n);else kb.insertBefore(n,kb.firstChild)}else if(old&&old.tagName==='IMG')old.remove()}
+ if(!TJEmpresa.empEsInicial()){document.title=nombreNegocio();shopMetaEmpresa()}
+}
 const shopSaveCart=()=>{try{localStorage.setItem(lsk('tj_shop_cart'),JSON.stringify(SH.cart))}catch(e){window._tjw&&_tjw(e)}};
 function shopRender(){const o=$('shop');if(!o)return;
  if(SH.err)return o.innerHTML=`<div class="kreg-w"><div class="kreg">${shopLogo()}<h2>Catálogo no disponible</h2><p>No se pudo conectar. Intente de nuevo en unos minutos.</p><button class="sbtn" data-h-click="h24">Reintentar</button></div></div>`;
@@ -2754,7 +2832,7 @@ function shopBanner(){const e=$('k_banner');if(!e)return;const L=SH.items.filter
  e.innerHTML=`<div class="kban-bg"><img src="${bg}" alt="" loading="lazy"></div><div class="kban-copy"><h1>${esc(SH.heroTitle||nombreNegocio())}</h1><p>${esc((SH.heroSub||'').split('·')[0].trim())}</p><button class="sbtn" data-h-click="h79">Descubre nuestra colección</button></div>`}
 function shopPromo(){
  const e=$("k_promo");if(!e)return;
- const custom=Array.isArray(SH.banners)?SH.banners:null;
+ const custom=Array.isArray(SH.banners)?SH.banners:(TJEmpresa.empEsInicial()?null:[]);
  const L=custom?custom.map((b,i)=>({id:b.id||('ban'+i),custom:true,src:b.src,name:'Banner '+(i+1)})):[...PROMO];
  if(!L.length){e.hidden=true;e.innerHTML="";return}
  e.hidden=false;
@@ -2817,8 +2895,7 @@ function shopHero(){
  e.innerHTML=`${bgMediaHtml}${SH.wordmark?`<div class="khero-bg-wordmark" aria-hidden="true">${esc(SH.wordmark)}<span class="khero-dot">.</span></div>`:''}
 <div class="khero-wordmark-wrap">
   ${logoCoverHtml}
-  <h1 class="khero-title">${esc(SH.heroTitle||nombreNegocio())}</h1>
-  <p class="khero-wordmark-sub">${esc(SH.heroSub||"Cada momento merece una tarjeta especial · Tarjetas para toda ocasión")}</p>
+  ${(!SH.cfgOk&&!TJEmpresa.empEsInicial())?'<h1 class="khero-title khero-sk" aria-hidden="true">&nbsp;</h1><p class="khero-wordmark-sub khero-sk" aria-hidden="true">&nbsp;</p>':`<h1 class="khero-title">${esc(SH.heroTitle||nombreNegocio())}</h1>${(SH.heroSub||heroSubDef())?`<p class="khero-wordmark-sub">${esc(SH.heroSub||heroSubDef())}</p>`:''}`}
 </div>
 <div class="khero-constellation">${flHtml}</div>
 <div class="khero-search-wrap">
@@ -2842,7 +2919,7 @@ function shopFilters(){shopOpts();shopChips();shopSide();shopGrid(1);shopHero();
 function shopChips(){const e=$('sh_ch');if(!e)return;
  e.innerHTML=SH.opts.length?`<button class="kchip ${SH.sel.length?'':'on'}" data-h-click="h71">Todos</button>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<button class="kchip ${on?'on':''}" data-h-click="h70" data-a-click="${_ha(k)}" aria-pressed="${on}">${on?'✓':o.e} ${esc(o.n)}</button>`}).join(''):''}
 function shopSide(){const e=$('k_side');if(!e)return;const av=[['all','Todos',SH.items.length],['in','Disponibles',SH.items.filter(i=>!noDisp(i)).length],['low','Pocas existencias',SH.items.filter(i=>i.stock==='low').length],['out','No disponibles',SH.items.filter(noDisp).length]];
- e.innerHTML=`<div class="kfilter-section"><h3>Filtros <button class="kfilter-clear" data-h-click="h62">Limpiar</button></h3><div class="kprice-fields"><label>Precio desde<input type="number" min="0" inputmode="decimal" placeholder="$ 0" value="${esc(SH.minPrice)}" data-h-input="h74"></label><label>Precio hasta<input type="number" min="0" inputmode="decimal" placeholder="Sin límite" value="${esc(SH.maxPrice)}" data-h-input="h73"></label></div><div class="kavail">${av.map(([v,l,n])=>`<button class="${SH.avail===v?'on':''}" data-h-click="h72" data-a-click="${_ha(v)}"><span>${l}</span><span>${n}</span></button>`).join('')}</div></div><div class="kfilter-section"><h3>Por ocasión</h3>${SH.opts.length?`<label class="ksd ${SH.sel.length?'':'on'}"><input type="checkbox" ${SH.sel.length?'':'checked'} data-h-change="h71"><span>✨ Todos</span><i>${SH.items.length}</i></label>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<label class="ksd ${on?'on':''}"><input type="checkbox" ${on?'checked':''} data-h-change="h70" data-a-change="${_ha(k)}"><span>${o.e} ${esc(o.n)}</span><i>${o.c}</i></label>`}).join(''):''}</div>`}
+ e.innerHTML=`<div class="kfilter-section"><h3>Filtros <button class="kfilter-clear" data-h-click="h62">Limpiar</button></h3><div class="kprice-fields"><label>Precio desde<input type="number" min="0" inputmode="decimal" placeholder="$ 0" value="${esc(SH.minPrice)}" data-h-input="h74"></label><label>Precio hasta<input type="number" min="0" inputmode="decimal" placeholder="Sin límite" value="${esc(SH.maxPrice)}" data-h-input="h73"></label></div><div class="kavail">${av.map(([v,l,n])=>`<button class="${SH.avail===v?'on':''}" data-h-click="h72" data-a-click="${_ha(v)}"><span>${l}</span><span>${n}</span></button>`).join('')}</div></div><div class="kfilter-section"><h3>${TEMAS.length?'Por ocasión':'Categorías'}</h3>${SH.opts.length?`<label class="ksd ${SH.sel.length?'':'on'}"><input type="checkbox" ${SH.sel.length?'':'checked'} data-h-change="h71"><span>✨ Todos</span><i>${SH.items.length}</i></label>`+SH.opts.map((o,k)=>{const on=SH.sel.includes(o.id);return `<label class="ksd ${on?'on':''}"><input type="checkbox" ${on?'checked':''} data-h-change="h70" data-a-change="${_ha(k)}"><span>${o.e} ${esc(o.n)}</span><i>${o.c}</i></label>`}).join(''):''}</div>`}
 function shopSel(k){if(k<0)SH.sel=[];else{const id=SH.opts[k].id,p=SH.sel.indexOf(id);if(p<0)SH.sel.push(id);else SH.sel.splice(p,1)}shopChips();shopSide();shopGrid(1)}
 function shopTemaId(t){SH.sel=[t];SH.favOnly=false;SH.q='';if($('sh_q'))$('sh_q').value='';shopFilters();shopNav();const s=$('shop');if(s)s.scrollTo({top:0,behavior:'smooth'})}
 function shopSearchSubmit(){const q=(($("sh_q_hero")&&$("sh_q_hero").value)||($("sh_q")&&$("sh_q").value)||"").trim();shopQ(q);const g=$("sh_g");if(g)g.scrollIntoView({behavior:"smooth",block:"start"})}
@@ -2873,7 +2950,7 @@ function shopGrid(reset){const g=$('sh_g');if(!g)return;if(reset)SH.n=24;if(SH.i
  if(!SH.ok){g.innerHTML=Array(8).fill('<div class="kc ksk"><div class="kimg"></div><div class="kbd"><i></i><i style="width:60%"></i></div></div>').join('');mt.innerHTML='';return}
  const L=shopList(),f=SH.q||SH.sel.length||SH.minPrice||SH.maxPrice||SH.avail!=='all',nm=SH.sel.map(k=>(SH.opts.find(o=>o.id===k)||{}).n).filter(Boolean).join(', '),priceTag=(SH.minPrice||SH.maxPrice)?` · $${SH.minPrice||'0'}–${SH.maxPrice||'∞'}`:'';
  mt.innerHTML=`<span class="kcnt">${L.length} diseño${L.length==1?'':'s'}${SH.favOnly?' favoritos':''}${nm?' · '+esc(nm):''}${priceTag}${SH.avail!=='all'?' · '+(SH.avail==='in'?'Disponibles':SH.avail==='low'?'Pocas existencias':'No disponibles'):''}</span><span class="kmr">${f?'<button data-h-click="h62">Limpiar</button>':''}${SH.sort==='pop'?`<span class="kfilter-tag">${kico(KI.star,13)} Popularidad</span>`:''}<select class="ksort" data-h-change="h64" aria-label="Ordenar"><option value="pop" ${SH.sort==='pop'?'selected':''}>Popularidad</option><option value="new" ${SH.sort==='new'?'selected':''}>Más recientes</option><option value="az" ${SH.sort==='az'?'selected':''}>Nombre A-Z</option><option value="pl" ${SH.sort==='pl'?'selected':''}>Precio: menor</option><option value="ph" ${SH.sort==='ph'?'selected':''}>Precio: mayor</option></select><button class="kview" data-h-click="h63" aria-label="${SH.view==='mini'?'Ver cuadrícula amplia':'Ver miniaturas'}">${kico(SH.view==='mini'?KI.grid:KI.list,18)}</button></span>`;
- g.innerHTML=L.length?L.slice(0,SH.n).map(shopCard).join(''):`<div class="kempty"><span class="e">${SH.favOnly&&!f?'♡':'🔍'}</span>${!SH.items.length?'Pronto tendremos productos disponibles.':SH.favOnly&&!f?'Aún no tienes favoritos.<br>Toca el corazón en los diseños que te gusten.':'No encontramos diseños con esos filtros.'}${f?'<br><button class="sbtn" style="width:auto" data-h-click="h62">Ver todos</button>':''}</div>`;
+ g.innerHTML=L.length?L.slice(0,SH.n).map(shopCard).join(''):`<div class="kempty"><span class="e">${SH.favOnly&&!f?'♡':'🔍'}</span>${!SH.items.length?'Esta tienda aún no tiene productos.':SH.favOnly&&!f?'Aún no tienes favoritos.<br>Toca el corazón en los diseños que te gusten.':'No encontramos diseños con esos filtros.'}${f?'<br><button class="sbtn" style="width:auto" data-h-click="h62">Ver todos</button>':''}</div>`;
  if(L.length>SH.n){mo.innerHTML='<div class="kspin"></div>';SH.io=new IntersectionObserver(es=>{if(!es[0].isIntersecting)return;const l=shopList(),a=SH.n;SH.n+=24;g.insertAdjacentHTML('beforeend',l.slice(a,SH.n).map(shopCard).join(''));if(l.length>SH.n){SH.io.unobserve(mo);SH.io.observe(mo)}else{SH.io.disconnect();mo.innerHTML=''}},{root:$('shop'),rootMargin:'900px'});SH.io.observe(mo)}}
 function shopView(){SH.view=SH.view==='mini'?'tiles':'mini';shopGrid(1)}
 const shopBtn=id=>{const it=SH.items.find(x=>x.id===id);if(noDisp(it))return '<span class="kno">'+stkLbl[it.stock]+'</span>';return shopBtn0(id)};
@@ -3032,7 +3109,7 @@ async function poliChkLimpiar(){
 /* Fase 24: botón OPCIONAL «Enviar también por WhatsApp» tras «¡Pedido enviado!». El pedido ya está guardado en Firestore; esto solo abre un chat de WhatsApp con el resumen
    (número de pedido, artículos con cantidad, total o «a consultar», nombre). Usa el mismo número que #k_wa; sin número configurado no hay botón. Sin teléfono, correo, dirección ni nota. */
 function shopPedidoWAurl(p,c){
- const num=contLimpio(typeof SH!=='undefined'?SH.contacto:null).wa;if(!num||!p)return'';
+ const num=contWa(typeof SH!=='undefined'?SH.contacto:null);if(!num||!p)return'';
  const lim=(v,n)=>String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,n),its=(p.items||[]).filter(i=>+i.q>0),sin=its.some(i=>!(+i.p>0)),
   tot=+p.total>0?(sin?'Total parcial: '+$$(+p.total)+' (hay artículos a consultar)':'Total: '+$$(+p.total)):'Total: a consultar',
   ln=its.slice(0,15).map(i=>'• '+(+i.q)+' × '+lim(i.n,80)).concat(its.length>15?['… y '+(its.length-15)+' más']:[]);
@@ -3061,11 +3138,11 @@ if(c){c.terminos=auditTerminos;try{localStorage.setItem(lsk('tj_cli_term_'+c.id)
   try{await fbCol('tienda_pedidos').doc(id).set(p)}catch(e){let ok=false;
    if(fl){/* respaldo: si las reglas no admiten el campo envío, el transportista viaja en la nota */delete p.envio;p.nota=fleNotaRespaldo(p.nota,fleNotaTxt(fl,ed));try{await fbCol('tienda_pedidos').doc(id).set(p);ok=true}catch(e2){window._tjw&&_tjw(e2)}}
    if(!ok){b.disabled=false;b.textContent='Enviar pedido';$('sh_m2').textContent='No se pudo enviar. Intente de nuevo.';return}}}
- SH.last=p;SH.pendNote='';SH.poliOk=false;shopOrdSave(p);try{shopConfetti()}catch(e){window._tjw&&_tjw(e)}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en Tarjetería Jhon. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica();if(document.documentElement.classList.contains('panama'))shopPatrio(1)}SH.cart={};try{localStorage.removeItem(lsk('tj_shop_cart'))}catch(e){window._tjw&&_tjw(e)}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
+ SH.last=p;SH.pendNote='';SH.poliOk=false;shopOrdSave(p);try{shopConfetti()}catch(e){window._tjw&&_tjw(e)}{const h=new Date().getHours(),sal=h<12?'Buenos días':h<19?'Buenas tardes':'Buenas noches',nm=(c.name||'').split(' ')[0];shopVoz(sal+', '+nm+'. Su pedido ha sido recibido con éxito. Agradecemos sinceramente su confianza en '+nombreNegocio()+'. Un asesor se comunicará con usted muy pronto para confirmar los detalles y la forma de pago. Que tenga un excelente día.'+(document.documentElement.classList.contains('xmas')?' Le deseamos una feliz Navidad y un próspero Año Nuevo.':(document.documentElement.classList.contains('summer')?' Le deseamos un verano increíble.':'')));if(document.documentElement.classList.contains('xmas'))shopMusica();if(document.documentElement.classList.contains('panama'))shopPatrio(1)}SH.cart={};try{localStorage.removeItem(lsk('tj_shop_cart'))}catch(e){window._tjw&&_tjw(e)}document.querySelectorAll('.kact').forEach(e=>e.innerHTML=shopBtn(e.dataset.a));shopNav();
  shopM('<div style="text-align:center;padding:10px 0"><div style="font-size:54px">✅</div><h2 style="margin:6px 0">¡Pedido enviado!</h2><p style="color:var(--tx2);margin:0 0 16px">Gracias, '+esc((c.name||'').split(' ')[0])+'. Nos pondremos en contacto con usted muy pronto para confirmar su pedido.</p>'+(document.documentElement.classList.contains('xmas')?'<div class="kxg">🎄 ¡Le deseamos una <b>feliz Navidad</b> y un <b>próspero Año Nuevo</b>! 🎁</div>':(document.documentElement.classList.contains('summer')?'<div class="kxg ksm">☀️ ¡Que disfrute un <b>verano increíble</b>! 🌴</div>':(document.documentElement.classList.contains('panama')?'<div class="kxg kpa2"><span class="kfl"></span> ¡<b>Viva Panamá</b>! Que disfrute un <b>feliz mes patrio</b></div>':'')))+'<button class="sbtn" data-h-click="h34" style="margin-bottom:8px">👁 Ver comprobante</button><button class="sbtn g" data-h-click="h33" style="margin-bottom:8px">📄 Descargar PDF</button><button class="sbtn g" data-h-click="h32" style="margin-bottom:8px">🧾 Mis pedidos</button>'+shopPedidoWABoton(p,c)+'<button class="sbtn g" data-h-click="h31">Seguir viendo el catálogo</button></div>','ok');}
 function shopFab(){const e=$('k_fab');if(!e)return;const L=shopLines(),n=L.reduce((a,l)=>a+l.q,0),t=L.reduce((a,l)=>a+l.q*l.p,0);e.innerHTML=n?`<button class="kfab" data-h-click="h30">${kico(KI.cart,22)}<span>Ver pedido · ${n}${t>0?' · '+$$(t):''}</span></button>`:''}
 const _kn=shopNav;shopNav=function(){_kn.apply(this,arguments);try{shopFab()}catch(e){window._tjw&&_tjw(e)}};
-function shopShare(id){const i=SH.items.find(x=>x.id===id);if(!i)return;const u=tdLink()+'&p='+encodeURIComponent(id),t=(i.name||'Producto')+' — Tarjetería Jhon';
+function shopShare(id){const i=SH.items.find(x=>x.id===id);if(!i)return;const u=tdLink()+'&p='+encodeURIComponent(id),t=(i.name||'Producto')+' — '+nombreNegocio();
  if(navigator.share)navigator.share({title:t,text:t,url:u}).catch(()=>{});else{try{navigator.clipboard.writeText(u);shopToast('Enlace copiado ✔')}catch(e){prompt('Copie el enlace:',u)}}}
 function shopConfetti(){if(matchMedia('(prefers-reduced-motion:reduce)').matches)return;const c=document.createElement('canvas');c.id='k_conf';c.style.cssText='position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:99999';c.width=innerWidth;c.height=innerHeight;document.body.appendChild(c);
  const g=c.getContext('2d'),K=['#E0457B','#FF9F0A','#2fa84f','#0A84FF','#AF52DE','#FFD60A'],P=Array.from({length:110},()=>({x:innerWidth/2,y:innerHeight*.35,vx:(Math.random()-.5)*14,vy:-Math.random()*13-3,w:6+Math.random()*6,h:4+Math.random()*5,r:Math.random()*6,vr:(Math.random()-.5)*.4,c:K[Math.random()*6|0]}));let n=0;
@@ -3081,7 +3158,7 @@ function shopMusica(){const ac=SH.ac;if(!ac)return;try{ac.resume();const N={C:26
  S.forEach(([n,d])=>{const f=N[n],g=ac.createGain(),g2=ac.createGain(),o=ac.createOscillator(),o2=ac.createOscillator(),L=d*b;o.type='sine';o2.type='triangle';o.frequency.value=f*2;o2.frequency.value=f*4;g2.gain.value=.25;o.connect(g);o2.connect(g2);g2.connect(g);g.connect(ac.destination);
   g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(.11,t+.01);g.gain.exponentialRampToValueAtTime(.0008,t+L+.35);o.start(t);o2.start(t);o.stop(t+L+.4);o2.stop(t+L+.4);t+=L})}catch(e){window._tjw&&_tjw(e)}}
 
-const PATRIO_TXT='Gracias por celebrar con nosotros el mes de la patria. En Tarjetería Jhon honramos a Panamá: a su gente, a su bandera y a su historia. Recordamos el tres de noviembre, la separación de Panamá de Colombia; el cuatro, día de la bandera; y el veintiocho, la independencia de España. Que este mes patrio nos una el amor por nuestra tierra. ¡Viva Panamá! ¡Viva la patria!';
+const PATRIO_TXT='Gracias por celebrar con nosotros el mes de la patria. En {NEGOCIO} honramos a Panamá: a su gente, a su bandera y a su historia. Recordamos el tres de noviembre, la separación de Panamá de Colombia; el cuatro, día de la bandera; y el veintiocho, la independencia de España. Que este mes patrio nos una el amor por nuestra tierra. ¡Viva Panamá! ¡Viva la patria!';
 function shopPatrioSnd(){let ac=SH.ac;try{ac=SH.ac=ac||new (window.AudioContext||window.webkitAudioContext)();ac.resume()}catch(e){return}
  const M=ac.createGain();M.gain.value=.4;M.connect(ac.destination);const T=ac.currentTime+.08,nb=ac.createBuffer(1,ac.sampleRate>>1,ac.sampleRate),nd=nb.getChannelData(0);for(let i=0;i<nd.length;i++)nd[i]=Math.random()*2-1;
  const tone=(f,t,d,ty,v,lp)=>{const g=ac.createGain(),F=ac.createBiquadFilter();F.type='lowpass';F.frequency.value=lp;g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+.03);g.gain.setValueAtTime(v,t+d*.75);g.gain.linearRampToValueAtTime(0,t+d);F.connect(g);g.connect(M);[-6,6].forEach(c=>{const o=ac.createOscillator();o.type=ty;o.frequency.value=f;o.detune.value=c;o.connect(F);o.start(t);o.stop(t+d+.05)})};
@@ -3098,7 +3175,7 @@ function shopPatrioSnd(){let ac=SH.ac;try{ac=SH.ac=ac||new (window.AudioContext|
  let s=0;P.forEach(([f,l])=>{tone(f,T1+s*e,l*e*.95,'sawtooth',.06,2600);s+=l});
  const tf=T1+24*e;[523.25,659.25,783.99].forEach(f=>tone(f,tf,.9,'sawtooth',.07,2200));drum(tf,95,.6);hit(tf,2200,.35,.1);
 }
-function shopPatrioVoz(q){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{if(!q)ss.cancel();const u=new SpeechSynthesisUtterance(PATRIO_TXT),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-PA';u.rate=.95;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){window._tjw&&_tjw(e)}};
+function shopPatrioVoz(q){const ss=window.speechSynthesis;if(!ss)return;const go=()=>{try{if(!q)ss.cancel();const u=new SpeechSynthesisUtterance(PATRIO_TXT.replace('{NEGOCIO}',nombreNegocio())),v=typeof vozEs==='function'?vozEs():null;if(v){u.voice=v;u.lang=v.lang}else u.lang='es-PA';u.rate=.95;u.pitch=1.05;u.volume=1;ss.speak(u)}catch(e){window._tjw&&_tjw(e)}};
  if(ss.getVoices().length)go();else{let d=0;const h=()=>{if(d++)return;go()};ss.onvoiceschanged=h;setTimeout(h,600)}}
 function shopPatrio(q){try{shopPatrioSnd()}catch(e){window._tjw&&_tjw(e)}shopPatrioVoz(q)}
 function shopSummer(){const H=document.documentElement,on=H.classList.contains('summer'),ids=['k_sw','k_sun','k_bub','k_sb','k_gs'];
@@ -3180,14 +3257,29 @@ NAVI.mapa=['M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7
 const _mr=mergeRemote;mergeRemote=function(r){_mr(r);authRefresh()};
 /* Nombre comercial real de la empresa activa (empresas.js lo resuelve; aquí cae
    a cfg.nombre y por último al histórico). Usar en login, tienda, políticas... */
+/* Nombre de archivo de exportación: la empresa inicial conserva los de siempre; otra empresa usa su propio nombre (sin acentos ni espacios). */
+function nomArch(inicial,prefijo){
+ try{if(TJEmpresa.empEsInicial())return inicial}catch(e){return inicial}
+ var s=String(nombreNegocio()||'empresa').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'').slice(0,30)||'empresa';
+ return (prefijo||'')+s}
 function nombreNegocio(){
  /* En la tienda pública (sin sesión) manda el nombre de la empresa guardado en
 	    su plantilla (__cfg.empresaNombre, que escriben Datos de la empresa y el
 	    demo de empresas nuevas). */
  try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&(SH.empresaNombre||SH.heroTitle))return SH.empresaNombre||SH.heroTitle}catch(e){}
  try{if(typeof empNombreActiva==='function'){var n=empNombreActiva();if(n)return n}}catch(e){}
- return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.nombre)||'Tarjetería Jhon';
+ /* Empresa inicial: sus textos de siempre. Cualquier otra NO hereda «Tarjetería Jhon» (valor por defecto de DB.cfg):
+    en la tienda pública solo vale lo publicado por la empresa (los datos locales de DB son de quien administra, no del visitante). */
+ var ini=true;try{ini=TJEmpresa.empEsInicial()}catch(e){}
+ var c=(typeof DB!=='undefined'&&DB.cfg)||{},shop=typeof SHOP!=='undefined'&&SHOP;
+ if(ini)return c.nombre||'Tarjetería Jhon';
+ if(!shop&&c.nombre&&c.nombre!=='Tarjetería Jhon')return c.nombre;
+ return shop?'Nuestra tienda':'Mi empresa';
 }
+/* Eslogan por defecto de la portada: solo la empresa inicial conserva el de Tarjetería; las demás, ninguno. */
+function heroSubDef(){try{return TJEmpresa.empEsInicial()?'Cada momento merece una tarjeta especial · Tarjetas para toda ocasión':''}catch(e){return ''}}
+/* Parámetro de empresa para los enlaces de la tienda: sin él, un cliente abriría la tienda de la empresa inicial. */
+function tdEmpQ(){try{return TJEmpresa.empEsInicial()?'':'&emp='+encodeURIComponent(TJEmpresa.empActiva())}catch(e){return ''}}
 /* Logo del inicio de sesión: foto, GIF animado o video corto por empresa.
    Se guarda en cfg (sincroniza) Y en este navegador (tj_lg): la pantalla de
    entrada aparece ANTES de cargar la configuración de la nube, así que sin la
@@ -3354,7 +3446,37 @@ async function loginLogoFile(ev){
  }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~900 KB: suba uno más liviano o use un enlace.':'❌ No se pudo procesar el archivo ('+((e&&e.message)||e)+').')}
 }
 /* Logo del menú lateral del panel (la marca de la barra izquierda). */
-function panelLogoApply(){try{const im=document.querySelector('.brand .logo img');if(im)im.src=(DB.cfg&&DB.cfg.panelLogoSrc)||'assets/logo.png'}catch(e){}}
+function panelLogoApply(){try{const im=document.querySelector('.brand .logo img');if(im)im.src=(DB.cfg&&DB.cfg.panelLogoSrc)||(TJEmpresa.empEsInicial()?'assets/logo.png':(typeof empDemoLogo==='function'?empDemoLogo((DB.cfg&&DB.cfg.nombre)||nombreNegocio()):'assets/ven-crm/icono-app.svg'))}catch(e){}try{panelMarcaApply()}catch(e){window._tjw&&_tjw(e)}}
+/* Nombre visible y lema de la barra lateral (debajo del logo): editables por empresa (cfg.panelNombre / cfg.panelLema).
+   Sin valor propio: la empresa inicial conserva sus textos de siempre; cualquier otra usa el nombre de SU empresa y sin lema
+   (nunca los de Tarjetería Jhon, que están escritos fijos en index.html). */
+const PANEL_NOMBRE_INI='Tarjetería Jhon',PANEL_LEMA_INI='Tarjetas para toda ocasión';
+function panelMarcaTextos(){
+ const c=(typeof DB!=='undefined'&&DB.cfg)||{},ini=TJEmpresa.empEsInicial();
+ const nom=String(c.panelNombre==null?'':c.panelNombre).trim();
+ const nombre=nom||(ini?PANEL_NOMBRE_INI:(String(c.nombre||'').trim()&&c.nombre!==PANEL_NOMBRE_INI?String(c.nombre).trim():nombreNegocio()));
+ const lema=c.panelLema!=null?String(c.panelLema).trim():(ini?PANEL_LEMA_INI:'');
+ return {nombre:nombre,lema:lema,propioNombre:!!nom,propioLema:c.panelLema!=null};
+}
+function panelMarcaApply(){
+ const T=panelMarcaTextos(),d=document;
+ const sm=d.querySelector('.brand small'),p=d.querySelector('.brand p'),im=d.querySelector('.brand .logo img');
+ if(sm)sm.textContent=T.nombre;
+ if(p){p.textContent=T.lema;p.hidden=!T.lema}
+ if(im)im.alt=T.nombre;
+ /* Rótulos fijos de la cabecera y del h1 oculto: se rehacen siempre desde su texto original para poder cambiarlos de nuevo. */
+ [d.querySelector('.top .rt'),d.querySelector('h1.h1m')].forEach(e=>{if(!e)return;
+  if(e.dataset.tpl===undefined)e.dataset.tpl=e.textContent;
+  e.textContent=e.dataset.tpl.split(PANEL_NOMBRE_INI).join(T.nombre).replace('Panel de Facturación',(window.TJMarca&&TJMarca.panel)?'VEN CRM':'Panel de Facturación')})
+}
+function panelMarcaGuardar(){
+ const n=(($('pm_nombre')||{}).value||'').trim().slice(0,40),l=(($('pm_lema')||{}).value||'').trim().slice(0,60);
+ if(n)DB.cfg.panelNombre=n;else delete DB.cfg.panelNombre;
+ DB.cfg.panelLema=l;
+ save();panelMarcaApply();R.config();alert('✔ Nombre y lema del menú lateral guardados.')}
+function panelMarcaRestaurar(){
+ if(!confirm('¿Volver al nombre y lema por defecto del menú lateral?'))return;
+ delete DB.cfg.panelNombre;delete DB.cfg.panelLema;save();panelMarcaApply();R.config();alert('✔ Se restauró el nombre y el lema por defecto.')}
 async function panelLogoFile(ev){
  const file=archivoDe.call(this,ev);if(!file)return;
  if(!/^image\//.test(file.type||''))return alert('❌ Ese archivo no es una imagen (use PNG o JPG).');
@@ -3443,6 +3565,20 @@ function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
    <input id="lg_url" placeholder="…o enlace (URL) de imagen/GIF/video" style="flex:1;min-width:200px"><button class="btn s" data-h-click="call" data-a-click="${_ha('loginLogoUrl')}">Usar enlace</button>
   </div>
+  <div style="padding-top:10px;border-top:1px dashed var(--linea)"><b style="font-size:13.5px">🏷 Nombre y eslogan bajo el logo del menú</b></div>
+  <div class="g" style="margin:0 0 8px"><div><label for="pm_nombre">Nombre bajo el logo del menú</label><input id="pm_nombre" maxlength="40" value="${esc(DB.cfg.panelNombre||'')}" placeholder="${esc(panelMarcaTextos().nombre)}"></div>
+  <div><label for="pm_lema">Eslogan bajo el nombre</label><input id="pm_lema" maxlength="60" value="${esc(DB.cfg.panelLema!=null?DB.cfg.panelLema:'')}" placeholder="${esc(panelMarcaTextos().lema||'Opcional')}"></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn p s" data-h-click="call" data-a-click="${_ha('panelMarcaGuardar')}">💾 Guardar nombre y eslogan</button><button class="btn s" data-h-click="call" data-a-click="${_ha('panelMarcaRestaurar')}">↺ Restaurar</button></div>
+  <div style="padding-top:10px;border-top:1px dashed var(--linea)"><b style="font-size:13.5px">🛍 Logo de la tienda web</b></div>
+  <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0 6px">
+   ${TD.logoUrl?`<img src="${esc(TD.logoUrl)}" alt="logo de la tienda" style="height:44px;max-width:180px;object-fit:contain;border-radius:10px;background:#fff;padding:3px 6px;border:1px solid var(--linea)">`:`<small style="color:var(--gris)">${TJEmpresa.empEsInicial()?'Logo de la tienda web: usa el original.':'Logo de la tienda web: sin logo propio (la tienda muestra la inicial de su empresa).'}</small>`}
+   <div style="display:flex;gap:8px;flex-wrap:wrap">
+    <label class="btn s" style="cursor:pointer;margin:0;display:inline-flex;align-items:center;gap:6px">📁 Subir logo de la tienda web<input type="file" accept="image/*" hidden data-h-change="call" data-a-change="${_ha('shopLogoFile')}"></label>
+    ${TD.logoUrl?`<button class="btn s d" data-h-click="call" data-a-click="${_ha('shopLogoQuitar')}">Quitar</button>`:''}
+   </div>
+  </div>
+  <small style="display:block;color:var(--gris);font-size:11.5px;margin:0 0 10px">Es el logo que ven sus clientes arriba a la izquierda de la tienda (junto a «Catálogo virtual») y en la portada. PNG con fondo transparente o JPG, recomendado ancho de 400–800 px; se reduce solo a ≤180 KB. Se guarda al instante, solo para esta empresa.</small>
+  <div style="padding-top:10px;border-top:1px dashed var(--linea)"><b style="font-size:13.5px">🔐 Textos de la pantalla de acceso</b></div>
   <div class="g"><div><label>Título (nombre que va arriba)</label><input id="lg_t" value="${esc(ll.loginTitulo||'')}" placeholder="${esc(nombreNegocio())}" maxlength="60"></div>
   <div><label>Descripción (línea de abajo)</label><input id="lg_d" value="${esc(ll.loginDesc||'')}" placeholder="Inicie sesión para continuar." maxlength="120"></div></div>
   <div style="margin-top:10px"><button class="btn p s" data-h-click="call" data-a-click="${_ha('loginIdentGuardar')}">💾 Guardar textos</button></div>
@@ -3520,7 +3656,7 @@ document.addEventListener('click', function(e){
    (nunca en la tienda pública, con "ahorro de datos" ni con conexión 2G). Si no llega a guardarse, se guarda igual la primera vez que se abre Check. */
 function precalentarModelos(){
  const c=navigator.connection||{};
- if(SHOP||navigator.onLine===false||c.saveData||/(^|-)2g$/.test(c.effectiveType||''))return;
+ if(SHOP||!TJEmpresa.empEsInicial()||navigator.onLine===false||c.saveData||/(^|-)2g$/.test(c.effectiveType||''))return;
  const pedir=()=>navigator.serviceWorker.ready.then(r=>{if(r.active)r.active.postMessage('precalentar-modelos')}).catch(()=>{});
  const idle=()=>{(window.requestIdleCallback||(f=>setTimeout(f,3000)))(pedir,{timeout:10000})};
  setTimeout(idle,5000);
@@ -3980,6 +4116,7 @@ __H.h333=function(event,a){mcIr(a[0])};
 __H.h334=function(event,a){ir('mapa')};
 __H.h335=function(event,a){redesGuardar()};
 __H.h336=function(event,a){RS_DRAFT[this.id]=this.value;RS_MSG=null;const e=$('rs_est');if(e)e.textContent=''};
+__H.h365=function(event,a){RS_DRAFT[this.id]=this.checked;RS_MSG=null;const e=$('rs_est');if(e)e.textContent=''};
 __H.h307=function(event,a){delP(a[0])};
 __H.h308=function(event,a){editP(a[0])};
 __H.h309=function(event,a){addP()};
@@ -4023,3 +4160,6 @@ __H.h363=function(){tjLiveOpen('https://www.tiktok.com/')};
 __H.h364=function(){tjLiveOpen('https://www.tiktok.com/studio/download')};
 __H.h355=function(){ir('nueva')};
 
+
+/* Barra lateral del panel: nombre y eslogan de la empresa activa desde el primer pintado (la copia local de DB ya está cargada). */
+try{if(!SHOP)panelMarcaApply()}catch(e){window._tjw&&_tjw(e)}

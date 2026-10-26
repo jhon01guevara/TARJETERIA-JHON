@@ -83,7 +83,7 @@ function correrPrecalentar(opts){
  const fuente=appTodo();
  const m=/function precalentarModelos\(\)\{[\s\S]*?\n\}\n/.exec(fuente);assert.ok(m,'precalentarModelos existe');
  const msgs=[],timers=[],listeners=[];
- const env={SHOP:!!opts.shop,setTimeout:(f,t)=>{timers.push(f)},
+ const env={SHOP:!!opts.shop,TJEmpresa:{empEsInicial:()=>!opts.otraEmpresa},setTimeout:(f,t)=>{timers.push(f)},
   navigator:{onLine:opts.online!==false,connection:opts.conn,serviceWorker:{addEventListener:(n,f,o)=>listeners.push(n),ready:Promise.resolve({active:{postMessage:x=>msgs.push(x)}})}},
   window:{requestIdleCallback:f=>timers.push(f)}};
  vm.createContext(env);vm.runInContext(m[0]+';precalentarModelos();',env);
@@ -91,7 +91,7 @@ function correrPrecalentar(opts){
 }
 test('Fase 16: app.js pide el precalentamiento en un momento libre, y no en tienda pública, sin conexión, con ahorro de datos ni en 2G',async()=>{
  let r=await correrPrecalentar({});assert.deepEqual(r.msgs,['precalentar-modelos']);assert.deepEqual(r.listeners,['controllerchange']);
- for(const o of [{shop:true},{online:false},{conn:{saveData:true}},{conn:{effectiveType:'2g'}},{conn:{effectiveType:'slow-2g'}}]){
+ for(const o of [{shop:true},{otraEmpresa:true},{online:false},{conn:{saveData:true}},{conn:{effectiveType:'2g'}},{conn:{effectiveType:'slow-2g'}}]){
   r=await correrPrecalentar(o);assert.deepEqual(r.msgs,[],JSON.stringify(o));
  }
  r=await correrPrecalentar({conn:{effectiveType:'4g',saveData:false}});assert.ok(r.msgs.length>=1);

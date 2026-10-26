@@ -28,8 +28,9 @@ test('La tarjeta de inicio de sesión agrupa logo, textos y fondo',()=>{
 
 test('La factura usa el logo de la empresa con fallback al del panel',()=>{
  const app=require('./helpers/app-fuentes').appTodo();
- assert.match(app,/c\.logoFac\|\|'assets\/logo\.png'/,'factura clásica');
- assert.match(app,/c\.logoFac\|\|LOGO_T/,'plantilla Apple');
+ assert.match(app,/facLogoSrc\(c,'assets\/logo\.png'\)/,'factura clásica');
+ assert.match(app,/facLogoSrc\(c,LOGO_T\)/,'plantilla Apple');
+ assert.match(app,/function facLogoSrc\(c,def\)\{c=c\|\|\{\};if\(c\.logoFac\)return c\.logoFac;if\(TJEmpresa\.empEsInicial\(\)\)return def;/,'otra empresa no cae al logo de Tarjetería');
  assert.match(app,/Logo de la empresa \(aparece en la factura\)/,'campo en Datos de la empresa');
  assert.match(app,/function facLogoFile/);
 });
@@ -43,7 +44,7 @@ test('La Plantilla de la web contiene banners editables y forma de botones',()=>
  assert.match(app,/🔘 Forma de los botones de la tienda/);
  assert.match(app,/function btnRadioSet/);
  /* la tienda usa banners propios si existen; si no, los del panel */
- assert.match(app,/const custom=Array\.isArray\(SH\.banners\)\?SH\.banners:null/);
+ assert.match(app,/const custom=Array\.isArray\(SH\.banners\)\?SH\.banners:\(TJEmpresa\.empEsInicial\(\)\?null:\[\]\)/,'sin banners propios: los de Tarjetería solo para la empresa inicial; las demás, ninguno');
  assert.match(app,/TD\.banners=Array\.isArray\(cd\.banners\)\?cd\.banners:undefined/);
  /* forma aplicada como variable CSS */
  assert.match(app,/--kbtn-r/);

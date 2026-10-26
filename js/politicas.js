@@ -12,14 +12,26 @@ const TJ_POLITICAS = {
  /* Getters: se evalúan al usarse — reflejan la empresa activa (panel) o los
     datos publicados de la tienda (__cfg.empresaNombre / contacto) en la web. */
  get nombre(){return nombreNegocio()},
- get web(){return location.origin+location.pathname+'?tienda=1'},
+ get web(){return location.origin+location.pathname+'?tienda=1'+(typeof tdEmpQ==='function'?tdEmpQ():'')},
+ /* Contacto de la empresa activa: en la tienda, lo publicado por la empresa (el que copia «Datos de la empresa» al guardar); en el panel, sus
+    Datos de la empresa. Solo la empresa INICIAL conserva su correo y teléfono de siempre como último recurso; cualquier otra devuelve '' (no se inventa nada). */
  get correo(){
-  try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.email)return SH.contacto.email}catch(e){}
-  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com';
+  const ini=typeof TJEmpresa==='undefined'||TJEmpresa.empEsInicial(),shop=typeof SHOP!=='undefined'&&SHOP;
+  try{if(shop&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.email)return SH.contacto.email}catch(e){}
+  if(shop&&!ini)return '';
+  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.email)||(ini?'tarjeteriajhon@gmail.com':'');
  },
  get tel(){
-  try{if(typeof SHOP!=='undefined'&&SHOP&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.tel)return SH.contacto.tel}catch(e){}
-  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.tel)||'6074-1150';
+  const ini=typeof TJEmpresa==='undefined'||TJEmpresa.empEsInicial(),shop=typeof SHOP!=='undefined'&&SHOP;
+  try{if(shop&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.tel)return SH.contacto.tel}catch(e){}
+  if(shop&&!ini)return '';
+  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.tel)||(ini?'6074-1150':'');
+ },
+ get dir(){
+  const ini=typeof TJEmpresa==='undefined'||TJEmpresa.empEsInicial(),shop=typeof SHOP!=='undefined'&&SHOP;
+  try{if(shop&&typeof SH!=='undefined'&&SH.contacto&&SH.contacto.dir)return SH.contacto.dir}catch(e){}
+  if(shop)return '';
+  return (typeof DB!=='undefined'&&DB.cfg&&DB.cfg.dir)||'';
  },
  estado: "Etapa preparatoria. La tienda todavía no recibe pedidos ni pagos comerciales.",
 };
@@ -72,7 +84,7 @@ function shopPoliticas(tabSel){
      <p><b>3.3. Finalidades previstas:</b> Responder consultas, coordinar pedidos/entregas futuras, confirmar operaciones legítimas, gestionar incidencias y cumplir con obligaciones legales aplicables.</p>
      <p><b>3.4. Destinatarios:</b> La información personal no se comparte con terceros para fines incompatibles ni se comercializa.</p>
      <p><b>3.5. Seguridad:</b> Se aplican medidas de restricción de acceso, reglas de seguridad en bases de datos y cifrado SSL/HTTPS en tránsito.</p>
-     <p><b>3.6. Derechos ARCO:</b> Las personas pueden ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición enviando una solicitud formal a <b><a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a></b>.</p>
+     <p><b>3.6. Derechos ARCO:</b> Las personas pueden ejercer sus derechos de Acceso, Rectificación, Cancelación y Oposición enviando una solicitud formal a ${TJ_POLITICAS.correo?`<b><a href="mailto:${esc(TJ_POLITICAS.correo)}">${esc(TJ_POLITICAS.correo)}</a></b>`:`<b>${esc(nombreNegocio())}</b> (los datos de contacto oficiales se indican en la sección «Contacto» de la tienda)`}.</p>
    </div>`;
  } else if(t === "4"){
    body = `<div style="font-size:13px;line-height:1.6;color:var(--txt)">
@@ -87,8 +99,10 @@ function shopPoliticas(tabSel){
      <h3 style="margin:0 0 6px;font-size:14.5px">5. Atención al cliente y reclamaciones</h3>
      <div style="background:var(--sf);border:1px solid var(--linea);border-radius:10px;padding:12px;margin-bottom:12px">
        <b>Canales Oficiales:</b><br>
-       ✉️ Correo: <a href="mailto:tarjeteriajhon@gmail.com">tarjeteriajhon@gmail.com</a><br>
-       📞 Teléfono: <a href="tel:60741150">6074-1150</a>
+       ${TJ_POLITICAS.correo?`✉️ Correo: <a href="mailto:${esc(TJ_POLITICAS.correo)}">${esc(TJ_POLITICAS.correo)}</a><br>`:''}
+       ${TJ_POLITICAS.tel?`📞 Teléfono: <a href="tel:${esc(String(TJ_POLITICAS.tel).replace(/[^\d+]/g,''))}">${esc(TJ_POLITICAS.tel)}</a><br>`:''}
+       ${TJ_POLITICAS.dir?`📍 Dirección: ${esc(TJ_POLITICAS.dir)}<br>`:''}
+       ${(!TJ_POLITICAS.correo&&!TJ_POLITICAS.tel&&!TJ_POLITICAS.dir)?'Esta empresa aún no ha publicado sus datos de contacto.':''}
      </div>
      <p><b>5.1. Revisión y respuesta:</b> Las consultas y reclamaciones se atienden de forma individual y oportuna.</p>
      <p><b>5.2. Derechos del consumidor:</b> Estas políticas no pretenden excluir ni reducir los derechos que reconoce la legislación panameña (ACODECO).</p>
@@ -278,7 +292,7 @@ function poliExportarCSV(){
 }
 
 function poliCopiar(){
- const NN=nombreNegocio(),CORREO=(DB.cfg&&DB.cfg.email)||'tarjeteriajhon@gmail.com',TEL=(DB.cfg&&DB.cfg.tel)||'6074-1150',SITIO=location.origin+location.pathname+'?tienda=1';
+ const NN=nombreNegocio(),CORREO=TJ_POLITICAS.correo||'No indicado',TEL=TJ_POLITICAS.tel||'No indicado',SITIO=location.origin+location.pathname+'?tienda=1'+(typeof tdEmpQ==='function'?tdEmpQ():'');
  const txt = `${NN}\nPolíticas preliminares de uso, privacidad y protección del cliente\nEstado: etapa preparatoria. La tienda todavía no recibe pedidos ni pagos.\nNombre comercial: ${NN}\nSitio web: ${SITIO}\nCorreo de contacto: ${CORREO}\nTeléfono: ${TEL}\n\n1. Aviso de etapa preparatoria\nNo se reciben pedidos comerciales ni pagos por la tienda. No envíes dinero ni compartas claves.\n\n2. Términos y condiciones de uso\nUso lícito, productos y precios informativos.\n\n3. Política preliminar de privacidad y protección de datos\nProtección conforme a la Ley 81 de 2019 de la República de Panamá y Decreto Ejecutivo 285 de 2021.\n\n4. Entregas y retiros\nModalidades a domicilio y retiro en punto acordado.\n\n5. Atención al cliente y reclamaciones\n${CORREO} · ${TEL}\n\n6. Lista de verificación antes de la apertura\nRUC, Aviso de Operación y formalización comercial.`;
  navigator.clipboard&&navigator.clipboard.writeText(txt).then(()=>alert("Copiado al portapapeles.")).catch(()=>alert(txt));
 }
