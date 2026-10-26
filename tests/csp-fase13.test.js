@@ -66,7 +66,7 @@ test('apps/*.html no tienen <style> en línea y enlazan su css',()=>{
 });
 
 test('ningún script crea elementos <style> ni escribe <style> en línea sin hash en la CSP',()=>{
- for(const f of ['js/app.js','js/marketing.js','js/empresas.js','js/mkt-editor.js','js/empresa-contexto.js','js/facturacion.js','js/utils.js','js/sanear.js','js/redes.js','js/a11y.js','js/uber-nav.js','js/tema.js','js/inicio.js','apps/modelos.js','apps/investigacion.js','migraciones/migracion-multiempresa.js']){
+ for(const f of ['js/app.js','js/marketing.js','js/empresas.js','js/mkt-editor.js','js/empresa-contexto.js','js/facturacion.js','js/utils.js','js/sanear.js','js/redes.js','js/a11y.js','js/uber-nav.js','js/guia.js','js/tema.js','js/inicio.js','apps/modelos.js','apps/investigacion.js','migraciones/migracion-multiempresa.js']){
   const t=leer(f);
   assert.ok(!/createElement\(\s*['"]style['"]\s*\)/.test(t),f+': createElement(\'style\')');
   if(f!=='js/politicas.js')assert.ok(!/<style[\s>]/.test(t.replace(/\/\*[\s\S]*?\*\//g,'')),f+': <style> en texto');

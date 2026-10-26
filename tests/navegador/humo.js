@@ -109,12 +109,12 @@ const esperarFn=(p,fn,arg,ms)=>p.waitForFunction(fn,arg,{timeout:ms||20000});
   /* ============ 2. Clientes y productos ============ */
   await paso('Crea un cliente (Clientes) y lo ve en la lista',async()=>{
    await ap.evaluate(()=>ir('cli'));await ap.waitForSelector('#cn');await ap.fill('#cn','Cliente Humo');await ap.fill('#cr','8-123-456');await ap.fill('#ct2','6123-4567');await ap.fill('#cd2','Calle de prueba 1');
-   await ap.click('#v .card:first-child button.btn.p:has-text("Agregar")');await ap.waitForTimeout(1200);
+   await ap.click('#v div.card:first-of-type button.btn.p:has-text("Agregar")');await ap.waitForTimeout(1200);
    const t=await ap.evaluate(()=>({n:DB.cli.length,txt:document.getElementById('v').innerText}));
    exige(t.n===1&&/Cliente Humo/.test(t.txt),'El cliente no aparece en la lista',JSON.stringify({n:t.n}))});
   await paso('Crea un producto (Productos) y lo ve en la lista',async()=>{
    await ap.evaluate(()=>ir('prod'));await ap.waitForSelector('#pn');await ap.fill('#pn','Producto Humo');await ap.fill('#pp','10');
-   await ap.click('#v .card:first-child button.btn.p:has-text("Agregar")');await ap.waitForTimeout(1000);
+   await ap.click('#v div.card:first-of-type button.btn.p:has-text("Agregar")');await ap.waitForTimeout(1000);
    const t=await ap.evaluate(()=>({n:DB.prod.length,txt:document.getElementById('v').innerText}));
    exige(t.n===1&&/Producto Humo/.test(t.txt)&&/10\.00/.test(t.txt),'El producto no aparece con su precio',JSON.stringify({n:t.n}))});
   /* ============ 3. Factura ============ */
@@ -131,6 +131,14 @@ const esperarFn=(p,fn,arg,ms)=>p.waitForFunction(fn,arg,{timeout:ms||20000});
    exige(f.n===1&&f.v==='fac','No se guardó la factura o no fue a «Facturas»',JSON.stringify({n:f.n,v:f.v}));
    exige(/Cliente Humo/.test(f.t)&&f.t.includes(TOTAL.toFixed(2)),'La factura no aparece en el historial con cliente y total',f.t.slice(0,120));
    exige(f.imp>=1,'No se abrió la impresión de la factura')});
+  await paso('Guía «Primeros pasos»: detecta sola el cliente, el producto y la factura y no estorba',async()=>{
+   await esperarFn(ap,()=>window.guiaEstado&&guiaEstado()&&guiaEstado().hechos>=3,null,12000).catch(()=>{});
+   const g=await ap.evaluate(()=>{const e=window.guiaEstado&&guiaEstado();return e&&{t:e.total,ids:e.items.filter(i=>i.hecho).map(i=>i.p.id)}});
+   exige(!!g,'No cargó la guía de primeros pasos (js/guia.js)');
+   for(const id of ['cliente','producto','venta'])exige(g.ids.includes(id),'La guía no marcó sola el paso «'+id+'»',JSON.stringify(g.ids));
+   await ap.evaluate(()=>ir('home'));await ap.waitForTimeout(800);
+   exige(await ap.evaluate(()=>!!document.getElementById('guiaCard')||!!document.getElementById('guiaAbrir')),'Inicio no muestra la guía (ni su botón «Primeros pasos»)');
+   await csp(ap)});
   await paso('Los datos quedaron guardados en la nube (cliente, producto y factura)',async()=>{
    await esperarFn(ap,async()=>{try{const d=await fbDocRef.get(),c=d.exists?d.data():{};const s=JSON.stringify(c);return /Producto Humo/.test(s)&&/Cliente Humo/.test(s)}catch(e){return false}},null,25000).catch(()=>{});
    const r=await ap.evaluate(async TOTAL=>{try{const d=await fbDocRef.get(),s=JSON.stringify(d.exists?d.data():{});return{prod:/Producto Humo/.test(s),fac:s.includes('"total":'+TOTAL),cli:/Cliente Humo/.test(s)||/Cliente Humo/.test(JSON.stringify(((await clientesRef().get()).data()||{})))}}catch(e){return{err:e.message}}},TOTAL);
