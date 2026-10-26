@@ -1,6 +1,21 @@
 # Firebase Hosting para `vencrm.com` — preparación (NADA de esto está ejecutado)
 
-> Estado (2026-10-25): este documento y los archivos `firebase.json` y `.firebaserc` solo **preparan** el paso de GitHub Pages a Firebase Hosting. No se creó ningún sitio, no se desplegó nada, no se tocó DNS, Auth ni la API key. Cada acción de la §3 necesita la aprobación expresa de John. `github.io` sigue sirviendo el panel y la tienda hasta que todo funcione.
+> Estado (2026-10-25): este documento y los archivos `firebase.json` y `.firebaserc` preparan el paso de GitHub Pages a Firebase Hosting. Ver §0: ya existe el sitio `vencrm-app` con la app desplegada; sigue sin tocarse DNS, dominio personalizado, Auth ni la API key. Cada acción de la §3 necesita la aprobación expresa de John. `github.io` sigue sirviendo el panel y la tienda hasta que todo funcione.
+
+## 0. Estado de ejecución (actualizado 2026-10-25, 20:10 hora de Panamá)
+
+John autorizó solo los pasos 1 a 3 de la §3. **Hecho:**
+- **Sitio creado: `vencrm-app`** (no `ven-crm`: Firebase respondió «`ven-crm` is reserved by another project»). El *target* de `firebase.json` se sigue llamando `ven-crm`; `.firebaserc` lo apunta ahora al sitio `vencrm-app`. URL: `https://vencrm-app.web.app` y `https://vencrm-app.firebaseapp.com`.
+- **Vista previa** (canal `ven-crm-preview`, expira 2026-11-01): `https://vencrm-app--ven-crm-preview-lh2i2g27.web.app`.
+- **Live desplegado** en `vencrm-app` (123 archivos). Verificado con curl y Chrome real: cabeceras HSTS, `frame-ancestors`, `Cache-Control` de `sw.js`/manifests/`*.js` correctas; `docs/`, `tests/`, `firestore.rules` y `package.json` dan 404; sin violaciones de CSP; service worker activo con alcance `/`; manifests e íconos 200.
+- Único error de consola en el dominio nuevo: `AppCheck: ReCAPTCHA error` (el dominio aún no está en la clave reCAPTCHA; esperado, App Check no se impone todavía).
+- **Sin tocar:** el sitio `tarjeteria-jhon` (sigue en 404 / «Site Not Found»), `github.io`, dominio personalizado, DNS, Auth, API key, App Check y reglas de Firestore.
+
+**Vuelta atrás** (cualquiera de las dos; ninguna afecta a `github.io` ni a Firestore):
+- Desactivar el sitio (deja de servir, conserva el sitio): `npx -y firebase-tools@latest hosting:disable --site vencrm-app --project tarjeteria-jhon`.
+- Eliminar el canal de vista previa: `npx -y firebase-tools@latest hosting:channel:delete ven-crm-preview --site vencrm-app --project tarjeteria-jhon`.
+- Eliminar el sitio por completo: `npx -y firebase-tools@latest hosting:sites:delete vencrm-app --project tarjeteria-jhon` (el nombre se puede reservar de nuevo, no hay garantía).
+- Volver a una versión anterior: en la consola de Hosting → `vencrm-app` → Historial de versiones → «Revertir».
 
 ## 1. Qué se agrega al repo
 
@@ -31,12 +46,12 @@ Emulador de Hosting (`firebase emulators:start --only hosting`, corre solo en `1
 
 ## 3. Lo que NO se hizo y requiere aprobación de John (en este orden)
 
-1. **Crear el sitio de Hosting** `ven-crm` en `tarjeteria-jhon`: `npx -y firebase-tools@latest hosting:sites:create ven-crm --project tarjeteria-jhon`. Hoy el proyecto solo tiene el sitio por defecto `tarjeteria-jhon` (`https://tarjeteria-jhon.web.app`), que **no tiene ningún despliegue** (responde «Site Not Found»). Si `ven-crm` ya estuviera tomado en todo Firebase, el comando falla; alternativas: `ven-crm-app` o `vencrm`, o usar el sitio por defecto (sin crear sitio) cambiando el target en `.firebaserc`.
-2. **Desplegar a un canal de vista previa** (no toca el dominio): `npx -y firebase-tools@latest hosting:channel:deploy vista --only ven-crm --project tarjeteria-jhon --expires 7d`. Probar la URL temporal (`ven-crm--vista-XXXX.web.app`): panel, tienda, instalación de la PWA. Ojo: un canal de vista previa es otro origen; el login **no funcionará ahí** hasta autorizar ese dominio en Auth (sirve para probar carga, no sesión).
-3. **Desplegar a producción del sitio** (`firebase deploy --only hosting:ven-crm --project tarjeteria-jhon`). Todavía no tiene dominio, solo `ven-crm.web.app`.
+1. **Crear el sitio de Hosting** `ven-crm` en `tarjeteria-jhon`: `npx -y firebase-tools@latest hosting:sites:create ven-crm --project tarjeteria-jhon`. Hoy el proyecto solo tiene el sitio por defecto `tarjeteria-jhon` (`https://tarjeteria-jhon.web.app`), que **no tiene ningún despliegue** (responde «Site Not Found»). **Resultado real: `ven-crm` estaba reservado por otro proyecto; se creó `vencrm-app`.**
+2. **Desplegar a un canal de vista previa** (no toca el dominio): `npx -y firebase-tools@latest hosting:channel:deploy vista --only ven-crm --project tarjeteria-jhon --expires 7d`. Probar la URL temporal (`vencrm-app--<canal>-XXXX.web.app`): panel, tienda, instalación de la PWA. Ojo: un canal de vista previa es otro origen; el login **no funcionará ahí** hasta autorizar ese dominio en Auth (sirve para probar carga, no sesión).
+3. **Desplegar a producción del sitio** (`firebase deploy --only hosting:ven-crm --project tarjeteria-jhon`). Todavía no tiene dominio, solo `vencrm-app.web.app`.
 4. **Agregar el dominio personalizado** `vencrm.com` (y `www.vencrm.com` redirigiendo al raíz) en la consola de Hosting (la CLI no lo hace) y **poner los registros DNS en Namecheap** (§4).
-5. **Auth → Dominios autorizados**: agregar `vencrm.com`, `www.vencrm.com` y `ven-crm.web.app` (y `ven-crm.firebaseapp.com`). No quitar los actuales.
-6. **API key (Google Cloud → Credenciales)**: **añadir** `https://vencrm.com/*`, `https://www.vencrm.com/*`, `https://ven-crm.web.app/*`, `https://ven-crm.firebaseapp.com/*`; conservar `https://jhon01guevara.github.io/*`, `https://tarjeteria-jhon.firebaseapp.com/*` y `https://tarjeteria-jhon.web.app/*`.
+5. **Auth → Dominios autorizados**: agregar `vencrm.com`, `www.vencrm.com` y `vencrm-app.web.app` (y `vencrm-app.firebaseapp.com`). No quitar los actuales.
+6. **API key (Google Cloud → Credenciales)**: **añadir** `https://vencrm.com/*`, `https://www.vencrm.com/*`, `https://vencrm-app.web.app/*`, `https://vencrm-app.firebaseapp.com/*`; conservar `https://jhon01guevara.github.io/*`, `https://tarjeteria-jhon.firebaseapp.com/*` y `https://tarjeteria-jhon.web.app/*`.
 7. **reCAPTCHA / App Check y EmailJS**: agregar `vencrm.com` y `www.vencrm.com` a los dominios de la clave reCAPTCHA v3 y a los orígenes permitidos de EmailJS. No activar la imposición de App Check antes de la revisión del 30-oct-2026.
 8. Probar en `https://vencrm.com`: login, lectura/escritura, subida de fotos, pedido de prueba, GPS. Solo entonces anunciar.
 
@@ -46,7 +61,7 @@ Los valores definitivos los muestra el asistente «Agregar dominio personalizado
 
 | Tipo | Host (Namecheap) | Valor | TTL |
 |---|---|---|---|
-| TXT | `@` | `<valor de verificación que da la consola de Firebase>` (forma `hosting-site=ven-crm` o `firebase=…`) | Automatic |
+| TXT | `@` | `<valor de verificación que da la consola de Firebase>` (forma `hosting-site=vencrm-app` o `firebase=…`) | Automatic |
 | A | `@` | `199.36.158.100` | Automatic |
 | A | `www` | `199.36.158.100` | Automatic |
 
@@ -73,6 +88,6 @@ Reversión: borrar los registros A y TXT en Advanced DNS (y quitar el dominio en
 - **Login inutilizable hasta autorizar el dominio en Auth y la API key**: hacerlo (pasos 5 y 6) *antes* de anunciar; probar con una cuenta de prueba.
 - **Cabeceras nuevas**: `X-Frame-Options: SAMEORIGIN` bloquea que otro sitio incruste el panel (deseado). Si en el futuro se incrusta desde otro dominio, hay que cambiarlo.
 - **`Permissions-Policy`**: si se agrega una función que use otra API (p. ej. Bluetooth/WebUSB) habrá que permitirla.
-- **Nombre del sitio** `ven-crm` no verificable hasta crearlo (la URL `ven-crm.web.app` responde 404, lo que sugiere —pero no garantiza— que está libre).
+- **Nombre del sitio**: `ven-crm` estaba tomado; se usa `vencrm-app` (ver §0). Es solo el nombre técnico `*.web.app`; la marca pública será `vencrm.com`.
 - **Registro de marca «VEN»** pendiente (ver `docs/MARCA-VEN-CRM.md` §3).
 - **Costo**: Hosting en plan Spark: 10 GB de almacenamiento y 360 MB/día de transferencia. `catalogo_default.zip` pesa 12 MB y `apps/modelos.js` 1,6 MB: con mucho tráfico a la tienda se pasa del límite diario; en ese caso se necesita el plan Blaze (de pago). Confirmar con John antes de desplegar.

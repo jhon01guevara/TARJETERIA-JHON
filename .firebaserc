@@ -6,7 +6,7 @@
   "targets": {
     "tarjeteria-jhon": {
       "hosting": {
-        "ven-crm": ["ven-crm"]
+        "ven-crm": ["vencrm-app"]
       }
     }
   }
