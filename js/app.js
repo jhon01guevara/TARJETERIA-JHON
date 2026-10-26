@@ -3354,7 +3354,37 @@ async function loginLogoFile(ev){
  }catch(e){alert(e.message==='gif-grande'?'❌ El GIF pesa más de ~900 KB: suba uno más liviano o use un enlace.':'❌ No se pudo procesar el archivo ('+((e&&e.message)||e)+').')}
 }
 /* Logo del menú lateral del panel (la marca de la barra izquierda). */
-function panelLogoApply(){try{const im=document.querySelector('.brand .logo img');if(im)im.src=(DB.cfg&&DB.cfg.panelLogoSrc)||'assets/logo.png'}catch(e){}}
+function panelLogoApply(){try{const im=document.querySelector('.brand .logo img');if(im)im.src=(DB.cfg&&DB.cfg.panelLogoSrc)||'assets/logo.png'}catch(e){}try{panelMarcaApply()}catch(e){window._tjw&&_tjw(e)}}
+/* Nombre visible y lema de la barra lateral (debajo del logo): editables por empresa (cfg.panelNombre / cfg.panelLema).
+   Sin valor propio: la empresa inicial conserva sus textos de siempre; cualquier otra usa el nombre de SU empresa y sin lema
+   (nunca los de Tarjetería Jhon, que están escritos fijos en index.html). */
+const PANEL_NOMBRE_INI='Tarjetería Jhon',PANEL_LEMA_INI='Tarjetas para toda ocasión';
+function panelMarcaTextos(){
+ const c=(typeof DB!=='undefined'&&DB.cfg)||{},ini=TJEmpresa.empEsInicial();
+ const nom=String(c.panelNombre==null?'':c.panelNombre).trim();
+ const nombre=nom||(ini?PANEL_NOMBRE_INI:(String(c.nombre||'').trim()&&c.nombre!==PANEL_NOMBRE_INI?String(c.nombre).trim():nombreNegocio()));
+ const lema=c.panelLema!=null?String(c.panelLema).trim():(ini?PANEL_LEMA_INI:'');
+ return {nombre:nombre,lema:lema,propioNombre:!!nom,propioLema:c.panelLema!=null};
+}
+function panelMarcaApply(){
+ const T=panelMarcaTextos(),d=document;
+ const sm=d.querySelector('.brand small'),p=d.querySelector('.brand p'),im=d.querySelector('.brand .logo img');
+ if(sm)sm.textContent=T.nombre;
+ if(p){p.textContent=T.lema;p.hidden=!T.lema}
+ if(im)im.alt=T.nombre;
+ /* Rótulos fijos de la cabecera y del h1 oculto: se rehacen siempre desde su texto original para poder cambiarlos de nuevo. */
+ [d.querySelector('.top .rt'),d.querySelector('h1.h1m')].forEach(e=>{if(!e)return;
+  if(e.dataset.tpl===undefined)e.dataset.tpl=e.textContent;
+  e.textContent=e.dataset.tpl.split(PANEL_NOMBRE_INI).join(T.nombre).replace('Panel de Facturación',(window.TJMarca&&TJMarca.panel)?'VEN CRM':'Panel de Facturación')})
+}
+function panelMarcaGuardar(){
+ const n=(($('pm_nombre')||{}).value||'').trim().slice(0,40),l=(($('pm_lema')||{}).value||'').trim().slice(0,60);
+ if(n)DB.cfg.panelNombre=n;else delete DB.cfg.panelNombre;
+ DB.cfg.panelLema=l;
+ save();panelMarcaApply();R.config();alert('✔ Nombre y lema del menú lateral guardados.')}
+function panelMarcaRestaurar(){
+ if(!confirm('¿Volver al nombre y lema por defecto del menú lateral?'))return;
+ delete DB.cfg.panelNombre;delete DB.cfg.panelLema;save();panelMarcaApply();R.config();alert('✔ Se restauró el nombre y el lema por defecto.')}
 async function panelLogoFile(ev){
  const file=archivoDe.call(this,ev);if(!file)return;
  if(!/^image\//.test(file.type||''))return alert('❌ Ese archivo no es una imagen (use PNG o JPG).');
@@ -3440,6 +3470,9 @@ function lbgCard(){const m=lbgMeta(),on=k=>m.mode===k?'p':'';
    </div>
   </div>
   <small style="display:block;color:var(--gris);font-size:11.5px;margin:0 0 8px">Recomendado <b>200×200 px</b> cuadrado (mínimo 100) · aparece en el menú de todos sus dispositivos.</small>
+  <div class="g" style="margin:0 0 8px"><div><label for="pm_nombre">Nombre bajo el logo del menú</label><input id="pm_nombre" maxlength="40" value="${esc(DB.cfg.panelNombre||'')}" placeholder="${esc(panelMarcaTextos().nombre)}"></div>
+  <div><label for="pm_lema">Eslogan bajo el nombre</label><input id="pm_lema" maxlength="60" value="${esc(DB.cfg.panelLema!=null?DB.cfg.panelLema:'')}" placeholder="${esc(panelMarcaTextos().lema||'Opcional')}"></div></div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px"><button class="btn p s" data-h-click="call" data-a-click="${_ha('panelMarcaGuardar')}">💾 Guardar nombre y eslogan</button><button class="btn s" data-h-click="call" data-a-click="${_ha('panelMarcaRestaurar')}">↺ Restaurar</button></div>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
    <input id="lg_url" placeholder="…o enlace (URL) de imagen/GIF/video" style="flex:1;min-width:200px"><button class="btn s" data-h-click="call" data-a-click="${_ha('loginLogoUrl')}">Usar enlace</button>
   </div>
@@ -4023,3 +4056,6 @@ __H.h363=function(){tjLiveOpen('https://www.tiktok.com/')};
 __H.h364=function(){tjLiveOpen('https://www.tiktok.com/studio/download')};
 __H.h355=function(){ir('nueva')};
 
+
+/* Barra lateral del panel: nombre y eslogan de la empresa activa desde el primer pintado (la copia local de DB ya está cargada). */
+try{if(!SHOP)panelMarcaApply()}catch(e){window._tjw&&_tjw(e)}
