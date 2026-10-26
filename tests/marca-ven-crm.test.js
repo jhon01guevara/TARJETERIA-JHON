@@ -95,13 +95,82 @@ test('js/app.js: authUI usa TJMarca solo si es el panel y conserva el acceso ant
  assert.match(f,/\(vc\?TJMarca\.pie\(\):'🔒 Acceso restringido · Panel de Facturación'\)/);
 });
 
-test('sw.js: caché tj-net-first-24 o más, precachea lo nuevo y todo lo precacheado existe',()=>{
- const sw=leer('sw.js');assert.ok(+/const V='tj-net-first-(\d+)'/.exec(sw)[1]>=24);
+test('sw.js: caché tj-net-first-25 o más, precachea lo nuevo y todo lo precacheado existe',()=>{
+ const sw=leer('sw.js');assert.ok(+/const V='tj-net-first-(\d+)'/.exec(sw)[1]>=25);
  const pre=eval(/const PRE=(\[[^\]]*\])/.exec(sw)[1]);
- for(const f of ['manifest-ven-crm.json','assets/ven-crm/icon-192.png','assets/ven-crm/ven-crm-horizontal-oscuro.svg','js/marca-crm.js','css/marca-ven-crm.css'])assert.ok(pre.includes(f),f);
+ for(const f of ['manifest-ven-crm.json','assets/ven-crm/icon-192.png','assets/ven-crm/ven-crm-horizontal-oscuro.svg','js/marca-crm.js','css/marca-ven-crm.css','assets/ven-crm/ven-crm-horizontal-claro.svg','assets/ven-crm/icono-app.svg'])assert.ok(pre.includes(f),f);
  for(const f of pre)assert.ok(fs.existsSync(path.join(raiz,f)),'no existe: '+f);
 });
 test('la CSP no cambió y sigue permitiendo el manifest/íconos propios (default-src y img-src de este sitio)',()=>{
  const h=leer('index.html'),csp=/Content-Security-Policy" content="([^"]*)"/.exec(h)[1];
  assert.match(csp,/default-src 'self'/);assert.match(csp,/img-src 'self'/);assert.doesNotMatch(csp,/script-src[^;]*unsafe-inline/);
+});
+
+/* ===== Interior del panel (PR «marca-ven-crm-panel») ===== */
+function dom(search){
+ /* DOM mínimo: lo justo para ejecutar TJMarca.interior() y ver qué toca. */
+ const mk=(tag,txt)=>{const e={tag,children:[],attrs:{},cls:new Set(),textContent:txt||'',
+  setAttribute(k,v){this.attrs[k]=v},getAttribute(k){return this.attrs[k]},classList:{add:c=>e.cls.add(c)},
+  appendChild(c){c.padre=e;e.children.push(c);return c},insertBefore(c,r){c.padre=e;e.children.splice(Math.max(0,e.children.indexOf(r)),0,c);return c},
+  querySelector(s){const q=s.replace('.','');const rec=n=>{for(const c of n.children){if(c.cls.has(q)||c.tag===s)return c;const r=rec(c);if(r)return r}return null};return rec(e)}};
+  Object.defineProperty(e,'className',{get(){return[...e.cls].join(' ')},set(v){e.cls=new Set(String(v).split(' ').filter(Boolean))}});return e};
+ const h1=mk('h1','Panel de Facturación'),rt=mk('div','Tarjetería Jhon · Panel de Facturación'),h1m=mk('h1','Panel de Facturación · Tarjetería Jhon'),sf=mk('div','Respaldo'),div1=mk('div'),logoImg=mk('img');
+ const mapa={'.brand h1':h1,'.top .rt':rt,'h1.h1m':h1m,'.top > div':div1,'.sf':sf};
+ const el=a=>({attrs:Object.assign({},a),setAttribute(k,v){this.attrs[k]=v},getAttribute(k){return this.attrs[k]}});
+ ['link[rel=manifest]','meta[name=theme-color]','link[rel=icon]','link[rel=apple-touch-icon]','meta[name=apple-mobile-web-app-title]','meta[property="og:site_name"]','meta[property="og:title"]','meta[name="twitter:title"]'].forEach(s=>mapa[s]=el({}));
+ h1.classList={add:c=>h1.cls.add(c)};
+ const document={title:'Tarjetería Jhon · Panel de Facturación',createElement:t=>mk(t),documentElement:{classList:{add(){}}},querySelector:s=>mapa[s]||null};
+ const win={};const ctx={window:win,document,location:{search}};ctx.self=win;vm.createContext(ctx);
+ vm.runInContext(leer('js/marca-crm.js'),ctx);
+ return{h1,rt,h1m,sf,div1,logoImg,document,M:win.TJMarca};
+}
+test('js/marca-crm.js interior: en el panel pone el logo VEN CRM, el símbolo, el pie y cambia «Panel de Facturación» por «VEN CRM» sin tocar el nombre de la empresa',()=>{
+ const x=dom('?v=admin');
+ assert.equal(x.h1.children.length,1);assert.equal(x.h1.children[0].alt,'VEN CRM');assert.equal(x.h1.children[0].src,'assets/ven-crm/ven-crm-horizontal-claro.svg');assert.ok(x.h1.cls.has('vwm'));
+ assert.equal(x.rt.textContent,'Tarjetería Jhon · VEN CRM');assert.equal(x.h1m.textContent,'VEN CRM · Tarjetería Jhon');
+ assert.equal(x.div1.children[0].className,'vsym');assert.equal(x.div1.children[0].alt,'');assert.equal(x.div1.children[0].src,'assets/ven-crm/icono-app.svg');
+ assert.equal(x.sf.children.at(-1).className,'vpie');assert.equal(x.sf.children.at(-1).textContent,'VEN CRM');
+});
+test('js/marca-crm.js interior: es idempotente (llamarlo otra vez no duplica nada)',()=>{
+ const x=dom('');x.M.interior();x.M.interior();
+ assert.equal(x.h1.children.length,1);assert.equal(x.div1.children.length,1);assert.equal(x.sf.children.length,1);assert.equal(x.rt.textContent,'Tarjetería Jhon · VEN CRM');
+});
+test('js/marca-crm.js interior: en la tienda (?tienda=…) no toca ningún rótulo, ni crea elementos',()=>{
+ const x=dom('?tienda=1&v=admin');
+ assert.equal(x.h1.children.length,0);assert.equal(x.h1.textContent,'Panel de Facturación');assert.equal(x.rt.textContent,'Tarjetería Jhon · Panel de Facturación');
+ assert.equal(x.div1.children.length,0);assert.equal(x.sf.children.length,0);assert.equal(typeof x.M.interior,'undefined');
+});
+test('js/marca-crm.js interior: no crea elementos con la clase «logo» (facturas, informes y PDF leen el primer «.logo img» = el logo de la empresa)',()=>{
+ const s=leer('js/marca-crm.js').replace(/\/\*[\s\S]*?\*\//g,'');
+ assert.doesNotMatch(s,/className\s*=\s*'logo|classList\.add\('logo/);
+ assert.deepEqual(dom('').M.paleta.length>=6,true);
+ for(const c of dom('').M.paleta){const r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),b=parseInt(c.slice(5,7),16);assert.ok(!(r>g+40&&r>b),'sin rosado/rojo: '+c)}
+});
+test('index.html: el HTML estático sigue siendo el de la tienda (nombre, h1 y rótulos) y .logo sigue siendo el primer «.logo img»',()=>{
+ const h=leer('index.html');
+ assert.match(h,/<div class="brand"><div class="logo"><img src="assets\/logo\.png" alt="Tarjetería Jhon"><\/div><small>Tarjetería Jhon<\/small><h1>Panel de Facturación<\/h1><p>Tarjetas para toda ocasión<\/p><\/div>/);
+ assert.match(h,/<div class="rt">Tarjetería Jhon · Panel de Facturación<\/div>/);
+ assert.match(h,/js\/marca-crm\.js\?v=marca-ven-crm-[2-9]/);assert.match(h,/css\/marca-ven-crm\.css\?v=marca-ven-crm-[2-9]/);
+ assert.match(h,/js\/app\.js\?v=modulos-fase-24[e-z]/);
+});
+test('css/marca-ven-crm.css interior: todo bajo html.ven-crm; no toca #shop, #prt (facturas/impresión), .fa, .logo ni .brand small/p (datos de la empresa)',()=>{
+ const c=leer('css/marca-ven-crm.css').replace(/\/\*[\s\S]*?\*\//g,'');
+ const sels=c.split('}').map(x=>x.split('{')[0].trim()).filter(Boolean).flatMap(r=>r.split(',').map(x=>x.trim()));
+ for(const sel of sels){
+  assert.match(sel,/^(html\.ven-crm\b|\.vlogo\b|@media)/,'sin acotar: '+sel);
+  assert.doesNotMatch(sel,/#shop|#prt|\.fa\b|\.klogo|\.logo\b|\.brand small|\.brand p\b|\.cv\b|@page/,'toca algo que debe quedar igual: '+sel);
+ }
+ assert.doesNotMatch(c,/E0457B|224,\s*69,\s*123/i,'el rosado no puede volver');
+});
+test('css/marca-ven-crm.css interior: contraste accesible (blanco sobre #1f1f1f, negro sobre blanco, grises ≥ 4,5:1, acento ≥ 4,5:1)',()=>{
+ const L=h=>{const v=[1,3,5].map(i=>parseInt(h.slice(i,i+2),16)/255).map(x=>x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4));return .2126*v[0]+.7152*v[1]+.0722*v[2]};
+ const R=(a,b)=>{const x=L(a),y=L(b);return(Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+ assert.ok(R('#ffffff','#1f1f1f')>=7);assert.ok(R('#000000','#ffffff')>=7);assert.ok(R('#ffffff','#2e2e2e')>=7);
+ assert.ok(R('#1A56DB','#ffffff')>=4.5,'acento claro sobre blanco');assert.ok(R('#7FA8FF','#000000')>=4.5,'acento nocturno sobre negro');
+ assert.ok(R('#6B6B6B','#ffffff')>=4.5,'gris del tema (--gris) sobre blanco');
+ const c=leer('css/marca-ven-crm.css');assert.match(c,/--ven-acento:#1A56DB/);assert.match(c,/--ven-acento:#7FA8FF/);
+});
+test('js/app.js: los gráficos usan la paleta de VEN CRM solo en el panel y conservan la anterior como respaldo',()=>{
+ const a=leer('js/app.js');
+ assert.ok(a.includes("const cPal=(window.TJMarca&&TJMarca.panel&&TJMarca.paleta)||['#E0457B','#6366f1','#10b981','#f59e0b','#8b5cf6','#06b6d4'];"));
 });

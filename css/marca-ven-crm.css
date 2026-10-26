@@ -5,3 +5,34 @@ html.ven-crm #auth .abg span{opacity:.55}
 .vlogo img{display:block;margin:0 auto;width:220px;max-width:80%;height:auto}
 html.ven-crm #auth .alogo{max-width:240px;padding:8px;border-radius:16px}
 html.ven-crm #auth .alogo img{max-height:64px}
+
+/* ===== Interior del panel (VEN CRM) · todo acotado a html.ven-crm: la tienda (?tienda=) nunca recibe esta clase =====
+   Paleta: negro/blanco/grises (uber-skin.css ya pone --az negro en el tema claro y blanco en el nocturno) y un único acento sobrio, el azul #1A56DB (7,0:1 sobre blanco).
+   NO se tocan: el logo y los datos de la empresa (.logo, .brand small/p), facturas e impresiones (#prt), la tienda ni los colores de estado (verde cobrado, rojo error). */
+html.ven-crm{--ven-acento:#1A56DB;--ven-acento-bg:rgba(26,86,219,.10)}
+html.ven-crm[data-t="nocturno"]{--ven-acento:#7FA8FF;--ven-acento-bg:rgba(127,168,255,.16)}
+/* Barra lateral: el logo VEN CRM va arriba (h1 con la imagen); debajo sigue la tarjeta de la empresa tal cual (logo, nombre y lema propios). */
+html.ven-crm .brand{display:flex;flex-direction:column}
+html.ven-crm .brand h1.vwm{order:-1;margin:0 0 14px;padding:2px 2px 14px;border-bottom:1px solid var(--linea);line-height:0}
+html.ven-crm .brand h1.vwm img{display:block;width:132px;height:auto}
+html.ven-crm[data-t="nocturno"] .brand h1.vwm img,html.ven-crm[data-t="nocturno"] .top .vsym{filter:invert(1)}
+/* Cabecera: símbolo V a la izquierda del título. */
+html.ven-crm .top>div:first-child{display:grid;grid-template-columns:auto 1fr;column-gap:12px;align-items:center}
+html.ven-crm .top .vsym{grid-row:1/3;width:30px;height:30px;border-radius:8px;display:block}
+html.ven-crm .top .vsym+*{grid-column:2}
+html.ven-crm .top .vsym+*+*{grid-column:2}
+/* Iconos del menú: monocromos (antes un degradado de color por módulo). */
+html.ven-crm .ni .ic{background:#1f1f1f!important;box-shadow:none!important}
+html.ven-crm .ni.on .ic{background:#fff!important}
+html.ven-crm .ni.on .ic svg{fill:#000;filter:none}
+html.ven-crm[data-t="nocturno"] .ni .ic{background:#2e2e2e!important}
+html.ven-crm[data-t="nocturno"] .ni.on .ic{background:#000!important}
+html.ven-crm[data-t="nocturno"] .ni.on .ic svg{fill:#fff}
+html.ven-crm .ni:hover .ic{transform:none}
+/* Ítem activo: píldora sólida (negra en claro, blanca en nocturno) como en el resto de la marca; evita el texto negro sobre el degradado gris del tema nocturno. */
+html.ven-crm .ni.on{background:#000;color:#fff}
+html.ven-crm[data-t="nocturno"] .ni.on{background:#fff;color:#000}
+/* Anillo de foco con el acento sobrio (azul #1A56DB en claro, #7FA8FF en nocturno). */
+html.ven-crm .btn:focus-visible,html.ven-crm button:focus-visible,html.ven-crm .ni:focus-visible{outline-color:var(--ven-acento)}
+/* Pie de la barra lateral. */
+html.ven-crm .sf .vpie{margin-top:10px;padding-top:8px;border-top:1px solid var(--linea);font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gris)}
