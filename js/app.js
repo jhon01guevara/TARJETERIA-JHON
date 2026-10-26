@@ -2756,7 +2756,7 @@ function shopCacheCfg(cd){
 }
 /* Cuando llega (o cambia) la plantilla de la tienda, la cabecera se actualiza en su sitio: antes solo se rehacía la portada y el logo del primer pintado se quedaba. */
 /* Cabecera del documento de la tienda de OTRA empresa: ni manifest, ni iconos, ni textos de vista previa de Tarjetería Jhon.
-   Sin manifest propio (la CSP no admite blob: en manifest-src) la tienda no se instala como app, pero tampoco se instala con el nombre y el icono de Tarjetería.
+   El manifest de Tarjetería se quita; el propio de la empresa (nombre e iconos suyos) lo pone js/manifest-tienda.js cuando llega su plantilla, como URL data: (la CSP lo admite con manifest-src 'self' data:).
    Icono: el logo de la empresa si es una imagen; si no, la inicial de la empresa. La empresa inicial no cambia. */
 function shopMetaEmpresa(){
  if(TJEmpresa.empEsInicial()||typeof document==='undefined')return;
@@ -2772,6 +2772,8 @@ function shopMetaEmpresa(){
  set('meta[property="og:site_name"]','content',nm);set('meta[property="og:title"]','content',nm);set('meta[property="og:description"]','content',desc);
  set('meta[name="twitter:title"]','content',nm);set('meta[name="twitter:description"]','content',desc);
  const u=q('meta[property="og:url"]');if(u)u.remove();
+ /* Instalable con SU nombre y SU logo: manifest propio generado en el navegador (js/manifest-tienda.js; URL data:, permitida por manifest-src 'self' data: de la CSP). Solo cuando la plantilla de la empresa ya llegó. */
+ if(SH.cfgOk&&typeof TJManifestTienda!=='undefined')TJManifestTienda.aplicar({emp:TJEmpresa.empActiva(),nombre:nm,logo:ok})
 }
 function shopBrandRefresh(){
  const kb=document.querySelector('#shop .kbrand');
