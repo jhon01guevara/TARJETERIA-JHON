@@ -47,7 +47,7 @@ async function paso(nombre,fn,opc){
 }
 const exige=(ok,msg,det)=>{if(!ok)throw new Error(msg+(det!==undefined&&det!==''?'  ['+det+']':''))};
 /* ---------- contextos de navegador ---------- */
-let br,BASE,permitidas=null,ap0=()=>null;
+let TOTAL=10,br,BASE,permitidas=null,ap0=()=>null;
 async function contexto(o){
  const c=await br.newContext(Object.assign({viewport:{width:1366,height:900},serviceWorkers:'block'},o||{}));
  await c.route(PROD,r=>{tocoProd.push(r.request().url().slice(0,120));r.abort()});
@@ -124,15 +124,16 @@ const esperarFn=(p,fn,arg,ms)=>p.waitForFunction(fn,arg,{timeout:ms||20000});
    exige(await ap.inputValue('#f_cn')==='Cliente Humo','Al elegir el cliente no se llenó su nombre');
    const pid=await ap.evaluate(()=>DB.prod[0].id);await ap.selectOption('#fi tr:first-child select',pid);await ap.waitForTimeout(300);
    exige(await ap.inputValue('#fi tr:first-child input[aria-label^="Precio"]')==='10','Al elegir el producto no se puso su precio');
-   const tot=await ap.textContent('#t3');exige(/10\.7/.test(tot),'El total (10 + ITBMS 7 %) no es $10.70',tot);
+   const itb=await ap.evaluate(()=>+DB.cfg.itbms||0);TOTAL=Math.round(10*(1+itb/100)*100)/100;
+   const tot=await ap.textContent('#t3');exige(tot.replace(/[^0-9.]/g,'')===TOTAL.toFixed(2),'El total (10 + ITBMS '+itb+' %) no es $'+TOTAL.toFixed(2),tot);
    await ap.click('button:has-text("Emitir factura")');await ap.waitForTimeout(1500);
    const f=await ap.evaluate(()=>({n:DB.fac.length,v:vista,t:document.getElementById('v').innerText,imp:window.__imprimio||0,tot:DB.fac[0]&&DB.fac[0].total,cli:DB.fac[0]&&DB.fac[0].cli}));
    exige(f.n===1&&f.v==='fac','No se guardó la factura o no fue a «Facturas»',JSON.stringify({n:f.n,v:f.v}));
-   exige(/Cliente Humo/.test(f.t)&&/10\.70/.test(f.t),'La factura no aparece en el historial con cliente y total',f.t.slice(0,120));
+   exige(/Cliente Humo/.test(f.t)&&f.t.includes(TOTAL.toFixed(2)),'La factura no aparece en el historial con cliente y total',f.t.slice(0,120));
    exige(f.imp>=1,'No se abrió la impresión de la factura')});
   await paso('Los datos quedaron guardados en la nube (cliente, producto y factura)',async()=>{
    await esperarFn(ap,async()=>{try{const d=await fbDocRef.get(),c=d.exists?d.data():{};const s=JSON.stringify(c);return /Producto Humo/.test(s)&&/Cliente Humo/.test(s)}catch(e){return false}},null,25000).catch(()=>{});
-   const r=await ap.evaluate(async()=>{try{const d=await fbDocRef.get(),s=JSON.stringify(d.exists?d.data():{});return{prod:/Producto Humo/.test(s),fac:/"total":10\.7/.test(s),cli:/Cliente Humo/.test(s)||/Cliente Humo/.test(JSON.stringify(((await clientesRef().get()).data()||{})))}}catch(e){return{err:e.message}}});
+   const r=await ap.evaluate(async TOTAL=>{try{const d=await fbDocRef.get(),s=JSON.stringify(d.exists?d.data():{});return{prod:/Producto Humo/.test(s),fac:s.includes('"total":'+TOTAL),cli:/Cliente Humo/.test(s)||/Cliente Humo/.test(JSON.stringify(((await clientesRef().get()).data()||{})))}}catch(e){return{err:e.message}}},TOTAL);
    exige(!r.err&&r.prod&&r.fac&&r.cli,'La nube no tiene todo lo creado',JSON.stringify(r))});
   /* ============ 4. Catálogo y Tienda (panel) ============ */
   await paso('Catálogo: abre y una empresa nueva no hereda modelos de Tarjetería',async()=>{
