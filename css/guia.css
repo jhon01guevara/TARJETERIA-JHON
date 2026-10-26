@@ -46,3 +46,14 @@
  .guia-a .btn{flex:1 1 140px;white-space:normal}
  .guia-pa .btn{flex:1 1 120px}
 }
+/* Pantalla «Ayuda y soporte» (js/ayuda.js) */
+.ay-p{margin:2px 0 8px;font-size:13.5px;line-height:1.45;color:var(--gris);max-width:72ch}
+.ay-bt{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.ay-bt .btn{text-decoration:none}
+.ay-q{margin:0 0 8px;border:1px solid var(--linea,#E4E4E9);border-radius:12px;padding:8px 14px;background:var(--card,#fff)}
+.ay-q summary{cursor:pointer;font-weight:600;font-size:14.5px;padding:8px 0}
+.ay-q p{margin:8px 0 0;font-size:13.5px;line-height:1.5;max-width:72ch}
+.ay-ct{margin:0 0 12px;padding:12px 14px;border-radius:12px;background:var(--soft,#F5F5F7)}
+.ay-h{font-size:12.5px}
+.ay-ta{width:100%;box-sizing:border-box;margin-top:8px;font-size:12.5px;font-family:ui-monospace,Menlo,Consolas,monospace;resize:vertical}
+.guia-ay{margin:12px 0 0;font-size:13.5px;color:var(--gris)}

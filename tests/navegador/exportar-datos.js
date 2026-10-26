@@ -68,7 +68,7 @@ const lineas=b=>b.toString('utf8').replace(/^\ufeff/,'').trim().split('\r\n');
  await p.reload({waitUntil:'load'});await p.waitForSelector('#nav .ni',{state:'attached',timeout:45000});await p.waitForTimeout(3000);
  await irConfig(p);
  const cnt=await p.evaluate(()=>document.getElementById('exp_cnt').innerText);
- chk('los conteos reflejan los datos reales',/2 clientes · 2 productos · 2 facturas · 1 pedidos/.test(cnt),cnt);
+ chk('los conteos reflejan los datos reales',/2 clientes · 2 productos · 2 facturas · 1 pedido de la tienda/.test(cnt),cnt);
  await shotEl(p,'2-tarjeta-con-datos');
  // contadores de escritura
  await p.evaluate(()=>{window.__w=0;const F=firebase.firestore;for(const [o,ms] of [[F.DocumentReference.prototype,['set','update','delete']],[F.CollectionReference.prototype,['add']],[F.WriteBatch.prototype,['commit']]])ms.forEach(m=>{const f=o[m];o[m]=function(){window.__w++;return f.apply(this,arguments)}});const FP=Object.getPrototypeOf(fbDb),f2=FP.runTransaction;FP.runTransaction=function(){window.__w++;return f2.apply(this,arguments)}});
