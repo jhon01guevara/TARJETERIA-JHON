@@ -67,7 +67,7 @@ test('Fase 24 · WhatsApp del pedido: es un añadido a «¡Pedido enviado!»; el
  assert.match(s,/<button class="sbtn g" data-h-click="h32" style="margin-bottom:8px">🧾 Mis pedidos<\/button>'\+shopPedidoWABoton\(p,c\)\+'<button class="sbtn g" data-h-click="h31">Seguir viendo el catálogo<\/button>/);
  assert.ok(s.indexOf("fbCol('tienda_pedidos').doc(id).set(p)")<s.indexOf('shopPedidoWABoton(p,c)'),'el botón sale después de guardar el pedido');
  assert.match(s,/data-h-click="h34"[^]*Ver comprobante[^]*data-h-click="h33"[^]*Descargar PDF[^]*data-h-click="h32"/);
- assert.match(app,/id="k_wa"/);assert.match(app,/shopRedes[^]*w\.href='https:\/\/wa\.me\/'\+num\+'\?text='\+encodeURIComponent\('Hola, vi su catálogo virtual de Tarjetería Jhon y quisiera más información\.'\)/,'#k_wa no cambió');
+ assert.match(app,/id="k_wa"/);assert.match(app,/shopRedes[^]*w\.href='https:\/\/wa\.me\/'\+num\+'\?text='\+encodeURIComponent\('Hola, vi su catálogo virtual de '\+nombreNegocio\(\)\+' y quisiera más información\.'\)/,'#k_wa no cambió');
 });
 test('Fase 24 · caché del service worker tj-net-first-22 o posterior y ?v= de app.js subido (WhatsApp)',()=>{
  assert.match(leer('sw.js'),/const V='tj-net-first-(2[2-9]|[3-9]\d)'/);
