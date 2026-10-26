@@ -22,7 +22,7 @@ test('los sitios de comprobante, reporte y marketing usan colorMarca() y solo de
    assert.ok(/TJEmpresa\.colorMarca\?TJEmpresa\.colorMarca\(\):'$/.test(ctxTxt)||/colorMarca\(\):'#E0457B/.test(s.slice(m.index-30,m.index+10)),f+': rosa fijo sin colorMarca');
   }
  }
- assert.match(leer('js/app.js'),/AC=\(typeof TJEmpresa!=='undefined'&&TJEmpresa\.colorMarca\?TJEmpresa\.colorMarca\(\):'#E0457B'\)/,'reporte PDF');
+ assert.match(leer('js/reportes-ventas.js'),/AC=\(typeof TJEmpresa!=='undefined'&&TJEmpresa\.colorMarca\?TJEmpresa\.colorMarca\(\):'#E0457B'\)/,'reporte PDF');
 });
 test('el pie de la etiqueta de envío usa el nombre de la empresa, no «Tarjetería Jhon» fijo',()=>{
  const s=leer('js/etiquetas.js');
