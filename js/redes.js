@@ -11,7 +11,7 @@ const RED_SVG={
  tiktok:'<path d="M14 3v11.5a3.5 3.5 0 1 1-3.5-3.5"/><path d="M14 3c.4 2.6 2.1 4.2 5 4.5"/>',
  instagram:'<rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>',
  facebook:'<path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/>'};
-const CONT_DEF=[['tel','Teléfono','+507 6074-1150'],['wa','WhatsApp (botón flotante)','60741150'],['email','Correo','ventas@ejemplo.com'],['dir','Dirección','Calle principal, Panamá Oeste'],['horario','Horario','Lunes a sábado, 9:00 a.m. a 6:00 p.m.']];
+const CONT_DEF=[['tel','Teléfono','+507 6000-0000'],['wa','WhatsApp (botón flotante)','60000000'],['email','Correo','ventas@ejemplo.com'],['dir','Dirección','Calle principal, Ciudad'],['horario','Horario','Lunes a sábado, 9:00 a.m. a 6:00 p.m.']];
 // Acepta @usuario, usuario o un link de la red; devuelve un link https seguro o '' si no es válido.
 function redUrl(red,txt){
  let t=String(txt==null?'':txt).trim();if(!t||t.length>300||!RED_HOST[red])return'';
@@ -32,7 +32,7 @@ function redUrl(red,txt){
 function contLimpio(c){
  c=c&&typeof c==='object'?c:{};
  const tx=(v,m)=>String(v==null?'':v).replace(/[\u0000-\u001f<>]/g,' ').replace(/\s+/g,' ').trim().slice(0,m),o={};
- const tel=tx(c.tel,25);o.tel=/^[+\d][\d\s().-]{5,24}$/.test(tel)?tel:'';
+ const tel=tx(c.tel,25);o.tel=/^[+(\d][\d\s().-]{5,24}$/.test(tel)?tel:'';
  let w=String(c.wa==null?'':c.wa).replace(/\D/g,'');if(w.length===8)w='507'+w;o.wa=/^\d{10,15}$/.test(w)?w:'';
  const em=tx(c.email,120);o.email=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)?em:'';
  o.dir=tx(c.dir,200);o.horario=tx(c.horario,150);
