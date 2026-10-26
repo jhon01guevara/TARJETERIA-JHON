@@ -16,3 +16,23 @@ Tarjeta «🧹 Limpieza de «<empresa>»» al final de **Empresas** (visible sol
 ## Pruebas
 - `tests/empresa-nueva-vacia.test.js` (npm test, Firestore simulado).
 - `tests/navegador/empresa-nueva-vacia.js` (Chrome real, copia de PRUEBA; crea y borra `ej-sin-prueba` y `ej-con-prueba`).
+
+## 3. «Quitar lo heredado de Tarjetería» (empresas creadas con la versión anterior)
+Antes del arreglo, una empresa nueva podía heredar de Tarjetería: modelos del catálogo de fábrica, los 6 productos de arranque y datos de contacto. La misma tarjeta de limpieza trae un segundo bloque **«Datos heredados de Tarjetería Jhon»** con dos pasos:
+1. **«Ver vista previa»** (solo lectura, no escribe nada): cuenta lo que se quitaría.
+2. **«Quitar lo heredado»** → confirmación con el detalle («SOLO de esta empresa», «no se puede deshacer») → vuelve a escanear justo antes de borrar → borra.
+
+Qué se considera heredado (coincidencia **exacta**, para no tocar lo propio):
+- **Catálogo (nube), tienda y este dispositivo:** modelos cuyo **id Y nombre** coinciden con la lista de fábrica de `catalogo_default.zip` (88 modelos). Un modelo que subiste tú, aunque se llame parecido, no se toca.
+- **Productos de arranque:** `p0…p5` con el nombre «TARJETAS DE TODA OCACION[ DISTRUBUCION]» y su precio original.
+- **Contacto:** nombre, teléfono y correo de Tarjetería, solo si el valor es idéntico (dirección, banco, RUC… nunca se tocan: «Banco General» o «Panamá Oeste» pueden ser legítimos).
+
+Límites a tener presentes:
+- Solo actúa en la empresa **activa** y no aparece en la empresa inicial.
+- Los cambios del panel se guardan por el camino normal (`save`); si otro dispositivo tiene el panel abierto con datos viejos, debe **recargar** antes de seguir editando (si no, podría volver a subirlos).
+- El catálogo de los otros dispositivos se limpia solo al sincronizar los borrados de la nube.
+- Probado únicamente en PRUEBA. **No se ha ejecutado en producción**; si decides limpiar una empresa real, hazlo tú desde el panel, con la vista previa primero.
+
+## Pruebas del bloque heredado
+- `tests/limpieza-heredado.test.js` (npm test; incluye la lista de fábrica real de 88 modelos).
+- `tests/navegador/quitar-heredado.js` (Chrome real, copia de PRUEBA con `CON_ZIP=1`; siembra y reinicia `vacia-prueba`, comprueba que no cambia nada en la vista previa, que lo propio queda, que tras recargar no reaparece y que la empresa inicial no muestra la herramienta).
