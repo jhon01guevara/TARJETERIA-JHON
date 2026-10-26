@@ -131,6 +131,9 @@ Tarjetería Jhon y Genuine **no se tocan**: se crea su documento con `plan:'nego
 
 Notas para quien lo envíe: **este texto no se ha enviado a nadie**; el envío lo decide y lo hace John. Si se distribuye a varias empresas, mencionar el enlace de su tienda (`?tienda=1&emp=…`) con el nuevo dominio. `github.io` sigue funcionando, así que no hay urgencia ni corte.
 
+### Aviso dentro de la app (ya hecho, Etapa 5)
+Además del texto de arriba (que John decide si envía), la app muestra sola un aviso amable **solo cuando se abre desde `*.github.io`**: «VEN CRM tiene dirección nueva: vencrm.com», con botón para abrir vencrm.com, los pasos para reinstalar según el aparato (Android, iPhone o computadora) y dos salidas: «Ahora no» (vuelve a salir a los 14 días) y «No mostrar más». No sale en vencrm.com, en copias de prueba ni en las tiendas públicas (`?tienda=…`). Código: `js/aviso-dominio.js` y `css/aviso-dominio.css`; no toca datos, sesión ni el service worker; lo guardado vive en `localStorage` (`tj_aviso_dominio`). Para quitarlo: borrar su `<script>` y `<link>` de `index.html` y su entrada en `sw.js`. Prueba: `tests/aviso-dominio.test.js` y `tests/navegador/aviso-dominio.js`.
+
 ## Orden sugerido de la Etapa 4
 1. Decidir el modelo de roles por empresa y aprobar su publicación de reglas (sección 0) — **bloquea** invitar clientes con administrador propio.
 2. Fase manual: documento `suscripcion/estado` + módulo `js/suscripcion.js` (avisos y límites en el cliente) + pantalla de «Plataforma» para John. Sin pasarela.
