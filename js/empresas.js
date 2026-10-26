@@ -10,6 +10,7 @@
    al momento de renderizar, nunca al cargarse. */
 'use strict';
 var EM={list:[],tab:'lista',edit:null,domEmp:'',msg:null};
+var EMP_COLOR1='#111111',EMP_COLOR2='#276EF1';
 var _emOn=false;
 
 /* ---------- Validadores (puros, testeables en Node) ---------- */
@@ -30,8 +31,9 @@ function empSan(data,existente){
  if(nombre.length<2)return {err:'Escriba el nombre de la empresa (mínimo 2 letras).'};
  var slug=d.slug===undefined||d.slug===null||d.slug===''?empNormSlug(nombre):String(d.slug).trim();
  if(!TJEmpresa.empSlugOk(slug))return {err:'El identificador (slug) debe tener 3-40 caracteres: minúsculas, números y guiones.'};
- var color=empColorOk(d.color)?d.color:'#E0457B';
- var color2=empColorOk(d.color2)?d.color2:'#0F6CBD';
+ /* Colores por defecto de una empresa nueva: los neutros de la plataforma VEN CRM (negro y azul), no el rosa de Tarjetería Jhon. */
+ var color=empColorOk(d.color)?d.color:EMP_COLOR1;
+ var color2=empColorOk(d.color2)?d.color2:EMP_COLOR2;
  var tel=String(d.tel==null?'':d.tel).replace(/[\u0000-\u001f<>]/g,' ').trim().slice(0,25);
  var email=String(d.email==null?'':d.email).trim().slice(0,120);
  if(email&&!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return {err:'El correo de contacto no es válido.'};
@@ -106,7 +108,7 @@ function empActivar(id){
   location.href=location.pathname+'?emp='+encodeURIComponent(id);
   return;
  }
- var aviso='Preferencia guardada. La separación real de datos por empresa se activa tras aprobar la migración (Fase 6-7 del plan); mientras tanto el panel sigue mostrando los datos de Tarjetería Jhon.';
+ var aviso='Preferencia guardada. La separación real de datos por empresa se activa tras aprobar la migración (Fase 6-7 del plan); mientras tanto el panel sigue mostrando los datos de la empresa inicial.';
  EM.msg={ok:true,t:aviso};
  if(typeof R!=='undefined'&&R.empresas)R.empresas();
 }
@@ -218,14 +220,15 @@ function empresasRender(){
  if(EM.tab==='form'){
   var e=EM.edit||{};
   var v=function(k,dflt){return typeof esc==='function'?esc(e[k]!=null&&k!=='contacto'?e[k]:(dflt||'')):(dflt||'')};
-  body='<div class="g" style="margin-top:12px">'
+  body='<h3 style="margin:12px 0 2px">'+(EM.edit?'Editar empresa':'Nueva empresa en VEN CRM')+'</h3><p style="font-size:12.5px;color:var(--gris);margin:0">Cada empresa tiene su propio panel, catálogo, tienda y datos. Estos datos de contacto son solo de esta empresa y se pueden cambiar después en «Datos de la empresa».</p>'
+   +'<div class="g" style="margin-top:12px">'
    +'<div><label>Nombre comercial *</label><input id="em_nombre" value="'+v('nombre')+'" maxlength="60" placeholder="Ej. Dulcería La Central"></div>'
    +'<div><label>Identificador (slug)'+(EM.edit?' — no se puede cambiar':'')+'</label><input id="em_slug" value="'+v('slug')+'" maxlength="40" placeholder="se genera del nombre"'+(EM.edit?' disabled':'')+'></div>'
    +'<div><label>Logo (URL de imagen)</label><input id="em_logo" value="'+v('logo')+'" maxlength="300" placeholder="https://... (opcional)"></div>'
-   +'<div><label>Color principal</label><input id="em_color" type="color" value="'+(e.color||'#E0457B')+'" style="height:42px;padding:2px"></div>'
-   +'<div><label>Color secundario</label><input id="em_color2" type="color" value="'+(e.color2||'#0F6CBD')+'" style="height:42px;padding:2px"></div>'
-   +'<div><label>Teléfono</label><input id="em_tel" value="'+(e.contacto?e.contacto.tel:'')+'" maxlength="25"></div>'
-   +'<div><label>Correo</label><input id="em_email" value="'+(e.contacto?e.contacto.email:'')+'" maxlength="120"></div>'
+   +'<div><label>Color principal</label><input id="em_color" type="color" value="'+(e.color||EMP_COLOR1)+'" style="height:42px;padding:2px"></div>'
+   +'<div><label>Color secundario</label><input id="em_color2" type="color" value="'+(e.color2||EMP_COLOR2)+'" style="height:42px;padding:2px"></div>'
+   +'<div><label>Teléfono de contacto</label><input id="em_tel" value="'+(e.contacto?e.contacto.tel:'')+'" maxlength="25" placeholder="+507 0000-0000"></div>'
+   +'<div><label>Correo de contacto</label><input id="em_email" value="'+(e.contacto?e.contacto.email:'')+'" maxlength="120" placeholder="contacto@suempresa.com"></div>'
    +'</div><div style="display:flex;gap:8px;margin-top:12px"><button class="btn p" data-h-click="call" data-a-click="'+(typeof _ha==='function'?_ha('empGuardar'):'')+'">💾 Guardar empresa</button>'
    +'<button class="btn" data-h-click="call" data-a-click="'+(typeof _ha==='function'?_ha('empCancelar'):'')+'">Cancelar</button></div>';
  }else if(EM.tab==='dominios'){
@@ -243,8 +246,8 @@ function empresasRender(){
  }else{
   var filas=EM.list.map(function(x){
    var esAct=x.id===activa;
-   return '<div class="dl" style="border-left:5px solid '+(x.color||'#E0457B')+'"><div style="display:flex;align-items:center;gap:10px;min-width:0">'
-    +(x.logo?'<img src="'+(typeof esc==='function'?esc(x.logo):x.logo)+'" alt="" style="width:38px;height:38px;border-radius:10px;object-fit:cover">':'<span style="width:38px;height:38px;border-radius:12px;background:'+(x.color||'#E0457B')+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800">'+(x.nombre||'?').charAt(0).toUpperCase()+'</span>')
+   return '<div class="dl" style="border-left:5px solid '+(x.color||EMP_COLOR1)+'"><div style="display:flex;align-items:center;gap:10px;min-width:0">'
+    +(x.logo?'<img src="'+(typeof esc==='function'?esc(x.logo):x.logo)+'" alt="" style="width:38px;height:38px;border-radius:10px;object-fit:cover">':'<span style="width:38px;height:38px;border-radius:12px;background:'+(x.color||EMP_COLOR1)+';color:#fff;display:inline-flex;align-items:center;justify-content:center;font-weight:800">'+(x.nombre||'?').charAt(0).toUpperCase()+'</span>')
     +'<div style="min-width:0"><b>'+(typeof esc==='function'?esc(x.nombre||x.id):x.id)+'</b> <small style="color:var(--gris)">· '+ (typeof esc==='function'?esc(x.id):x.id) +'</small>'
     +'<small style="display:block;color:var(--gris)">'+(x.estado==='pausa'?'⏸ Pausada':'✅ Activa')+(x.inicial?' · empresa inicial':'')+(esAct?' · <b>en uso ahora</b>':'')+'</small></div></div>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">'
@@ -254,7 +257,7 @@ function empresasRender(){
     +'</div></div>';
   }).join('');
   body='<div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn p" data-h-click="call" data-a-click="'+(typeof _ha==='function'?_ha('empNueva'):'')+'">+ Nueva empresa</button></div>'
-   +(filas||'<div class="vacio">Aún no hay empresas en la nube. La empresa inicial (Tarjetería Jhon) se registra sola al abrir esta pantalla; también puede crear otras con «Nueva empresa».</div>');
+   +(filas||'<div class="vacio">Aún no hay empresas en la nube. La empresa inicial se registra sola al abrir esta pantalla; también puede crear otras con «Nueva empresa».</div>');
  }
 
  var html=cab+body+'</div>';
